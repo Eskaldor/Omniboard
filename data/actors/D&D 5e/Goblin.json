@@ -1,0 +1,24 @@
+{
+  "id": "5d2de581-78bb-4b28-8e03-d94bbb1f4d30",
+  "name": "Goblin",
+  "role": "enemy",
+  "is_revealed": true,
+  "group_id": null,
+  "group_mode": "sequential",
+  "initiative": 12,
+  "portrait": "https://picsum.photos/seed/goblin/100/100",
+  "miniature_id": null,
+  "stats": {
+    "hp": 7,
+    "ac": 15,
+    "speed": 30
+  },
+  "effects": [],
+  "visibility": {
+    "hp": true,
+    "stats": true,
+    "effects": true,
+    "name": true
+  },
+  "hotbar": []
+}
