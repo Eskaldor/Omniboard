@@ -188,8 +188,8 @@ async def update_combat_system(payload: dict):
     system_name = (payload.get("system") or "").strip()
     if not system_name:
         raise HTTPException(status_code=400, detail="system is required")
-    state.system = system_name
     await save_snapshot()
+    state.system = system_name
     await broadcast_state()
     return {"system": state.system}
 
@@ -222,7 +222,6 @@ async def create_actor(actor: Actor):
         reorder_turn_queue()
         add_log("actor_joined", actor_id=actor.id, actor_name=actor.name)
     await broadcast_state()
-    await save_snapshot()
     return actor
 
 @app.patch("/api/actors/{actor_id}")
@@ -279,7 +278,6 @@ async def update_actor(actor_id: str, updates: dict):
                         state.actors[j] = Actor(**od)
             reorder_turn_queue()
             await broadcast_state()
-            await save_snapshot()
             return state.actors[i]
     return {"error": "not found"}
 
@@ -339,7 +337,6 @@ async def next_turn():
             add_log("turn_start", actor_id=a.id, actor_name=a.name)
 
     await broadcast_state()
-    await save_snapshot()
     return state
 
 @app.post("/api/combat/start")
@@ -370,7 +367,6 @@ async def start_combat():
     state.current_index = 0
     add_log("combat_start")
     await broadcast_state()
-    await save_snapshot()
     return state
 
 @app.post("/api/combat/end")
@@ -381,7 +377,6 @@ async def end_combat():
     state.current_index = 0
     add_log("combat_end")
     await broadcast_state()
-    await save_snapshot()
     return state
 
 @app.post("/api/combat/reset")
@@ -398,7 +393,6 @@ async def reset_combat():
     (LOGS_DIR / "latest_combat.json").write_text("[]", encoding="utf-8")
     (LOGS_DIR / "latest_combat.md").write_text("", encoding="utf-8")
     await broadcast_state()
-    await save_snapshot()
     return state
 
 
@@ -415,16 +409,15 @@ async def clear_combat():
     (LOGS_DIR / "latest_combat.json").write_text("[]", encoding="utf-8")
     (LOGS_DIR / "latest_combat.md").write_text("", encoding="utf-8")
     await broadcast_state()
-    await save_snapshot()
     return state
 
 
 @app.patch("/api/combat/settings")
 async def update_combat_settings(payload: dict):
     global state
+    await save_snapshot()
     if "enable_logging" in payload:
         state.enable_logging = bool(payload["enable_logging"])
-    await save_snapshot()
     await broadcast_state()
     return {"enable_logging": state.enable_logging}
 
@@ -432,6 +425,7 @@ async def update_combat_settings(payload: dict):
 @app.patch("/api/combat/legend")
 async def update_legend(payload: dict):
     global state
+    await save_snapshot()
     legend_keys = {"player", "enemy", "ally", "neutral"}
     if any(k in payload for k in legend_keys):
         state.legend = LegendConfig(**{k: payload.get(k, getattr(state.legend, k)) for k in legend_keys})
@@ -439,7 +433,6 @@ async def update_legend(payload: dict):
         state.show_group_colors = bool(payload["show_group_colors"])
     if "show_faction_colors" in payload:
         state.show_faction_colors = bool(payload["show_faction_colors"])
-    await save_snapshot()
     await broadcast_state()
     return {"legend": state.legend, "show_group_colors": state.show_group_colors, "show_faction_colors": state.show_faction_colors}
 
@@ -486,7 +479,6 @@ async def delete_actor(actor_id: str):
         if state.current_index >= len(state.turn_queue):
             state.current_index = max(0, len(state.turn_queue) - 1)
     await broadcast_state()
-    await save_snapshot()
     return {"status": "success"}
 
 @app.patch("/api/combat/layout")
@@ -495,7 +487,6 @@ async def update_layout(layout: dict):
     from backend.models import MiniatureLayout
     state.layout = MiniatureLayout(**layout)
     await broadcast_state()
-    await save_snapshot()
     return state.layout
 
 @app.get("/api/systems/{system_name}/effects")
@@ -756,7 +747,6 @@ async def load_combat(payload: dict):
         state.current_index = 0
         state.is_active = False
     await broadcast_state()
-    await save_snapshot()
     return state
 
 @app.get("/api/render/{actor_id}")
