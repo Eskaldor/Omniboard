@@ -307,12 +307,28 @@ export function ConfigModal({
   systemName: string, setSystemName: (s: string) => void,
   onClose: () => void 
 }) {
+  const [localSystemName, setLocalSystemName] = useState(systemName);
   const [newKey, setNewKey] = useState('');
   const [newLabel, setNewLabel] = useState('');
   const [showPresets, setShowPresets] = useState(false);
+  const [presets, setPresets] = useState<string[]>([]);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const presets = ['D&D 5e', 'Pathfinder 2e', 'Call of Cthulhu', 'Custom'];
+  useEffect(() => {
+    setLocalSystemName(systemName);
+  }, [systemName]);
+
+  useEffect(() => {
+    fetch('/api/systems/list')
+      .then(res => res.json())
+      .then(data => setPresets(Array.isArray(data) ? data : []))
+      .catch(() => setPresets([]));
+  }, []);
+
+  const commitSystemName = () => {
+    const trimmed = localSystemName.trim();
+    if (trimmed) setSystemName(trimmed);
+  };
 
   const toggleColumn = (key: string) => {
     setColumns(columns.map(c => c.key === key ? { ...c, showInTable: !c.showInTable } : c));
@@ -344,30 +360,13 @@ export function ConfigModal({
 
   const loadPreset = async (preset: string) => {
     setSystemName(preset);
+    setLocalSystemName(preset);
     setShowPresets(false);
-    
     try {
       const res = await fetch(`/api/systems/${encodeURIComponent(preset)}/columns`);
       const data = await res.json();
-      if (data && data.length > 0) {
+      if (data && Array.isArray(data) && data.length > 0) {
         setColumns(data);
-      } else {
-        // Fallbacks if no saved data
-        if (preset === 'D&D 5e') {
-          setColumns([
-            { key: 'hp', label: 'HP', showInTable: true },
-            { key: 'ac', label: 'AC', showInTable: true },
-            { key: 'speed', label: 'Speed', showInTable: true },
-          ]);
-        } else if (preset === 'Pathfinder 2e') {
-          setColumns([
-            { key: 'hp', label: 'HP', showInTable: true },
-            { key: 'ac', label: 'AC', showInTable: true },
-            { key: 'fort', label: 'Fort', showInTable: false },
-            { key: 'ref', label: 'Ref', showInTable: false },
-            { key: 'will', label: 'Will', showInTable: false },
-          ]);
-        }
       }
     } catch (err) {
       console.error("Failed to load preset columns", err);
@@ -379,7 +378,7 @@ export function ConfigModal({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${systemName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_columns.json`;
+    a.download = `${(localSystemName || systemName).replace(/[^a-z0-9]/gi, '_').toLowerCase()}_columns.json`;
     a.click();
   };
 
@@ -400,27 +399,56 @@ export function ConfigModal({
   };
 
   const handleSave = async () => {
+    const name = localSystemName.trim() || systemName;
+    if (!name) return;
     try {
-      await fetch(`/api/systems/${encodeURIComponent(systemName)}/columns`, {
+      const res = await fetch(`/api/systems/${encodeURIComponent(name)}/columns`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(columns)
       });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        const detail = err.detail;
+        const msg = typeof detail === 'string'
+          ? detail
+          : Array.isArray(detail)
+            ? detail.map((d: { msg?: string }) => d.msg || JSON.stringify(d)).join('; ')
+            : typeof detail === 'object' && detail !== null
+              ? JSON.stringify(detail)
+              : `Ошибка сохранения: ${res.status}`;
+        alert(msg);
+        return;
+      }
       alert('Columns saved to system!');
+      // Refresh saved systems list so the new system appears in the dropdown
+      const listRes = await fetch('/api/systems/list');
+      const listData = await listRes.json().catch(() => []);
+      setPresets(Array.isArray(listData) ? listData : []);
     } catch (err) {
       console.error('Failed to save columns', err);
+      alert('Не удалось сохранить. Проверьте консоль.');
     }
   };
 
+  const inputClass = "py-1 px-2 text-sm bg-zinc-950 border border-zinc-800 rounded hover:border-zinc-700 focus:border-emerald-500 focus:outline-none text-zinc-200";
+
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-4xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
         <div className="p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50">
           <div className="relative flex items-center gap-1">
             <input
               type="text"
-              value={systemName}
-              onChange={(e) => setSystemName(e.target.value)}
+              value={localSystemName}
+              onChange={(e) => setLocalSystemName(e.target.value)}
+              onBlur={commitSystemName}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.currentTarget.blur();
+                  commitSystemName();
+                }
+              }}
               className="bg-transparent text-lg font-medium text-zinc-100 border-none outline-none min-w-[8rem] placeholder-zinc-500"
               placeholder="System name"
             />
@@ -434,119 +462,125 @@ export function ConfigModal({
 
             {showPresets && (
               <div className="absolute top-full left-0 mt-2 w-48 bg-zinc-800 border border-zinc-700 rounded-xl shadow-xl overflow-hidden z-10">
-                <div className="px-3 py-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider bg-zinc-900/50">Saved Presets</div>
-                {presets.map(p => (
-                  <button 
-                    key={p}
-                    onClick={() => loadPreset(p)}
-                    className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors"
-                  >
-                    {p}
-                  </button>
-                ))}
+                <div className="px-3 py-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider bg-zinc-900/50">Saved systems</div>
+                {presets.length === 0 ? (
+                  <div className="px-4 py-2 text-sm text-zinc-500">No systems yet</div>
+                ) : (
+                  presets.map(p => (
+                    <button 
+                      key={p}
+                      onClick={() => loadPreset(p)}
+                      className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors"
+                    >
+                      {p}
+                    </button>
+                  ))
+                )}
               </div>
             )}
           </div>
           <button onClick={onClose} className="text-zinc-400 hover:text-zinc-100"><X size={20} /></button>
         </div>
         
-        <div className="p-6 overflow-y-auto space-y-6">
-          <div>
-            <h4 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-3">Fields / Columns</h4>
-            <div className="space-y-2">
-              {columns.map((col, index) => (
-                <div key={col.key} className="flex items-center justify-between gap-2 p-3 bg-zinc-950 border border-zinc-800 rounded-lg hover:border-zinc-700 transition-colors group">
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => moveColumn(index, 'up')}
-                      disabled={index === 0}
-                      className="p-1 text-zinc-500 hover:text-zinc-300 disabled:opacity-30 disabled:cursor-not-allowed"
-                      title="Move up"
-                    >
-                      <ChevronUp size={16} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => moveColumn(index, 'down')}
-                      disabled={index === columns.length - 1}
-                      className="p-1 text-zinc-500 hover:text-zinc-300 disabled:opacity-30 disabled:cursor-not-allowed"
-                      title="Move down"
-                    >
-                      <ChevronDown size={16} />
-                    </button>
-                  </div>
-                  <div className="flex flex-col min-w-0 flex-1">
-                    <span className="text-sm font-medium text-zinc-200">{col.label}</span>
-                    <span className="text-xs text-zinc-500 font-mono">{col.key}</span>
-                    <div className="flex gap-2 mt-1.5 flex-wrap">
-                      <input
-                        type="text"
-                        placeholder="Group (e.g. Attributes)"
-                        value={col.group ?? ''}
-                        onChange={(e) => updateColumn(col.key, { group: e.target.value.trim() || undefined })}
-                        className="flex-1 min-w-[80px] max-w-[120px] bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-xs text-zinc-300 focus:outline-none focus:border-emerald-500"
-                      />
-                      <input
-                        type="text"
-                        placeholder="Max key (e.g. max_hp)"
-                        value={col.maxKey ?? ''}
-                        onChange={(e) => updateColumn(col.key, { maxKey: e.target.value.trim() || undefined })}
-                        className="flex-1 min-w-[80px] max-w-[120px] bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-xs text-zinc-300 font-mono focus:outline-none focus:border-emerald-500"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4 shrink-0">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <span className="text-xs text-zinc-500">Show in table</span>
-                      <input 
-                        type="checkbox" 
-                        checked={col.showInTable} 
-                        onChange={() => toggleColumn(col.key)}
-                        className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-zinc-900"
-                      />
-                    </label>
-                    <button 
-                      onClick={() => removeColumn(col.key)}
-                      className="text-zinc-600 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
-                      title="Remove field"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
-              ))}
+        <div className="p-4 overflow-y-auto space-y-1">
+          <div className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">Fields / Columns</div>
+          {columns.map((col, index) => (
+            <div key={col.key} className="flex items-center gap-2 py-1.5 border-b border-zinc-800/50 last:border-0">
+              <div className="flex flex-col shrink-0">
+                <button
+                  type="button"
+                  onClick={() => moveColumn(index, 'up')}
+                  disabled={index === 0}
+                  className="p-0.5 text-zinc-500 hover:text-zinc-300 disabled:opacity-30 disabled:cursor-not-allowed"
+                  title="Move up"
+                >
+                  <ChevronUp size={14} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => moveColumn(index, 'down')}
+                  disabled={index === columns.length - 1}
+                  className="p-0.5 text-zinc-500 hover:text-zinc-300 disabled:opacity-30 disabled:cursor-not-allowed"
+                  title="Move down"
+                >
+                  <ChevronDown size={14} />
+                </button>
+              </div>
+              <input
+                type="text"
+                value={col.label}
+                onChange={(e) => updateColumn(col.key, { label: e.target.value })}
+                placeholder="Label"
+                className={`${inputClass} w-24 min-w-0 flex-1 max-w-[120px]`}
+              />
+              <input
+                type="text"
+                value={col.key}
+                onChange={(e) => updateColumn(col.key, { key: e.target.value })}
+                placeholder="Key"
+                className={`${inputClass} w-20 min-w-0 font-mono max-w-[100px]`}
+              />
+              <input
+                type="text"
+                value={col.group ?? ''}
+                onChange={(e) => updateColumn(col.key, { group: e.target.value.trim() || undefined })}
+                placeholder="Group"
+                className={`${inputClass} w-20 min-w-0 flex-1 max-w-[100px]`}
+              />
+              <input
+                type="text"
+                value={col.maxKey ?? ''}
+                onChange={(e) => updateColumn(col.key, { maxKey: e.target.value.trim() || undefined })}
+                placeholder="Max key"
+                className={`${inputClass} w-20 min-w-0 font-mono max-w-[100px]`}
+              />
+              <div className="flex items-center gap-1 shrink-0 w-16 justify-center">
+                <input
+                  type="checkbox"
+                  checked={col.showInTable}
+                  onChange={() => toggleColumn(col.key)}
+                  className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-zinc-900"
+                  title="Show in table"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeColumn(col.key)}
+                  className="p-1 text-zinc-600 hover:text-red-400 transition-colors"
+                  title="Remove field"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
             </div>
+          ))}
+
+          <div className="flex items-center gap-2 py-2 mt-2 border-t border-zinc-800">
+            <span className="text-xs text-zinc-500 shrink-0">Add field:</span>
+            <input
+              type="text"
+              placeholder="Label"
+              value={newLabel}
+              onChange={e => setNewLabel(e.target.value)}
+              className={`${inputClass} w-28`}
+            />
+            <input
+              type="text"
+              placeholder="Key"
+              value={newKey}
+              onChange={e => setNewKey(e.target.value)}
+              className={`${inputClass} w-24 font-mono`}
+            />
+            <button
+              onClick={addColumn}
+              disabled={!newKey || !newLabel}
+              className="p-1.5 bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors flex items-center justify-center"
+              title="Add column"
+            >
+              <Plus size={16} />
+            </button>
           </div>
 
-          <div className="bg-zinc-950/50 border border-zinc-800/50 p-4 rounded-xl space-y-3">
-            <h4 className="text-sm font-medium text-zinc-400">Add New Field</h4>
-            <div className="flex gap-2">
-              <input 
-                type="text" 
-                placeholder="Label (e.g. Mana)" 
-                value={newLabel}
-                onChange={e => setNewLabel(e.target.value)}
-                className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
-              />
-              <input 
-                type="text" 
-                placeholder="Key (e.g. mp)" 
-                value={newKey}
-                onChange={e => setNewKey(e.target.value)}
-                className="w-24 bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500 font-mono"
-              />
-              <button 
-                onClick={addColumn}
-                disabled={!newKey || !newLabel}
-                className="bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 disabled:opacity-50 disabled:cursor-not-allowed px-3 rounded-lg transition-colors flex items-center justify-center"
-              >
-                <Plus size={18} />
-              </button>
-            </div>
-          </div>
-
-          <div className="flex gap-2 pt-4 border-t border-zinc-800">
+          <div className="flex gap-2 pt-4 border-t border-zinc-800 mt-2">
             <button onClick={handleExport} className="flex-1 flex items-center justify-center gap-2 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-xs transition-colors">
               <Download size={14} /> Export
             </button>

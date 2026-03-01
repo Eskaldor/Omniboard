@@ -1,4 +1,4 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, HTTPException
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -268,17 +268,60 @@ async def save_system_effect(system_name: str, effect: dict):
     file_path.write_text(json.dumps(effects, indent=2))
     return effects
 
+@app.get("/api/systems/list")
+async def list_systems():
+    """Scan data/systems for *_columns.json files and return unique system display names."""
+    names = set()
+    for f in DATA_DIR.glob("*_columns.json"):
+        stem = f.stem
+        prefix = stem[:- len("_columns")] if stem.endswith("_columns") else stem
+        try:
+            data = json.loads(f.read_text(encoding="utf-8"))
+            if isinstance(data, dict) and "displayName" in data:
+                names.add(data["displayName"])
+            else:
+                names.add(prefix)
+        except Exception:
+            names.add(prefix)
+    return sorted(names)
+
+
+def _safe_columns_filename(system_name: str) -> str:
+    """Filesystem-safe name for columns file (used for both save and get)."""
+    s = (system_name or "default").strip()
+    for c in "/\\:*?\"<>|&":
+        s = s.replace(c, "_")
+    s = s.replace("..", "_").strip() or "default"
+    return s[:100]
+
+
 @app.get("/api/systems/{system_name}/columns")
 async def get_system_columns(system_name: str):
-    file_path = DATA_DIR / f"{system_name}_columns.json"
-    if file_path.exists():
-        return json.loads(file_path.read_text())
+    # Try raw name first (backward compat), then safe filename
+    for name in (system_name.strip(), _safe_columns_filename(system_name)):
+        file_path = DATA_DIR / f"{name}_columns.json"
+        if not file_path.exists():
+            continue
+        try:
+            data = json.loads(file_path.read_text(encoding="utf-8"))
+            if isinstance(data, list):
+                return data
+            return data.get("columns", [])
+        except Exception:
+            pass
     return []
 
+
 @app.post("/api/systems/{system_name}/columns")
-async def save_system_columns(system_name: str, columns: list):
-    file_path = DATA_DIR / f"{system_name}_columns.json"
-    file_path.write_text(json.dumps(columns, indent=2))
+async def save_system_columns(system_name: str, columns: list = Body(...)):
+    system_name = (system_name or "").strip()
+    if not system_name:
+        raise HTTPException(status_code=400, detail="system name is required")
+    safe = _safe_columns_filename(system_name)
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    file_path = DATA_DIR / f"{safe}_columns.json"
+    payload = {"displayName": system_name, "columns": columns}
+    file_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     return {"status": "ok"}
 
 @app.get("/api/systems/{system_name}/actors")
