@@ -142,7 +142,7 @@ export default function App() {
         id: crypto.randomUUID(),
         name: 'New Actor',
         role: 'enemy',
-        portrait: 'https://picsum.photos/seed/new/100/100',
+        portrait: '',
         stats: { hp: 10, ac: 10, speed: 30 },
         initiative: Math.floor(Math.random() * 20) + 1,
         effects: [],
