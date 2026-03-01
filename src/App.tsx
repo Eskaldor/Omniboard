@@ -67,10 +67,26 @@ export default function App() {
     let ws: WebSocket;
     let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
     let isMounted = true;
+    let lastFallbackAt = 0;
+    const FALLBACK_THROTTLE_MS = 5000;
+
+    const fetchStateFallback = () => {
+      const now = Date.now();
+      if (lastFallbackAt > 0 && now - lastFallbackAt < FALLBACK_THROTTLE_MS) return;
+      lastFallbackAt = now;
+      fetch('/api/combat/state')
+        .then(res => res.ok ? res.json() : Promise.reject())
+        .then(data => { if (isMounted) { setState(data); setWsError(null); } })
+        .catch(() => { if (isMounted) setWsError("Бэкенд недоступен. Проверьте, что сервер запущен (npm run dev)."); });
+    };
 
     const connect = () => {
       if (!isMounted) return;
       ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        setWsError(null);
+      };
 
       ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
@@ -81,12 +97,12 @@ export default function App() {
       };
 
       ws.onerror = () => {
-        setWsError("Не удалось подключиться к бэкенду на Python (FastAPI). Сервер ещё запускается или недоступен.");
+        fetchStateFallback();
       };
 
       ws.onclose = () => {
         if (!isMounted) return;
-        // Auto-reconnect after 2 seconds
+        fetchStateFallback();
         reconnectTimeout = setTimeout(connect, 2000);
       };
     };
@@ -100,12 +116,20 @@ export default function App() {
     };
   }, []);
 
+  const refetchState = () => {
+    fetch('/api/combat/state')
+      .then(res => res.ok ? res.json() : Promise.reject())
+      .then(setState)
+      .catch(() => {});
+  };
+
   const updateActorStat = async (actorId: string, statKey: string, value: any) => {
     await fetch(`/api/actors/${actorId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ stats: { [statKey]: value } })
     });
+    refetchState();
   };
 
   const updateActorField = async (actorId: string, field: string, value: any) => {
@@ -114,35 +138,42 @@ export default function App() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ [field]: value })
     });
+    refetchState();
   };
 
   const nextTurn = async () => {
     await fetch('/api/combat/next-turn', { method: 'POST' });
+    refetchState();
   };
 
   const startCombat = async () => {
     await fetch('/api/combat/start', { method: 'POST' });
+    refetchState();
   };
 
   const endCombat = async () => {
     await fetch('/api/combat/end', { method: 'POST' });
+    refetchState();
   };
 
   const resetCombat = async () => {
     if (confirm("Reset combat? This will clear the queue, reset the round to 1, and remove all effects.")) {
       await fetch('/api/combat/reset', { method: 'POST' });
+      refetchState();
     }
   };
 
   const clearCombat = async () => {
     if (confirm("Clear combat? This will remove all actors and reset the combat state.")) {
       await fetch('/api/combat/reset', { method: 'POST' });
+      refetchState();
     }
   };
 
   const deleteActor = async (actorId: string) => {
     if (confirm("Delete this actor?")) {
       await fetch(`/api/actors/${actorId}`, { method: 'DELETE' });
+      refetchState();
     }
   };
 
@@ -162,6 +193,7 @@ export default function App() {
         hotbar: []
       })
     });
+    refetchState();
   };
 
   const addFromRoster = async (template: Actor) => {
@@ -173,6 +205,7 @@ export default function App() {
         body: JSON.stringify(newActor)
       });
       setShowRoster(false);
+      refetchState();
     } catch (err) {
       console.error("Failed to add actor from roster", err);
     }
@@ -408,6 +441,7 @@ export default function App() {
               body: JSON.stringify({ effects: newEffects })
             });
             setEffectModalActor(null);
+            refetchState();
           }} 
         />
       )}
