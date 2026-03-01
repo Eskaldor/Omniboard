@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Literal, Optional, List, Dict, Any
 
 class Effect(BaseModel):
@@ -43,7 +43,8 @@ class Actor(BaseModel):
     role: Literal["character", "enemy", "ally", "neutral"]
     is_revealed: bool = True
     group_id: Optional[str] = None
-    group_mode: Literal["sequential", "simultaneous"] = "sequential"
+    group_mode: Optional[Literal["sequential", "simultaneous"]] = None
+    group_color: Optional[str] = None
     initiative: int = 0
     portrait: str
     miniature_id: Optional[str] = None
@@ -51,6 +52,14 @@ class Actor(BaseModel):
     effects: List[Effect] = []
     visibility: Visibility = Visibility()
     hotbar: List[HotbarAction] = []
+
+
+class LegendConfig(BaseModel):
+    player: str = "#10b981"   # emerald
+    enemy: str = "#ef4444"    # red
+    ally: str = "#3b82f6"    # blue
+    neutral: str = "#a1a1aa"  # zinc
+
 
 class LogEntry(BaseModel):
     type: Literal["combat_start", "combat_end", "round_start", "turn_start", "hp_change", "effect_added", "effect_removed", "actor_joined", "actor_left", "text"]
@@ -66,6 +75,9 @@ class CombatState(BaseModel):
     round: int = 1
     system: str = "D&D 5e"
     layout: MiniatureLayout = MiniatureLayout(show_portrait=True)
+    legend: LegendConfig = Field(default_factory=LegendConfig)
+    show_group_colors: bool = True
+    show_faction_colors: bool = True
     sync_led_to_ui: bool = True
     history: List[LogEntry] = []
     history_cursor: int = -1

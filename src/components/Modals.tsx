@@ -267,6 +267,52 @@ export function MiniSheetModal({
               <div className="text-sm text-zinc-400">Initiative: <span className="text-zinc-200">{actor.initiative}</span></div>
             </div>
           </div>
+
+          <div className="space-y-3">
+            <h4 className="text-sm font-medium text-zinc-500 uppercase tracking-wider">Group</h4>
+            <div>
+              <label className="block text-xs text-zinc-500 mb-1">Group ID</label>
+              <input
+                type="text"
+                value={actor.group_id ?? ''}
+                onChange={(e) => {
+                  const v = e.target.value.trim() || null;
+                  onUpdate?.(actor.id, 'group_id', v);
+                  if (!v) {
+                    onUpdate?.(actor.id, 'group_mode', null);
+                    onUpdate?.(actor.id, 'group_color', null);
+                  }
+                }}
+                placeholder="e.g. group-1"
+                className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
+              />
+            </div>
+            {actor.group_id && (
+              <>
+                <div>
+                  <label className="block text-xs text-zinc-500 mb-1">Group Mode</label>
+                  <select
+                    value={actor.group_mode ?? 'sequential'}
+                    onChange={(e) => onUpdate?.(actor.id, 'group_mode', e.target.value === 'none' ? null : e.target.value)}
+                    className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
+                  >
+                    <option value="simultaneous">Simultaneous</option>
+                    <option value="sequential">Sequential</option>
+                    <option value="none">None</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-zinc-500 mb-1">Group Color</label>
+                  <input
+                    type="color"
+                    value={actor.group_color ?? '#10b981'}
+                    onChange={(e) => onUpdate?.(actor.id, 'group_color', e.target.value)}
+                    className="w-10 h-8 rounded bg-zinc-800 border border-zinc-700 cursor-pointer"
+                  />
+                </div>
+              </>
+            )}
+          </div>
           
           <div>
             <h4 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-3">All Stats</h4>

@@ -2,7 +2,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, H
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from backend.models import CombatState, Actor, Effect, LogEntry
+from backend.models import CombatState, Actor, Effect, LogEntry, LegendConfig
 from backend.compositor import render_miniature
 import uuid
 import json
@@ -157,10 +157,10 @@ def reorder_turn_queue():
         return
     active_id = state.turn_queue[state.current_index]
     initiative_by_id = {a.id: a.initiative for a in state.actors}
+    group_by_id = {a.id: (getattr(a, "group_id", None) or "") for a in state.actors}
     state.turn_queue = sorted(
         state.turn_queue,
-        key=lambda actor_id: initiative_by_id.get(actor_id, 0),
-        reverse=True,
+        key=lambda actor_id: (-initiative_by_id.get(actor_id, 0), group_by_id.get(actor_id, "")),
     )
     state.current_index = state.turn_queue.index(active_id)
 
@@ -269,6 +269,14 @@ async def update_actor(actor_id: str, updates: dict):
                         details={"effect_name": e.name},
                     )
             state.actors[i] = new_actor
+            # Sync initiative to all actors in the same simultaneous group
+            if "initiative" in updates and new_actor.group_id and getattr(new_actor, "group_mode", None) == "simultaneous":
+                val = new_actor.initiative
+                for j, other in enumerate(state.actors):
+                    if j != i and getattr(other, "group_id", None) == new_actor.group_id:
+                        od = other.model_dump()
+                        od["initiative"] = val
+                        state.actors[j] = Actor(**od)
             reorder_turn_queue()
             await broadcast_state()
             await save_snapshot()
@@ -280,8 +288,23 @@ async def next_turn():
     await save_snapshot()
     if not state.turn_queue:
         return {"error": "Queue empty"}
-    
-    state.current_index = (state.current_index + 1) % len(state.turn_queue)
+
+    def get_actor(aid: str):
+        return next((a for a in state.actors if a.id == aid), None)
+
+    # Slot size at current position: 1 or count of consecutive same simultaneous group
+    idx = state.current_index
+    current_actor = get_actor(state.turn_queue[idx])
+    slot_size = 1
+    if current_actor and getattr(current_actor, "group_id", None) and getattr(current_actor, "group_mode", None) == "simultaneous":
+        gid = current_actor.group_id
+        while idx + slot_size < len(state.turn_queue):
+            next_actor = get_actor(state.turn_queue[idx + slot_size])
+            if not next_actor or getattr(next_actor, "group_id", None) != gid or getattr(next_actor, "group_mode", None) != "simultaneous":
+                break
+            slot_size += 1
+
+    state.current_index = (state.current_index + slot_size) % len(state.turn_queue)
     if state.current_index == 0:
         state.round += 1
         add_log("round_start")
@@ -298,12 +321,23 @@ async def next_turn():
                         details={"effect_name": effect.name},
                     )
             actor.effects = [e for e in actor.effects if e.duration is None or e.duration > 0]
-    
-    current_actor_id = state.turn_queue[state.current_index]
-    current_actor = next((a for a in state.actors if a.id == current_actor_id), None)
-    if current_actor:
-        add_log("turn_start", actor_id=current_actor.id, actor_name=current_actor.name)
-    
+
+    # Log turn_start for each actor in the new slot
+    idx = state.current_index
+    new_actor = get_actor(state.turn_queue[idx])
+    slot_size = 1
+    if new_actor and getattr(new_actor, "group_id", None) and getattr(new_actor, "group_mode", None) == "simultaneous":
+        gid = new_actor.group_id
+        while idx + slot_size < len(state.turn_queue):
+            next_actor = get_actor(state.turn_queue[idx + slot_size])
+            if not next_actor or getattr(next_actor, "group_id", None) != gid or getattr(next_actor, "group_mode", None) != "simultaneous":
+                break
+            slot_size += 1
+    for i in range(slot_size):
+        a = get_actor(state.turn_queue[idx + i])
+        if a:
+            add_log("turn_start", actor_id=a.id, actor_name=a.name)
+
     await broadcast_state()
     await save_snapshot()
     return state
@@ -313,7 +347,25 @@ async def start_combat():
     await save_snapshot()
     state.is_active = True
     state.round = 1
-    sorted_actors = sorted(state.actors, key=lambda a: a.initiative, reverse=True)
+    # For each simultaneous group, set all members' initiative to the max in the group
+    groups: dict[str, list[tuple[str, int]]] = {}
+    for a in state.actors:
+        if getattr(a, "group_id", None) and getattr(a, "group_mode", None) == "simultaneous":
+            groups.setdefault(a.group_id, []).append((a.id, a.initiative))
+    for gid, id_init_list in groups.items():
+        if not id_init_list:
+            continue
+        max_init = max(init for _, init in id_init_list)
+        for i, actor in enumerate(state.actors):
+            if getattr(actor, "group_id", None) == gid:
+                ad = actor.model_dump()
+                ad["initiative"] = max_init
+                state.actors[i] = Actor(**ad)
+    # Sort by initiative desc, then by group_id so simultaneous groups stay consecutive
+    def sort_key(a):
+        gid = getattr(a, "group_id", None) or ""
+        return (-a.initiative, gid)
+    sorted_actors = sorted(state.actors, key=sort_key)
     state.turn_queue = [a.id for a in sorted_actors]
     state.current_index = 0
     add_log("combat_start")
@@ -375,6 +427,21 @@ async def update_combat_settings(payload: dict):
     await save_snapshot()
     await broadcast_state()
     return {"enable_logging": state.enable_logging}
+
+
+@app.patch("/api/combat/legend")
+async def update_legend(payload: dict):
+    global state
+    legend_keys = {"player", "enemy", "ally", "neutral"}
+    if any(k in payload for k in legend_keys):
+        state.legend = LegendConfig(**{k: payload.get(k, getattr(state.legend, k)) for k in legend_keys})
+    if "show_group_colors" in payload:
+        state.show_group_colors = bool(payload["show_group_colors"])
+    if "show_faction_colors" in payload:
+        state.show_faction_colors = bool(payload["show_faction_colors"])
+    await save_snapshot()
+    await broadcast_state()
+    return {"legend": state.legend, "show_group_colors": state.show_group_colors, "show_faction_colors": state.show_faction_colors}
 
 
 @app.post("/api/combat/log/note")

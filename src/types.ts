@@ -29,7 +29,8 @@ export interface Actor {
   role: "character" | "enemy" | "ally" | "neutral";
   is_revealed: boolean;
   group_id: string | null;
-  group_mode: "sequential" | "simultaneous";
+  group_mode: "sequential" | "simultaneous" | null;
+  group_color: string | null;
   initiative: number;
   portrait: string;
   miniature_id: string | null;
@@ -37,6 +38,13 @@ export interface Actor {
   effects: Effect[];
   visibility: Visibility;
   hotbar: HotbarAction[];
+}
+
+export interface LegendConfig {
+  player: string;
+  enemy: string;
+  ally: string;
+  neutral: string;
 }
 
 export interface DisplayField {
@@ -83,6 +91,9 @@ export interface CombatState {
   system: string;
   is_active: boolean;
   layout: MiniatureLayout;
+  legend?: LegendConfig;
+  show_group_colors?: boolean;
+  show_faction_colors?: boolean;
   history?: CombatLogEntry[];
   enable_logging?: boolean;
   can_undo?: boolean;
