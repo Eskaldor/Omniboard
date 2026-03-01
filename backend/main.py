@@ -90,6 +90,8 @@ def reorder_turn_queue():
         reverse=True,
     )
     state.current_index = state.turn_queue.index(active_id)
+
+@app.websocket("/ws/master")
 async def websocket_master(websocket: WebSocket):
     await websocket.accept()
     clients.append(websocket)

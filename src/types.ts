@@ -71,4 +71,6 @@ export interface ColumnConfig {
   key: string;
   label: string;
   showInTable: boolean;
+  group?: string;
+  maxKey?: string;
 }

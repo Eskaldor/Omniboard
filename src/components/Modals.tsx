@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Download, Upload, Trash2, Plus, ChevronDown, Check, Search, Swords } from 'lucide-react';
+import { X, Save, Download, Upload, Trash2, Plus, ChevronDown, ChevronUp, Check, Search, Swords } from 'lucide-react';
 import { Actor, ColumnConfig, Effect, MiniatureLayout, DisplayField } from '../types';
 import { slugify } from 'transliteration';
 
@@ -322,6 +322,18 @@ export function ConfigModal({
     setColumns(columns.filter(c => c.key !== key));
   };
 
+  const moveColumn = (index: number, dir: 'up' | 'down') => {
+    const next = dir === 'up' ? index - 1 : index + 1;
+    if (next < 0 || next >= columns.length) return;
+    const copy = [...columns];
+    [copy[index], copy[next]] = [copy[next], copy[index]];
+    setColumns(copy);
+  };
+
+  const updateColumn = (key: string, updates: Partial<ColumnConfig>) => {
+    setColumns(columns.map(c => c.key === key ? { ...c, ...updates } : c));
+  };
+
   const addColumn = () => {
     if (newKey && newLabel && !columns.find(c => c.key === newKey)) {
       setColumns([...columns, { key: newKey, label: newLabel, showInTable: true }]);
@@ -442,13 +454,49 @@ export function ConfigModal({
           <div>
             <h4 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-3">Fields / Columns</h4>
             <div className="space-y-2">
-              {columns.map(col => (
-                <div key={col.key} className="flex items-center justify-between p-3 bg-zinc-950 border border-zinc-800 rounded-lg hover:border-zinc-700 transition-colors group">
-                  <div className="flex flex-col">
+              {columns.map((col, index) => (
+                <div key={col.key} className="flex items-center justify-between gap-2 p-3 bg-zinc-950 border border-zinc-800 rounded-lg hover:border-zinc-700 transition-colors group">
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => moveColumn(index, 'up')}
+                      disabled={index === 0}
+                      className="p-1 text-zinc-500 hover:text-zinc-300 disabled:opacity-30 disabled:cursor-not-allowed"
+                      title="Move up"
+                    >
+                      <ChevronUp size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moveColumn(index, 'down')}
+                      disabled={index === columns.length - 1}
+                      className="p-1 text-zinc-500 hover:text-zinc-300 disabled:opacity-30 disabled:cursor-not-allowed"
+                      title="Move down"
+                    >
+                      <ChevronDown size={16} />
+                    </button>
+                  </div>
+                  <div className="flex flex-col min-w-0 flex-1">
                     <span className="text-sm font-medium text-zinc-200">{col.label}</span>
                     <span className="text-xs text-zinc-500 font-mono">{col.key}</span>
+                    <div className="flex gap-2 mt-1.5 flex-wrap">
+                      <input
+                        type="text"
+                        placeholder="Group (e.g. Attributes)"
+                        value={col.group ?? ''}
+                        onChange={(e) => updateColumn(col.key, { group: e.target.value.trim() || undefined })}
+                        className="flex-1 min-w-[80px] max-w-[120px] bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-xs text-zinc-300 focus:outline-none focus:border-emerald-500"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Max key (e.g. max_hp)"
+                        value={col.maxKey ?? ''}
+                        onChange={(e) => updateColumn(col.key, { maxKey: e.target.value.trim() || undefined })}
+                        className="flex-1 min-w-[80px] max-w-[120px] bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-xs text-zinc-300 font-mono focus:outline-none focus:border-emerald-500"
+                      />
+                    </div>
                   </div>
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4 shrink-0">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <span className="text-xs text-zinc-500">Show in table</span>
                       <input 

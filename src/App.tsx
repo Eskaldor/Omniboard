@@ -4,7 +4,7 @@ import { Settings, BookImage, Play, SkipForward, Plus, Square, RotateCcw, Monito
 import { CombatState, Actor, ColumnConfig, Effect } from './types';
 import { MiniSheetModal, ConfigModal, LibraryModal, AddEffectModal, MiniaturesModal, ActorRosterModal, EncountersModal } from './components/Modals';
 
-function InlineInput({ value, onChange, type = "text", className = "" }: { value: string | number, onChange: (val: string) => void, type?: string, className?: string }) {
+function InlineInput({ value, onChange, type = "text", className = "", maxValue }: { value: string | number, onChange: (val: string) => void, type?: string, className?: string, maxValue?: number }) {
   const [localVal, setLocalVal] = useState(value);
 
   useEffect(() => {
@@ -25,6 +25,9 @@ function InlineInput({ value, onChange, type = "text", className = "" }: { value
     } else {
       const parsed = parseFloat(str);
       newNum = Number.isNaN(parsed) ? 0 : parsed;
+    }
+    if (maxValue !== undefined && maxValue !== null && !Number.isNaN(maxValue)) {
+      newNum = Math.min(newNum, maxValue);
     }
     const newValStr = String(newNum);
     onChange(newValStr);
@@ -310,14 +313,32 @@ export default function App() {
           
           {/* Header Row */}
           <div className="flex items-center gap-4 px-3 mb-2 text-sm font-medium text-zinc-400">
-            <div className="w-12 shrink-0"></div> {/* Portrait spacer */}
+            <div className="w-[54px] shrink-0"></div>
             <div className="flex-1 flex items-center gap-4 px-4">
-              <div className="w-12">Init</div>
+              <div className="w-[54px]">Init</div>
               <div className="w-48">Name</div>
-              {columns.filter(c => c.showInTable).map(col => (
-                <div key={col.key} className="w-24">{col.label}</div>
-              ))}
-              <div className="flex-1">Effects</div>
+              {(() => {
+                const visible = columns.filter(c => c.showInTable);
+                const standalone = visible.filter(c => !c.group || String(c.group).trim() === '');
+                const grouped = visible.filter(c => c.group && String(c.group).trim() !== '');
+                const groupNames = [...new Set(grouped.map(c => String(c.group).trim()))];
+                return (
+                  <>
+                    {standalone.map(col => (
+                      <div key={col.key} className="w-24">{col.label}</div>
+                    ))}
+                    {groupNames.map(grp => (
+                      <div key={grp} className="flex flex-wrap items-center gap-2 px-2 py-1 bg-zinc-800/50 rounded-lg border border-zinc-700/50 max-w-[12rem]">
+                        <span className="text-[10px] text-zinc-500 uppercase">{grp}</span>
+                        {grouped.filter(c => String(c.group).trim() === grp).map(col => (
+                          <span key={col.key} className="text-[10px] text-zinc-400">{col.label}</span>
+                        ))}
+                      </div>
+                    ))}
+                    <div className="flex-1">Effects</div>
+                  </>
+                );
+              })()}
             </div>
           </div>
 
@@ -333,7 +354,7 @@ export default function App() {
                 {/* Portrait Outside */}
                 {actor.portrait ? (
                   <div 
-                    className="w-12 h-12 shrink-0 rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 flex items-center justify-center shadow-md cursor-pointer hover:border-emerald-500 transition-colors relative group/portrait"
+                    className="w-[54px] h-[96px] shrink-0 rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 flex items-center justify-center shadow-md cursor-pointer hover:border-emerald-500 transition-colors relative group/portrait"
                     onClick={() => setPortraitSelectActorId(actor.id)}
                   >
                     <img src={actor.portrait} alt={actor.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
@@ -343,7 +364,7 @@ export default function App() {
                   </div>
                 ) : (
                   <div 
-                    className="w-12 h-12 shrink-0 rounded-xl bg-zinc-900 border border-dashed border-zinc-700 flex items-center justify-center cursor-pointer hover:border-emerald-500 transition-colors"
+                    className="w-[54px] h-[96px] shrink-0 rounded-xl bg-zinc-900 border border-dashed border-zinc-700 flex items-center justify-center cursor-pointer hover:border-emerald-500 transition-colors"
                     onClick={() => setPortraitSelectActorId(actor.id)}
                   >
                     <Plus size={16} className="text-zinc-600" />
@@ -353,12 +374,12 @@ export default function App() {
                 {/* Data Row */}
                 <div 
                   onDoubleClick={() => setSelectedActor(actor)}
-                  className={`flex-1 flex items-center gap-4 px-4 py-3 bg-zinc-900 border rounded-xl cursor-pointer transition-colors relative overflow-hidden shadow-sm ${activeActorId === actor.id ? 'border-emerald-500/50 bg-zinc-800/50' : 'border-zinc-800 hover:border-zinc-700'}`}
+                  className={`flex-1 flex items-center gap-4 px-4 py-4 min-h-[96px] bg-zinc-900 border rounded-xl cursor-pointer transition-colors relative overflow-hidden shadow-sm ${activeActorId === actor.id ? 'border-emerald-500/50 bg-zinc-800/50' : 'border-zinc-800 hover:border-zinc-700'}`}
                 >
                   {activeActorId === actor.id && (
                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500"></div>
                   )}
-                  <div className="w-12 pl-2">
+                  <div className="w-[54px] pl-2">
                     <InlineInput 
                       type="number" 
                       value={actor.initiative}
@@ -375,18 +396,41 @@ export default function App() {
                     />
                   </div>
                   
-                  {columns.filter(c => c.showInTable).map(col => (
-                    <div key={col.key} className="w-24">
-                      <InlineInput 
-                        type="number" 
-                        value={actor.stats[col.key] || 0}
-                        onChange={(val) => updateActorStat(actor.id, col.key, parseInt(val))}
-                        className="w-16 bg-zinc-950 border border-zinc-700 rounded px-2 py-1 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
-                      />
-                    </div>
-                  ))}
-                  
-                  <div className="flex-1 flex gap-1 flex-wrap items-center">
+                  {(() => {
+                    const visible = columns.filter(c => c.showInTable);
+                    const standalone = visible.filter(c => !c.group || String(c.group).trim() === '');
+                    const grouped = visible.filter(c => c.group && String(c.group).trim() !== '');
+                    const groupNames = [...new Set(grouped.map(c => String(c.group).trim()))];
+                    return (
+                      <>
+                        {standalone.map(col => (
+                          <div key={col.key} className="w-24">
+                            <InlineInput
+                              type="number"
+                              value={actor.stats[col.key] ?? 0}
+                              onChange={(val) => updateActorStat(actor.id, col.key, parseInt(val))}
+                              maxValue={col.maxKey != null && typeof actor.stats[col.maxKey] === 'number' ? actor.stats[col.maxKey] : undefined}
+                              className="w-16 bg-zinc-950 border border-zinc-700 rounded px-2 py-1 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            />
+                          </div>
+                        ))}
+                        {groupNames.map(grp => (
+                          <div key={grp} className="flex flex-wrap gap-2 px-2 py-1 bg-zinc-800/50 rounded-lg border border-zinc-700/50 w-48 max-w-[12rem]">
+                            {grouped.filter(c => String(c.group).trim() === grp).map(col => (
+                              <div key={col.key} className="flex items-center gap-1">
+                                <span className="text-[10px] text-zinc-500">{col.label}:</span>
+                                <InlineInput
+                                  type="number"
+                                  value={actor.stats[col.key] ?? 0}
+                                  onChange={(val) => updateActorStat(actor.id, col.key, parseInt(val))}
+                                  maxValue={col.maxKey != null && typeof actor.stats[col.maxKey] === 'number' ? actor.stats[col.maxKey] : undefined}
+                                  className="w-10 bg-zinc-950 border border-zinc-700 rounded px-1.5 py-0.5 text-xs text-zinc-200 focus:outline-none focus:border-emerald-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        ))}
+                        <div className="flex-1 flex gap-1 flex-wrap items-center">
                     {actor.effects.map(eff => (
                       <span key={eff.id} className="text-xs px-2 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-full border border-indigo-500/30" title={eff.description}>
                         {eff.name} {eff.duration ? `(${eff.duration})` : ''}
@@ -400,6 +444,9 @@ export default function App() {
                       <Plus size={12} />
                     </button>
                   </div>
+                      </>
+                    );
+                  })()}
                   <button
                     onClick={(e) => { e.stopPropagation(); deleteActor(actor.id); }}
                     className="w-8 h-8 rounded-lg bg-zinc-800/50 hover:bg-red-900/50 flex items-center justify-center text-zinc-500 hover:text-red-400 transition-colors ml-2 shrink-0"

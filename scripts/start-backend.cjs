@@ -1,5 +1,5 @@
 /**
- * Освобождает порт 8000, ждёт 3 с, затем запускает uvicorn.
+ * Освобождает порт 8001, ждёт 3 с, затем запускает uvicorn.
  */
 const { execSync, spawn } = require('child_process');
 const path = require('path');
@@ -19,7 +19,7 @@ setTimeout(() => {
   const env = { ...process.env, PYTHONDONTWRITEBYTECODE: '1' };
   const child = spawn('python', ['-m', 'uvicorn', 'backend.main:app', '--host', '127.0.0.1', '--port', '8001'], {
     stdio: 'inherit',
-    shell: true,
+    shell: false,
     cwd: path.join(__dirname, '..'),
     env,
   });
