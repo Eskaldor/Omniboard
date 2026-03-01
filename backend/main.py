@@ -140,8 +140,11 @@ async def save_snapshot():
 clients = []
 
 async def broadcast_state():
-    state_json = state.model_dump_json()
-    message = json.dumps({"type": "state_update", "payload": json.loads(state_json)})
+    global history_stack, history_index
+    payload = json.loads(state.model_dump_json())
+    payload["can_undo"] = history_index > 0
+    payload["can_redo"] = history_index < len(history_stack) - 1
+    message = json.dumps({"type": "state_update", "payload": payload})
     dead = []
     for client in clients:
         try:
@@ -168,7 +171,10 @@ def reorder_turn_queue():
 async def websocket_master(websocket: WebSocket):
     await websocket.accept()
     clients.append(websocket)
-    await websocket.send_text(json.dumps({"type": "state_update", "payload": json.loads(state.model_dump_json())}))
+    payload = json.loads(state.model_dump_json())
+    payload["can_undo"] = history_index > 0
+    payload["can_redo"] = history_index < len(history_stack) - 1
+    await websocket.send_text(json.dumps({"type": "state_update", "payload": payload}))
     try:
         while True:
             data = await websocket.receive_text()
@@ -190,6 +196,7 @@ async def update_combat_system(payload: dict):
         raise HTTPException(status_code=400, detail="system is required")
     await save_snapshot()
     state.system = system_name
+    await save_snapshot()
     await broadcast_state()
     return {"system": state.system}
 
@@ -221,6 +228,7 @@ async def create_actor(actor: Actor):
         state.turn_queue.append(actor.id)
         reorder_turn_queue()
         add_log("actor_joined", actor_id=actor.id, actor_name=actor.name)
+    await save_snapshot()
     await broadcast_state()
     return actor
 
@@ -277,6 +285,7 @@ async def update_actor(actor_id: str, updates: dict):
                         od["initiative"] = val
                         state.actors[j] = Actor(**od)
             reorder_turn_queue()
+            await save_snapshot()
             await broadcast_state()
             return state.actors[i]
     return {"error": "not found"}
@@ -336,6 +345,7 @@ async def next_turn():
         if a:
             add_log("turn_start", actor_id=a.id, actor_name=a.name)
 
+    await save_snapshot()
     await broadcast_state()
     return state
 
@@ -366,6 +376,7 @@ async def start_combat():
     state.turn_queue = [a.id for a in sorted_actors]
     state.current_index = 0
     add_log("combat_start")
+    await save_snapshot()
     await broadcast_state()
     return state
 
@@ -376,6 +387,7 @@ async def end_combat():
     state.turn_queue = []
     state.current_index = 0
     add_log("combat_end")
+    await save_snapshot()
     await broadcast_state()
     return state
 
@@ -392,6 +404,7 @@ async def reset_combat():
     # Clear log files
     (LOGS_DIR / "latest_combat.json").write_text("[]", encoding="utf-8")
     (LOGS_DIR / "latest_combat.md").write_text("", encoding="utf-8")
+    await save_snapshot()
     await broadcast_state()
     return state
 
@@ -408,6 +421,7 @@ async def clear_combat():
     state.is_active = False
     (LOGS_DIR / "latest_combat.json").write_text("[]", encoding="utf-8")
     (LOGS_DIR / "latest_combat.md").write_text("", encoding="utf-8")
+    await save_snapshot()
     await broadcast_state()
     return state
 
@@ -418,6 +432,7 @@ async def update_combat_settings(payload: dict):
     await save_snapshot()
     if "enable_logging" in payload:
         state.enable_logging = bool(payload["enable_logging"])
+    await save_snapshot()
     await broadcast_state()
     return {"enable_logging": state.enable_logging}
 
@@ -433,6 +448,7 @@ async def update_legend(payload: dict):
         state.show_group_colors = bool(payload["show_group_colors"])
     if "show_faction_colors" in payload:
         state.show_faction_colors = bool(payload["show_faction_colors"])
+    await save_snapshot()
     await broadcast_state()
     return {"legend": state.legend, "show_group_colors": state.show_group_colors, "show_faction_colors": state.show_faction_colors}
 
@@ -478,6 +494,7 @@ async def delete_actor(actor_id: str):
         state.turn_queue.remove(actor_id)
         if state.current_index >= len(state.turn_queue):
             state.current_index = max(0, len(state.turn_queue) - 1)
+    await save_snapshot()
     await broadcast_state()
     return {"status": "success"}
 
@@ -486,6 +503,7 @@ async def update_layout(layout: dict):
     await save_snapshot()
     from backend.models import MiniatureLayout
     state.layout = MiniatureLayout(**layout)
+    await save_snapshot()
     await broadcast_state()
     return state.layout
 
@@ -746,6 +764,7 @@ async def load_combat(payload: dict):
         state.turn_queue = []
         state.current_index = 0
         state.is_active = False
+    await save_snapshot()
     await broadcast_state()
     return state
 
