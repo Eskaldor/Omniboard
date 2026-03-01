@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Settings, BookImage, Play, SkipForward, Plus, Square, RotateCcw, MonitorSmartphone, Users, Trash } from 'lucide-react';
+import { Settings, BookImage, Play, SkipForward, Plus, Square, RotateCcw, MonitorSmartphone, Users, Trash, Swords } from 'lucide-react';
 import { CombatState, Actor, ColumnConfig, Effect } from './types';
-import { MiniSheetModal, ConfigModal, LibraryModal, AddEffectModal, MiniaturesModal, ActorRosterModal } from './components/Modals';
+import { MiniSheetModal, ConfigModal, LibraryModal, AddEffectModal, MiniaturesModal, ActorRosterModal, EncountersModal } from './components/Modals';
 
 function InlineInput({ value, onChange, type = "text", className = "" }: { value: string | number, onChange: (val: string) => void, type?: string, className?: string }) {
   const [localVal, setLocalVal] = useState(value);
@@ -47,6 +47,7 @@ export default function App() {
   const [showLibrary, setShowLibrary] = useState(false);
   const [showMiniatures, setShowMiniatures] = useState(false);
   const [showRoster, setShowRoster] = useState(false);
+  const [showEncounters, setShowEncounters] = useState(false);
   const [portraitSelectActorId, setPortraitSelectActorId] = useState<string | null>(null);
   const { t } = useTranslation('core');
 
@@ -117,7 +118,7 @@ export default function App() {
   }, []);
 
   const refetchState = () => {
-    fetch('/api/combat/state')
+    return fetch('/api/combat/state')
       .then(res => res.ok ? res.json() : Promise.reject())
       .then(setState)
       .catch(() => {});
@@ -267,6 +268,9 @@ export default function App() {
             <div className="flex gap-4">
               <button onClick={addActor} className="flex items-center gap-1 text-sm text-emerald-400 hover:text-emerald-300">
                 <Plus size={16} /> Add Actor
+              </button>
+              <button onClick={() => setShowEncounters(true)} className="flex items-center gap-1 text-sm text-zinc-400 hover:text-zinc-300">
+                <Swords size={16} /> Encounters
               </button>
               <button onClick={() => setShowRoster(true)} className="flex items-center gap-1 text-sm text-zinc-400 hover:text-zinc-300">
                 <Users size={16} /> Roster
@@ -459,6 +463,14 @@ export default function App() {
       )}
       {showMiniatures && <MiniaturesModal layout={state.layout} columns={columns} onClose={() => setShowMiniatures(false)} />}
       {showRoster && <ActorRosterModal systemName={systemName} onClose={() => setShowRoster(false)} onAdd={addFromRoster} />}
+      {showEncounters && (
+        <EncountersModal
+          systemName={systemName}
+          currentActors={state.actors}
+          onClose={() => setShowEncounters(false)}
+          onLoad={refetchState}
+        />
+      )}
     </div>
   );
 }

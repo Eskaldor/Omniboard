@@ -28,6 +28,9 @@ SYSTEMS_ASSETS_DIR.mkdir(exist_ok=True)
 ACTORS_DIR = Path("data/actors")
 ACTORS_DIR.mkdir(parents=True, exist_ok=True)
 
+ENCOUNTERS_DIR = Path("data/encounters")
+ENCOUNTERS_DIR.mkdir(parents=True, exist_ok=True)
+
 RENDER_DIR = Path("data/render")
 RENDER_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -237,6 +240,134 @@ async def save_actor(system_name: str, actor: dict):
     file_path.write_text(json.dumps(actor, indent=2))
     return {"status": "ok"}
 
+def _safe_system_dir(name: str) -> str:
+    s = (name or "default").strip()
+    for c in "/\\:*?\"<>|&":
+        s = s.replace(c, "_")
+    s = s.replace("..", "_").strip() or "default"
+    return s[:100]
+
+# Encounters: unique paths to avoid any route conflict
+@app.get("/api/encounters/list")
+async def list_encounters(system_name: str):
+    safe_sys = _safe_system_dir(system_name)
+    sys_dir = ENCOUNTERS_DIR / safe_sys
+    if not sys_dir.exists():
+        return []
+    out = []
+    for f in sys_dir.glob("enc_*.json"):
+        try:
+            data = json.loads(f.read_text())
+            out.append({"name": data.get("name", f.stem), "filename": f.name})
+        except Exception:
+            out.append({"name": f.stem, "filename": f.name})
+    return out
+
+@app.post("/api/encounters/save")
+async def save_encounter_body(payload: dict):
+    system_name = (payload.get("system_name") or "").strip()
+    name = (payload.get("name") or "Unnamed").strip()
+    actors = payload.get("actors", [])
+    safe_sys = _safe_system_dir(system_name)
+    safe = "".join(c for c in name if c.isalnum() or c in " -_").strip() or "encounter"
+    safe = safe.replace(" ", "_")[:80]
+    sys_dir = ENCOUNTERS_DIR / safe_sys
+    try:
+        sys_dir.mkdir(parents=True, exist_ok=True)
+        file_path = sys_dir / f"enc_{safe}.json"
+        file_path.write_text(json.dumps({"name": name, "actors": actors}, indent=2))
+        return {"status": "ok", "filename": file_path.name}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/encounters/get")
+async def get_encounter_item(system_name: str, filename: str):
+    if not filename.startswith("enc_") or not filename.endswith(".json"):
+        raise HTTPException(status_code=400, detail="Invalid filename")
+    safe_sys = _safe_system_dir(system_name)
+    file_path = ENCOUNTERS_DIR / safe_sys / filename
+    if not file_path.exists() or not file_path.is_file():
+        raise HTTPException(status_code=404, detail="Encounter not found")
+    return json.loads(file_path.read_text())
+
+@app.delete("/api/encounters/delete")
+async def delete_encounter_item(system_name: str, filename: str):
+    if not filename.startswith("enc_") or not filename.endswith(".json"):
+        raise HTTPException(status_code=400, detail="Invalid filename")
+    safe_sys = _safe_system_dir(system_name)
+    file_path = ENCOUNTERS_DIR / safe_sys / filename
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Encounter not found")
+    file_path.unlink()
+    return {"status": "ok"}
+
+# Legacy path-based routes (keep for compatibility)
+@app.get("/api/systems/{system_name}/encounters")
+async def get_saved_encounters(system_name: str):
+    safe_sys = _safe_system_dir(system_name)
+    sys_dir = ENCOUNTERS_DIR / safe_sys
+    if not sys_dir.exists():
+        return []
+    out = []
+    for f in sys_dir.glob("enc_*.json"):
+        try:
+            data = json.loads(f.read_text())
+            out.append({"name": data.get("name", f.stem), "filename": f.name})
+        except Exception:
+            out.append({"name": f.stem, "filename": f.name})
+    return out
+
+@app.post("/api/systems/{system_name}/encounters")
+async def save_encounter(system_name: str, payload: dict):
+    name = (payload.get("name") or "Unnamed").strip()
+    actors = payload.get("actors", [])
+    safe_sys = _safe_system_dir(system_name)
+    safe = "".join(c for c in name if c.isalnum() or c in " -_").strip() or "encounter"
+    safe = safe.replace(" ", "_")[:80]
+    sys_dir = ENCOUNTERS_DIR / safe_sys
+    try:
+        sys_dir.mkdir(parents=True, exist_ok=True)
+        file_path = sys_dir / f"enc_{safe}.json"
+        file_path.write_text(json.dumps({"name": name, "actors": actors}, indent=2))
+        return {"status": "ok", "filename": file_path.name}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/systems/{system_name}/encounters/{filename}")
+async def get_encounter(system_name: str, filename: str):
+    if not filename.startswith("enc_") or not filename.endswith(".json"):
+        raise HTTPException(status_code=400, detail="Invalid filename")
+    safe_sys = _safe_system_dir(system_name)
+    file_path = ENCOUNTERS_DIR / safe_sys / filename
+    if not file_path.exists() or not file_path.is_file():
+        raise HTTPException(status_code=404, detail="Encounter not found")
+    return json.loads(file_path.read_text())
+
+@app.delete("/api/systems/{system_name}/encounters/{filename}")
+async def delete_encounter(system_name: str, filename: str):
+    if not filename.startswith("enc_") or not filename.endswith(".json"):
+        raise HTTPException(status_code=400, detail="Invalid filename")
+    safe_sys = _safe_system_dir(system_name)
+    file_path = ENCOUNTERS_DIR / safe_sys / filename
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Encounter not found")
+    file_path.unlink()
+    return {"status": "ok"}
+
+@app.post("/api/combat/load")
+async def load_combat(payload: dict):
+    actors_data = payload.get("actors", [])
+    try:
+        state.actors = [Actor(**a) if isinstance(a, dict) else a for a in actors_data]
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    state.turn_queue = []
+    state.current_index = 0
+    state.is_active = False
+    state.round = 1
+    await broadcast_state()
+    return state
+
 @app.get("/api/render/{actor_id}")
 async def get_rendered_miniature(actor_id: str):
     actor = next((a for a in state.actors if a.id == actor_id), None)
@@ -304,8 +435,8 @@ async def delete_asset(category: str, filename: str, system: str = None):
         return {"status": "ok"}
     raise HTTPException(status_code=404, detail="File not found")
 
-# Serve Vite frontend in production
-if os.path.isdir("dist"):
+# Serve Vite frontend in production (only when SERVE_DIST=1 to avoid catch-all in dev)
+if os.path.isdir("dist") and os.environ.get("SERVE_DIST") == "1":
     app.mount("/assets", StaticFiles(directory="dist/assets"), name="assets")
     @app.get("/{full_path:path}")
     async def catch_all(full_path: str):

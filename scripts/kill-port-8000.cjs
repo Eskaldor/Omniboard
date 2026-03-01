@@ -1,13 +1,29 @@
 /**
- * Предохранитель: освобождает порт 8000 перед запуском dev-сервера,
- * чтобы избежать WinError 10013 (порт занят старым uvicorn).
- * Всегда завершается с кодом 0, чтобы npm run dev продолжал запуск.
+ * Освобождает порты 8000 и 3000 перед запуском dev-сервера.
+ * Удаляет backend/__pycache__ чтобы worker не подхватывал старый байткод.
  */
 const { execSync } = require('child_process');
+const path = require('path');
+const fs = require('fs');
 
-try {
-  execSync('npx kill-port 8000', { stdio: 'inherit' });
-} catch (_) {
-  // Порт свободен или нет прав — не мешаем запуску dev
+function kill(port) {
+  try {
+    execSync(`npx kill-port ${port}`, { stdio: 'inherit' });
+  } catch (_) {}
 }
-process.exit(0);
+
+const pycache = path.join(__dirname, '..', 'backend', '__pycache__');
+if (fs.existsSync(pycache)) {
+  try {
+    fs.rmSync(pycache, { recursive: true });
+  } catch (_) {}
+}
+
+kill(8000);
+kill(3000);
+setTimeout(() => {
+  kill(8000);
+  kill(3000);
+  // Даём Windows время освободить порт (TIME_WAIT) перед запуском серверов
+  setTimeout(() => process.exit(0), 4000);
+}, 800);
