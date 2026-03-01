@@ -59,6 +59,22 @@ function LogEvent({ entry, index }: { entry: LogEntryView; index: number }) {
         </div>
       );
     }
+    case 'effect_added':
+      return (
+        <div className="py-1.5 px-2 rounded text-sm">
+          <span className="text-zinc-300">{entry.actor_name ?? 'Unknown'}</span>
+          <span className="text-zinc-400"> gained effect: </span>
+          <span className="text-indigo-400">{entry.details?.effect_name ?? '?'}</span>
+        </div>
+      );
+    case 'effect_removed':
+      return (
+        <div className="py-1.5 px-2 rounded text-sm">
+          <span className="text-zinc-300">{entry.actor_name ?? 'Unknown'}</span>
+          <span className="text-zinc-400"> lost effect: </span>
+          <span className="text-zinc-500 line-through">{entry.details?.effect_name ?? '?'}</span>
+        </div>
+      );
     case 'actor_joined':
       return (
         <div className="py-1.5 px-2 rounded text-sm text-zinc-400 border-l-2 border-emerald-700/50 bg-emerald-950/20">
@@ -73,8 +89,6 @@ function LogEvent({ entry, index }: { entry: LogEntryView; index: number }) {
           <span className="text-red-400/90"> left the battle.</span>
         </div>
       );
-    case 'effect_added':
-    case 'effect_removed':
     case 'text':
     default:
       if (isGmNote) {

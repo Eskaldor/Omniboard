@@ -1114,7 +1114,14 @@ export function EncountersModal({
         const res = await fetch('/api/combat/load', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ actors }),
+          body: JSON.stringify({
+            actors,
+            history: Array.isArray(data.history) ? data.history : [],
+            round: typeof data.round === 'number' ? data.round : undefined,
+            turn_queue: Array.isArray(data.turn_queue) ? data.turn_queue : undefined,
+            current_index: typeof data.current_index === 'number' ? data.current_index : undefined,
+            is_active: typeof data.is_active === 'boolean' ? data.is_active : undefined,
+          }),
         });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
@@ -1143,10 +1150,15 @@ export function EncountersModal({
       }
       const data = await res.json();
       const actors = data?.actors ?? [];
+      const history = Array.isArray(data?.history) ? data.history : [];
+      const round = typeof data?.round === 'number' ? data.round : undefined;
+      const turn_queue = Array.isArray(data?.turn_queue) ? data.turn_queue : undefined;
+      const current_index = typeof data?.current_index === 'number' ? data.current_index : undefined;
+      const is_active = typeof data?.is_active === 'boolean' ? data.is_active : undefined;
       const loadRes = await fetch('/api/combat/load', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ actors }),
+        body: JSON.stringify({ actors, history, round, turn_queue, current_index, is_active }),
       });
       if (!loadRes.ok) {
         const err = await loadRes.json().catch(() => ({}));

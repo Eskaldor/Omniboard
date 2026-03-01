@@ -162,7 +162,7 @@ export default function App() {
 
   const clearCombat = async () => {
     if (confirm("Clear combat? This will remove all actors and reset the combat state.")) {
-      await fetch('/api/combat/reset', { method: 'POST' });
+      await fetch('/api/combat/clear', { method: 'POST' });
       refetchState();
     }
   };

@@ -79,12 +79,48 @@ def add_log(
     )
     # Write log file in background so request is not blocked
     history_snapshot = [h.model_dump() for h in state.history]
+
+    def _entry_to_md_line(entry: dict) -> str:
+        t = entry.get("type", "")
+        r = entry.get("round", 1)
+        name = entry.get("actor_name") or "Unknown"
+        det = entry.get("details") or {}
+        if t == "turn_start":
+            return f"\n### Round {r} ###\n▶ Turn: {name}"
+        if t == "round_start":
+            return f"\n### Round {r} ###"
+        if t == "hp_change":
+            delta = det.get("delta", 0)
+            return f"{name} HP changed ({delta})."
+        if t == "effect_added":
+            effect_name = det.get("effect_name", "?")
+            return f"{name} gained effect: {effect_name}."
+        if t == "effect_removed":
+            effect_name = det.get("effect_name", "?")
+            return f"{name} lost effect: {effect_name}."
+        if t == "text" and det.get("is_gm_note"):
+            msg = det.get("message", "")
+            return f"*GM Note: {msg}*"
+        if t == "combat_start":
+            return "Combat started."
+        if t == "combat_end":
+            return "Combat ended."
+        if t == "actor_joined":
+            return f"{name} joined the battle."
+        if t == "actor_left":
+            return f"{name} left the battle."
+        return f"[{t}]"
+
     def _write():
         try:
-            path = LOGS_DIR / "latest_combat.json"
-            path.write_text(json.dumps(history_snapshot, indent=2), encoding="utf-8")
+            path_json = LOGS_DIR / "latest_combat.json"
+            path_json.write_text(json.dumps(history_snapshot, indent=2), encoding="utf-8")
+            md_lines = [_entry_to_md_line(e) for e in history_snapshot]
+            path_md = LOGS_DIR / "latest_combat.md"
+            path_md.write_text("\n".join(md_lines).strip() + "\n", encoding="utf-8")
         except Exception:
             pass
+
     threading.Thread(target=_write, daemon=True).start()
 
 
@@ -194,6 +230,7 @@ async def update_actor(actor_id: str, updates: dict):
     await save_snapshot()
     for i, a in enumerate(state.actors):
         if a.id == actor_id:
+            old_actor = a
             actor_dict = a.model_dump()
             old_hp = actor_dict.get("stats", {}).get("hp")
             if "stats" in updates:
@@ -210,6 +247,27 @@ async def update_actor(actor_id: str, updates: dict):
                     actor_name=new_actor.name,
                     details={"delta": delta, "is_damage": delta < 0},
                 )
+            # Effect diff: added and removed
+            def _effect_key(e):
+                return getattr(e, "id", None) or getattr(e, "name", "")
+            old_keys = {_effect_key(e) for e in old_actor.effects}
+            new_keys = {_effect_key(e) for e in new_actor.effects}
+            for e in new_actor.effects:
+                if _effect_key(e) not in old_keys:
+                    add_log(
+                        "effect_added",
+                        actor_id=new_actor.id,
+                        actor_name=new_actor.name,
+                        details={"effect_name": e.name},
+                    )
+            for e in old_actor.effects:
+                if _effect_key(e) not in new_keys:
+                    add_log(
+                        "effect_removed",
+                        actor_id=new_actor.id,
+                        actor_name=new_actor.name,
+                        details={"effect_name": e.name},
+                    )
             state.actors[i] = new_actor
             reorder_turn_queue()
             await broadcast_state()
@@ -231,6 +289,14 @@ async def next_turn():
             for effect in actor.effects:
                 if effect.duration is not None:
                     effect.duration -= 1
+            for effect in actor.effects:
+                if effect.duration is not None and effect.duration <= 0:
+                    add_log(
+                        "effect_removed",
+                        actor_id=actor.id,
+                        actor_name=actor.name,
+                        details={"effect_name": effect.name},
+                    )
             actor.effects = [e for e in actor.effects if e.duration is None or e.duration > 0]
     
     current_actor_id = state.turn_queue[state.current_index]
@@ -276,6 +342,26 @@ async def reset_combat():
     state.history = []
     for actor in state.actors:
         actor.effects = []
+    # Clear log files
+    (LOGS_DIR / "latest_combat.json").write_text("[]", encoding="utf-8")
+    (LOGS_DIR / "latest_combat.md").write_text("", encoding="utf-8")
+    await broadcast_state()
+    await save_snapshot()
+    return state
+
+
+@app.post("/api/combat/clear")
+async def clear_combat():
+    """Fully clear the tracker: all actors, queue, round, history, log files."""
+    await save_snapshot()
+    state.actors = []
+    state.turn_queue = []
+    state.current_index = 0
+    state.round = 1
+    state.history = []
+    state.is_active = False
+    (LOGS_DIR / "latest_combat.json").write_text("[]", encoding="utf-8")
+    (LOGS_DIR / "latest_combat.md").write_text("", encoding="utf-8")
     await broadcast_state()
     await save_snapshot()
     return state
@@ -303,9 +389,8 @@ async def add_log_note(payload: dict):
 async def clear_combat_log():
     global state
     state.history = []
-    path = LOGS_DIR / "latest_combat.json"
-    if path.exists():
-        path.unlink()
+    (LOGS_DIR / "latest_combat.json").write_text("[]", encoding="utf-8")
+    (LOGS_DIR / "latest_combat.md").write_text("", encoding="utf-8")
     await broadcast_state()
     return {"status": "ok"}
 
@@ -485,7 +570,15 @@ async def save_encounter_body(payload: dict):
     try:
         sys_dir.mkdir(parents=True, exist_ok=True)
         file_path = sys_dir / f"enc_{safe}.json"
-        data = {"name": name, "actors": actors, "history": [h.model_dump() for h in state.history]}
+        data = {
+            "name": name,
+            "actors": actors,
+            "history": [h.model_dump() for h in state.history],
+            "round": state.round,
+            "turn_queue": state.turn_queue,
+            "current_index": state.current_index,
+            "is_active": state.is_active,
+        }
         file_path.write_text(json.dumps(data, indent=2))
         return {"status": "ok", "filename": file_path.name}
     except Exception as e:
@@ -573,15 +666,28 @@ async def load_combat(payload: dict):
         state.actors = [Actor(**a) if isinstance(a, dict) else a for a in actors_data]
     except Exception as e:
         raise HTTPException(status_code=422, detail=str(e))
-    state.turn_queue = []
-    state.current_index = 0
-    state.is_active = False
-    state.round = 1
     history_data = payload.get("history", [])
     try:
         state.history = [LogEntry(**h) for h in history_data]
     except Exception:
         state.history = []
+    round_val = payload.get("round")
+    if round_val is not None and isinstance(round_val, (int, float)):
+        state.round = max(1, int(round_val))
+    elif state.history:
+        state.round = max((e.round for e in state.history), default=1)
+    else:
+        state.round = 1
+    actor_ids = {a.id for a in state.actors}
+    turn_queue = payload.get("turn_queue")
+    if isinstance(turn_queue, list) and len(turn_queue) > 0:
+        state.turn_queue = [aid for aid in turn_queue if aid in actor_ids]
+        state.current_index = max(0, min(int(payload.get("current_index", 0)), len(state.turn_queue) - 1))
+        state.is_active = bool(payload.get("is_active", False))
+    else:
+        state.turn_queue = []
+        state.current_index = 0
+        state.is_active = False
     await broadcast_state()
     await save_snapshot()
     return state
