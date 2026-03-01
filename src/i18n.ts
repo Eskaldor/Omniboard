@@ -15,6 +15,9 @@ i18n
     interpolation: {
       escapeValue: false, // react already safes from xss
     },
+    react: {
+      useSuspense: false, // prevent suspend on re-render so App state is not lost (no Loading flash on next turn)
+    },
   });
 
 export default i18n;

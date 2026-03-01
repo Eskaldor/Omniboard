@@ -63,6 +63,8 @@ export type CombatLogEntryType =
   | 'hp_change'
   | 'effect_added'
   | 'effect_removed'
+  | 'actor_joined'
+  | 'actor_left'
   | 'text';
 
 export interface CombatLogEntry {
@@ -82,6 +84,7 @@ export interface CombatState {
   is_active: boolean;
   layout: MiniatureLayout;
   history?: CombatLogEntry[];
+  enable_logging?: boolean;
   can_undo?: boolean;
   can_redo?: boolean;
 }

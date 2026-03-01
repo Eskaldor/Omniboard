@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { FolderOpen, Trash2, Send } from 'lucide-react';
 import type { CombatLogEntry } from '../types';
 
 export type LogEntryView = CombatLogEntry;
@@ -7,9 +8,13 @@ interface CombatLogProps {
   history: LogEntryView[];
   isOpen: boolean;
   onClose: () => void;
+  enableLogging?: boolean;
+  onRefetch: () => void;
 }
 
 function LogEvent({ entry, index }: { entry: LogEntryView; index: number }) {
+  const isGmNote = entry.type === 'text' && entry.details?.is_gm_note === true;
+
   switch (entry.type) {
     case 'combat_start':
     case 'combat_end':
@@ -54,10 +59,32 @@ function LogEvent({ entry, index }: { entry: LogEntryView; index: number }) {
         </div>
       );
     }
+    case 'actor_joined':
+      return (
+        <div className="py-1.5 px-2 rounded text-sm text-zinc-400 border-l-2 border-emerald-700/50 bg-emerald-950/20">
+          <span className="text-zinc-300">{entry.actor_name ?? 'Unknown'}</span>
+          <span className="text-emerald-400/90"> joined the battle.</span>
+        </div>
+      );
+    case 'actor_left':
+      return (
+        <div className="py-1.5 px-2 rounded text-sm text-zinc-400 border-l-2 border-red-800/50 bg-red-950/20">
+          <span className="text-zinc-300">{entry.actor_name ?? 'Unknown'}</span>
+          <span className="text-red-400/90"> left the battle.</span>
+        </div>
+      );
     case 'effect_added':
     case 'effect_removed':
     case 'text':
     default:
+      if (isGmNote) {
+        const message = typeof entry.details?.message === 'string' ? entry.details.message : '';
+        return (
+          <div className="py-1.5 px-2 rounded border-l-2 border-amber-600/70 bg-amber-900/20 text-sm text-amber-200/90 italic">
+            {message || 'GM note'}
+          </div>
+        );
+      }
       return (
         <div className="py-1 px-2 rounded text-sm text-zinc-400">
           {entry.actor_name && <span className="text-zinc-300">{entry.actor_name}: </span>}
@@ -69,14 +96,52 @@ function LogEvent({ entry, index }: { entry: LogEntryView; index: number }) {
   }
 }
 
-export function CombatLog({ history, isOpen, onClose }: CombatLogProps) {
+export function CombatLog({ history, isOpen, onClose, enableLogging = true, onRefetch }: CombatLogProps) {
   const listRef = useRef<HTMLDivElement>(null);
+  const [noteInput, setNoteInput] = useState('');
+  const [sendingNote, setSendingNote] = useState(false);
 
   useEffect(() => {
     if (isOpen && listRef.current) {
       listRef.current.scrollTop = listRef.current.scrollHeight;
     }
   }, [isOpen, history]);
+
+  const setEnableLogging = async (checked: boolean) => {
+    await fetch('/api/combat/settings', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enable_logging: checked }),
+    });
+    onRefetch();
+  };
+
+  const openFolder = async () => {
+    await fetch('/api/logs/open_folder', { method: 'POST' });
+  };
+
+  const clearLog = async () => {
+    if (!confirm('Clear all combat logs?')) return;
+    await fetch('/api/combat/log', { method: 'DELETE' });
+    onRefetch();
+  };
+
+  const sendNote = async () => {
+    const msg = noteInput.trim();
+    if (!msg || sendingNote) return;
+    setSendingNote(true);
+    try {
+      await fetch('/api/combat/log/note', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg }),
+      });
+      setNoteInput('');
+      onRefetch();
+    } finally {
+      setSendingNote(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -88,16 +153,46 @@ export function CombatLog({ history, isOpen, onClose }: CombatLogProps) {
         onClick={onClose}
       />
       <div
-        className="absolute top-full mt-2 w-80 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl z-50 overflow-hidden"
+        className="absolute top-full mt-2 w-[26rem] max-w-[90vw] bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col"
         role="dialog"
         aria-label="Combat log"
       >
-        <div className="px-3 py-2 border-b border-zinc-800 text-xs font-medium text-zinc-400 uppercase tracking-wider">
-          Combat Log
+        {/* Header */}
+        <div className="px-3 py-2 border-b border-zinc-800 flex items-center justify-between gap-2 flex-wrap">
+          <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Combat Log</span>
+          <div className="flex items-center gap-2">
+            <label className="flex items-center gap-1.5 cursor-pointer text-xs text-zinc-400 hover:text-zinc-300">
+              <input
+                type="checkbox"
+                checked={enableLogging}
+                onChange={(e) => setEnableLogging(e.target.checked)}
+                className="rounded border-zinc-600 bg-zinc-800 text-emerald-500 focus:ring-emerald-500/50"
+              />
+              Record Log
+            </label>
+            <button
+              type="button"
+              onClick={openFolder}
+              className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+              title="Open logs folder"
+            >
+              <FolderOpen size={16} />
+            </button>
+            <button
+              type="button"
+              onClick={clearLog}
+              className="p-1.5 rounded-md text-zinc-400 hover:text-red-400 hover:bg-zinc-800 transition-colors"
+              title="Clear all logs"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
         </div>
+
+        {/* Scrollable body */}
         <div
           ref={listRef}
-          className="max-h-96 overflow-y-auto p-2 space-y-2"
+          className="max-h-[28rem] overflow-y-auto p-2 space-y-2 flex-1 min-h-0"
         >
           {history.length === 0 ? (
             <p className="text-zinc-500 text-sm py-4 text-center">No events yet.</p>
@@ -108,6 +203,27 @@ export function CombatLog({ history, isOpen, onClose }: CombatLogProps) {
               </div>
             ))
           )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-2 py-2 border-t border-zinc-800 flex gap-2">
+          <input
+            type="text"
+            value={noteInput}
+            onChange={(e) => setNoteInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') sendNote(); }}
+            placeholder="Add GM note..."
+            className="flex-1 min-w-0 px-2 py-1.5 text-sm bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50"
+          />
+          <button
+            type="button"
+            onClick={sendNote}
+            disabled={!noteInput.trim() || sendingNote}
+            className="p-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors"
+            title="Send note"
+          >
+            <Send size={16} />
+          </button>
         </div>
       </div>
     </>

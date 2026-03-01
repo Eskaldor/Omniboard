@@ -53,7 +53,7 @@ class Actor(BaseModel):
     hotbar: List[HotbarAction] = []
 
 class LogEntry(BaseModel):
-    type: Literal["combat_start", "combat_end", "round_start", "turn_start", "hp_change", "effect_added", "effect_removed", "text"]
+    type: Literal["combat_start", "combat_end", "round_start", "turn_start", "hp_change", "effect_added", "effect_removed", "actor_joined", "actor_left", "text"]
     round: int
     actor_id: Optional[str] = None
     actor_name: Optional[str] = None
@@ -71,3 +71,4 @@ class CombatState(BaseModel):
     history_cursor: int = -1
     is_active: bool = False
     active_reaction_actor_id: Optional[str] = None
+    enable_logging: bool = True

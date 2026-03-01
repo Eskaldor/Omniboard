@@ -8,6 +8,9 @@ import uuid
 import json
 import os
 import shutil
+import platform
+import subprocess
+import threading
 from pathlib import Path
 
 app = FastAPI()
@@ -37,6 +40,9 @@ RENDER_DIR.mkdir(parents=True, exist_ok=True)
 LOCALES_DIR = Path("data/locales")
 LOCALES_DIR.mkdir(parents=True, exist_ok=True)
 
+LOGS_DIR = Path("data/logs")
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
+
 app.mount("/assets", StaticFiles(directory="data/assets"), name="assets")
 app.mount("/render", StaticFiles(directory="data/render"), name="render")
 app.mount("/locales", StaticFiles(directory="data/locales"), name="locales")
@@ -60,6 +66,8 @@ def add_log(
     details: dict | None = None,
 ):
     global state
+    if not state.enable_logging:
+        return
     state.history.append(
         LogEntry(
             type=entry_type,
@@ -69,6 +77,15 @@ def add_log(
             details=details or {},
         )
     )
+    # Write log file in background so request is not blocked
+    history_snapshot = [h.model_dump() for h in state.history]
+    def _write():
+        try:
+            path = LOGS_DIR / "latest_combat.json"
+            path.write_text(json.dumps(history_snapshot, indent=2), encoding="utf-8")
+        except Exception:
+            pass
+    threading.Thread(target=_write, daemon=True).start()
 
 
 history_stack: list = []
@@ -167,6 +184,7 @@ async def create_actor(actor: Actor):
     if state.is_active:
         state.turn_queue.append(actor.id)
         reorder_turn_queue()
+        add_log("actor_joined", actor_id=actor.id, actor_name=actor.name)
     await broadcast_state()
     await save_snapshot()
     return actor
@@ -262,9 +280,54 @@ async def reset_combat():
     await save_snapshot()
     return state
 
+
+@app.patch("/api/combat/settings")
+async def update_combat_settings(payload: dict):
+    global state
+    if "enable_logging" in payload:
+        state.enable_logging = bool(payload["enable_logging"])
+    await save_snapshot()
+    await broadcast_state()
+    return {"enable_logging": state.enable_logging}
+
+
+@app.post("/api/combat/log/note")
+async def add_log_note(payload: dict):
+    message = (payload.get("message") or "").strip()
+    add_log("text", details={"message": message, "is_gm_note": True})
+    await broadcast_state()
+    return {"status": "ok"}
+
+
+@app.delete("/api/combat/log")
+async def clear_combat_log():
+    global state
+    state.history = []
+    path = LOGS_DIR / "latest_combat.json"
+    if path.exists():
+        path.unlink()
+    await broadcast_state()
+    return {"status": "ok"}
+
+
+@app.post("/api/logs/open_folder")
+async def open_logs_folder():
+    path = str(LOGS_DIR.absolute())
+    if platform.system() == "Windows":
+        os.startfile(path)
+    elif platform.system() == "Darwin":
+        subprocess.Popen(["open", path])
+    else:
+        subprocess.Popen(["xdg-open", path])
+    return {"status": "ok"}
+
+
 @app.delete("/api/actors/{actor_id}")
 async def delete_actor(actor_id: str):
     await save_snapshot()
+    deleted = next((a for a in state.actors if a.id == actor_id), None)
+    if deleted and state.is_active:
+        add_log("actor_left", actor_id=deleted.id, actor_name=deleted.name)
     state.actors = [a for a in state.actors if a.id != actor_id]
     if actor_id in state.turn_queue:
         state.turn_queue.remove(actor_id)
@@ -422,7 +485,8 @@ async def save_encounter_body(payload: dict):
     try:
         sys_dir.mkdir(parents=True, exist_ok=True)
         file_path = sys_dir / f"enc_{safe}.json"
-        file_path.write_text(json.dumps({"name": name, "actors": actors}, indent=2))
+        data = {"name": name, "actors": actors, "history": [h.model_dump() for h in state.history]}
+        file_path.write_text(json.dumps(data, indent=2))
         return {"status": "ok", "filename": file_path.name}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -513,6 +577,11 @@ async def load_combat(payload: dict):
     state.current_index = 0
     state.is_active = False
     state.round = 1
+    history_data = payload.get("history", [])
+    try:
+        state.history = [LogEntry(**h) for h in history_data]
+    except Exception:
+        state.history = []
     await broadcast_state()
     await save_snapshot()
     return state

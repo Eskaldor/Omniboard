@@ -4,6 +4,7 @@ import { Settings, BookImage, Play, SkipForward, Plus, Square, RotateCcw, Monito
 import { CombatState, Actor, ColumnConfig, Effect } from './types';
 import { MiniSheetModal, ConfigModal, LibraryModal, AddEffectModal, MiniaturesModal, ActorRosterModal, EncountersModal } from './components/Modals';
 import { CombatLog } from './components/CombatLog';
+import { useCombatState } from './contexts/CombatStateContext';
 
 function InlineInput({ value, onChange, type = "text", className = "", maxValue }: { value: string | number, onChange: (val: string) => void, type?: string, className?: string, maxValue?: number }) {
   const [localVal, setLocalVal] = useState(value);
@@ -60,11 +61,31 @@ const DEFAULT_COLUMNS: ColumnConfig[] = [
   { key: 'speed', label: 'Speed', showInTable: true },
 ];
 
+// Survives remounts and HMR: when context state is temporarily null, keep showing last state
+let lastKnownState: CombatState | null = null;
+const STORAGE_KEY = 'omniboard_combat_state';
+
+function getRehydratedState(): CombatState | null {
+  if (typeof sessionStorage === 'undefined') return null;
+  try {
+    const s = sessionStorage.getItem(STORAGE_KEY);
+    return s ? (JSON.parse(s) as CombatState) : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function App() {
-  const [state, setState] = useState<CombatState | null>(null);
+  const { state, setState, wsError, refetchState } = useCombatState();
+  if (state != null) {
+    lastKnownState = state;
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch {}
+  }
+  const effectiveState = state ?? lastKnownState ?? (lastKnownState = getRehydratedState());
   const [columns, setColumns] = useState<ColumnConfig[]>(DEFAULT_COLUMNS);
-  const systemName = state?.system || "D&D 5e";
-  const [wsError, setWsError] = useState<string | null>(null);
+  const systemName = effectiveState?.system || "D&D 5e";
   
   const [selectedActor, setSelectedActor] = useState<Actor | null>(null);
   const [effectModalActor, setEffectModalActor] = useState<Actor | null>(null);
@@ -76,7 +97,7 @@ export default function App() {
   const [showEncounters, setShowEncounters] = useState(false);
   const [showLog, setShowLog] = useState(false);
   const [portraitSelectActorId, setPortraitSelectActorId] = useState<string | null>(null);
-  const { t } = useTranslation('core');
+  const { t } = useTranslation('core', { useSuspense: false });
 
   useEffect(() => {
     fetch(`/api/systems/${encodeURIComponent(systemName)}/columns`)
@@ -89,68 +110,6 @@ export default function App() {
       })
       .catch(err => console.error("Failed to fetch columns", err));
   }, [systemName]);
-
-  useEffect(() => {
-    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${wsProtocol}//${window.location.host}/ws/master`;
-    let ws: WebSocket;
-    let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
-    let isMounted = true;
-    let lastFallbackAt = 0;
-    const FALLBACK_THROTTLE_MS = 5000;
-
-    const fetchStateFallback = () => {
-      const now = Date.now();
-      if (lastFallbackAt > 0 && now - lastFallbackAt < FALLBACK_THROTTLE_MS) return;
-      lastFallbackAt = now;
-      fetch('/api/combat/state')
-        .then(res => res.ok ? res.json() : Promise.reject())
-        .then(data => { if (isMounted) { setState(data); setWsError(null); } })
-        .catch(() => { if (isMounted) setWsError("Бэкенд недоступен. Проверьте, что сервер запущен (npm run dev)."); });
-    };
-
-    const connect = () => {
-      if (!isMounted) return;
-      ws = new WebSocket(wsUrl);
-
-      ws.onopen = () => {
-        setWsError(null);
-      };
-
-      ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (data.type === 'state_update') {
-          setState(data.payload);
-          setWsError(null);
-        }
-      };
-
-      ws.onerror = () => {
-        fetchStateFallback();
-      };
-
-      ws.onclose = () => {
-        if (!isMounted) return;
-        fetchStateFallback();
-        reconnectTimeout = setTimeout(connect, 2000);
-      };
-    };
-
-    connect();
-
-    return () => {
-      isMounted = false;
-      if (reconnectTimeout) clearTimeout(reconnectTimeout);
-      ws?.close();
-    };
-  }, []);
-
-  const refetchState = () => {
-    return fetch('/api/combat/state')
-      .then(res => res.ok ? res.json() : Promise.reject())
-      .then(setState)
-      .catch(() => {});
-  };
 
   const updateActorStat = async (actorId: string, statKey: string, value: any) => {
     await fetch(`/api/actors/${actorId}`, {
@@ -172,17 +131,17 @@ export default function App() {
 
   const nextTurn = async () => {
     await fetch('/api/combat/next-turn', { method: 'POST' });
-    refetchState();
+    // State is pushed via WebSocket broadcast; no refetch to avoid UI freeze
   };
 
   const startCombat = async () => {
     await fetch('/api/combat/start', { method: 'POST' });
-    refetchState();
+    // State is pushed via WebSocket broadcast; no refetch to avoid UI freeze
   };
 
   const endCombat = async () => {
     await fetch('/api/combat/end', { method: 'POST' });
-    refetchState();
+    // State is pushed via WebSocket broadcast; no refetch to avoid UI freeze
   };
 
   const resetCombat = async () => {
@@ -249,7 +208,7 @@ export default function App() {
     }
   };
 
-  if (wsError && !state) {
+  if (wsError && !effectiveState) {
     return (
       <div className="min-h-screen bg-zinc-950 text-zinc-200 flex flex-col items-center justify-center p-6 text-center">
         <div className="bg-zinc-900 border border-red-500/30 p-6 rounded-xl max-w-md">
@@ -272,9 +231,9 @@ export default function App() {
     );
   }
 
-  if (!state) return <div className="min-h-screen bg-zinc-950 text-zinc-200 flex items-center justify-center">Loading...</div>;
+  if (!effectiveState) return <div className="min-h-screen bg-zinc-950 text-zinc-200 flex items-center justify-center">Loading...</div>;
 
-  const activeActorId = state.is_active && state.turn_queue.length > 0 ? state.turn_queue[state.current_index] : null;
+  const activeActorId = effectiveState.is_active && effectiveState.turn_queue.length > 0 ? effectiveState.turn_queue[effectiveState.current_index] : null;
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-200 flex flex-col font-sans">
@@ -290,12 +249,14 @@ export default function App() {
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setShowLog((v) => !v); } }}
               className="text-xs text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors"
             >
-              Round: {state.round}
+              Round: {effectiveState.round}
             </div>
             <CombatLog
-              history={state.history ?? []}
+              history={effectiveState.history ?? []}
               isOpen={showLog}
               onClose={() => setShowLog(false)}
+              enableLogging={effectiveState.enable_logging !== false}
+              onRefetch={refetchState}
             />
           </div>
         </div>
@@ -363,11 +324,11 @@ export default function App() {
 
           {/* Rows */}
           <div className="space-y-2">
-            {(state.is_active
-              ? state.turn_queue.map((id, index) => ({ actor: state.actors.find(a => a.id === id), index })).filter((x): x is { actor: Actor; index: number } => !!x.actor)
-              : [...state.actors].sort((a, b) => b.initiative - a.initiative).map(actor => ({ actor, index: -1 }))
+            {(effectiveState.is_active
+              ? effectiveState.turn_queue.map((id, index) => ({ actor: effectiveState.actors.find(a => a.id === id), index })).filter((x): x is { actor: Actor; index: number } => !!x.actor)
+              : [...effectiveState.actors].sort((a, b) => b.initiative - a.initiative).map(actor => ({ actor, index: -1 }))
             ).map(({ actor, index }) => {
-              const isPastTurn = state.is_active && index < state.current_index;
+              const isPastTurn = effectiveState.is_active && index < effectiveState.current_index;
               return (
               <div key={actor.id} className={`flex items-center gap-4 group ${isPastTurn ? 'opacity-40 grayscale-[50%]' : ''}`}>
                 {/* Portrait Outside */}
@@ -485,7 +446,7 @@ export default function App() {
                 </div>
               </div>
             );})}
-            {state.actors.length === 0 && (
+            {effectiveState.actors.length === 0 && (
               <div className="text-center p-8 text-zinc-500 bg-zinc-900/50 rounded-xl border border-zinc-800 border-dashed">
                 No actors in combat.
               </div>
@@ -499,7 +460,7 @@ export default function App() {
         <div className="flex gap-2">
           <button
             onClick={undoCombat}
-            disabled={!state?.can_undo}
+            disabled={!effectiveState?.can_undo}
             className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-300 rounded-lg font-medium transition-colors text-sm"
             title="Undo"
           >
@@ -507,7 +468,7 @@ export default function App() {
           </button>
           <button
             onClick={redoCombat}
-            disabled={!state?.can_redo}
+            disabled={!effectiveState?.can_redo}
             className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-300 rounded-lg font-medium transition-colors text-sm"
             title="Redo"
           >
@@ -519,7 +480,7 @@ export default function App() {
           <button onClick={clearCombat} className="flex items-center gap-2 px-4 py-2 bg-red-900/20 hover:bg-red-900/40 text-red-400 rounded-lg font-medium transition-colors text-sm border border-red-900/30">
             <Trash size={16} /> Clear Combat
           </button>
-          {state.is_active && (
+          {effectiveState.is_active && (
             <button onClick={endCombat} className="flex items-center gap-2 px-4 py-2 bg-red-900/30 hover:bg-red-900/50 text-red-400 rounded-lg font-medium transition-colors text-sm border border-red-900/50">
               <Square size={16} /> End Combat
             </button>
@@ -527,7 +488,7 @@ export default function App() {
         </div>
         
         <div className="flex gap-4">
-          {!state.is_active ? (
+          {!effectiveState.is_active ? (
             <button onClick={startCombat} className="flex items-center gap-2 px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors">
               <Play size={18} /> {t('start_combat', 'Start Combat')}
             </button>
@@ -583,7 +544,7 @@ export default function App() {
             <button
               type="button"
               onClick={async () => {
-                const actor = state?.actors.find(a => a.id === selectedEffect.actorId);
+                const actor = effectiveState?.actors.find(a => a.id === selectedEffect.actorId);
                 if (!actor) return;
                 const newEffects = actor.effects.filter(e => e.id !== selectedEffect.effect.id);
                 await fetch(`/api/actors/${selectedEffect.actorId}`, {
@@ -630,12 +591,12 @@ export default function App() {
           systemName={systemName}
         />
       )}
-      {showMiniatures && <MiniaturesModal layout={state.layout} columns={columns} onClose={() => setShowMiniatures(false)} />}
+      {showMiniatures && <MiniaturesModal layout={effectiveState.layout} columns={columns} onClose={() => setShowMiniatures(false)} />}
       {showRoster && <ActorRosterModal systemName={systemName} onClose={() => setShowRoster(false)} onAdd={addFromRoster} />}
       {showEncounters && (
         <EncountersModal
           systemName={systemName}
-          currentActors={state.actors}
+          currentActors={effectiveState.actors}
           onClose={() => setShowEncounters(false)}
           onLoad={refetchState}
         />

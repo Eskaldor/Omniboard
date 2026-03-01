@@ -1,13 +1,16 @@
-import {StrictMode, Suspense} from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
-import './i18n';
+import i18n from './i18n';
+import { CombatStateProvider } from './contexts/CombatStateContext';
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <Suspense fallback={<div className="min-h-screen bg-zinc-950 flex items-center justify-center text-zinc-400">Loading...</div>}>
+function renderApp() {
+  createRoot(document.getElementById('root')!).render(
+    <CombatStateProvider>
       <App />
-    </Suspense>
-  </StrictMode>,
-);
+    </CombatStateProvider>
+  );
+}
+
+// Preload default namespace so useTranslation never suspends after first render
+i18n.loadNamespaces(i18n.options.defaultNS || 'core').then(renderApp).catch(renderApp);
