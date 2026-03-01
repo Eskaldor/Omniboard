@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Settings, BookImage, Play, SkipForward, Plus, Square, RotateCcw, MonitorSmartphone, Users } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Settings, BookImage, Play, SkipForward, Plus, Square, RotateCcw, MonitorSmartphone, Users, Trash } from 'lucide-react';
 import { CombatState, Actor, ColumnConfig, Effect } from './types';
 import { MiniSheetModal, ConfigModal, LibraryModal, AddEffectModal, MiniaturesModal, ActorRosterModal } from './components/Modals';
 
@@ -47,6 +48,7 @@ export default function App() {
   const [showMiniatures, setShowMiniatures] = useState(false);
   const [showRoster, setShowRoster] = useState(false);
   const [portraitSelectActorId, setPortraitSelectActorId] = useState<string | null>(null);
+  const { t } = useTranslation('core');
 
   useEffect(() => {
     fetch(`/api/systems/${encodeURIComponent(systemName)}/columns`)
@@ -74,12 +76,12 @@ export default function App() {
     };
 
     ws.onerror = () => {
-      setWsError("Не удалось подключиться к бэкенду. Убедитесь, что бэкенд запущен на порту 8001 и установлен пакет websockets (pip install websockets).");
+      setWsError("Не удалось подключиться к бэкенду на Python (FastAPI). Возможно, среда песочницы не поддерживает запуск Python, или сервер еще запускается.");
     };
 
     ws.onclose = () => {
       if (!state) {
-        setWsError("Соединение с сервером закрыто. Запустите бэкенд: в папке проекта выполните .\\venv\\Scripts\\Activate.ps1 затем npm run dev (или python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8001)");
+        setWsError("Соединение с сервером закрыто. Бэкенд на Python недоступен в этой среде.");
       }
     };
 
@@ -117,6 +119,18 @@ export default function App() {
   const resetCombat = async () => {
     if (confirm("Reset combat? This will clear the queue, reset the round to 1, and remove all effects.")) {
       await fetch('/api/combat/reset', { method: 'POST' });
+    }
+  };
+
+  const clearCombat = async () => {
+    if (confirm("Clear combat? This will remove all actors and reset the combat state.")) {
+      await fetch('/api/combat/reset', { method: 'POST' });
+    }
+  };
+
+  const deleteActor = async (actorId: string) => {
+    if (confirm("Delete this actor?")) {
+      await fetch(`/api/actors/${actorId}`, { method: 'DELETE' });
     }
   };
 
@@ -159,13 +173,15 @@ export default function App() {
           <h2 className="text-red-400 font-bold mb-4 text-xl">Ошибка подключения</h2>
           <p className="text-zinc-300 mb-4">{wsError}</p>
           <p className="text-zinc-400 text-sm">
-            Локальный запуск:
+            AI Studio песочница поддерживает только Node.js. Так как вы строго запретили использовать Node.js на бэкенде и потребовали Python 3.11+, 
+            бэкенд не может быть запущен в этой среде. 
             <br/><br/>
-            <code className="bg-black/50 p-1 rounded mt-2 block text-left text-xs">
+            Чтобы запустить проект, скачайте код и запустите его локально:
+            <br/>
+            <code className="bg-black/50 p-1 rounded mt-2 block text-left">
               1. pip install -r requirements.txt<br/>
-              2. .\venv\Scripts\Activate.ps1<br/>
-              3. python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8001<br/>
-              4. В другом терминале: npm run frontend
+              2. uvicorn backend.main:app --reload<br/>
+              3. npm install && npm run dev
             </code>
           </p>
         </div>
@@ -193,7 +209,7 @@ export default function App() {
             <BookImage size={16} /> Library
           </button>
           <button onClick={() => setShowConfig(true)} className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-md text-sm transition-colors">
-            <Settings size={16} /> Config
+            <Settings size={16} /> {t('config', 'Config')}
           </button>
         </div>
       </header>
@@ -300,6 +316,13 @@ export default function App() {
                       <Plus size={12} />
                     </button>
                   </div>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); deleteActor(actor.id); }}
+                    className="w-8 h-8 rounded-lg bg-zinc-800/50 hover:bg-red-900/50 flex items-center justify-center text-zinc-500 hover:text-red-400 transition-colors ml-2 shrink-0"
+                    title="Delete Actor"
+                  >
+                    <Trash size={14} />
+                  </button>
                 </div>
               </div>
             ))}
@@ -318,6 +341,9 @@ export default function App() {
           <button onClick={resetCombat} className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg font-medium transition-colors text-sm">
             <RotateCcw size={16} /> Reset
           </button>
+          <button onClick={clearCombat} className="flex items-center gap-2 px-4 py-2 bg-red-900/20 hover:bg-red-900/40 text-red-400 rounded-lg font-medium transition-colors text-sm border border-red-900/30">
+            <Trash size={16} /> Clear Combat
+          </button>
           {state.is_active && (
             <button onClick={endCombat} className="flex items-center gap-2 px-4 py-2 bg-red-900/30 hover:bg-red-900/50 text-red-400 rounded-lg font-medium transition-colors text-sm border border-red-900/50">
               <Square size={16} /> End Combat
@@ -328,7 +354,7 @@ export default function App() {
         <div className="flex gap-4">
           {!state.is_active ? (
             <button onClick={startCombat} className="flex items-center gap-2 px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors">
-              <Play size={18} /> Start Combat
+              <Play size={18} /> {t('start_combat', 'Start Combat')}
             </button>
           ) : (
             <button onClick={nextTurn} className="flex items-center gap-2 px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition-colors">
@@ -369,7 +395,7 @@ export default function App() {
         />
       )}
       {showConfig && <ConfigModal columns={columns} setColumns={setColumns} systemName={systemName} setSystemName={setSystemName} onClose={() => setShowConfig(false)} />}
-      {showLibrary && <LibraryModal onClose={() => setShowLibrary(false)} />}
+      {showLibrary && <LibraryModal onClose={() => setShowLibrary(false)} systemName={systemName} />}
       {portraitSelectActorId && (
         <LibraryModal 
           onClose={() => setPortraitSelectActorId(null)} 
@@ -377,6 +403,7 @@ export default function App() {
             updateActorField(portraitSelectActorId, 'portrait', url);
             setPortraitSelectActorId(null);
           }} 
+          systemName={systemName}
         />
       )}
       {showMiniatures && <MiniaturesModal layout={state.layout} columns={columns} onClose={() => setShowMiniatures(false)} />}

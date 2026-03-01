@@ -17,9 +17,13 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 ASSETS_DIR = Path("data/assets")
 ASSETS_DIR.mkdir(parents=True, exist_ok=True)
-(ASSETS_DIR / "portraits").mkdir(exist_ok=True)
-(ASSETS_DIR / "frames").mkdir(exist_ok=True)
-(ASSETS_DIR / "effects").mkdir(exist_ok=True)
+DEFAULT_ASSETS_DIR = ASSETS_DIR / "default"
+DEFAULT_ASSETS_DIR.mkdir(exist_ok=True)
+(DEFAULT_ASSETS_DIR / "portraits").mkdir(exist_ok=True)
+(DEFAULT_ASSETS_DIR / "frames").mkdir(exist_ok=True)
+(DEFAULT_ASSETS_DIR / "effects").mkdir(exist_ok=True)
+SYSTEMS_ASSETS_DIR = ASSETS_DIR / "systems"
+SYSTEMS_ASSETS_DIR.mkdir(exist_ok=True)
 
 ACTORS_DIR = Path("data/actors")
 ACTORS_DIR.mkdir(parents=True, exist_ok=True)
@@ -27,8 +31,12 @@ ACTORS_DIR.mkdir(parents=True, exist_ok=True)
 RENDER_DIR = Path("data/render")
 RENDER_DIR.mkdir(parents=True, exist_ok=True)
 
+LOCALES_DIR = Path("data/locales")
+LOCALES_DIR.mkdir(parents=True, exist_ok=True)
+
 app.mount("/assets", StaticFiles(directory="data/assets"), name="assets")
 app.mount("/render", StaticFiles(directory="data/render"), name="render")
+app.mount("/locales", StaticFiles(directory="data/locales"), name="locales")
 
 app.add_middleware(
     CORSMiddleware,
@@ -39,17 +47,6 @@ app.add_middleware(
 )
 
 state = CombatState()
-
-# Add some mock data for the MVP
-mock_actor = Actor(
-    id=str(uuid.uuid4()),
-    name="Goblin",
-    role="enemy",
-    portrait="https://picsum.photos/seed/goblin/100/100",
-    stats={"hp": 7, "ac": 15, "speed": 30},
-    initiative=12
-)
-state.actors.append(mock_actor)
 
 clients = []
 
@@ -140,10 +137,19 @@ async def reset_combat():
     state.round = 1
     state.turn_queue = []
     state.current_index = 0
-    for actor in state.actors:
-        actor.effects = []
+    state.actors = []
     await broadcast_state()
     return state
+
+@app.delete("/api/actors/{actor_id}")
+async def delete_actor(actor_id: str):
+    state.actors = [a for a in state.actors if a.id != actor_id]
+    if actor_id in state.turn_queue:
+        state.turn_queue.remove(actor_id)
+        if state.current_index >= len(state.turn_queue):
+            state.current_index = max(0, len(state.turn_queue) - 1)
+    await broadcast_state()
+    return {"status": "success"}
 
 @app.patch("/api/combat/layout")
 async def update_layout(layout: dict):
@@ -168,7 +174,7 @@ async def save_system_effect(system_name: str, effect: dict):
     
     # Update or append
     for i, e in enumerate(effects):
-        if e.get("name") == effect.get("name"):
+        if e.get("id") == effect.get("id"):
             effects[i] = effect
             file_path.write_text(json.dumps(effects, indent=2))
             return effects
@@ -223,35 +229,58 @@ async def get_rendered_miniature(actor_id: str):
     return FileResponse(output_path)
 
 @app.get("/api/assets/{category}")
-async def list_assets(category: str):
+async def list_assets(category: str, system: str = None):
     if category not in ["portraits", "frames", "effects"]:
         raise HTTPException(status_code=400, detail="Invalid category")
     
-    dir_path = ASSETS_DIR / category
-    files = []
-    if dir_path.exists():
-        for f in dir_path.iterdir():
+    files_dict = {}
+    
+    # Default assets
+    default_dir = ASSETS_DIR / "default" / category
+    if default_dir.exists():
+        for f in default_dir.iterdir():
             if f.is_file() and f.suffix.lower() in ['.png', '.jpg', '.jpeg', '.gif', '.webp']:
-                files.append(f"/assets/{category}/{f.name}")
-    return files
+                files_dict[f.name] = f"/assets/default/{category}/{f.name}"
+                
+    # System assets
+    if system:
+        system_dir = ASSETS_DIR / "systems" / system / category
+        if system_dir.exists():
+            for f in system_dir.iterdir():
+                if f.is_file() and f.suffix.lower() in ['.png', '.jpg', '.jpeg', '.gif', '.webp']:
+                    files_dict[f.name] = f"/assets/systems/{system}/{category}/{f.name}"
+                    
+    return list(files_dict.values())
 
 @app.post("/api/assets/{category}")
-async def upload_asset(category: str, file: UploadFile = File(...)):
+async def upload_asset(category: str, system: str = None, file: UploadFile = File(...)):
     if category not in ["portraits", "frames", "effects"]:
         raise HTTPException(status_code=400, detail="Invalid category")
     
-    file_path = ASSETS_DIR / category / file.filename
+    if system:
+        target_dir = ASSETS_DIR / "systems" / system / category
+        url_prefix = f"/assets/systems/{system}/{category}"
+    else:
+        target_dir = ASSETS_DIR / "default" / category
+        url_prefix = f"/assets/default/{category}"
+        
+    target_dir.mkdir(parents=True, exist_ok=True)
+    file_path = target_dir / file.filename
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     
-    return {"url": f"/assets/{category}/{file.filename}"}
+    return {"url": f"{url_prefix}/{file.filename}"}
 
 @app.delete("/api/assets/{category}/{filename}")
-async def delete_asset(category: str, filename: str):
+async def delete_asset(category: str, filename: str, system: str = None):
     if category not in ["portraits", "frames", "effects"]:
         raise HTTPException(status_code=400, detail="Invalid category")
     
-    file_path = ASSETS_DIR / category / filename
+    if system:
+        file_path = ASSETS_DIR / "systems" / system / category / filename
+    else:
+        file_path = ASSETS_DIR / "default" / category / filename
+        
     if file_path.exists():
         file_path.unlink()
         return {"status": "ok"}

@@ -19,12 +19,24 @@ export default defineConfig(({mode}) => {
       hmr: process.env.DISABLE_HMR !== 'true',
       proxy: {
         '/api': {
-          target: 'http://127.0.0.1:8001',
+          target: 'http://127.0.0.1:8000',
           changeOrigin: true,
         },
         '/ws': {
-          target: 'ws://127.0.0.1:8001',
+          target: 'ws://127.0.0.1:8000',
           ws: true,
+        },
+        '/assets': {
+          target: 'http://127.0.0.1:8000',
+          changeOrigin: true,
+        },
+        '/render': {
+          target: 'http://127.0.0.1:8000',
+          changeOrigin: true,
+        },
+        '/locales': {
+          target: 'http://127.0.0.1:8000',
+          changeOrigin: true,
         }
       }
     },

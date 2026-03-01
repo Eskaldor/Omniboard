@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Download, Upload, Trash2, Plus, ChevronDown, Check, Search } from 'lucide-react';
 import { Actor, ColumnConfig, Effect, MiniatureLayout, DisplayField } from '../types';
+import { slugify } from 'transliteration';
 
 export function MiniaturesModal({ 
   layout, columns, onClose 
@@ -514,6 +515,8 @@ export function AddEffectModal({
 }) {
   const [systemEffects, setSystemEffects] = useState<Effect[]>([]);
   const [name, setName] = useState('');
+  const [technicalId, setTechnicalId] = useState('');
+  const [isCustomId, setIsCustomId] = useState(false);
   const [description, setDescription] = useState('');
   const [duration, setDuration] = useState<number | ''>(1);
   const [isInfinite, setIsInfinite] = useState(false);
@@ -532,6 +535,8 @@ export function AddEffectModal({
     setName(val);
     const selected = systemEffects.find(eff => eff.name === val);
     if (selected) {
+      setTechnicalId(selected.id);
+      setIsCustomId(true);
       setDescription(selected.description || '');
       if (selected.duration === null) {
         setIsInfinite(true);
@@ -541,13 +546,22 @@ export function AddEffectModal({
         setDuration(selected.duration);
       }
       setShowOnMiniature(selected.show_on_miniature || false);
+    } else {
+      if (!isCustomId) {
+        setTechnicalId(slugify(val, { separator: '_' }));
+      }
     }
   };
 
+  const handleTechnicalIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTechnicalId(e.target.value);
+    setIsCustomId(true);
+  };
+
   const handleSaveToSystem = async () => {
-    if (!name) return;
+    if (!name || !technicalId) return;
     const newEffect = {
-      id: crypto.randomUUID(),
+      id: technicalId,
       name,
       description,
       duration: isInfinite ? null : (duration === '' ? 1 : duration),
@@ -568,9 +582,9 @@ export function AddEffectModal({
   };
 
   const handleAdd = () => {
-    if (!name) return;
+    if (!name || !technicalId) return;
     onAdd({
-      id: crypto.randomUUID(),
+      id: technicalId,
       name,
       description,
       duration: isInfinite ? null : (duration === '' ? 1 : duration),
@@ -589,22 +603,34 @@ export function AddEffectModal({
         </div>
         
         <div className="p-6 space-y-4">
-          <div>
-            <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">Effect Name</label>
-            <div className="relative">
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">Display Name</label>
+              <div className="relative">
+                <input 
+                  type="text" 
+                  value={name}
+                  onChange={handleSelectEffect}
+                  placeholder="Type or select effect..."
+                  className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
+                  list="effect-suggestions"
+                />
+                <datalist id="effect-suggestions">
+                  {systemEffects.map(eff => (
+                    <option key={eff.id} value={eff.name} />
+                  ))}
+                </datalist>
+              </div>
+            </div>
+            <div className="flex-1">
+              <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">Technical ID</label>
               <input 
                 type="text" 
-                value={name}
-                onChange={handleSelectEffect}
-                placeholder="Type or select effect..."
+                value={technicalId}
+                onChange={handleTechnicalIdChange}
+                placeholder="e.g. v_plenu"
                 className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
-                list="effect-suggestions"
               />
-              <datalist id="effect-suggestions">
-                {systemEffects.map(eff => (
-                  <option key={eff.id} value={eff.name} />
-                ))}
-              </datalist>
             </div>
           </div>
 
@@ -670,7 +696,7 @@ export function AddEffectModal({
             
             <button 
               onClick={handleAdd}
-              disabled={!name}
+              disabled={!name || !technicalId}
               className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
             >
               Add Effect
@@ -682,14 +708,17 @@ export function AddEffectModal({
   );
 }
 
-export function LibraryModal({ onClose, onSelect }: { onClose: () => void, onSelect?: (url: string) => void }) {
+export function LibraryModal({ onClose, onSelect, systemName }: { onClose: () => void, onSelect?: (url: string) => void, systemName: string }) {
   const [activeTab, setActiveTab] = useState<'portraits' | 'frames' | 'effects'>('portraits');
   const [assets, setAssets] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [displayName, setDisplayName] = useState('');
+  const [technicalId, setTechnicalId] = useState('');
+  const [isCustomId, setIsCustomId] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const fetchAssets = () => {
-    fetch(`/api/assets/${activeTab}`)
+    fetch(`/api/assets/${activeTab}?system=${encodeURIComponent(systemName)}`)
       .then(res => res.json())
       .then(data => setAssets(data))
       .catch(err => console.error("Failed to fetch assets", err));
@@ -697,22 +726,45 @@ export function LibraryModal({ onClose, onSelect }: { onClose: () => void, onSel
 
   useEffect(() => {
     fetchAssets();
-  }, [activeTab]);
+  }, [activeTab, systemName]);
+
+  const handleDisplayNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setDisplayName(val);
+    if (!isCustomId) {
+      setTechnicalId(slugify(val, { separator: '_' }));
+    }
+  };
+
+  const handleTechnicalIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTechnicalId(e.target.value);
+    setIsCustomId(true);
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     const formData = new FormData();
-    formData.append('file', file);
+    
+    if (technicalId) {
+      const ext = file.name.split('.').pop();
+      const newFile = new File([file], `${technicalId}.${ext}`, { type: file.type });
+      formData.append('file', newFile);
+    } else {
+      formData.append('file', file);
+    }
 
     setIsUploading(true);
     try {
-      await fetch(`/api/assets/${activeTab}`, {
+      await fetch(`/api/assets/${activeTab}?system=${encodeURIComponent(systemName)}`, {
         method: 'POST',
         body: formData
       });
       fetchAssets();
+      setDisplayName('');
+      setTechnicalId('');
+      setIsCustomId(false);
     } catch (err) {
       console.error("Upload failed", err);
     } finally {
@@ -724,8 +776,10 @@ export function LibraryModal({ onClose, onSelect }: { onClose: () => void, onSel
   const handleDelete = async (url: string) => {
     if (!confirm('Delete this asset?')) return;
     const filename = url.split('/').pop();
+    const isDefault = url.includes('/assets/default/');
+    const queryParam = isDefault ? '' : `?system=${encodeURIComponent(systemName)}`;
     try {
-      await fetch(`/api/assets/${activeTab}/${filename}`, { method: 'DELETE' });
+      await fetch(`/api/assets/${activeTab}/${filename}${queryParam}`, { method: 'DELETE' });
       fetchAssets();
     } catch (err) {
       console.error("Delete failed", err);
@@ -752,14 +806,37 @@ export function LibraryModal({ onClose, onSelect }: { onClose: () => void, onSel
               </button>
             ))}
           </div>
-          <div className="py-2">
+        </div>
+
+        <div className="bg-zinc-900 border-b border-zinc-800 p-4 flex gap-4 items-end">
+          <div className="flex-1">
+            <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">Display Name</label>
+            <input 
+              type="text" 
+              value={displayName}
+              onChange={handleDisplayNameChange}
+              placeholder="e.g. В плену"
+              className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
+            />
+          </div>
+          <div className="flex-1">
+            <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">Technical ID</label>
+            <input 
+              type="text" 
+              value={technicalId}
+              onChange={handleTechnicalIdChange}
+              placeholder="e.g. v_plenu"
+              className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
+            />
+          </div>
+          <div className="pb-0.5">
             <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*" />
             <button 
               onClick={() => fileInputRef.current?.click()} 
-              disabled={isUploading} 
-              className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-md text-sm transition-colors disabled:opacity-50"
+              disabled={isUploading || (!technicalId && activeTab === 'effects')} 
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
             >
-              <Upload size={14} /> {isUploading ? 'Uploading...' : 'Upload'}
+              <Upload size={16} /> {isUploading ? 'Uploading...' : 'Upload'}
             </button>
           </div>
         </div>
