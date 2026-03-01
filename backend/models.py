@@ -60,7 +60,7 @@ class CombatState(BaseModel):
     turn_queue: List[str] = []
     current_index: int = 0
     round: int = 1
-    system: str = "dnd5e"
+    system: str = "D&D 5e"
     layout: MiniatureLayout = MiniatureLayout(show_portrait=True)
     sync_led_to_ui: bool = True
     history: List[LogEntry] = []

@@ -109,6 +109,17 @@ async def get_state():
     out["can_redo"] = history_index < len(history_stack) - 1
     return out
 
+@app.patch("/api/combat/system")
+async def update_combat_system(payload: dict):
+    global state
+    system_name = (payload.get("system") or "").strip()
+    if not system_name:
+        raise HTTPException(status_code=400, detail="system is required")
+    state.system = system_name
+    await save_snapshot()
+    await broadcast_state()
+    return {"system": state.system}
+
 @app.post("/api/combat/undo")
 async def undo_combat():
     global state, history_index

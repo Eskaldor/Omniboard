@@ -62,11 +62,12 @@ const DEFAULT_COLUMNS: ColumnConfig[] = [
 export default function App() {
   const [state, setState] = useState<CombatState | null>(null);
   const [columns, setColumns] = useState<ColumnConfig[]>(DEFAULT_COLUMNS);
-  const [systemName, setSystemName] = useState("D&D 5e");
+  const systemName = state?.system || "D&D 5e";
   const [wsError, setWsError] = useState<string | null>(null);
   
   const [selectedActor, setSelectedActor] = useState<Actor | null>(null);
   const [effectModalActor, setEffectModalActor] = useState<Actor | null>(null);
+  const [selectedEffect, setSelectedEffect] = useState<{ actorId: string; effect: Effect } | null>(null);
   const [showConfig, setShowConfig] = useState(false);
   const [showLibrary, setShowLibrary] = useState(false);
   const [showMiniatures, setShowMiniatures] = useState(false);
@@ -79,9 +80,10 @@ export default function App() {
     fetch(`/api/systems/${encodeURIComponent(systemName)}/columns`)
       .then(res => res.json())
       .then(data => {
-        if (data && data.length > 0) {
+        if (data && Array.isArray(data) && data.length > 0) {
           setColumns(data);
         }
+        // If empty, do not fallback: keep current columns (or DEFAULT_COLUMNS from initial state)
       })
       .catch(err => console.error("Failed to fetch columns", err));
   }, [systemName]);
@@ -432,9 +434,18 @@ export default function App() {
                         ))}
                         <div className="flex-1 flex gap-1 flex-wrap items-center">
                     {actor.effects.map(eff => (
-                      <span key={eff.id} className="text-xs px-2 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-full border border-indigo-500/30" title={eff.description}>
-                        {eff.name} {eff.duration ? `(${eff.duration})` : ''}
-                      </span>
+                      <button
+                        key={eff.id}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedEffect({ actorId: actor.id, effect: eff });
+                        }}
+                        className="text-xs px-2 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-full border border-indigo-500/30 hover:bg-indigo-500/30 hover:border-indigo-400/50 transition-colors cursor-pointer"
+                        title={eff.description || eff.name}
+                      >
+                        {eff.name} {eff.duration != null ? `(${eff.duration})` : ''}
+                      </button>
                     ))}
                     <button 
                       onClick={(e) => { e.stopPropagation(); setEffectModalActor(actor); }}
@@ -542,7 +553,55 @@ export default function App() {
           }} 
         />
       )}
-      {showConfig && <ConfigModal columns={columns} setColumns={setColumns} systemName={systemName} setSystemName={setSystemName} onClose={() => setShowConfig(false)} />}
+      {selectedEffect && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setSelectedEffect(null)}>
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl max-w-sm w-full p-4 flex flex-col gap-3" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold text-zinc-100">{selectedEffect.effect.name}</h3>
+            {selectedEffect.effect.duration != null && (
+              <p className="text-sm text-zinc-400">Duration: {selectedEffect.effect.duration} round{selectedEffect.effect.duration !== 1 ? 's' : ''}</p>
+            )}
+            {selectedEffect.effect.description && (
+              <p className="text-sm text-zinc-300">{selectedEffect.effect.description}</p>
+            )}
+            <button
+              type="button"
+              onClick={async () => {
+                const actor = state?.actors.find(a => a.id === selectedEffect.actorId);
+                if (!actor) return;
+                const newEffects = actor.effects.filter(e => e.id !== selectedEffect.effect.id);
+                await fetch(`/api/actors/${selectedEffect.actorId}`, {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ effects: newEffects })
+                });
+                setSelectedEffect(null);
+                refetchState();
+              }}
+              className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg font-medium text-sm transition-colors"
+            >
+              Remove Effect
+            </button>
+            <button type="button" onClick={() => setSelectedEffect(null)} className="text-sm text-zinc-400 hover:text-zinc-300">
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+      {showConfig && (
+          <ConfigModal
+            columns={columns}
+            setColumns={setColumns}
+            systemName={systemName}
+            setSystemName={(val) =>
+              fetch('/api/combat/system', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ system: val })
+              })
+            }
+            onClose={() => setShowConfig(false)}
+          />
+        )}
       {showLibrary && <LibraryModal onClose={() => setShowLibrary(false)} systemName={systemName} />}
       {portraitSelectActorId && (
         <LibraryModal 
