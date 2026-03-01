@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Settings, BookImage, Play, SkipForward, Plus, Square, RotateCcw, MonitorSmartphone, Users, Trash, Swords, Undo, Redo, Layers } from 'lucide-react';
+import { Settings, BookImage, Plus, MonitorSmartphone, Users, Trash, Swords, Layers } from 'lucide-react';
 import { CombatState, Actor, ColumnConfig, Effect, LegendConfig } from './types';
 import { MiniSheetModal, ConfigModal, LibraryModal, AddEffectModal, MiniaturesModal, ActorRosterModal, EncountersModal } from './components/Modals';
 import { CombatLog } from './components/CombatLog';
+import { Toolbar } from './components/Toolbar';
 import { useCombatState } from './contexts/CombatStateContext';
 import { CombatProvider } from './contexts/CombatContext';
 
@@ -658,50 +659,18 @@ export default function App() {
         </div>
       </main>
 
-      {/* Footer Controls */}
-      <footer className="bg-zinc-900 border-t border-zinc-800 p-4 flex justify-between items-center">
-        <div className="flex gap-2">
-          <button
-            onClick={undoCombat}
-            disabled={!effectiveState?.can_undo}
-            className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-300 rounded-lg font-medium transition-colors text-sm"
-            title="Undo"
-          >
-            <Undo size={16} /> Undo
-          </button>
-          <button
-            onClick={redoCombat}
-            disabled={!effectiveState?.can_redo}
-            className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-300 rounded-lg font-medium transition-colors text-sm"
-            title="Redo"
-          >
-            <Redo size={16} /> Redo
-          </button>
-          <button onClick={resetCombat} className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg font-medium transition-colors text-sm">
-            <RotateCcw size={16} /> Reset
-          </button>
-          <button onClick={clearCombat} className="flex items-center gap-2 px-4 py-2 bg-red-900/20 hover:bg-red-900/40 text-red-400 rounded-lg font-medium transition-colors text-sm border border-red-900/30">
-            <Trash size={16} /> Clear Combat
-          </button>
-          {effectiveState.is_active && (
-            <button onClick={endCombat} className="flex items-center gap-2 px-4 py-2 bg-red-900/30 hover:bg-red-900/50 text-red-400 rounded-lg font-medium transition-colors text-sm border border-red-900/50">
-              <Square size={16} /> End Combat
-            </button>
-          )}
-        </div>
-        
-        <div className="flex gap-4">
-          {!effectiveState.is_active ? (
-            <button onClick={startCombat} className="flex items-center gap-2 px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors">
-              <Play size={18} /> {t('start_combat', 'Start Combat')}
-            </button>
-          ) : (
-            <button onClick={nextTurn} className="flex items-center gap-2 px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition-colors">
-              <SkipForward size={18} /> Next Turn
-            </button>
-          )}
-        </div>
-      </footer>
+      <Toolbar
+        isActive={effectiveState.is_active}
+        canUndo={effectiveState?.can_undo ?? false}
+        canRedo={effectiveState?.can_redo ?? false}
+        onStartCombat={startCombat}
+        onEndCombat={endCombat}
+        onNextTurn={nextTurn}
+        onReset={resetCombat}
+        onClearCombat={clearCombat}
+        onUndo={undoCombat}
+        onRedo={redoCombat}
+      />
 
       {/* Modals */}
       {selectedActor && (
