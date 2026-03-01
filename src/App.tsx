@@ -257,10 +257,12 @@ export default function App() {
           {/* Rows */}
           <div className="space-y-2">
             {(state.is_active
-              ? state.turn_queue.map(id => state.actors.find(a => a.id === id)).filter((a): a is NonNullable<typeof a> => !!a)
-              : [...state.actors].sort((a,b) => b.initiative - a.initiative)
-            ).map((actor) => (
-              <div key={actor.id} className="flex items-center gap-4 group">
+              ? state.turn_queue.map((id, index) => ({ actor: state.actors.find(a => a.id === id), index })).filter((x): x is { actor: Actor; index: number } => !!x.actor)
+              : [...state.actors].sort((a, b) => b.initiative - a.initiative).map(actor => ({ actor, index: -1 }))
+            ).map(({ actor, index }) => {
+              const isPastTurn = state.is_active && index < state.current_index;
+              return (
+              <div key={actor.id} className={`flex items-center gap-4 group ${isPastTurn ? 'opacity-40 grayscale-[50%]' : ''}`}>
                 {/* Portrait Outside */}
                 {actor.portrait ? (
                   <div 
@@ -340,7 +342,7 @@ export default function App() {
                   </button>
                 </div>
               </div>
-            ))}
+            );})}
             {state.actors.length === 0 && (
               <div className="text-center p-8 text-zinc-500 bg-zinc-900/50 rounded-xl border border-zinc-800 border-dashed">
                 No actors in combat.

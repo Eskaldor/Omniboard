@@ -62,7 +62,18 @@ async def broadcast_state():
     for client in dead:
         clients.remove(client)
 
-@app.websocket("/ws/master")
+def reorder_turn_queue():
+    """Re-sort turn_queue by initiative (desc) while keeping the current actor's turn active."""
+    if not state.is_active or not state.turn_queue:
+        return
+    active_id = state.turn_queue[state.current_index]
+    initiative_by_id = {a.id: a.initiative for a in state.actors}
+    state.turn_queue = sorted(
+        state.turn_queue,
+        key=lambda actor_id: initiative_by_id.get(actor_id, 0),
+        reverse=True,
+    )
+    state.current_index = state.turn_queue.index(active_id)
 async def websocket_master(websocket: WebSocket):
     await websocket.accept()
     clients.append(websocket)
@@ -84,6 +95,7 @@ async def create_actor(actor: Actor):
     state.actors.append(actor)
     if state.is_active:
         state.turn_queue.append(actor.id)
+        reorder_turn_queue()
     await broadcast_state()
     return actor
 
@@ -97,6 +109,7 @@ async def update_actor(actor_id: str, updates: dict):
                 del updates["stats"]
             actor_dict.update(updates)
             state.actors[i] = Actor(**actor_dict)
+            reorder_turn_queue()
             await broadcast_state()
             return state.actors[i]
     return {"error": "not found"}
