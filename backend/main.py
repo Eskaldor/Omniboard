@@ -79,6 +79,8 @@ async def create_actor(actor: Actor):
     if not actor.id:
         actor.id = str(uuid.uuid4())
     state.actors.append(actor)
+    if state.is_active:
+        state.turn_queue.append(actor.id)
     await broadcast_state()
     return actor
 
