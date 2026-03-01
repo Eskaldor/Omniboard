@@ -4,58 +4,10 @@ import { Settings, BookImage, Plus, MonitorSmartphone, Users, Trash, Swords, Lay
 import { CombatState, Actor, ColumnConfig, Effect, LegendConfig } from './types';
 import { MiniSheetModal, ConfigModal, LibraryModal, AddEffectModal, MiniaturesModal, ActorRosterModal, EncountersModal } from './components/Modals';
 import { CombatLog } from './components/CombatLog';
+import { InitiativeTable } from './components/InitiativeTracker/InitiativeTable';
 import { Toolbar } from './components/Toolbar';
 import { useCombatState } from './contexts/CombatStateContext';
 import { CombatProvider } from './contexts/CombatContext';
-
-function InlineInput({ value, onChange, type = "text", className = "", maxValue }: { value: string | number, onChange: (val: string) => void, type?: string, className?: string, maxValue?: number }) {
-  const [localVal, setLocalVal] = useState(value);
-
-  useEffect(() => {
-    setLocalVal(value);
-  }, [value]);
-
-  const commitValue = () => {
-    if (type !== "number") {
-      onChange(localVal.toString());
-      return;
-    }
-    const str = localVal.toString().trim();
-    const base = typeof value === "string" ? parseFloat(value) || 0 : Number(value);
-    let newNum: number;
-    if (str.startsWith("+") || str.startsWith("-")) {
-      const delta = parseFloat(str) || 0;
-      newNum = base + delta;
-    } else {
-      const parsed = parseFloat(str);
-      newNum = Number.isNaN(parsed) ? 0 : parsed;
-    }
-    if (maxValue !== undefined && maxValue !== null && !Number.isNaN(maxValue)) {
-      newNum = Math.min(newNum, maxValue);
-    }
-    const newValStr = String(newNum);
-    onChange(newValStr);
-    setLocalVal(newValStr);
-  };
-
-  return (
-    <input
-      type={type === "number" ? "text" : type}
-      inputMode={type === "number" ? "decimal" : undefined}
-      value={localVal}
-      onChange={(e) => setLocalVal(e.target.value)}
-      onBlur={commitValue}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          e.currentTarget.blur();
-        }
-      }}
-      onClick={(e) => e.stopPropagation()}
-      onDoubleClick={(e) => e.stopPropagation()}
-      className={`${className} ${type === "number" ? "[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" : ""}`}
-    />
-  );
-}
 
 const DEFAULT_COLUMNS: ColumnConfig[] = [
   { key: 'hp', label: 'HP', showInTable: true },
@@ -129,20 +81,20 @@ export default function App() {
       .catch(err => console.error("Failed to fetch columns", err));
   }, [systemName]);
 
-  const updateActorStat = async (actorId: string, statKey: string, value: any) => {
-    await fetch(`/api/actors/${actorId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ stats: { [statKey]: value } })
-    });
-    refetchState();
-  };
-
   const updateActorField = async (actorId: string, field: string, value: any) => {
     await fetch(`/api/actors/${actorId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ [field]: value })
+    });
+    refetchState();
+  };
+
+  const updateActor = async (actorId: string, updates: Partial<Actor>) => {
+    await fetch(`/api/actors/${actorId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates)
     });
     refetchState();
   };
@@ -250,23 +202,6 @@ export default function App() {
   }
 
   if (!effectiveState) return <div className="min-h-screen bg-zinc-950 text-zinc-200 flex items-center justify-center">Loading...</div>;
-
-  const activeActorId = effectiveState.is_active && effectiveState.turn_queue.length > 0 ? effectiveState.turn_queue[effectiveState.current_index] : null;
-  const activeActorIds = (() => {
-    if (!effectiveState?.is_active || !effectiveState.turn_queue.length) return new Set<string>();
-    const idx = effectiveState.current_index;
-    const aid = effectiveState.turn_queue[idx];
-    const actor = effectiveState.actors.find((a) => a.id === aid);
-    if (!actor?.group_id || actor.group_mode !== 'simultaneous') return new Set([aid]);
-    const ids = new Set<string>();
-    const gid = actor.group_id;
-    for (let i = idx; i < effectiveState.turn_queue.length; i++) {
-      const a = effectiveState.actors.find((x) => x.id === effectiveState.turn_queue[i]);
-      if (!a || a.group_id !== gid || a.group_mode !== 'simultaneous') break;
-      ids.add(a.id);
-    }
-    return ids;
-  })();
 
   return (
     <CombatProvider>
@@ -448,214 +383,32 @@ export default function App() {
             </div>
           )}
 
-          {/* Header Row */}
-          <div className="flex items-center gap-4 px-3 mb-2 text-sm font-medium text-zinc-400">
-            <div className="w-[54px] shrink-0"></div>
-            <div className="flex-1 flex items-center gap-4 px-4">
-              <div className="w-[54px]">Init</div>
-              <div className="w-48">Name</div>
-              {(() => {
-                const visible = columns.filter(c => c.showInTable);
-                const standalone = visible.filter(c => !c.group || String(c.group).trim() === '');
-                const grouped = visible.filter(c => c.group && String(c.group).trim() !== '');
-                const groupNames = [...new Set(grouped.map(c => String(c.group).trim()))];
-                return (
-                  <>
-                    {standalone.map(col => (
-                      <div key={col.key} className="w-24">{col.label}</div>
-                    ))}
-                    {groupNames.map(grp => (
-                      <div key={grp} className="flex flex-wrap items-center gap-2 px-2 py-1 bg-zinc-800/50 rounded-lg border border-zinc-700/50 max-w-[12rem]">
-                        <span className="text-[10px] text-zinc-500 uppercase">{grp}</span>
-                        {grouped.filter(c => String(c.group).trim() === grp).map(col => (
-                          <span key={col.key} className="text-[10px] text-zinc-400">{col.label}</span>
-                        ))}
-                      </div>
-                    ))}
-                    <div className="flex-1">Effects</div>
-                  </>
-                );
-              })()}
-            </div>
-          </div>
-
-          {/* Rows */}
-          <div className="space-y-2">
-            {(() => {
-              const rows = effectiveState.is_active
-                ? effectiveState.turn_queue.map((id, index) => ({ actor: effectiveState.actors.find(a => a.id === id), index })).filter((x): x is { actor: Actor; index: number } => !!x.actor)
-                : [...effectiveState.actors].sort((a, b) => b.initiative - a.initiative).map((actor, index) => ({ actor, index }));
-              const sortedActors = rows.map(r => r.actor);
-              return rows.map(({ actor, index }) => {
-              const isPastTurn = effectiveState.is_active && index < effectiveState.current_index;
-              const isGrouped = actor.group_id && actor.group_mode === 'simultaneous';
-              const prevActor = sortedActors[index - 1];
-              const nextActor = sortedActors[index + 1];
-              const isFirstInGroup = !prevActor || prevActor.group_id !== actor.group_id;
-              const isLastInGroup = !nextActor || nextActor.group_id !== actor.group_id;
-              const isSelectedForGroup = groupSelectMode && selectedActorIds.has(actor.id);
-              return (
-              <div key={actor.id} className={`flex items-center gap-4 group ${isPastTurn ? 'opacity-40 grayscale-[50%]' : ''}`}>
-                {/* Portrait */}
-                <div className="relative w-[54px] h-[96px] shrink-0">
-                {actor.portrait ? (
-                  <div 
-                    className="w-full h-full rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 flex items-center justify-center shadow-md cursor-pointer hover:border-emerald-500 transition-colors group/portrait"
-                    onClick={() => !groupSelectMode && setPortraitSelectActorId(actor.id)}
-                  >
-                    <img src={actor.portrait} alt={actor.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/portrait:opacity-100 flex items-center justify-center transition-opacity">
-                      <span className="text-[10px] uppercase font-bold text-white tracking-wider">Change</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div 
-                    className="w-full h-full rounded-xl bg-zinc-900 border border-dashed border-zinc-700 flex items-center justify-center cursor-pointer hover:border-emerald-500 transition-colors"
-                    onClick={() => !groupSelectMode && setPortraitSelectActorId(actor.id)}
-                  >
-                    <Plus size={16} className="text-zinc-600" />
-                  </div>
-                )}
-                {groupSelectMode && (
-                  <label className="absolute top-1 right-1 z-20 flex items-center justify-center">
-                    <input
-                      type="checkbox"
-                      checked={isSelectedForGroup}
-                      onChange={(e) => {
-                        setSelectedActorIds((prev) => {
-                          const next = new Set(prev);
-                          if (e.target.checked) next.add(actor.id); else next.delete(actor.id);
-                          return next;
-                        });
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                      className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-emerald-500"
-                    />
-                  </label>
-                )}
-                </div>
-
-                {/* Data Row */}
-                <div 
-                  onDoubleClick={() => setSelectedActor(actor)}
-                  className={`flex-1 flex items-center gap-4 px-4 py-4 min-h-[96px] bg-zinc-900 border rounded-xl cursor-pointer transition-colors relative overflow-hidden shadow-sm ${activeActorIds.has(actor.id) ? 'border-emerald-500/50 bg-zinc-800/50' : 'border-zinc-800 hover:border-zinc-700'}`}
-                >
-                  {showGroupColorsInTable && isGrouped && (
-                    <div
-                      className="absolute left-0 top-0 bottom-0 w-1 z-10 opacity-70 group-hover:opacity-90 transition-all duration-200"
-                      style={{
-                        backgroundColor: actor.group_color || '#10b981',
-                        borderTopLeftRadius: isFirstInGroup ? '0.5rem' : '0',
-                        borderTopRightRadius: isFirstInGroup ? '0.5rem' : '0',
-                        borderBottomLeftRadius: isLastInGroup ? '0.5rem' : '0',
-                        borderBottomRightRadius: isLastInGroup ? '0.5rem' : '0',
-                        boxShadow: 'none',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.boxShadow = `0 0 12px ${actor.group_color || '#10b981'}`;
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.boxShadow = 'none';
-                      }}
-                    />
-                  )}
-                  {activeActorIds.has(actor.id) && (
-                    <div className={`absolute top-0 bottom-0 w-1 bg-emerald-500 ${isGrouped && showGroupColorsInTable ? 'left-1' : 'left-0'}`}></div>
-                  )}
-                  <div className="w-[54px] pl-2 font-mono font-bold text-lg shrink-0" style={{ color: showFactionColorsInTable ? getLegendColor(actor.role) : '#a1a1aa' }}>
-                    <InlineInput 
-                      type="number" 
-                      value={actor.initiative}
-                      onChange={(val) => updateActorField(actor.id, 'initiative', parseInt(val) || 0)}
-                      className="w-10 bg-transparent border border-transparent hover:border-zinc-700 focus:border-emerald-500 rounded px-1 py-0.5 font-mono text-sm focus:outline-none transition-colors"
-                    />
-                  </div>
-                  <div className="w-48">
-                    <InlineInput 
-                      type="text" 
-                      value={actor.name}
-                      onChange={(val) => updateActorField(actor.id, 'name', val)}
-                      className="w-full bg-transparent border border-transparent hover:border-zinc-700 focus:border-emerald-500 rounded px-1 py-0.5 text-zinc-200 font-medium focus:outline-none transition-colors truncate"
-                    />
-                  </div>
-                  
-                  {(() => {
-                    const visible = columns.filter(c => c.showInTable);
-                    const standalone = visible.filter(c => !c.group || String(c.group).trim() === '');
-                    const grouped = visible.filter(c => c.group && String(c.group).trim() !== '');
-                    const groupNames = [...new Set(grouped.map(c => String(c.group).trim()))];
-                    return (
-                      <>
-                        {standalone.map(col => (
-                          <div key={col.key} className="w-24">
-                            <InlineInput
-                              type="number"
-                              value={actor.stats[col.key] ?? 0}
-                              onChange={(val) => updateActorStat(actor.id, col.key, parseInt(val))}
-                              maxValue={col.maxKey != null && typeof actor.stats[col.maxKey] === 'number' ? actor.stats[col.maxKey] : undefined}
-                              className="w-16 bg-zinc-950 border border-zinc-700 rounded px-2 py-1 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                            />
-                          </div>
-                        ))}
-                        {groupNames.map(grp => (
-                          <div key={grp} className="flex flex-wrap gap-2 px-2 py-1 bg-zinc-800/50 rounded-lg border border-zinc-700/50 w-48 max-w-[12rem]">
-                            {grouped.filter(c => String(c.group).trim() === grp).map(col => (
-                              <div key={col.key} className="flex items-center gap-1">
-                                <span className="text-[10px] text-zinc-500">{col.label}:</span>
-                                <InlineInput
-                                  type="number"
-                                  value={actor.stats[col.key] ?? 0}
-                                  onChange={(val) => updateActorStat(actor.id, col.key, parseInt(val))}
-                                  maxValue={col.maxKey != null && typeof actor.stats[col.maxKey] === 'number' ? actor.stats[col.maxKey] : undefined}
-                                  className="w-10 bg-zinc-950 border border-zinc-700 rounded px-1.5 py-0.5 text-xs text-zinc-200 focus:outline-none focus:border-emerald-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        ))}
-                        <div className="flex-1 flex gap-1 flex-wrap items-center">
-                    {actor.effects.map(eff => (
-                      <button
-                        key={eff.id}
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedEffect({ actorId: actor.id, effect: eff });
-                        }}
-                        className="text-xs px-2 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-full border border-indigo-500/30 hover:bg-indigo-500/30 hover:border-indigo-400/50 transition-colors cursor-pointer"
-                        title={eff.description || eff.name}
-                      >
-                        {eff.name} {eff.duration != null ? `(${eff.duration})` : ''}
-                      </button>
-                    ))}
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); setEffectModalActor(actor); }}
-                      className="w-5 h-5 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-emerald-400 transition-colors"
-                      title="Add Effect"
-                    >
-                      <Plus size={12} />
-                    </button>
-                  </div>
-                      </>
-                    );
-                  })()}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); deleteActor(actor.id); }}
-                    className="w-8 h-8 rounded-lg bg-zinc-800/50 hover:bg-red-900/50 flex items-center justify-center text-zinc-500 hover:text-red-400 transition-colors ml-2 shrink-0"
-                    title="Delete Actor"
-                  >
-                    <Trash size={14} />
-                  </button>
-                </div>
-              </div>
-            );});
-            })()}
-            {effectiveState.actors.length === 0 && (
-              <div className="text-center p-8 text-zinc-500 bg-zinc-900/50 rounded-xl border border-zinc-800 border-dashed">
-                No actors in combat.
-              </div>
-            )}
-          </div>
+          <InitiativeTable
+            actors={effectiveState.actors}
+            turnQueue={effectiveState.turn_queue}
+            currentIndex={effectiveState.current_index}
+            isActive={effectiveState.is_active}
+            columns={columns}
+            showGroupColorsInTable={showGroupColorsInTable}
+            showFactionColorsInTable={showFactionColorsInTable}
+            getLegendColor={getLegendColor}
+            groupSelectMode={groupSelectMode}
+            selectedActorIds={selectedActorIds}
+            onUpdateActor={updateActor}
+            onDeleteActor={deleteActor}
+            onPortraitClick={(id) => setPortraitSelectActorId(id)}
+            onRowDoubleClick={setSelectedActor}
+            onEffectClick={(actorId, effect) => setSelectedEffect({ actorId, effect })}
+            onAddEffectClick={(actor) => setEffectModalActor(actor)}
+            onToggleGroupSelect={(actorId, selected) => {
+              setSelectedActorIds((prev) => {
+                const next = new Set(prev);
+                if (selected) next.add(actorId);
+                else next.delete(actorId);
+                return next;
+              });
+            }}
+          />
         </div>
       </main>
 
