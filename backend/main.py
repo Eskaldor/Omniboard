@@ -53,11 +53,14 @@ clients = []
 async def broadcast_state():
     state_json = state.model_dump_json()
     message = json.dumps({"type": "state_update", "payload": json.loads(state_json)})
+    dead = []
     for client in clients:
         try:
             await client.send_text(message)
-        except:
-            pass
+        except Exception:
+            dead.append(client)
+    for client in dead:
+        clients.remove(client)
 
 @app.websocket("/ws/master")
 async def websocket_master(websocket: WebSocket):

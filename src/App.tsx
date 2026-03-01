@@ -63,29 +63,41 @@ export default function App() {
 
   useEffect(() => {
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    // In dev, Vite proxies /ws to backend. In prod, it's the same host.
     const wsUrl = `${wsProtocol}//${window.location.host}/ws/master`;
-    const ws = new WebSocket(wsUrl);
+    let ws: WebSocket;
+    let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+    let isMounted = true;
 
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.type === 'state_update') {
-        setState(data.payload);
-        setWsError(null);
-      }
+    const connect = () => {
+      if (!isMounted) return;
+      ws = new WebSocket(wsUrl);
+
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === 'state_update') {
+          setState(data.payload);
+          setWsError(null);
+        }
+      };
+
+      ws.onerror = () => {
+        setWsError("Не удалось подключиться к бэкенду на Python (FastAPI). Сервер ещё запускается или недоступен.");
+      };
+
+      ws.onclose = () => {
+        if (!isMounted) return;
+        // Auto-reconnect after 2 seconds
+        reconnectTimeout = setTimeout(connect, 2000);
+      };
     };
 
-    ws.onerror = () => {
-      setWsError("Не удалось подключиться к бэкенду на Python (FastAPI). Возможно, среда песочницы не поддерживает запуск Python, или сервер еще запускается.");
-    };
+    connect();
 
-    ws.onclose = () => {
-      if (!state) {
-        setWsError("Соединение с сервером закрыто. Бэкенд на Python недоступен в этой среде.");
-      }
+    return () => {
+      isMounted = false;
+      if (reconnectTimeout) clearTimeout(reconnectTimeout);
+      ws?.close();
     };
-
-    return () => ws.close();
   }, []);
 
   const updateActorStat = async (actorId: string, statKey: string, value: any) => {
@@ -244,7 +256,10 @@ export default function App() {
 
           {/* Rows */}
           <div className="space-y-2">
-            {(state.is_active ? state.turn_queue.map(id => state.actors.find(a => a.id === id)!) : [...state.actors].sort((a,b) => b.initiative - a.initiative)).map((actor) => (
+            {(state.is_active
+              ? state.turn_queue.map(id => state.actors.find(a => a.id === id)).filter((a): a is NonNullable<typeof a> => !!a)
+              : [...state.actors].sort((a,b) => b.initiative - a.initiative)
+            ).map((actor) => (
               <div key={actor.id} className="flex items-center gap-4 group">
                 {/* Portrait Outside */}
                 {actor.portrait ? (
