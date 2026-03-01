@@ -1,6 +1,6 @@
 # Omniboard Architecture Rules
 - Backend: STRICTLY Python 3.11+ with FastAPI. Never use Node.js/Express.
 - Frontend: React 19 + Vite + TailwindCSS + TypeScript.
-- State Sync: React components must read state via WebSockets (`state_update` events) and mutate state ONLY via REST API (`POST`, `PATCH`, `DELETE`). Never mutate state locally.
-- Pydantic: Use `model_dump()` / `model_dump_json()` instead of the deprecated `dict()`.
+- State Sync: React reads state via WebSockets (`state_update`) and mutates via REST API (`POST`, `PATCH`, `DELETE`).
+- Pydantic: Use `model_dump()` / `model_dump_json()`.
 - Data persistence: Save JSONs using Python's `pathlib.Path` to `data/systems/`, `data/actors/`, etc.

@@ -7,6 +7,6 @@
 - [x] i18n Foundation
 
 ## Next Phase / Backlog
-- [ ] Visual Faction Legend (Dynamic Initiative colors based on actor.role)
+- [ ] Visual Faction Legend (Dynamic Colors for Initiative based on actor.role)
 - [ ] Actor Grouping (Simultaneous turns & Visual linking)
-- [ ] Combat Encounters Import/Export (Save/Load full CombatState)
+- [ ] Combat Encounters Import/Export
