@@ -63,6 +63,7 @@ export interface CombatState {
   system: string;
   is_active: boolean;
   layout: MiniatureLayout;
+  history?: { message: string }[];
   can_undo?: boolean;
   can_redo?: boolean;
 }

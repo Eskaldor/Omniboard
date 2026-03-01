@@ -2,7 +2,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, H
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from backend.models import CombatState, Actor, Effect
+from backend.models import CombatState, Actor, Effect, LogEntry
 from backend.compositor import render_miniature
 import uuid
 import json
@@ -50,6 +50,12 @@ app.add_middleware(
 )
 
 state = CombatState()
+
+
+def add_log(msg: str):
+    global state
+    state.history.append(LogEntry(message=msg))
+
 
 history_stack: list = []
 history_index: int = -1
@@ -157,11 +163,20 @@ async def update_actor(actor_id: str, updates: dict):
     for i, a in enumerate(state.actors):
         if a.id == actor_id:
             actor_dict = a.model_dump()
+            old_hp = actor_dict.get("stats", {}).get("hp")
             if "stats" in updates:
                 actor_dict["stats"].update(updates["stats"])
                 del updates["stats"]
             actor_dict.update(updates)
-            state.actors[i] = Actor(**actor_dict)
+            new_actor = Actor(**actor_dict)
+            new_hp = new_actor.stats.get("hp")
+            if old_hp is not None and new_hp is not None and old_hp != new_hp:
+                delta = new_hp - old_hp
+                if delta < 0:
+                    add_log(f"{new_actor.name} HP changed (-{abs(delta)} damage).")
+                else:
+                    add_log(f"{new_actor.name} HP changed (+{delta} healed).")
+            state.actors[i] = new_actor
             reorder_turn_queue()
             await broadcast_state()
             await save_snapshot()
@@ -183,6 +198,11 @@ async def next_turn():
                     effect.duration -= 1
             actor.effects = [e for e in actor.effects if e.duration is None or e.duration > 0]
     
+    current_actor_id = state.turn_queue[state.current_index]
+    current_actor = next((a for a in state.actors if a.id == current_actor_id), None)
+    if current_actor:
+        add_log(f"Round {state.round}, turn: {current_actor.name}.")
+    
     await broadcast_state()
     await save_snapshot()
     return state
@@ -195,6 +215,7 @@ async def start_combat():
     sorted_actors = sorted(state.actors, key=lambda a: a.initiative, reverse=True)
     state.turn_queue = [a.id for a in sorted_actors]
     state.current_index = 0
+    add_log("Combat started.")
     await broadcast_state()
     await save_snapshot()
     return state
@@ -205,6 +226,7 @@ async def end_combat():
     state.is_active = False
     state.turn_queue = []
     state.current_index = 0
+    add_log("Combat ended.")
     await broadcast_state()
     await save_snapshot()
     return state
@@ -216,6 +238,7 @@ async def reset_combat():
     state.round = 1
     state.turn_queue = []
     state.current_index = 0
+    state.history = []
     for actor in state.actors:
         actor.effects = []
     await broadcast_state()

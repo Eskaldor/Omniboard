@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Settings, BookImage, Play, SkipForward, Plus, Square, RotateCcw, MonitorSmartphone, Users, Trash, Swords, Undo, Redo } from 'lucide-react';
 import { CombatState, Actor, ColumnConfig, Effect } from './types';
 import { MiniSheetModal, ConfigModal, LibraryModal, AddEffectModal, MiniaturesModal, ActorRosterModal, EncountersModal } from './components/Modals';
+import { CombatLog } from './components/CombatLog';
 
 function InlineInput({ value, onChange, type = "text", className = "", maxValue }: { value: string | number, onChange: (val: string) => void, type?: string, className?: string, maxValue?: number }) {
   const [localVal, setLocalVal] = useState(value);
@@ -73,6 +74,7 @@ export default function App() {
   const [showMiniatures, setShowMiniatures] = useState(false);
   const [showRoster, setShowRoster] = useState(false);
   const [showEncounters, setShowEncounters] = useState(false);
+  const [showLog, setShowLog] = useState(false);
   const [portraitSelectActorId, setPortraitSelectActorId] = useState<string | null>(null);
   const { t } = useTranslation('core');
 
@@ -280,7 +282,22 @@ export default function App() {
       <header className="bg-zinc-900 border-b border-zinc-800 p-4 flex justify-between items-center">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-zinc-100">Omniboard</h1>
-          <div className="text-xs text-zinc-500">Round: {state.round}</div>
+          <div className="relative inline-block">
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => setShowLog((v) => !v)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setShowLog((v) => !v); } }}
+              className="text-xs text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors"
+            >
+              Round: {state.round}
+            </div>
+            <CombatLog
+              history={state.history ?? []}
+              isOpen={showLog}
+              onClose={() => setShowLog(false)}
+            />
+          </div>
         </div>
         <div className="flex gap-3">
           <button onClick={() => setShowMiniatures(true)} className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-md text-sm transition-colors">
