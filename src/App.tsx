@@ -5,6 +5,7 @@ import { CombatState, Actor, ColumnConfig, Effect, LegendConfig } from './types'
 import { MiniSheetModal, ConfigModal, LibraryModal, AddEffectModal, MiniaturesModal, ActorRosterModal, EncountersModal } from './components/Modals';
 import { CombatLog } from './components/CombatLog';
 import { useCombatState } from './contexts/CombatStateContext';
+import { CombatProvider } from './contexts/CombatContext';
 
 function InlineInput({ value, onChange, type = "text", className = "", maxValue }: { value: string | number, onChange: (val: string) => void, type?: string, className?: string, maxValue?: number }) {
   const [localVal, setLocalVal] = useState(value);
@@ -267,6 +268,7 @@ export default function App() {
   })();
 
   return (
+    <CombatProvider>
     <div className="min-h-screen bg-zinc-950 text-zinc-200 flex flex-col font-sans">
       {/* Header */}
       <header className="relative bg-zinc-900 border-b border-zinc-800 p-4 flex justify-between items-center">
@@ -803,5 +805,6 @@ export default function App() {
         />
       )}
     </div>
+    </CombatProvider>
   );
 }
