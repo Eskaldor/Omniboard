@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Settings, BookImage, Plus, MonitorSmartphone, Users, Trash, Swords, Layers } from 'lucide-react';
+import { Plus, Users, Trash, Swords } from 'lucide-react';
 import { CombatState, Actor, ColumnConfig, Effect, LegendConfig } from './types';
 import { MiniSheetModal, ConfigModal, LibraryModal, AddEffectModal, MiniaturesModal, ActorRosterModal, EncountersModal } from './components/Modals';
 import { CombatLog } from './components/CombatLog';
 import { InitiativeTable } from './components/InitiativeTracker/InitiativeTable';
-import { Toolbar } from './components/Toolbar';
+import { AppHeader } from './components/AppHeader';
+import { CombatToolbar } from './components/CombatToolbar';
 import { useCombatState } from './contexts/CombatStateContext';
 import { CombatProvider } from './contexts/CombatContext';
 
@@ -61,7 +62,6 @@ export default function App() {
   const { t } = useTranslation('core', { useSuspense: false });
 
   const legendConfig = effectiveState?.legend ?? { player: '#10b981', enemy: '#ef4444', ally: '#3b82f6', neutral: '#a1a1aa' };
-  const editingLegend = legendLocal ?? legendConfig;
   const showGroupColors = showGroupColorsLocal ?? effectiveState?.show_group_colors ?? true;
   const showFactionColors = showFactionColorsLocal ?? effectiveState?.show_faction_colors ?? true;
   const roleToLegendKey: Record<Actor['role'], keyof LegendConfig> = { character: 'player', enemy: 'enemy', ally: 'ally', neutral: 'neutral' };
@@ -206,122 +206,51 @@ export default function App() {
   return (
     <CombatProvider>
     <div className="min-h-screen bg-zinc-950 text-zinc-200 flex flex-col font-sans">
-      {/* Header */}
-      <header className="relative bg-zinc-900 border-b border-zinc-800 p-4 flex justify-between items-center">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight text-zinc-100">Omniboard</h1>
-          <div className="relative inline-block">
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => setShowLog((v) => !v)}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setShowLog((v) => !v); } }}
-              className="text-xs text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors"
-            >
-              Round: {effectiveState.round}
-            </div>
-            <CombatLog
-              history={effectiveState.history ?? []}
-              isOpen={showLog}
-              onClose={() => setShowLog(false)}
-              enableLogging={effectiveState.enable_logging !== false}
-              onRefetch={refetchState}
-            />
-          </div>
-        </div>
-        <div className="flex gap-3">
-          <button onClick={() => setShowMiniatures(true)} className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-md text-sm transition-colors">
-            <MonitorSmartphone size={16} /> Miniatures
-          </button>
-          <button onClick={() => setShowLibrary(true)} className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-md text-sm transition-colors">
-            <BookImage size={16} /> Library
-          </button>
-          <button onClick={() => setShowConfig(true)} className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-md text-sm transition-colors">
-            <Settings size={16} /> {t('config', 'Config')}
-          </button>
-          <button onClick={() => setShowLegendPanel((v) => !v)} className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors ${showLegendPanel ? 'bg-emerald-600/30 text-emerald-400' : 'bg-zinc-800 hover:bg-zinc-700'}`} title="Groups">
-            <Layers size={16} /> Groups
-          </button>
-        </div>
-        {(
-          <div
-            className={`absolute top-full right-4 mt-2 w-80 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl overflow-hidden z-50 transition-all duration-300 ease-out ${
-              showLegendPanel ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
-            }`}
-          >
-            <div className="p-4 border-b border-zinc-800">
-              <h3 className="text-sm font-semibold text-zinc-100">Groups</h3>
-            </div>
-            <div className="p-4 space-y-4">
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={showGroupColors}
-                    onChange={(e) => setShowGroupColorsLocal(e.target.checked)}
-                    className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-emerald-500"
-                  />
-                  <span className="text-sm text-zinc-300">Display group colors</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={showFactionColors}
-                    onChange={(e) => setShowFactionColorsLocal(e.target.checked)}
-                    className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-emerald-500"
-                  />
-                  <span className="text-sm text-zinc-300">Display faction (role) colors</span>
-                </label>
-              </div>
-              <div>
-                <h4 className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">Legend (role colors)</h4>
-                <div className="space-y-2">
-                  {(['player', 'enemy', 'ally', 'neutral'] as const).map((role) => (
-                    <div key={role} className="flex items-center justify-between gap-2">
-                      <label className="text-sm text-zinc-300 capitalize">{role === 'player' ? 'Player' : role}</label>
-                      <input
-                        type="color"
-                        value={editingLegend[role]}
-                        onChange={(e) => setLegendLocal((prev) => ({ ...(prev ?? legendConfig), [role]: e.target.value }))}
-                        className="w-10 h-8 rounded bg-zinc-800 border border-zinc-700 cursor-pointer"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <button
-                onClick={() => {
-                  const name = prompt('Group name', '');
-                  if (name == null) return;
-                  const color = prompt('Group color (hex)', '#10b981') || '#10b981';
-                  setCreateGroupModal({ name: name.trim() || 'Group', color: color.trim() || '#10b981', groupId: crypto.randomUUID() });
-                  setGroupSelectMode(true);
-                  setSelectedActorIds(new Set());
-                  setShowLegendPanel(false);
-                }}
-                className="w-full py-2 bg-zinc-700 hover:bg-zinc-600 text-zinc-200 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
-              >
-                <Layers size={16} /> Create Group
-              </button>
-              <button
-                onClick={async () => {
-                  const payload: Record<string, unknown> = { ...(legendLocal ?? legendConfig) };
-                  payload.show_group_colors = showGroupColorsLocal ?? effectiveState?.show_group_colors ?? true;
-                  payload.show_faction_colors = showFactionColorsLocal ?? effectiveState?.show_faction_colors ?? true;
-                  await fetch('/api/combat/legend', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                  setLegendLocal(null);
-                  setShowGroupColorsLocal(null);
-                  setShowFactionColorsLocal(null);
-                  refetchState();
-                }}
-                className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium transition-colors"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        )}
-      </header>
+      <AppHeader
+        round={effectiveState.round}
+        history={effectiveState.history ?? []}
+        showLog={showLog}
+        onToggleLog={() => setShowLog((v) => !v)}
+        enableLogging={effectiveState.enable_logging !== false}
+        onRefetch={refetchState}
+        onShowMiniatures={() => setShowMiniatures(true)}
+        onShowLibrary={() => setShowLibrary(true)}
+        onShowConfig={() => setShowConfig(true)}
+        showLegendPanel={showLegendPanel}
+        onToggleLegendPanel={() => setShowLegendPanel((v) => !v)}
+        legendConfig={legendConfig}
+        editingLegend={legendLocal ?? legendConfig}
+        showGroupColors={showGroupColors}
+        showFactionColors={showFactionColors}
+        onLegendColorChange={(role, color) =>
+          setLegendLocal((prev) => ({ ...(prev ?? legendConfig), [role]: color }))
+        }
+        onShowGroupColorsChange={setShowGroupColorsLocal}
+        onShowFactionColorsChange={setShowFactionColorsLocal}
+        onCreateGroup={() => {
+          const name = prompt('Group name', '');
+          if (name == null) return;
+          const color = prompt('Group color (hex)', '#10b981') || '#10b981';
+          setCreateGroupModal({ name: name.trim() || 'Group', color: color.trim() || '#10b981', groupId: crypto.randomUUID() });
+          setGroupSelectMode(true);
+          setSelectedActorIds(new Set());
+          setShowLegendPanel(false);
+        }}
+        onSaveLegend={async () => {
+          const payload: Record<string, unknown> = { ...(legendLocal ?? legendConfig) };
+          payload.show_group_colors = showGroupColorsLocal ?? effectiveState?.show_group_colors ?? true;
+          payload.show_faction_colors = showFactionColorsLocal ?? effectiveState?.show_faction_colors ?? true;
+          await fetch('/api/combat/legend', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          setLegendLocal(null);
+          setShowGroupColorsLocal(null);
+          setShowFactionColorsLocal(null);
+          refetchState();
+        }}
+      />
 
       {/* Main Content */}
       <main className="flex-1 p-6 overflow-auto">
@@ -412,7 +341,7 @@ export default function App() {
         </div>
       </main>
 
-      <Toolbar
+      <CombatToolbar
         isActive={effectiveState.is_active}
         canUndo={effectiveState?.can_undo ?? false}
         canRedo={effectiveState?.can_redo ?? false}

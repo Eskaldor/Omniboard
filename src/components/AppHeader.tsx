@@ -3,56 +3,54 @@ import { useTranslation } from 'react-i18next';
 import type { CombatLogEntry, LegendConfig } from '../types';
 import { CombatLog } from './CombatLog';
 
-export interface ToolbarProps {
+export type LogEntry = CombatLogEntry;
+
+export interface AppHeaderProps {
   round: number;
-  history: CombatLogEntry[];
+  history: LogEntry[];
   showLog: boolean;
   onToggleLog: () => void;
+  enableLogging: boolean;
+  onRefetch: () => void;
   onShowMiniatures: () => void;
   onShowLibrary: () => void;
   onShowConfig: () => void;
-  onToggleLegendPanel: () => void;
-  enableLogging: boolean;
-  onRefetch: () => void;
-  // Groups panel (dropdown)
   showLegendPanel: boolean;
+  onToggleLegendPanel: () => void;
+  legendConfig: LegendConfig;
+  editingLegend: LegendConfig;
   showGroupColors: boolean;
   showFactionColors: boolean;
-  editingLegend: LegendConfig | null;
-  legendConfig: LegendConfig;
-  onShowGroupColorsChange: (v: boolean) => void;
-  onShowFactionColorsChange: (v: boolean) => void;
-  onLegendColorChange: (role: keyof LegendConfig, value: string) => void;
-  onCreateGroupClick: () => void;
+  onLegendColorChange: (role: keyof LegendConfig, color: string) => void;
+  onShowGroupColorsChange: (val: boolean) => void;
+  onShowFactionColorsChange: (val: boolean) => void;
+  onCreateGroup: () => void;
   onSaveLegend: () => void;
 }
 
-export function Toolbar(props: ToolbarProps) {
+export function AppHeader(props: AppHeaderProps) {
   const { t } = useTranslation('core', { useSuspense: false });
   const {
     round,
     history,
     showLog,
     onToggleLog,
+    enableLogging,
+    onRefetch,
     onShowMiniatures,
     onShowLibrary,
     onShowConfig,
-    onToggleLegendPanel,
-    enableLogging,
-    onRefetch,
     showLegendPanel,
+    onToggleLegendPanel,
+    editingLegend,
     showGroupColors,
     showFactionColors,
-    editingLegend,
-    legendConfig,
+    onLegendColorChange,
     onShowGroupColorsChange,
     onShowFactionColorsChange,
-    onLegendColorChange,
-    onCreateGroupClick,
+    onCreateGroup,
     onSaveLegend,
   } = props;
-
-  const editing = editingLegend ?? legendConfig;
 
   return (
     <header className="relative bg-zinc-900 border-b border-zinc-800 p-4 flex justify-between items-center">
@@ -137,7 +135,7 @@ export function Toolbar(props: ToolbarProps) {
                   <label className="text-sm text-zinc-300 capitalize">{role === 'player' ? 'Player' : role}</label>
                   <input
                     type="color"
-                    value={editing[role]}
+                    value={editingLegend[role]}
                     onChange={(e) => onLegendColorChange(role, e.target.value)}
                     className="w-10 h-8 rounded bg-zinc-800 border border-zinc-700 cursor-pointer"
                   />
@@ -146,7 +144,7 @@ export function Toolbar(props: ToolbarProps) {
             </div>
           </div>
           <button
-            onClick={onCreateGroupClick}
+            onClick={onCreateGroup}
             className="w-full py-2 bg-zinc-700 hover:bg-zinc-600 text-zinc-200 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
           >
             <Layers size={16} /> Create Group
