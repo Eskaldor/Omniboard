@@ -52,9 +52,23 @@ app.add_middleware(
 state = CombatState()
 
 
-def add_log(msg: str):
+def add_log(
+    entry_type: str,
+    *,
+    actor_id: str | None = None,
+    actor_name: str | None = None,
+    details: dict | None = None,
+):
     global state
-    state.history.append(LogEntry(message=msg))
+    state.history.append(
+        LogEntry(
+            type=entry_type,
+            round=state.round,
+            actor_id=actor_id,
+            actor_name=actor_name,
+            details=details or {},
+        )
+    )
 
 
 history_stack: list = []
@@ -172,10 +186,12 @@ async def update_actor(actor_id: str, updates: dict):
             new_hp = new_actor.stats.get("hp")
             if old_hp is not None and new_hp is not None and old_hp != new_hp:
                 delta = new_hp - old_hp
-                if delta < 0:
-                    add_log(f"{new_actor.name} HP changed (-{abs(delta)} damage).")
-                else:
-                    add_log(f"{new_actor.name} HP changed (+{delta} healed).")
+                add_log(
+                    "hp_change",
+                    actor_id=new_actor.id,
+                    actor_name=new_actor.name,
+                    details={"delta": delta, "is_damage": delta < 0},
+                )
             state.actors[i] = new_actor
             reorder_turn_queue()
             await broadcast_state()
@@ -192,6 +208,7 @@ async def next_turn():
     state.current_index = (state.current_index + 1) % len(state.turn_queue)
     if state.current_index == 0:
         state.round += 1
+        add_log("round_start")
         for actor in state.actors:
             for effect in actor.effects:
                 if effect.duration is not None:
@@ -201,7 +218,7 @@ async def next_turn():
     current_actor_id = state.turn_queue[state.current_index]
     current_actor = next((a for a in state.actors if a.id == current_actor_id), None)
     if current_actor:
-        add_log(f"Round {state.round}, turn: {current_actor.name}.")
+        add_log("turn_start", actor_id=current_actor.id, actor_name=current_actor.name)
     
     await broadcast_state()
     await save_snapshot()
@@ -215,7 +232,7 @@ async def start_combat():
     sorted_actors = sorted(state.actors, key=lambda a: a.initiative, reverse=True)
     state.turn_queue = [a.id for a in sorted_actors]
     state.current_index = 0
-    add_log("Combat started.")
+    add_log("combat_start")
     await broadcast_state()
     await save_snapshot()
     return state
@@ -226,7 +243,7 @@ async def end_combat():
     state.is_active = False
     state.turn_queue = []
     state.current_index = 0
-    add_log("Combat ended.")
+    add_log("combat_end")
     await broadcast_state()
     await save_snapshot()
     return state

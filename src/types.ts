@@ -55,6 +55,24 @@ export interface MiniatureLayout {
   bottom2: DisplayField | null;
 }
 
+export type CombatLogEntryType =
+  | 'combat_start'
+  | 'combat_end'
+  | 'round_start'
+  | 'turn_start'
+  | 'hp_change'
+  | 'effect_added'
+  | 'effect_removed'
+  | 'text';
+
+export interface CombatLogEntry {
+  type: CombatLogEntryType;
+  round: number;
+  actor_id?: string | null;
+  actor_name?: string | null;
+  details: Record<string, unknown>;
+}
+
 export interface CombatState {
   actors: Actor[];
   turn_queue: string[];
@@ -63,7 +81,7 @@ export interface CombatState {
   system: string;
   is_active: boolean;
   layout: MiniatureLayout;
-  history?: { message: string }[];
+  history?: CombatLogEntry[];
   can_undo?: boolean;
   can_redo?: boolean;
 }
