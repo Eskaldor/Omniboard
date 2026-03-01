@@ -404,14 +404,22 @@ export function ConfigModal({
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
         <div className="p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50">
-          <div className="relative">
-            <button 
+          <div className="relative flex items-center gap-1">
+            <input
+              type="text"
+              value={systemName}
+              onChange={(e) => setSystemName(e.target.value)}
+              className="bg-transparent text-lg font-medium text-zinc-100 border-none outline-none min-w-[8rem] placeholder-zinc-500"
+              placeholder="System name"
+            />
+            <button
               onClick={() => setShowPresets(!showPresets)}
-              className="flex items-center gap-2 text-lg font-medium text-zinc-100 hover:text-emerald-400 transition-colors"
+              className="p-1 text-zinc-400 hover:text-emerald-400 transition-colors"
+              title="Load preset"
             >
-              {systemName} <ChevronDown size={16} className={`transition-transform ${showPresets ? 'rotate-180' : ''}`} />
+              <ChevronDown size={16} className={`transition-transform ${showPresets ? 'rotate-180' : ''}`} />
             </button>
-            
+
             {showPresets && (
               <div className="absolute top-full left-0 mt-2 w-48 bg-zinc-800 border border-zinc-700 rounded-xl shadow-xl overflow-hidden z-10">
                 <div className="px-3 py-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider bg-zinc-900/50">Saved Presets</div>

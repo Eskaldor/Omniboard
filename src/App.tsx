@@ -1,30 +1,51 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Settings, BookImage, Play, SkipForward, Plus, Square, RotateCcw, MonitorSmartphone, Users, Trash, Swords } from 'lucide-react';
+import { Settings, BookImage, Play, SkipForward, Plus, Square, RotateCcw, MonitorSmartphone, Users, Trash, Swords, Undo, Redo } from 'lucide-react';
 import { CombatState, Actor, ColumnConfig, Effect } from './types';
 import { MiniSheetModal, ConfigModal, LibraryModal, AddEffectModal, MiniaturesModal, ActorRosterModal, EncountersModal } from './components/Modals';
 
 function InlineInput({ value, onChange, type = "text", className = "" }: { value: string | number, onChange: (val: string) => void, type?: string, className?: string }) {
   const [localVal, setLocalVal] = useState(value);
-  
+
   useEffect(() => {
     setLocalVal(value);
   }, [value]);
 
+  const commitValue = () => {
+    if (type !== "number") {
+      onChange(localVal.toString());
+      return;
+    }
+    const str = localVal.toString().trim();
+    const base = typeof value === "string" ? parseFloat(value) || 0 : Number(value);
+    let newNum: number;
+    if (str.startsWith("+") || str.startsWith("-")) {
+      const delta = parseFloat(str) || 0;
+      newNum = base + delta;
+    } else {
+      const parsed = parseFloat(str);
+      newNum = Number.isNaN(parsed) ? 0 : parsed;
+    }
+    const newValStr = String(newNum);
+    onChange(newValStr);
+    setLocalVal(newValStr);
+  };
+
   return (
-    <input 
-      type={type}
+    <input
+      type={type === "number" ? "text" : type}
+      inputMode={type === "number" ? "decimal" : undefined}
       value={localVal}
       onChange={(e) => setLocalVal(e.target.value)}
-      onBlur={() => onChange(localVal.toString())}
+      onBlur={commitValue}
       onKeyDown={(e) => {
-        if (e.key === 'Enter') {
+        if (e.key === "Enter") {
           e.currentTarget.blur();
         }
       }}
       onClick={(e) => e.stopPropagation()}
       onDoubleClick={(e) => e.stopPropagation()}
-      className={className}
+      className={`${className} ${type === "number" ? "[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" : ""}`}
     />
   );
 }
@@ -162,6 +183,15 @@ export default function App() {
       await fetch('/api/combat/reset', { method: 'POST' });
       refetchState();
     }
+  };
+
+  const undoCombat = async () => {
+    await fetch('/api/combat/undo', { method: 'POST' });
+    refetchState();
+  };
+  const redoCombat = async () => {
+    await fetch('/api/combat/redo', { method: 'POST' });
+    refetchState();
   };
 
   const clearCombat = async () => {
@@ -392,6 +422,22 @@ export default function App() {
       {/* Footer Controls */}
       <footer className="bg-zinc-900 border-t border-zinc-800 p-4 flex justify-between items-center">
         <div className="flex gap-2">
+          <button
+            onClick={undoCombat}
+            disabled={!state?.can_undo}
+            className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-300 rounded-lg font-medium transition-colors text-sm"
+            title="Undo"
+          >
+            <Undo size={16} /> Undo
+          </button>
+          <button
+            onClick={redoCombat}
+            disabled={!state?.can_redo}
+            className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-300 rounded-lg font-medium transition-colors text-sm"
+            title="Redo"
+          >
+            <Redo size={16} /> Redo
+          </button>
           <button onClick={resetCombat} className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg font-medium transition-colors text-sm">
             <RotateCcw size={16} /> Reset
           </button>

@@ -51,6 +51,19 @@ app.add_middleware(
 
 state = CombatState()
 
+history_stack: list = []
+history_index: int = -1
+
+async def save_snapshot():
+    global history_stack, history_index, state
+    if history_index < len(history_stack) - 1:
+        history_stack = history_stack[:history_index + 1]
+    history_stack.append(state.model_dump())
+    while len(history_stack) > 20:
+        history_stack.pop(0)
+        history_index -= 1
+    history_index = len(history_stack) - 1
+
 clients = []
 
 async def broadcast_state():
@@ -89,10 +102,32 @@ async def websocket_master(websocket: WebSocket):
 
 @app.get("/api/combat/state")
 async def get_state():
+    out = state.model_dump()
+    out["can_undo"] = history_index > 0
+    out["can_redo"] = history_index < len(history_stack) - 1
+    return out
+
+@app.post("/api/combat/undo")
+async def undo_combat():
+    global state, history_index
+    if history_index > 0:
+        history_index -= 1
+        state = CombatState(**history_stack[history_index])
+        await broadcast_state()
+    return state
+
+@app.post("/api/combat/redo")
+async def redo_combat():
+    global state, history_index
+    if history_index < len(history_stack) - 1:
+        history_index += 1
+        state = CombatState(**history_stack[history_index])
+        await broadcast_state()
     return state
 
 @app.post("/api/actors")
 async def create_actor(actor: Actor):
+    await save_snapshot()
     if not actor.id:
         actor.id = str(uuid.uuid4())
     state.actors.append(actor)
@@ -100,10 +135,12 @@ async def create_actor(actor: Actor):
         state.turn_queue.append(actor.id)
         reorder_turn_queue()
     await broadcast_state()
+    await save_snapshot()
     return actor
 
 @app.patch("/api/actors/{actor_id}")
 async def update_actor(actor_id: str, updates: dict):
+    await save_snapshot()
     for i, a in enumerate(state.actors):
         if a.id == actor_id:
             actor_dict = a.model_dump()
@@ -114,11 +151,13 @@ async def update_actor(actor_id: str, updates: dict):
             state.actors[i] = Actor(**actor_dict)
             reorder_turn_queue()
             await broadcast_state()
+            await save_snapshot()
             return state.actors[i]
     return {"error": "not found"}
 
 @app.post("/api/combat/next-turn")
 async def next_turn():
+    await save_snapshot()
     if not state.turn_queue:
         return {"error": "Queue empty"}
     
@@ -132,51 +171,63 @@ async def next_turn():
             actor.effects = [e for e in actor.effects if e.duration is None or e.duration > 0]
     
     await broadcast_state()
+    await save_snapshot()
     return state
 
 @app.post("/api/combat/start")
 async def start_combat():
+    await save_snapshot()
     state.is_active = True
     state.round = 1
     sorted_actors = sorted(state.actors, key=lambda a: a.initiative, reverse=True)
     state.turn_queue = [a.id for a in sorted_actors]
     state.current_index = 0
     await broadcast_state()
+    await save_snapshot()
     return state
 
 @app.post("/api/combat/end")
 async def end_combat():
+    await save_snapshot()
     state.is_active = False
     state.turn_queue = []
     state.current_index = 0
     await broadcast_state()
+    await save_snapshot()
     return state
 
 @app.post("/api/combat/reset")
 async def reset_combat():
+    await save_snapshot()
     state.is_active = False
     state.round = 1
     state.turn_queue = []
     state.current_index = 0
-    state.actors = []
+    for actor in state.actors:
+        actor.effects = []
     await broadcast_state()
+    await save_snapshot()
     return state
 
 @app.delete("/api/actors/{actor_id}")
 async def delete_actor(actor_id: str):
+    await save_snapshot()
     state.actors = [a for a in state.actors if a.id != actor_id]
     if actor_id in state.turn_queue:
         state.turn_queue.remove(actor_id)
         if state.current_index >= len(state.turn_queue):
             state.current_index = max(0, len(state.turn_queue) - 1)
     await broadcast_state()
+    await save_snapshot()
     return {"status": "success"}
 
 @app.patch("/api/combat/layout")
 async def update_layout(layout: dict):
+    await save_snapshot()
     from backend.models import MiniatureLayout
     state.layout = MiniatureLayout(**layout)
     await broadcast_state()
+    await save_snapshot()
     return state.layout
 
 @app.get("/api/systems/{system_name}/effects")
@@ -356,6 +407,7 @@ async def delete_encounter(system_name: str, filename: str):
 
 @app.post("/api/combat/load")
 async def load_combat(payload: dict):
+    await save_snapshot()
     actors_data = payload.get("actors", [])
     try:
         state.actors = [Actor(**a) if isinstance(a, dict) else a for a in actors_data]
@@ -366,6 +418,7 @@ async def load_combat(payload: dict):
     state.is_active = False
     state.round = 1
     await broadcast_state()
+    await save_snapshot()
     return state
 
 @app.get("/api/render/{actor_id}")

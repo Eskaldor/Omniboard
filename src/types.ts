@@ -63,6 +63,8 @@ export interface CombatState {
   system: string;
   is_active: boolean;
   layout: MiniatureLayout;
+  can_undo?: boolean;
+  can_redo?: boolean;
 }
 
 export interface ColumnConfig {
