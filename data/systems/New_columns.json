@@ -1,0 +1,10 @@
+{
+  "displayName": "New",
+  "columns": [
+    {
+      "key": "hp",
+      "label": "HP",
+      "showInTable": true
+    }
+  ]
+}

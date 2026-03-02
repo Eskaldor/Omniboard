@@ -1,0 +1,55 @@
+{
+  "name": "Test1",
+  "actors": [
+    {
+      "id": "65d01ec0-23a8-4d85-92ab-a584cf08385b",
+      "name": "\u041f\u043e\u0432\u0435\u043b\u0438\u0442\u0435\u043b\u044c \u0442\u044c\u043c\u044b",
+      "role": "enemy",
+      "is_revealed": true,
+      "group_id": null,
+      "group_mode": "sequential",
+      "initiative": 19,
+      "portrait": "",
+      "miniature_id": null,
+      "stats": {
+        "hp": 45,
+        "ac": 10,
+        "speed": 30,
+        "hp_max": 45
+      },
+      "effects": [],
+      "visibility": {
+        "hp": true,
+        "stats": true,
+        "effects": true,
+        "name": true
+      },
+      "hotbar": []
+    },
+    {
+      "id": "bbe28ca0-ce99-42c1-9ee0-2efb663e226f",
+      "name": "\u0412\u043b\u0430\u0441\u0442\u0438\u0442\u0435\u043b\u044c \u043e\u0433\u043d\u044f",
+      "role": "enemy",
+      "is_revealed": true,
+      "group_id": null,
+      "group_mode": "sequential",
+      "initiative": 17,
+      "portrait": "",
+      "miniature_id": null,
+      "stats": {
+        "hp": 30,
+        "ac": 10,
+        "speed": 30,
+        "hp_max": 30
+      },
+      "effects": [],
+      "visibility": {
+        "hp": true,
+        "stats": true,
+        "effects": true,
+        "name": true
+      },
+      "hotbar": []
+    }
+  ]
+}

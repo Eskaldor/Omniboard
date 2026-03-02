@@ -1,0 +1,27 @@
+{
+  "displayName": "D&D 5e",
+  "columns": [
+    {
+      "key": "hp",
+      "label": "HP",
+      "showInTable": true
+    },
+    {
+      "key": "ac",
+      "label": "AC",
+      "showInTable": true
+    },
+    {
+      "key": "speed",
+      "label": "Speed",
+      "showInTable": true,
+      "group": "1"
+    },
+    {
+      "key": "mana",
+      "label": "mana",
+      "showInTable": true,
+      "group": "1"
+    }
+  ]
+}

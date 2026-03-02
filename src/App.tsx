@@ -1,65 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Settings, BookImage, Play, SkipForward, Plus, Square, RotateCcw, MonitorSmartphone, Users, Trash, Swords, Undo, Redo, Layers } from 'lucide-react';
-import { CombatState, Actor, ColumnConfig, Effect, LegendConfig } from './types';
+import { Plus, Users, Trash, Swords } from 'lucide-react';
+import { CombatState, Actor, Effect, LegendConfig } from './types';
 import { MiniSheetModal, ConfigModal, LibraryModal, AddEffectModal, MiniaturesModal, ActorRosterModal, EncountersModal } from './components/Modals';
 import { CombatLog } from './components/CombatLog';
+import { InitiativeTable } from './components/InitiativeTracker/InitiativeTable';
+import { AppHeader } from './components/AppHeader';
+import { CombatToolbar } from './components/CombatToolbar';
 import { useCombatState } from './contexts/CombatStateContext';
-
-function InlineInput({ value, onChange, type = "text", className = "", maxValue }: { value: string | number, onChange: (val: string) => void, type?: string, className?: string, maxValue?: number }) {
-  const [localVal, setLocalVal] = useState(value);
-
-  useEffect(() => {
-    setLocalVal(value);
-  }, [value]);
-
-  const commitValue = () => {
-    if (type !== "number") {
-      onChange(localVal.toString());
-      return;
-    }
-    const str = localVal.toString().trim();
-    const base = typeof value === "string" ? parseFloat(value) || 0 : Number(value);
-    let newNum: number;
-    if (str.startsWith("+") || str.startsWith("-")) {
-      const delta = parseFloat(str) || 0;
-      newNum = base + delta;
-    } else {
-      const parsed = parseFloat(str);
-      newNum = Number.isNaN(parsed) ? 0 : parsed;
-    }
-    if (maxValue !== undefined && maxValue !== null && !Number.isNaN(maxValue)) {
-      newNum = Math.min(newNum, maxValue);
-    }
-    const newValStr = String(newNum);
-    onChange(newValStr);
-    setLocalVal(newValStr);
-  };
-
-  return (
-    <input
-      type={type === "number" ? "text" : type}
-      inputMode={type === "number" ? "decimal" : undefined}
-      value={localVal}
-      onChange={(e) => setLocalVal(e.target.value)}
-      onBlur={commitValue}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          e.currentTarget.blur();
-        }
-      }}
-      onClick={(e) => e.stopPropagation()}
-      onDoubleClick={(e) => e.stopPropagation()}
-      className={`${className} ${type === "number" ? "[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" : ""}`}
-    />
-  );
-}
-
-const DEFAULT_COLUMNS: ColumnConfig[] = [
-  { key: 'hp', label: 'HP', showInTable: true },
-  { key: 'ac', label: 'AC', showInTable: true },
-  { key: 'speed', label: 'Speed', showInTable: true },
-];
+import { useColumns } from './contexts/ColumnsContext';
+import { CombatProvider } from './contexts/CombatContext';
 
 // Survives remounts and HMR: when context state is temporarily null, keep showing last state
 let lastKnownState: CombatState | null = null;
@@ -76,7 +26,8 @@ function getRehydratedState(): CombatState | null {
 }
 
 export default function App() {
-  const { state, setState, wsError, refetchState } = useCombatState();
+  const { state, wsError, refetchState } = useCombatState();
+  const { columns, setColumns, systemName } = useColumns();
   if (state != null) {
     lastKnownState = state;
     try {
@@ -84,9 +35,7 @@ export default function App() {
     } catch {}
   }
   const effectiveState = state ?? lastKnownState ?? (lastKnownState = getRehydratedState());
-  const [columns, setColumns] = useState<ColumnConfig[]>(DEFAULT_COLUMNS);
-  const systemName = effectiveState?.system || "D&D 5e";
-  
+
   const [selectedActor, setSelectedActor] = useState<Actor | null>(null);
   const [effectModalActor, setEffectModalActor] = useState<Actor | null>(null);
   const [selectedEffect, setSelectedEffect] = useState<{ actorId: string; effect: Effect } | null>(null);
@@ -107,7 +56,6 @@ export default function App() {
   const { t } = useTranslation('core', { useSuspense: false });
 
   const legendConfig = effectiveState?.legend ?? { player: '#10b981', enemy: '#ef4444', ally: '#3b82f6', neutral: '#a1a1aa' };
-  const editingLegend = legendLocal ?? legendConfig;
   const showGroupColors = showGroupColorsLocal ?? effectiveState?.show_group_colors ?? true;
   const showFactionColors = showFactionColorsLocal ?? effectiveState?.show_faction_colors ?? true;
   const roleToLegendKey: Record<Actor['role'], keyof LegendConfig> = { character: 'player', enemy: 'enemy', ally: 'ally', neutral: 'neutral' };
@@ -115,32 +63,20 @@ export default function App() {
   const showGroupColorsInTable = effectiveState?.show_group_colors !== false;
   const showFactionColorsInTable = effectiveState?.show_faction_colors !== false;
 
-  useEffect(() => {
-    fetch(`/api/systems/${encodeURIComponent(systemName)}/columns`)
-      .then(res => res.json())
-      .then(data => {
-        if (data && Array.isArray(data) && data.length > 0) {
-          setColumns(data);
-        }
-        // If empty, do not fallback: keep current columns (or DEFAULT_COLUMNS from initial state)
-      })
-      .catch(err => console.error("Failed to fetch columns", err));
-  }, [systemName]);
-
-  const updateActorStat = async (actorId: string, statKey: string, value: any) => {
-    await fetch(`/api/actors/${actorId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ stats: { [statKey]: value } })
-    });
-    refetchState();
-  };
-
   const updateActorField = async (actorId: string, field: string, value: any) => {
     await fetch(`/api/actors/${actorId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ [field]: value })
+    });
+    refetchState();
+  };
+
+  const updateActor = async (actorId: string, updates: Partial<Actor>) => {
+    await fetch(`/api/actors/${actorId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates)
     });
     refetchState();
   };
@@ -249,141 +185,54 @@ export default function App() {
 
   if (!effectiveState) return <div className="min-h-screen bg-zinc-950 text-zinc-200 flex items-center justify-center">Loading...</div>;
 
-  const activeActorId = effectiveState.is_active && effectiveState.turn_queue.length > 0 ? effectiveState.turn_queue[effectiveState.current_index] : null;
-  const activeActorIds = (() => {
-    if (!effectiveState?.is_active || !effectiveState.turn_queue.length) return new Set<string>();
-    const idx = effectiveState.current_index;
-    const aid = effectiveState.turn_queue[idx];
-    const actor = effectiveState.actors.find((a) => a.id === aid);
-    if (!actor?.group_id || actor.group_mode !== 'simultaneous') return new Set([aid]);
-    const ids = new Set<string>();
-    const gid = actor.group_id;
-    for (let i = idx; i < effectiveState.turn_queue.length; i++) {
-      const a = effectiveState.actors.find((x) => x.id === effectiveState.turn_queue[i]);
-      if (!a || a.group_id !== gid || a.group_mode !== 'simultaneous') break;
-      ids.add(a.id);
-    }
-    return ids;
-  })();
-
   return (
+    <CombatProvider>
     <div className="min-h-screen bg-zinc-950 text-zinc-200 flex flex-col font-sans">
-      {/* Header */}
-      <header className="relative bg-zinc-900 border-b border-zinc-800 p-4 flex justify-between items-center">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight text-zinc-100">Omniboard</h1>
-          <div className="relative inline-block">
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => setShowLog((v) => !v)}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setShowLog((v) => !v); } }}
-              className="text-xs text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors"
-            >
-              Round: {effectiveState.round}
-            </div>
-            <CombatLog
-              history={effectiveState.history ?? []}
-              isOpen={showLog}
-              onClose={() => setShowLog(false)}
-              enableLogging={effectiveState.enable_logging !== false}
-              onRefetch={refetchState}
-            />
-          </div>
-        </div>
-        <div className="flex gap-3">
-          <button onClick={() => setShowMiniatures(true)} className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-md text-sm transition-colors">
-            <MonitorSmartphone size={16} /> Miniatures
-          </button>
-          <button onClick={() => setShowLibrary(true)} className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-md text-sm transition-colors">
-            <BookImage size={16} /> Library
-          </button>
-          <button onClick={() => setShowConfig(true)} className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-md text-sm transition-colors">
-            <Settings size={16} /> {t('config', 'Config')}
-          </button>
-          <button onClick={() => setShowLegendPanel((v) => !v)} className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors ${showLegendPanel ? 'bg-emerald-600/30 text-emerald-400' : 'bg-zinc-800 hover:bg-zinc-700'}`} title="Groups">
-            <Layers size={16} /> Groups
-          </button>
-        </div>
-        {(
-          <div
-            className={`absolute top-full right-4 mt-2 w-80 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl overflow-hidden z-50 transition-all duration-300 ease-out ${
-              showLegendPanel ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
-            }`}
-          >
-            <div className="p-4 border-b border-zinc-800">
-              <h3 className="text-sm font-semibold text-zinc-100">Groups</h3>
-            </div>
-            <div className="p-4 space-y-4">
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={showGroupColors}
-                    onChange={(e) => setShowGroupColorsLocal(e.target.checked)}
-                    className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-emerald-500"
-                  />
-                  <span className="text-sm text-zinc-300">Display group colors</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={showFactionColors}
-                    onChange={(e) => setShowFactionColorsLocal(e.target.checked)}
-                    className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-emerald-500"
-                  />
-                  <span className="text-sm text-zinc-300">Display faction (role) colors</span>
-                </label>
-              </div>
-              <div>
-                <h4 className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">Legend (role colors)</h4>
-                <div className="space-y-2">
-                  {(['player', 'enemy', 'ally', 'neutral'] as const).map((role) => (
-                    <div key={role} className="flex items-center justify-between gap-2">
-                      <label className="text-sm text-zinc-300 capitalize">{role === 'player' ? 'Player' : role}</label>
-                      <input
-                        type="color"
-                        value={editingLegend[role]}
-                        onChange={(e) => setLegendLocal((prev) => ({ ...(prev ?? legendConfig), [role]: e.target.value }))}
-                        className="w-10 h-8 rounded bg-zinc-800 border border-zinc-700 cursor-pointer"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <button
-                onClick={() => {
-                  const name = prompt('Group name', '');
-                  if (name == null) return;
-                  const color = prompt('Group color (hex)', '#10b981') || '#10b981';
-                  setCreateGroupModal({ name: name.trim() || 'Group', color: color.trim() || '#10b981', groupId: crypto.randomUUID() });
-                  setGroupSelectMode(true);
-                  setSelectedActorIds(new Set());
-                  setShowLegendPanel(false);
-                }}
-                className="w-full py-2 bg-zinc-700 hover:bg-zinc-600 text-zinc-200 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
-              >
-                <Layers size={16} /> Create Group
-              </button>
-              <button
-                onClick={async () => {
-                  const payload: Record<string, unknown> = { ...(legendLocal ?? legendConfig) };
-                  payload.show_group_colors = showGroupColorsLocal ?? effectiveState?.show_group_colors ?? true;
-                  payload.show_faction_colors = showFactionColorsLocal ?? effectiveState?.show_faction_colors ?? true;
-                  await fetch('/api/combat/legend', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                  setLegendLocal(null);
-                  setShowGroupColorsLocal(null);
-                  setShowFactionColorsLocal(null);
-                  refetchState();
-                }}
-                className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium transition-colors"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        )}
-      </header>
+      <AppHeader
+        round={effectiveState.round}
+        history={effectiveState.history ?? []}
+        showLog={showLog}
+        onToggleLog={() => setShowLog((v) => !v)}
+        enableLogging={effectiveState.enable_logging !== false}
+        onRefetch={refetchState}
+        onShowMiniatures={() => setShowMiniatures(true)}
+        onShowLibrary={() => setShowLibrary(true)}
+        onShowConfig={() => setShowConfig(true)}
+        showLegendPanel={showLegendPanel}
+        onToggleLegendPanel={() => setShowLegendPanel((v) => !v)}
+        legendConfig={legendConfig}
+        editingLegend={legendLocal ?? legendConfig}
+        showGroupColors={showGroupColors}
+        showFactionColors={showFactionColors}
+        onLegendColorChange={(role, color) =>
+          setLegendLocal((prev) => ({ ...(prev ?? legendConfig), [role]: color }))
+        }
+        onShowGroupColorsChange={setShowGroupColorsLocal}
+        onShowFactionColorsChange={setShowFactionColorsLocal}
+        onCreateGroup={() => {
+          const name = prompt('Group name', '');
+          if (name == null) return;
+          const color = prompt('Group color (hex)', '#10b981') || '#10b981';
+          setCreateGroupModal({ name: name.trim() || 'Group', color: color.trim() || '#10b981', groupId: crypto.randomUUID() });
+          setGroupSelectMode(true);
+          setSelectedActorIds(new Set());
+          setShowLegendPanel(false);
+        }}
+        onSaveLegend={async () => {
+          const payload: Record<string, unknown> = { ...(legendLocal ?? legendConfig) };
+          payload.show_group_colors = showGroupColorsLocal ?? effectiveState?.show_group_colors ?? true;
+          payload.show_faction_colors = showFactionColorsLocal ?? effectiveState?.show_faction_colors ?? true;
+          await fetch('/api/combat/legend', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          setLegendLocal(null);
+          setShowGroupColorsLocal(null);
+          setShowFactionColorsLocal(null);
+          refetchState();
+        }}
+      />
 
       {/* Main Content */}
       <main className="flex-1 p-6 overflow-auto">
@@ -445,261 +294,47 @@ export default function App() {
             </div>
           )}
 
-          {/* Header Row */}
-          <div className="flex items-center gap-4 px-3 mb-2 text-sm font-medium text-zinc-400">
-            <div className="w-[54px] shrink-0"></div>
-            <div className="flex-1 flex items-center gap-4 px-4">
-              <div className="w-[54px]">Init</div>
-              <div className="w-48">Name</div>
-              {(() => {
-                const visible = columns.filter(c => c.showInTable);
-                const standalone = visible.filter(c => !c.group || String(c.group).trim() === '');
-                const grouped = visible.filter(c => c.group && String(c.group).trim() !== '');
-                const groupNames = [...new Set(grouped.map(c => String(c.group).trim()))];
-                return (
-                  <>
-                    {standalone.map(col => (
-                      <div key={col.key} className="w-24">{col.label}</div>
-                    ))}
-                    {groupNames.map(grp => (
-                      <div key={grp} className="flex flex-wrap items-center gap-2 px-2 py-1 bg-zinc-800/50 rounded-lg border border-zinc-700/50 max-w-[12rem]">
-                        <span className="text-[10px] text-zinc-500 uppercase">{grp}</span>
-                        {grouped.filter(c => String(c.group).trim() === grp).map(col => (
-                          <span key={col.key} className="text-[10px] text-zinc-400">{col.label}</span>
-                        ))}
-                      </div>
-                    ))}
-                    <div className="flex-1">Effects</div>
-                  </>
-                );
-              })()}
-            </div>
-          </div>
-
-          {/* Rows */}
-          <div className="space-y-2">
-            {(() => {
-              const rows = effectiveState.is_active
-                ? effectiveState.turn_queue.map((id, index) => ({ actor: effectiveState.actors.find(a => a.id === id), index })).filter((x): x is { actor: Actor; index: number } => !!x.actor)
-                : [...effectiveState.actors].sort((a, b) => b.initiative - a.initiative).map((actor, index) => ({ actor, index }));
-              const sortedActors = rows.map(r => r.actor);
-              return rows.map(({ actor, index }) => {
-              const isPastTurn = effectiveState.is_active && index < effectiveState.current_index;
-              const isGrouped = actor.group_id && actor.group_mode === 'simultaneous';
-              const prevActor = sortedActors[index - 1];
-              const nextActor = sortedActors[index + 1];
-              const isFirstInGroup = !prevActor || prevActor.group_id !== actor.group_id;
-              const isLastInGroup = !nextActor || nextActor.group_id !== actor.group_id;
-              const isSelectedForGroup = groupSelectMode && selectedActorIds.has(actor.id);
-              return (
-              <div key={actor.id} className={`flex items-center gap-4 group ${isPastTurn ? 'opacity-40 grayscale-[50%]' : ''}`}>
-                {/* Portrait */}
-                <div className="relative w-[54px] h-[96px] shrink-0">
-                {actor.portrait ? (
-                  <div 
-                    className="w-full h-full rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 flex items-center justify-center shadow-md cursor-pointer hover:border-emerald-500 transition-colors group/portrait"
-                    onClick={() => !groupSelectMode && setPortraitSelectActorId(actor.id)}
-                  >
-                    <img src={actor.portrait} alt={actor.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/portrait:opacity-100 flex items-center justify-center transition-opacity">
-                      <span className="text-[10px] uppercase font-bold text-white tracking-wider">Change</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div 
-                    className="w-full h-full rounded-xl bg-zinc-900 border border-dashed border-zinc-700 flex items-center justify-center cursor-pointer hover:border-emerald-500 transition-colors"
-                    onClick={() => !groupSelectMode && setPortraitSelectActorId(actor.id)}
-                  >
-                    <Plus size={16} className="text-zinc-600" />
-                  </div>
-                )}
-                {groupSelectMode && (
-                  <label className="absolute top-1 right-1 z-20 flex items-center justify-center">
-                    <input
-                      type="checkbox"
-                      checked={isSelectedForGroup}
-                      onChange={(e) => {
-                        setSelectedActorIds((prev) => {
-                          const next = new Set(prev);
-                          if (e.target.checked) next.add(actor.id); else next.delete(actor.id);
-                          return next;
-                        });
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                      className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-emerald-500"
-                    />
-                  </label>
-                )}
-                </div>
-
-                {/* Data Row */}
-                <div 
-                  onDoubleClick={() => setSelectedActor(actor)}
-                  className={`flex-1 flex items-center gap-4 px-4 py-4 min-h-[96px] bg-zinc-900 border rounded-xl cursor-pointer transition-colors relative overflow-hidden shadow-sm ${activeActorIds.has(actor.id) ? 'border-emerald-500/50 bg-zinc-800/50' : 'border-zinc-800 hover:border-zinc-700'}`}
-                >
-                  {showGroupColorsInTable && isGrouped && (
-                    <div
-                      className="absolute left-0 top-0 bottom-0 w-1 z-10 opacity-70 group-hover:opacity-90 transition-all duration-200"
-                      style={{
-                        backgroundColor: actor.group_color || '#10b981',
-                        borderTopLeftRadius: isFirstInGroup ? '0.5rem' : '0',
-                        borderTopRightRadius: isFirstInGroup ? '0.5rem' : '0',
-                        borderBottomLeftRadius: isLastInGroup ? '0.5rem' : '0',
-                        borderBottomRightRadius: isLastInGroup ? '0.5rem' : '0',
-                        boxShadow: 'none',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.boxShadow = `0 0 12px ${actor.group_color || '#10b981'}`;
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.boxShadow = 'none';
-                      }}
-                    />
-                  )}
-                  {activeActorIds.has(actor.id) && (
-                    <div className={`absolute top-0 bottom-0 w-1 bg-emerald-500 ${isGrouped && showGroupColorsInTable ? 'left-1' : 'left-0'}`}></div>
-                  )}
-                  <div className="w-[54px] pl-2 font-mono font-bold text-lg shrink-0" style={{ color: showFactionColorsInTable ? getLegendColor(actor.role) : '#a1a1aa' }}>
-                    <InlineInput 
-                      type="number" 
-                      value={actor.initiative}
-                      onChange={(val) => updateActorField(actor.id, 'initiative', parseInt(val) || 0)}
-                      className="w-10 bg-transparent border border-transparent hover:border-zinc-700 focus:border-emerald-500 rounded px-1 py-0.5 font-mono text-sm focus:outline-none transition-colors"
-                    />
-                  </div>
-                  <div className="w-48">
-                    <InlineInput 
-                      type="text" 
-                      value={actor.name}
-                      onChange={(val) => updateActorField(actor.id, 'name', val)}
-                      className="w-full bg-transparent border border-transparent hover:border-zinc-700 focus:border-emerald-500 rounded px-1 py-0.5 text-zinc-200 font-medium focus:outline-none transition-colors truncate"
-                    />
-                  </div>
-                  
-                  {(() => {
-                    const visible = columns.filter(c => c.showInTable);
-                    const standalone = visible.filter(c => !c.group || String(c.group).trim() === '');
-                    const grouped = visible.filter(c => c.group && String(c.group).trim() !== '');
-                    const groupNames = [...new Set(grouped.map(c => String(c.group).trim()))];
-                    return (
-                      <>
-                        {standalone.map(col => (
-                          <div key={col.key} className="w-24">
-                            <InlineInput
-                              type="number"
-                              value={actor.stats[col.key] ?? 0}
-                              onChange={(val) => updateActorStat(actor.id, col.key, parseInt(val))}
-                              maxValue={col.maxKey != null && typeof actor.stats[col.maxKey] === 'number' ? actor.stats[col.maxKey] : undefined}
-                              className="w-16 bg-zinc-950 border border-zinc-700 rounded px-2 py-1 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                            />
-                          </div>
-                        ))}
-                        {groupNames.map(grp => (
-                          <div key={grp} className="flex flex-wrap gap-2 px-2 py-1 bg-zinc-800/50 rounded-lg border border-zinc-700/50 w-48 max-w-[12rem]">
-                            {grouped.filter(c => String(c.group).trim() === grp).map(col => (
-                              <div key={col.key} className="flex items-center gap-1">
-                                <span className="text-[10px] text-zinc-500">{col.label}:</span>
-                                <InlineInput
-                                  type="number"
-                                  value={actor.stats[col.key] ?? 0}
-                                  onChange={(val) => updateActorStat(actor.id, col.key, parseInt(val))}
-                                  maxValue={col.maxKey != null && typeof actor.stats[col.maxKey] === 'number' ? actor.stats[col.maxKey] : undefined}
-                                  className="w-10 bg-zinc-950 border border-zinc-700 rounded px-1.5 py-0.5 text-xs text-zinc-200 focus:outline-none focus:border-emerald-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        ))}
-                        <div className="flex-1 flex gap-1 flex-wrap items-center">
-                    {actor.effects.map(eff => (
-                      <button
-                        key={eff.id}
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedEffect({ actorId: actor.id, effect: eff });
-                        }}
-                        className="text-xs px-2 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-full border border-indigo-500/30 hover:bg-indigo-500/30 hover:border-indigo-400/50 transition-colors cursor-pointer"
-                        title={eff.description || eff.name}
-                      >
-                        {eff.name} {eff.duration != null ? `(${eff.duration})` : ''}
-                      </button>
-                    ))}
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); setEffectModalActor(actor); }}
-                      className="w-5 h-5 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-emerald-400 transition-colors"
-                      title="Add Effect"
-                    >
-                      <Plus size={12} />
-                    </button>
-                  </div>
-                      </>
-                    );
-                  })()}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); deleteActor(actor.id); }}
-                    className="w-8 h-8 rounded-lg bg-zinc-800/50 hover:bg-red-900/50 flex items-center justify-center text-zinc-500 hover:text-red-400 transition-colors ml-2 shrink-0"
-                    title="Delete Actor"
-                  >
-                    <Trash size={14} />
-                  </button>
-                </div>
-              </div>
-            );});
-            })()}
-            {effectiveState.actors.length === 0 && (
-              <div className="text-center p-8 text-zinc-500 bg-zinc-900/50 rounded-xl border border-zinc-800 border-dashed">
-                No actors in combat.
-              </div>
-            )}
-          </div>
+          <InitiativeTable
+            actors={effectiveState.actors ?? []}
+            turnQueue={effectiveState.turn_queue}
+            currentIndex={effectiveState.current_index}
+            isActive={effectiveState.is_active}
+            columns={columns}
+            showGroupColorsInTable={showGroupColorsInTable}
+            showFactionColorsInTable={showFactionColorsInTable}
+            getLegendColor={getLegendColor}
+            groupSelectMode={groupSelectMode}
+            selectedActorIds={selectedActorIds}
+            onUpdateActor={updateActor}
+            onDeleteActor={deleteActor}
+            onPortraitClick={(id) => setPortraitSelectActorId(id)}
+            onRowDoubleClick={setSelectedActor}
+            onEffectClick={(actorId, effect) => setSelectedEffect({ actorId, effect })}
+            onAddEffectClick={(actor) => setEffectModalActor(actor)}
+            onToggleGroupSelect={(actorId, selected) => {
+              setSelectedActorIds((prev) => {
+                const next = new Set(prev);
+                if (selected) next.add(actorId);
+                else next.delete(actorId);
+                return next;
+              });
+            }}
+          />
         </div>
       </main>
 
-      {/* Footer Controls */}
-      <footer className="bg-zinc-900 border-t border-zinc-800 p-4 flex justify-between items-center">
-        <div className="flex gap-2">
-          <button
-            onClick={undoCombat}
-            disabled={!effectiveState?.can_undo}
-            className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-300 rounded-lg font-medium transition-colors text-sm"
-            title="Undo"
-          >
-            <Undo size={16} /> Undo
-          </button>
-          <button
-            onClick={redoCombat}
-            disabled={!effectiveState?.can_redo}
-            className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-300 rounded-lg font-medium transition-colors text-sm"
-            title="Redo"
-          >
-            <Redo size={16} /> Redo
-          </button>
-          <button onClick={resetCombat} className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg font-medium transition-colors text-sm">
-            <RotateCcw size={16} /> Reset
-          </button>
-          <button onClick={clearCombat} className="flex items-center gap-2 px-4 py-2 bg-red-900/20 hover:bg-red-900/40 text-red-400 rounded-lg font-medium transition-colors text-sm border border-red-900/30">
-            <Trash size={16} /> Clear Combat
-          </button>
-          {effectiveState.is_active && (
-            <button onClick={endCombat} className="flex items-center gap-2 px-4 py-2 bg-red-900/30 hover:bg-red-900/50 text-red-400 rounded-lg font-medium transition-colors text-sm border border-red-900/50">
-              <Square size={16} /> End Combat
-            </button>
-          )}
-        </div>
-        
-        <div className="flex gap-4">
-          {!effectiveState.is_active ? (
-            <button onClick={startCombat} className="flex items-center gap-2 px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors">
-              <Play size={18} /> {t('start_combat', 'Start Combat')}
-            </button>
-          ) : (
-            <button onClick={nextTurn} className="flex items-center gap-2 px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition-colors">
-              <SkipForward size={18} /> Next Turn
-            </button>
-          )}
-        </div>
-      </footer>
+      <CombatToolbar
+        isActive={effectiveState.is_active}
+        canUndo={effectiveState?.can_undo ?? false}
+        canRedo={effectiveState?.can_redo ?? false}
+        onStartCombat={startCombat}
+        onEndCombat={endCombat}
+        onNextTurn={nextTurn}
+        onReset={resetCombat}
+        onClearCombat={clearCombat}
+        onUndo={undoCombat}
+        onRedo={redoCombat}
+      />
 
       {/* Modals */}
       {selectedActor && (
@@ -803,5 +438,6 @@ export default function App() {
         />
       )}
     </div>
+    </CombatProvider>
   );
 }
