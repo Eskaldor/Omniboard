@@ -3,11 +3,14 @@ import App from './App.tsx';
 import './index.css';
 import i18n from './i18n';
 import { CombatStateProvider } from './contexts/CombatStateContext';
+import { ColumnsProvider } from './contexts/ColumnsContext';
 
 function renderApp() {
   createRoot(document.getElementById('root')!).render(
     <CombatStateProvider>
-      <App />
+      <ColumnsProvider>
+        <App />
+      </ColumnsProvider>
     </CombatStateProvider>
   );
 }

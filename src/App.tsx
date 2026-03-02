@@ -1,20 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Users, Trash, Swords } from 'lucide-react';
-import { CombatState, Actor, ColumnConfig, Effect, LegendConfig } from './types';
+import { CombatState, Actor, Effect, LegendConfig } from './types';
 import { MiniSheetModal, ConfigModal, LibraryModal, AddEffectModal, MiniaturesModal, ActorRosterModal, EncountersModal } from './components/Modals';
 import { CombatLog } from './components/CombatLog';
 import { InitiativeTable } from './components/InitiativeTracker/InitiativeTable';
 import { AppHeader } from './components/AppHeader';
 import { CombatToolbar } from './components/CombatToolbar';
 import { useCombatState } from './contexts/CombatStateContext';
+import { useColumns } from './contexts/ColumnsContext';
 import { CombatProvider } from './contexts/CombatContext';
-
-const DEFAULT_COLUMNS: ColumnConfig[] = [
-  { key: 'hp', label: 'HP', showInTable: true },
-  { key: 'ac', label: 'AC', showInTable: true },
-  { key: 'speed', label: 'Speed', showInTable: true },
-];
 
 // Survives remounts and HMR: when context state is temporarily null, keep showing last state
 let lastKnownState: CombatState | null = null;
@@ -31,7 +26,8 @@ function getRehydratedState(): CombatState | null {
 }
 
 export default function App() {
-  const { state, setState, wsError, refetchState } = useCombatState();
+  const { state, wsError, refetchState } = useCombatState();
+  const { columns, setColumns, systemName } = useColumns();
   if (state != null) {
     lastKnownState = state;
     try {
@@ -39,9 +35,7 @@ export default function App() {
     } catch {}
   }
   const effectiveState = state ?? lastKnownState ?? (lastKnownState = getRehydratedState());
-  const [columns, setColumns] = useState<ColumnConfig[]>(DEFAULT_COLUMNS);
-  const systemName = effectiveState?.system || "D&D 5e";
-  
+
   const [selectedActor, setSelectedActor] = useState<Actor | null>(null);
   const [effectModalActor, setEffectModalActor] = useState<Actor | null>(null);
   const [selectedEffect, setSelectedEffect] = useState<{ actorId: string; effect: Effect } | null>(null);
@@ -68,18 +62,6 @@ export default function App() {
   const getLegendColor = (role: Actor['role']) => legendConfig[roleToLegendKey[role]] ?? '#a1a1aa';
   const showGroupColorsInTable = effectiveState?.show_group_colors !== false;
   const showFactionColorsInTable = effectiveState?.show_faction_colors !== false;
-
-  useEffect(() => {
-    fetch(`/api/systems/${encodeURIComponent(systemName)}/columns`)
-      .then(res => res.json())
-      .then(data => {
-        if (data && Array.isArray(data) && data.length > 0) {
-          setColumns(data);
-        }
-        // If empty, do not fallback: keep current columns (or DEFAULT_COLUMNS from initial state)
-      })
-      .catch(err => console.error("Failed to fetch columns", err));
-  }, [systemName]);
 
   const updateActorField = async (actorId: string, field: string, value: any) => {
     await fetch(`/api/actors/${actorId}`, {
@@ -313,7 +295,7 @@ export default function App() {
           )}
 
           <InitiativeTable
-            actors={effectiveState.actors}
+            actors={effectiveState.actors ?? []}
             turnQueue={effectiveState.turn_queue}
             currentIndex={effectiveState.current_index}
             isActive={effectiveState.is_active}

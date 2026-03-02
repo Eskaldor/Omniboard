@@ -1,0 +1,186 @@
+{
+  "name": "\u0411\u0438\u0442\u0432\u0430 \u0433\u043e\u0431\u043b\u0438\u043d\u043e\u0432 \u0438 \u0447\u0435\u0440\u043d\u043e\u043a\u043d\u0438\u0436\u043d\u0438\u043a\u043e\u0432 \u043a\u043e\u043d\u0435\u0446",
+  "actors": [
+    {
+      "id": "ff59f890-6360-48a4-b17a-0a2c77e7ad47",
+      "name": "\u0427\u0435\u0440\u043d\u043e\u043a\u043d\u0438\u0436\u043d\u0438\u043a",
+      "role": "enemy",
+      "is_revealed": true,
+      "group_id": null,
+      "group_mode": "sequential",
+      "initiative": 5,
+      "portrait": "/assets/systems/D&D 5e/portraits/bandit.png",
+      "miniature_id": null,
+      "stats": {
+        "hp": 5,
+        "ac": 17,
+        "speed": 30
+      },
+      "effects": [],
+      "visibility": {
+        "hp": true,
+        "stats": true,
+        "effects": true,
+        "name": true
+      },
+      "hotbar": []
+    },
+    {
+      "id": "9e422880-30e8-442c-aa5d-852303597bae",
+      "name": "\u0427\u0435\u0440\u043d\u043e\u043a\u043d\u0438\u0436\u043d\u0438\u043a",
+      "role": "enemy",
+      "is_revealed": true,
+      "group_id": null,
+      "group_mode": "sequential",
+      "initiative": 6,
+      "portrait": "/assets/systems/D&D 5e/portraits/bandit.png",
+      "miniature_id": null,
+      "stats": {
+        "hp": 5,
+        "ac": 17,
+        "speed": 30
+      },
+      "effects": [],
+      "visibility": {
+        "hp": true,
+        "stats": true,
+        "effects": true,
+        "name": true
+      },
+      "hotbar": []
+    },
+    {
+      "id": "4928a8ff-6ff9-4107-8b8c-457d52779b9d",
+      "name": "Goblin",
+      "role": "enemy",
+      "is_revealed": true,
+      "group_id": null,
+      "group_mode": "sequential",
+      "initiative": 10,
+      "portrait": "https://picsum.photos/seed/goblin/100/100",
+      "miniature_id": null,
+      "stats": {
+        "hp": 7,
+        "ac": 15,
+        "speed": 30
+      },
+      "effects": [],
+      "visibility": {
+        "hp": true,
+        "stats": true,
+        "effects": true,
+        "name": true
+      },
+      "hotbar": []
+    }
+  ],
+  "history": [
+    {
+      "type": "combat_start",
+      "round": 1,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "hp_change",
+      "round": 1,
+      "actor_id": "9e422880-30e8-442c-aa5d-852303597bae",
+      "actor_name": "\u0427\u0435\u0440\u043d\u043e\u043a\u043d\u0438\u0436\u043d\u0438\u043a",
+      "details": {
+        "delta": -1,
+        "is_damage": true
+      }
+    },
+    {
+      "type": "hp_change",
+      "round": 1,
+      "actor_id": "ff59f890-6360-48a4-b17a-0a2c77e7ad47",
+      "actor_name": "\u0427\u0435\u0440\u043d\u043e\u043a\u043d\u0438\u0436\u043d\u0438\u043a",
+      "details": {
+        "delta": 5,
+        "is_damage": false
+      }
+    },
+    {
+      "type": "turn_start",
+      "round": 1,
+      "actor_id": "4928a8ff-6ff9-4107-8b8c-457d52779b9d",
+      "actor_name": "Goblin",
+      "details": {}
+    },
+    {
+      "type": "hp_change",
+      "round": 1,
+      "actor_id": "ff59f890-6360-48a4-b17a-0a2c77e7ad47",
+      "actor_name": "\u0427\u0435\u0440\u043d\u043e\u043a\u043d\u0438\u0436\u043d\u0438\u043a",
+      "details": {
+        "delta": -15,
+        "is_damage": true
+      }
+    },
+    {
+      "type": "turn_start",
+      "round": 1,
+      "actor_id": "9e422880-30e8-442c-aa5d-852303597bae",
+      "actor_name": "\u0427\u0435\u0440\u043d\u043e\u043a\u043d\u0438\u0436\u043d\u0438\u043a",
+      "details": {}
+    },
+    {
+      "type": "hp_change",
+      "round": 1,
+      "actor_id": "3a3432d8-9f41-4deb-a313-cadb5bd88f1a",
+      "actor_name": "Goblin",
+      "details": {
+        "delta": -7,
+        "is_damage": true
+      }
+    },
+    {
+      "type": "actor_left",
+      "round": 1,
+      "actor_id": "3a3432d8-9f41-4deb-a313-cadb5bd88f1a",
+      "actor_name": "Goblin",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 2,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 2,
+      "actor_id": "4928a8ff-6ff9-4107-8b8c-457d52779b9d",
+      "actor_name": "Goblin",
+      "details": {}
+    },
+    {
+      "type": "hp_change",
+      "round": 2,
+      "actor_id": "9e422880-30e8-442c-aa5d-852303597bae",
+      "actor_name": "\u0427\u0435\u0440\u043d\u043e\u043a\u043d\u0438\u0436\u043d\u0438\u043a",
+      "details": {
+        "delta": -9,
+        "is_damage": true
+      }
+    },
+    {
+      "type": "turn_start",
+      "round": 2,
+      "actor_id": "9e422880-30e8-442c-aa5d-852303597bae",
+      "actor_name": "\u0427\u0435\u0440\u043d\u043e\u043a\u043d\u0438\u0436\u043d\u0438\u043a",
+      "details": {}
+    }
+  ],
+  "round": 2,
+  "turn_queue": [
+    "4928a8ff-6ff9-4107-8b8c-457d52779b9d",
+    "9e422880-30e8-442c-aa5d-852303597bae",
+    "ff59f890-6360-48a4-b17a-0a2c77e7ad47"
+  ],
+  "current_index": 1,
+  "is_active": true
+}
