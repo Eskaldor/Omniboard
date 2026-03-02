@@ -84,3 +84,4 @@ class CombatState(BaseModel):
     is_active: bool = False
     active_reaction_actor_id: Optional[str] = None
     enable_logging: bool = True
+    autosave_enabled: bool = True
