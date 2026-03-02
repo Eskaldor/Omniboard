@@ -236,7 +236,7 @@ export default function App() {
 
       {/* Main Content */}
       <main className="flex-1 p-6 overflow-auto">
-        <div className="max-w-5xl mx-auto">
+        <div className="w-full px-8">
           <div className="flex justify-between items-end mb-4">
             <h2 className="text-lg font-medium text-zinc-300">Initiative Tracker</h2>
             <div className="flex gap-4">
