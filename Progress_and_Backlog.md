@@ -1,6 +1,6 @@
 # Omniboard — Progress & Backlog
 
-> Обновлено: 01.03.2026
+> Обновлено: 02.03.2026
 
 ---
 
@@ -63,21 +63,41 @@
 - [x] `data/locales/{lang}/core.json` — файлы переводов
 - [x] Language Switcher в ConfigModal
 
+## ✅ Фаза 8: Рефакторинг UI (02.03.2026)
+
+- [x] App.tsx → модульная структура (40KB → 20KB)
+- [x] Новые компоненты:
+  - AppHeader, CombatToolbar, Toolbar
+  - InitiativeTable, ActorRow, InlineInput
+- [x] Contexts: ColumnsContext, CombatContext, CombatStateContext
+- [x] Hooks: useCombatState
+- [x] Backend: backend/main.py оптимизирован
+- [x] Vite config + vite.config.ts обновлён
+- [x] BUG-2: Undo/Redo исправлен ✅
+- [x] BUG-3: Мигание колонок исправлено ✅
+
 ---
 
 ## 🐛 Активные баги
 
-- [ ] **BUG-1**: Stat Groups — визуальный баг отображения в столбце таблицы
-- [ ] **BUG-2**: `package.json` → `name: "react-example"` → переименовать в `"omniboard"`
-- [ ] **BUG-3**: Убрать мусорные зависимости `express` + `better-sqlite3` из `package.json`
-- [ ] **BUG-4**: Добавить `package-lock.json` в `.gitignore`
+- [ ] **BUG-1**: Stat Groups — выравнивание колонок
+- [ ] **BUG-4**: package.json name → "omniboard"
+- [ ] **BUG-5**: package-lock.json → .gitignore
+
+---
+
+## 🎯 Следующая задача: i18n Локализация 🇷🇺
+
+- Перевести UI на русский
+- Заполнить data/locales/ru/core.json
+- Добавить Language Switcher в ConfigModal
 
 ---
 
 ## 📋 Беклог
 
 ### 🔧 Рефакторинг (приоритет перед новыми фичами)
-- [ ] Разбить `src/App.tsx` (~40KB) на модули и кастомные хуки
+- [x] Разбить `src/App.tsx` (~40KB) на модули и кастомные хуки ✅ Фаза 8
 - [ ] Разбить `src/components/Modals.tsx` (если >20KB) на отдельные файлы
 - [ ] Полная миграция UI-строк на i18n (`useTranslation` во всех компонентах)
 - [ ] Перенести хардкодные тексты в `data/locales/ru/core.json`
