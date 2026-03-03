@@ -180,8 +180,17 @@ async def load_combat(payload: dict):
     actors_data = payload.get("actors", [])
     from backend.models import Actor  # local import: avoid bloating module import graph
 
+    # Keep pinned actors; they are not replaced by the loaded encounter
+    pinned_actors = [a for a in app_state.state.actors if getattr(a, "is_pinned", False)]
+    pinned_ids = {a.id for a in pinned_actors}
+
     try:
-        app_state.state.actors = [Actor(**a) if isinstance(a, dict) else a for a in actors_data]
+        new_actors = [
+            Actor(**a) if isinstance(a, dict) else a
+            for a in actors_data
+            if (a.get("id") if isinstance(a, dict) else getattr(a, "id", None)) not in pinned_ids
+        ]
+        app_state.state.actors = pinned_actors + new_actors
     except Exception as e:
         raise HTTPException(status_code=422, detail=str(e))
 

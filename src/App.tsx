@@ -272,11 +272,12 @@ export default function App() {
                   onClick={async () => {
                     const gid = createGroupModal.groupId ?? crypto.randomUUID();
                     const color = createGroupModal.color;
+                    const groupName = createGroupModal.name;
                     for (const actorId of selectedActorIds) {
                       await fetch(`/api/actors/${actorId}`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ group_id: gid, group_mode: 'simultaneous', group_color: color }),
+                        body: JSON.stringify({ group_id: gid, group_name: groupName, group_mode: 'simultaneous', group_color: color }),
                       });
                     }
                     setGroupSelectMode(false);
@@ -340,7 +341,7 @@ export default function App() {
       {/* Modals */}
       {selectedActor && (
         <MiniSheetModal 
-          actor={selectedActor} 
+          actor={effectiveState?.actors.find((a) => a.id === selectedActor.id) ?? selectedActor} 
           columns={columns} 
           systemName={systemName}
           onClose={() => setSelectedActor(null)} 

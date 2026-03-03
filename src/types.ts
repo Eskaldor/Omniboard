@@ -28,11 +28,14 @@ export interface Actor {
   name: string;
   role: "character" | "enemy" | "ally" | "neutral";
   is_revealed: boolean;
+  is_pinned?: boolean;
   group_id: string | null;
+  group_name?: string | null;
   group_mode: "sequential" | "simultaneous" | null;
   group_color: string | null;
   initiative: number;
   portrait: string;
+  show_portrait?: boolean;
   miniature_id: string | null;
   stats: Record<string, any>;
   effects: Effect[];

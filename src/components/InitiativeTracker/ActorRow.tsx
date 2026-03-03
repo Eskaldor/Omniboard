@@ -3,6 +3,7 @@ import { Plus, Trash } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
 import type { Actor, ColumnConfig, Effect } from '../../types';
+import { getMaxKey, buildStatUpdate as buildStatUpdateUtil } from '../../utils/stats';
 import { InlineInput } from './InlineInput';
 
 export interface ActorRowProps {
@@ -26,6 +27,8 @@ export interface ActorRowProps {
   onEffectClick: (effect: Effect) => void;
   onAddEffectClick: () => void;
   onToggleGroupSelect: (selected: boolean) => void;
+  /** When false, portrait column is hidden (cell not rendered). When true, portrait cell is shown only if actor.show_portrait. */
+  showPortraitColumn: boolean;
 }
 
 export const ActorRow = React.memo(function ActorRow({
@@ -49,25 +52,14 @@ export const ActorRow = React.memo(function ActorRow({
   onEffectClick,
   onAddEffectClick,
   onToggleGroupSelect,
+  showPortraitColumn,
 }: ActorRowProps) {
   const { t } = useTranslation('core', { useSuspense: false });
   const colLabel = (col: ColumnConfig) =>
     i18n.t(`${col.key}.name`, { ns: `systems/${systemName}`, defaultValue: col.label });
   const visible = columns.filter((c) => c.showInTable);
-  const getMaxKey = (c: ColumnConfig) => c.max_key ?? c.maxKey;
-
-  /** Build stats payload for updating base stat; auto-sets max_key to same value if max is empty/0 */
-  const buildStatUpdate = (col: ColumnConfig, baseKey: string, newVal: number) => {
-    const stats = { ...actor.stats, [baseKey]: newVal };
-    const maxKey = getMaxKey(col);
-    if (maxKey) {
-      const currentMax = actor.stats[maxKey];
-      if (currentMax === undefined || currentMax === null || currentMax === 0) {
-        stats[maxKey] = newVal;
-      }
-    }
-    return stats;
-  };
+  const buildStatUpdate = (col: ColumnConfig, baseKey: string, newVal: number) =>
+    buildStatUpdateUtil(actor, col, baseKey, newVal);
   const standalone = visible.filter(
     (c) => !c.group || String(c.group).trim() === '',
   );
@@ -81,51 +73,37 @@ export const ActorRow = React.memo(function ActorRow({
       onDoubleClick={onRowDoubleClick}
       className={`group bg-zinc-900/50 hover:bg-zinc-800/50 transition-colors [&>td:not(:first-child):not(:last-child)]:border-b [&>td:not(:first-child):not(:last-child)]:border-zinc-800/50 ${
         isPastTurn ? 'opacity-40 grayscale-[50%]' : ''
-      } ${isCurrent ? 'bg-zinc-800/40' : ''}`}
+      }       ${isCurrent ? 'bg-zinc-800/40' : ''}`}
     >
-      {/* Portrait */}
-      <td className="px-2 py-1 align-middle sticky left-0 z-10 bg-zinc-950 shadow-[8px_0_15px_-3px_rgba(0,0,0,0.5)] border-r border-zinc-800/50">
-        <div className="relative w-[54px] h-[96px]">
-          {actor.portrait ? (
-            <div
-              className="w-full h-full rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 flex items-center justify-center shadow-md cursor-pointer hover:border-emerald-500 transition-colors group/portrait"
-              onClick={() => !groupSelectMode && onPortraitClick()}
-            >
-              <img
-                src={actor.portrait}
-                alt={actor.name}
-                className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
-              />
-              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/portrait:opacity-100 flex items-center justify-center transition-opacity">
-                <span className="text-[10px] uppercase font-bold text-white tracking-wider">{t('modals.change')}</span>
-              </div>
+      {/* Portrait: only render when column is shown and actor has show_portrait */}
+      {showPortraitColumn && (
+        <td className="px-2 py-1 align-middle sticky left-0 z-10 bg-zinc-950 shadow-[8px_0_15px_-3px_rgba(0,0,0,0.5)] border-r border-zinc-800/50">
+          {actor.show_portrait ? (
+            <div className="relative w-[54px] h-[96px]">
+              {actor.portrait ? (
+                <div className="w-full h-full rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 flex items-center justify-center shadow-md">
+                  <img
+                    src={actor.portrait}
+                    alt={actor.name}
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+              ) : (
+                <div className="w-full h-full rounded-xl bg-zinc-900 border border-dashed border-zinc-700 flex items-center justify-center">
+                  <Plus size={16} className="text-zinc-600" />
+                </div>
+              )}
             </div>
           ) : (
-            <div
-              className="w-full h-full rounded-xl bg-zinc-900 border border-dashed border-zinc-700 flex items-center justify-center cursor-pointer hover:border-emerald-500 transition-colors"
-              onClick={() => !groupSelectMode && onPortraitClick()}
-            >
-              <Plus size={16} className="text-zinc-600" />
-            </div>
+            <div className="w-0 min-w-0 h-[96px]" aria-hidden />
           )}
-          {groupSelectMode && (
-            <label className="absolute top-1 right-1 z-20 flex items-center justify-center">
-              <input
-                type="checkbox"
-                checked={isSelectedForGroup}
-                onChange={(e) => onToggleGroupSelect(e.target.checked)}
-                onClick={(e) => e.stopPropagation()}
-                className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-emerald-500"
-              />
-            </label>
-          )}
-        </div>
-      </td>
+        </td>
+      )}
 
       {/* Initiative */}
       <td className="relative px-2 py-1 text-center align-middle">
-        {showGroupColorsInTable && isGrouped && (
+        {showGroupColorsInTable && !!actor.group_id && (
           <div
             className="absolute left-0 top-1 bottom-1 w-1 z-10 opacity-70"
             style={{
@@ -134,16 +112,27 @@ export const ActorRow = React.memo(function ActorRow({
             }}
           />
         )}
-        <div
-          className="w-[54px] mx-auto font-mono font-bold text-lg"
-          style={{ color: showFactionColorsInTable ? legendColor : '#a1a1aa' }}
-        >
-          <InlineInput
-            type="number"
-            value={actor.initiative}
-            onChange={(val) => onUpdate({ initiative: parseInt(val) || 0 })}
-            className="w-10 bg-transparent border border-transparent hover:border-zinc-700 focus:border-emerald-500 rounded px-1 py-0.5 font-mono text-sm focus:outline-none transition-colors"
-          />
+        <div className="flex items-center justify-center gap-2">
+          {groupSelectMode && (
+            <input
+              type="checkbox"
+              checked={isSelectedForGroup}
+              onChange={(e) => onToggleGroupSelect(e.target.checked)}
+              onClick={(e) => e.stopPropagation()}
+              className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-emerald-500"
+            />
+          )}
+          <div
+            className="w-[54px] mx-auto font-mono font-bold text-lg"
+            style={{ color: showFactionColorsInTable ? legendColor : '#a1a1aa' }}
+          >
+            <InlineInput
+              type="number"
+              value={actor.initiative}
+              onChange={(val) => onUpdate({ initiative: parseInt(val) || 0 })}
+              className="w-10 bg-transparent border border-transparent hover:border-zinc-700 focus:border-emerald-500 rounded px-1 py-0.5 font-mono text-sm focus:outline-none transition-colors"
+            />
+          </div>
         </div>
       </td>
 

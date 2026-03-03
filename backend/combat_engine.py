@@ -92,8 +92,8 @@ def reset_combat_state() -> None:
 
 
 def clear_combat_state() -> None:
-    """Fully clear tracker: actors, queue, round and history."""
-    app_state.state.actors = []
+    """Fully clear tracker: remove only non-pinned actors; keep queue, round and history cleared."""
+    app_state.state.actors = [a for a in app_state.state.actors if getattr(a, "is_pinned", False)]
     app_state.state.turn_queue = []
     app_state.state.current_index = 0
     app_state.state.round = 1

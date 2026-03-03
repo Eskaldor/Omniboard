@@ -64,11 +64,14 @@ class Actor(BaseModel):
     name: str
     role: Literal["character", "enemy", "ally", "neutral"]
     is_revealed: bool = True
+    is_pinned: bool = False
     group_id: Optional[str] = None
+    group_name: Optional[str] = None
     group_mode: Optional[Literal["sequential", "simultaneous"]] = None
     group_color: Optional[str] = None
     initiative: int = 0
     portrait: str
+    show_portrait: bool = False
     miniature_id: Optional[str] = None
     stats: Dict[str, Any] = {}
     effects: List[Effect] = []
