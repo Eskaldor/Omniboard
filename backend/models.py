@@ -85,3 +85,4 @@ class CombatState(BaseModel):
     active_reaction_actor_id: Optional[str] = None
     enable_logging: bool = True
     autosave_enabled: bool = True
+    table_centered: bool = True

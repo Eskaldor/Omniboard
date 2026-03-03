@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Save, Download, Upload, Trash2, Plus, ChevronDown, ChevronUp, Check, Search, Swords } from 'lucide-react';
 import { Actor, ColumnConfig, Effect, MiniatureLayout, DisplayField } from '../types';
 import { slugify } from 'transliteration';
+import { useCombatState } from '../contexts/CombatStateContext';
 
 export function MiniaturesModal({ 
   layout, columns, onClose 
@@ -353,6 +354,9 @@ export function ConfigModal({
   systemName: string, setSystemName: (s: string) => void,
   onClose: () => void 
 }) {
+  const { state } = useCombatState();
+  const tableCentered = state?.table_centered !== false;
+
   const [localSystemName, setLocalSystemName] = useState(systemName);
   const [newKey, setNewKey] = useState('');
   const [newLabel, setNewLabel] = useState('');
@@ -529,6 +533,29 @@ export function ConfigModal({
         </div>
         
         <div className="p-4 overflow-y-auto space-y-1">
+          <div className="flex items-center justify-between py-2 mb-2 border-b border-zinc-800/50">
+            <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">Table</span>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <span className="text-sm text-zinc-300">Центрировать таблицу</span>
+              <input
+                type="checkbox"
+                checked={tableCentered}
+                onChange={async e => {
+                  const next = e.target.checked;
+                  try {
+                    await fetch('/api/combat/settings', {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ table_centered: next }),
+                    });
+                  } catch (err) {
+                    console.error('Failed to toggle table centering', err);
+                  }
+                }}
+                className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-zinc-900"
+              />
+            </label>
+          </div>
           <div className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">Fields / Columns</div>
           {columns.map((col, index) => (
             <div key={col.key} className="flex items-center gap-2 py-1.5 border-b border-zinc-800/50 last:border-0">
@@ -1092,6 +1119,8 @@ export function EncountersModal({
   const [loading, setLoading] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const importInputRef = React.useRef<HTMLInputElement>(null);
+  const { state } = useCombatState();
+  const autosaveEnabled = state?.autosave_enabled ?? true;
 
   const fetchEncounters = () => {
     fetch(`/api/encounters/list?system_name=${encodeURIComponent(systemName)}`)
@@ -1257,6 +1286,26 @@ export function EncountersModal({
               <Save size={16} /> Save Current Combat
             </button>
           </div>
+          <label className="flex items-center gap-2 text-xs text-zinc-400">
+            <input
+              type="checkbox"
+              className="rounded border-zinc-600 bg-zinc-900 text-emerald-500 focus:ring-emerald-500"
+              checked={autosaveEnabled}
+              onChange={async e => {
+                const next = e.target.checked;
+                try {
+                  await fetch('/api/combat/settings', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ autosave_enabled: next }),
+                  });
+                } catch (err) {
+                  console.error('Failed to toggle autosave', err);
+                }
+              }}
+            />
+            <span>Autosave encounter state</span>
+          </label>
           {saveError && <p className="text-sm text-red-400">{saveError}</p>}
           <div className="flex gap-2 flex-wrap">
             <button

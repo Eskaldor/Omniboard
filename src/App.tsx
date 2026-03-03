@@ -305,6 +305,7 @@ export default function App() {
             getLegendColor={getLegendColor}
             groupSelectMode={groupSelectMode}
             selectedActorIds={selectedActorIds}
+            tableCentered={effectiveState?.table_centered !== false}
             onUpdateActor={updateActor}
             onDeleteActor={deleteActor}
             onPortraitClick={(id) => setPortraitSelectActorId(id)}

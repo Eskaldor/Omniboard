@@ -98,6 +98,7 @@ export interface CombatState {
   enable_logging?: boolean;
   can_undo?: boolean;
   can_redo?: boolean;
+  table_centered?: boolean;
 }
 
 export interface ColumnConfig {

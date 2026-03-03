@@ -13,6 +13,7 @@ export interface InitiativeTableProps {
   getLegendColor: (role: Actor['role']) => string;
   groupSelectMode: boolean;
   selectedActorIds: Set<string>;
+  tableCentered: boolean;
   onUpdateActor: (id: string, updates: Partial<Actor>) => void;
   onDeleteActor: (id: string) => void;
   onPortraitClick: (actorId: string) => void;
@@ -33,6 +34,7 @@ export function InitiativeTable({
   getLegendColor,
   groupSelectMode,
   selectedActorIds,
+  tableCentered,
   onUpdateActor,
   onDeleteActor,
   onPortraitClick,
@@ -85,7 +87,7 @@ export function InitiativeTable({
 
   return (
     <div className="w-full overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-      <table className="w-max min-w-full border-collapse text-left whitespace-nowrap text-sm text-zinc-200">
+      <table className={`w-max border-collapse text-left whitespace-nowrap text-sm text-zinc-200 ${tableCentered ? 'mx-auto' : 'min-w-full'}`}>
         <thead>
           <tr>
             {/* Portrait column */}

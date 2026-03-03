@@ -110,9 +110,20 @@ async def update_combat_settings(payload: dict):
     await save_snapshot()
     if "enable_logging" in payload:
         app_state.state.enable_logging = bool(payload["enable_logging"])
+    if "autosave_enabled" in payload:
+        app_state.state.autosave_enabled = bool(payload["autosave_enabled"])
+    if "table_centered" in payload:
+        app_state.state.table_centered = bool(payload["table_centered"])
+
     await save_snapshot()
+    # Persist current state of settings immediately to disk (non-blocking)
+    await app_state.save_state_async()
     await broadcast_state()
-    return {"enable_logging": app_state.state.enable_logging}
+    return {
+        "enable_logging": app_state.state.enable_logging,
+        "autosave_enabled": app_state.state.autosave_enabled,
+        "table_centered": app_state.state.table_centered,
+    }
 
 
 @router.patch("/legend")
