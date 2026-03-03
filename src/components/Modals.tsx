@@ -186,7 +186,7 @@ export function MiniSheetModal({
 }) {
   const { t } = useTranslation('core', { useSuspense: false });
   const colName = (col: ColumnConfig) =>
-    i18n.t(`${col.key}.name`, { ns: `systems/${systemName}`, defaultValue: col.label });
+    i18n.t(`${col.key}.name`, { ns: `systems/${systemName}`, defaultValue: col.key });
   const [localName, setLocalName] = useState(actor.name);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -373,6 +373,22 @@ export function ConfigModal({
   const [presets, setPresets] = useState<string[]>([]);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
+  const [labelDrafts, setLabelDrafts] = useState<Record<string, string>>({});
+
+  const currentLangCode = (i18n.language || '').split('-')[0];
+
+  useEffect(() => {
+    const drafts: Record<string, string> = {};
+    for (const col of columns) {
+      const translated = i18n.t(`${col.key}.name`, {
+        ns: `systems/${systemName}`,
+        defaultValue: col.key
+      });
+      drafts[col.key] = translated;
+    }
+    setLabelDrafts(drafts);
+  }, [systemName, currentLangCode, columns, i18n]);
+
   useEffect(() => {
     setLocalSystemName(systemName);
   }, [systemName]);
@@ -390,7 +406,6 @@ export function ConfigModal({
     setShowLangDropdown(false);
   };
 
-  const currentLangCode = (i18n.language || '').split('-')[0];
   const currentLang = languages.find(l => l.code === currentLangCode);
   const flagFontStyle: React.CSSProperties = { fontFamily: '"Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif' };
 
@@ -478,11 +493,15 @@ export function ConfigModal({
     const name = localSystemName.trim() || systemName;
     if (!name) return;
     const lang = (i18n.language || 'ru').split('-')[0];
+    const columnsToSave = columns.map(c => ({
+      ...c,
+      label: labelDrafts[c.key] ?? c.label
+    }));
     try {
       const res = await fetch(`/api/systems/${encodeURIComponent(name)}/columns`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lang, columns })
+        body: JSON.stringify({ lang, columns: columnsToSave })
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -498,7 +517,7 @@ export function ConfigModal({
         return;
       }
       alert('Columns saved to system!');
-      // Refresh saved systems list so the new system appears in the dropdown
+      setColumns(columnsToSave);
       const listRes = await fetch('/api/systems/list');
       const listData = await listRes.json().catch(() => []);
       setPresets(Array.isArray(listData) ? listData : []);
@@ -637,8 +656,11 @@ export function ConfigModal({
               </div>
               <input
                 type="text"
-                value={col.label}
-                onChange={(e) => updateColumn(col.key, { label: e.target.value })}
+                value={labelDrafts[col.key] ?? col.key}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setLabelDrafts(prev => ({ ...prev, [col.key]: v }));
+                }}
                 placeholder={t('config_modal.label_placeholder')}
                 className={`${inputClass} w-24 min-w-0 flex-1 max-w-[120px]`}
               />

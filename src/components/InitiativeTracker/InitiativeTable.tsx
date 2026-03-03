@@ -175,9 +175,9 @@ export function InitiativeTable({
             <tr>
               <td
                 colSpan={columnCount}
-                className="text-center py-6 px-2 text-zinc-500 bg-zinc-900/50 border-t border-zinc-800 border-dashed"
+                className="text-center py-3 px-2 text-zinc-500 bg-zinc-900/50 border-t border-zinc-800 border-dashed"
               >
-                No actors in combat.
+                {t('no_actors_in_combat', { defaultValue: 'No actors in combat.' })}
               </td>
             </tr>
           )}

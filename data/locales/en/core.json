@@ -1,11 +1,19 @@
 {
   "_meta": {
     "language_name": "English",
-    "flag": "🇬🇧"
+    "flag": "🇬🇧",
+    "app_name_short": "Omniboard",
+    "app_name_full": "Nevrar's Omniboard",
+    "app_author": "Nevrar"
   },
   "language": "Language",
   "config": "Config",
+  "errors": {
+    "connection_failed": "Connection Error",
+    "backend_offline_instructions": "Make sure the backend is running. Start the server with:\n1. pip install -r requirements.txt\n2. uvicorn backend.main:app --reload\n3. npm install && npm run dev"
+  },
   "start_combat": "Start Combat",
+  "no_actors_in_combat": "No actors in combat.",
   "app": {
     "title": "Omniboard"
   },
@@ -90,7 +98,8 @@
     "default_value": "Default value",
     "assign_selected_to_group": "Assign selected to group",
     "selected": "selected",
-    "assign_to_group": "Assign to Group"
+    "assign_to_group": "Assign to Group",
+    "no_actors_in_combat": "No actors in combat."
   },
   "modals": {
     "miniature_layout_config": "Miniature Layout Config",

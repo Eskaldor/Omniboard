@@ -1,5 +1,6 @@
 import { Settings, BookImage, MonitorSmartphone, Layers } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 import type { CombatLogEntry, LegendConfig } from '../types';
 import { CombatLog } from './CombatLog';
 
@@ -52,10 +53,16 @@ export function AppHeader(props: AppHeaderProps) {
     onSaveLegend,
   } = props;
 
+  const appAuthor = i18n.t('_meta.app_author', { ns: 'core', defaultValue: 'Nevrar' });
+  const appName = i18n.t('_meta.app_name_short', { ns: 'core', defaultValue: 'Omniboard' });
+
   return (
     <header className="relative bg-zinc-900 border-b border-zinc-800 p-4 flex justify-between items-center">
       <div>
-        <h1 className="text-xl font-bold tracking-tight text-zinc-100">{t('app.title')}</h1>
+        <h1 className="text-xl font-bold tracking-tight text-zinc-100">
+          <span className="text-base italic text-zinc-400 font-normal">{appAuthor}'s</span>{' '}
+          {appName}
+        </h1>
         <div className="relative inline-block">
           <div
             role="button"

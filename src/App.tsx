@@ -176,19 +176,10 @@ export default function App() {
     return (
       <div className="min-h-screen bg-zinc-950 text-zinc-200 flex flex-col items-center justify-center p-6 text-center">
         <div className="bg-zinc-900 border border-red-500/30 p-6 rounded-xl max-w-md">
-          <h2 className="text-red-400 font-bold mb-4 text-xl">Ошибка подключения</h2>
+          <h2 className="text-red-400 font-bold mb-4 text-xl">{t('errors.connection_failed')}</h2>
           <p className="text-zinc-300 mb-4">{wsError}</p>
-          <p className="text-zinc-400 text-sm">
-            AI Studio песочница поддерживает только Node.js. Так как вы строго запретили использовать Node.js на бэкенде и потребовали Python 3.11+, 
-            бэкенд не может быть запущен в этой среде. 
-            <br/><br/>
-            Чтобы запустить проект, скачайте код и запустите его локально:
-            <br/>
-            <code className="bg-black/50 p-1 rounded mt-2 block text-left">
-              1. pip install -r requirements.txt<br/>
-              2. uvicorn backend.main:app --reload<br/>
-              3. npm install && npm run dev
-            </code>
+          <p className="text-zinc-400 text-sm whitespace-pre-line">
+            {t('errors.backend_offline_instructions')}
           </p>
         </div>
       </div>
