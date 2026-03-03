@@ -371,6 +371,7 @@ export function ConfigModal({
   const [newLabel, setNewLabel] = useState('');
   const [showPresets, setShowPresets] = useState(false);
   const [presets, setPresets] = useState<string[]>([]);
+  const [expertMode, setExpertMode] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const [labelDrafts, setLabelDrafts] = useState<Record<string, string>>({});
@@ -443,7 +444,16 @@ export function ConfigModal({
 
   const addColumn = () => {
     if (newKey && newLabel && !columns.find(c => c.key === newKey)) {
-      setColumns([...columns, { key: newKey, label: newLabel, showInTable: true }]);
+      setColumns([...columns, {
+        key: newKey,
+        label: newLabel,
+        showInTable: true,
+        type: 'number',
+        width: '80px',
+        log_changes: false,
+        show_in_mini_sheet: false,
+        is_advanced: false,
+      }]);
       setNewKey('');
       setNewLabel('');
     }
@@ -495,7 +505,18 @@ export function ConfigModal({
     const lang = (i18n.language || 'ru').split('-')[0];
     const columnsToSave = columns.map(c => ({
       ...c,
-      label: labelDrafts[c.key] ?? c.label
+      label: labelDrafts[c.key] ?? c.label,
+      type: c.type ?? 'number',
+      width: c.width ?? '80px',
+      min_value: c.min_value ?? undefined,
+      max_value: c.max_value ?? undefined,
+      min_key: c.min_key ?? undefined,
+      max_key: c.max_key ?? c.maxKey ?? undefined,
+      display_as_fraction: c.display_as_fraction ?? false,
+      log_changes: c.log_changes ?? false,
+      log_color: c.log_changes ? (c.log_color ?? undefined) : undefined,
+      show_in_mini_sheet: c.show_in_mini_sheet ?? false,
+      is_advanced: c.is_advanced ?? false,
     }));
     try {
       const res = await fetch(`/api/systems/${encodeURIComponent(name)}/columns`, {
@@ -631,77 +652,197 @@ export function ConfigModal({
               />
             </label>
           </div>
+
+          {/* Simple / Expert mode toggle */}
+          <div className="flex items-center justify-between py-2 mb-2 border-b border-zinc-800/50">
+            <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
+              {t('config_modal.column_mode', { defaultValue: 'Column config' })}
+            </span>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <span className="text-sm text-zinc-400">{t('config_modal.simple_mode', { defaultValue: 'Simple' })}</span>
+              <input
+                type="checkbox"
+                checked={expertMode}
+                onChange={(e) => setExpertMode(e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="relative w-10 h-6 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-zinc-300 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500" />
+              <span className="text-sm text-zinc-300">{t('config_modal.expert_mode', { defaultValue: 'Expert' })}</span>
+            </label>
+          </div>
+
           <div className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">{t('config_modal.fields_columns')}</div>
           {columns.map((col, index) => (
-            <div key={col.key} className="flex items-center gap-2 py-1.5 border-b border-zinc-800/50 last:border-0">
-              <div className="flex flex-col shrink-0">
-                <button
-                  type="button"
-                  onClick={() => moveColumn(index, 'up')}
-                  disabled={index === 0}
-                  className="p-0.5 text-zinc-500 hover:text-zinc-300 disabled:opacity-30 disabled:cursor-not-allowed"
-                  title={t('config_modal.move_up')}
-                >
-                  <ChevronUp size={14} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => moveColumn(index, 'down')}
-                  disabled={index === columns.length - 1}
-                  className="p-0.5 text-zinc-500 hover:text-zinc-300 disabled:opacity-30 disabled:cursor-not-allowed"
-                  title={t('config_modal.move_down')}
-                >
-                  <ChevronDown size={14} />
-                </button>
-              </div>
-              <input
-                type="text"
-                value={labelDrafts[col.key] ?? col.key}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setLabelDrafts(prev => ({ ...prev, [col.key]: v }));
-                }}
-                placeholder={t('config_modal.label_placeholder')}
-                className={`${inputClass} w-24 min-w-0 flex-1 max-w-[120px]`}
-              />
-              <input
-                type="text"
-                value={col.key}
-                onChange={(e) => updateColumn(col.key, { key: e.target.value })}
-                placeholder={t('config_modal.key_placeholder')}
-                className={`${inputClass} w-20 min-w-0 font-mono max-w-[100px]`}
-              />
-              <input
-                type="text"
-                value={col.group ?? ''}
-                onChange={(e) => updateColumn(col.key, { group: e.target.value.trim() || undefined })}
-                placeholder={t('config_modal.group_placeholder_column')}
-                className={`${inputClass} w-20 min-w-0 flex-1 max-w-[100px]`}
-              />
-              <input
-                type="text"
-                value={col.maxKey ?? ''}
-                onChange={(e) => updateColumn(col.key, { maxKey: e.target.value.trim() || undefined })}
-                placeholder={t('config_modal.max_key_placeholder')}
-                className={`${inputClass} w-20 min-w-0 font-mono max-w-[100px]`}
-              />
-              <div className="flex items-center gap-1 shrink-0 w-16 justify-center">
+            <div key={col.key} className="py-3 border-b border-zinc-800/50 last:border-0 space-y-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex flex-col shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => moveColumn(index, 'up')}
+                    disabled={index === 0}
+                    className="p-0.5 text-zinc-500 hover:text-zinc-300 disabled:opacity-30 disabled:cursor-not-allowed"
+                    title={t('config_modal.move_up')}
+                  >
+                    <ChevronUp size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => moveColumn(index, 'down')}
+                    disabled={index === columns.length - 1}
+                    className="p-0.5 text-zinc-500 hover:text-zinc-300 disabled:opacity-30 disabled:cursor-not-allowed"
+                    title={t('config_modal.move_down')}
+                  >
+                    <ChevronDown size={14} />
+                  </button>
+                </div>
                 <input
-                  type="checkbox"
-                  checked={col.showInTable}
-                  onChange={() => toggleColumn(col.key)}
-                  className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-zinc-900"
-                  title={t('config_modal.show_in_table')}
+                  type="text"
+                  value={labelDrafts[col.key] ?? col.label}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setLabelDrafts(prev => ({ ...prev, [col.key]: v }));
+                  }}
+                  placeholder={t('config_modal.label_placeholder')}
+                  className={`${inputClass} w-24 min-w-0 flex-1 max-w-[120px]`}
                 />
-                <button
-                  type="button"
-                  onClick={() => removeColumn(col.key)}
-                  className="p-1 text-zinc-600 hover:text-red-400 transition-colors"
-                  title={t('config_modal.remove_field')}
+                <select
+                  value={col.type ?? 'number'}
+                  onChange={(e) => updateColumn(col.key, { type: e.target.value as 'number' | 'text' | 'string' })}
+                  className={`${inputClass} w-20 min-w-0 max-w-[100px]`}
                 >
-                  <Trash2 size={14} />
-                </button>
+                  <option value="number">{t('config_modal.type_number', { defaultValue: 'Number' })}</option>
+                  <option value="text">{t('config_modal.type_text', { defaultValue: 'Text' })}</option>
+                  <option value="string">{t('config_modal.type_string', { defaultValue: 'String' })}</option>
+                </select>
+                <input
+                  type="text"
+                  value={col.key}
+                  onChange={(e) => updateColumn(col.key, { key: e.target.value })}
+                  placeholder={t('config_modal.key_placeholder')}
+                  className={`${inputClass} w-20 min-w-0 font-mono max-w-[100px]`}
+                />
+                <input
+                  type="text"
+                  value={col.group ?? ''}
+                  onChange={(e) => updateColumn(col.key, { group: e.target.value.trim() || undefined })}
+                  placeholder={t('config_modal.group_placeholder_column')}
+                  className={`${inputClass} w-20 min-w-0 flex-1 max-w-[100px]`}
+                />
+                <input
+                  type="text"
+                  value={col.width ?? '80px'}
+                  onChange={(e) => updateColumn(col.key, { width: e.target.value.trim() || '80px' })}
+                  placeholder="80px"
+                  className={`${inputClass} w-16 min-w-0 font-mono max-w-[80px]`}
+                  title={t('config_modal.width', { defaultValue: 'Width' })}
+                />
+                <div className="flex items-center gap-1 shrink-0 w-16 justify-center">
+                  <input
+                    type="checkbox"
+                    checked={col.showInTable}
+                    onChange={() => toggleColumn(col.key)}
+                    className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-zinc-900"
+                    title={t('config_modal.show_in_table')}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeColumn(col.key)}
+                    className="p-1 text-zinc-600 hover:text-red-400 transition-colors"
+                    title={t('config_modal.remove_field')}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               </div>
+              {expertMode && (
+                <div className="pl-8 flex flex-wrap items-center gap-4 text-sm">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-zinc-500 text-xs">{t('config_modal.min_value', { defaultValue: 'Min' })}</span>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={col.min_key ?? ''}
+                        onChange={(e) => updateColumn(col.key, { min_key: e.target.value.trim() || undefined })}
+                        placeholder={t('config_modal.min_key_placeholder', { defaultValue: 'Key (e.g. min_hp)' })}
+                        className={`${inputClass} w-24 font-mono`}
+                      />
+                      <input
+                        type="number"
+                        value={col.min_value ?? ''}
+                        onChange={(e) => updateColumn(col.key, { min_value: e.target.value === '' ? undefined : parseInt(e.target.value, 10) || undefined })}
+                        placeholder={t('config_modal.static_limit', { defaultValue: 'Static' })}
+                        className={`${inputClass} w-16`}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-zinc-500 text-xs">{t('config_modal.max_value', { defaultValue: 'Max' })}</span>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={col.max_key ?? col.maxKey ?? ''}
+                        onChange={(e) => updateColumn(col.key, { max_key: e.target.value.trim() || undefined })}
+                        placeholder={t('config_modal.max_key_placeholder', { defaultValue: 'Key (e.g. max_hp)' })}
+                        className={`${inputClass} w-24 font-mono`}
+                      />
+                      <input
+                        type="number"
+                        value={col.max_value ?? ''}
+                        onChange={(e) => updateColumn(col.key, { max_value: e.target.value === '' ? undefined : parseInt(e.target.value, 10) || undefined })}
+                        placeholder={t('config_modal.static_limit', { defaultValue: 'Static' })}
+                        className={`${inputClass} w-16`}
+                      />
+                    </div>
+                  </div>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={col.display_as_fraction ?? false}
+                      onChange={(e) => updateColumn(col.key, { display_as_fraction: e.target.checked })}
+                      className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-zinc-900"
+                    />
+                    <span className="text-zinc-400">{t('config_modal.display_as_fraction', { defaultValue: 'Display as fraction (e.g., Current / Max)' })}</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={col.show_in_mini_sheet ?? false}
+                      onChange={(e) => updateColumn(col.key, { show_in_mini_sheet: e.target.checked })}
+                      className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-zinc-900"
+                    />
+                    <span className="text-zinc-400">{t('config_modal.show_in_mini_sheet', { defaultValue: 'Mini sheet' })}</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={col.is_advanced ?? false}
+                      onChange={(e) => updateColumn(col.key, { is_advanced: e.target.checked })}
+                      className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-zinc-900"
+                    />
+                    <span className="text-zinc-400">{t('config_modal.is_advanced', { defaultValue: 'Advanced (hidden from players)' })}</span>
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={col.log_changes ?? false}
+                        onChange={(e) => updateColumn(col.key, { log_changes: e.target.checked })}
+                        className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-zinc-900"
+                      />
+                      <span className="text-zinc-400">{t('config_modal.log_changes', { defaultValue: 'Log changes' })}</span>
+                    </label>
+                    {(col.log_changes ?? false) && (
+                      <input
+                        type="color"
+                        value={col.log_color ?? '#eab308'}
+                        onChange={(e) => updateColumn(col.key, { log_color: e.target.value })}
+                        className="w-8 h-7 rounded bg-zinc-800 border border-zinc-700 cursor-pointer"
+                        title={t('config_modal.log_color', { defaultValue: 'Log color' })}
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           ))}
 

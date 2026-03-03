@@ -37,6 +37,28 @@ class MiniatureLayout(BaseModel):
     bottom1: Optional[DisplayField] = None
     bottom2: Optional[DisplayField] = None
 
+
+class ColumnDef(BaseModel):
+    id: str
+    name: str  # Default name (can be overridden by i18n)
+    type: Literal["number", "text", "string"] = "number"  # "text" for comments/notes
+    group: Optional[str] = None
+    min_value: Optional[int] = None
+    max_value: Optional[int] = None
+    min_key: Optional[str] = None  # References another stat key for dynamic min
+    max_key: Optional[str] = None  # References another stat key for dynamic max (e.g. max_hp)
+    width: Optional[str] = "80px"  # e.g., "80px" or "1fr"
+
+    # Logging configuration
+    log_changes: bool = False
+    log_color: Optional[str] = None  # HEX color, e.g., "#eab308"
+
+    # Visibility and UI configuration
+    show_in_mini_sheet: bool = False
+    is_advanced: bool = False
+    display_as_fraction: bool = False  # If true, render as "Value / Max" in table
+
+
 class Actor(BaseModel):
     id: str
     name: str
@@ -62,7 +84,11 @@ class LegendConfig(BaseModel):
 
 
 class LogEntry(BaseModel):
-    type: Literal["combat_start", "combat_end", "round_start", "turn_start", "hp_change", "effect_added", "effect_removed", "actor_joined", "actor_left", "text"]
+    type: Literal[
+        "combat_start", "combat_end", "round_start", "turn_start",
+        "hp_change", "stat_change",
+        "effect_added", "effect_removed", "actor_joined", "actor_left", "text"
+    ]
     round: int
     actor_id: Optional[str] = None
     actor_name: Optional[str] = None

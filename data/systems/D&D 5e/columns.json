@@ -3,23 +3,72 @@
   "columns": [
     {
       "key": "hp",
-      "label": "HP",
-      "showInTable": true
+      "label": "ХП",
+      "showInTable": true,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": false,
+      "is_advanced": false,
+      "display_as_fraction": false
     },
     {
       "key": "ac",
-      "label": "AC",
-      "showInTable": true
+      "label": "КД",
+      "showInTable": true,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": false,
+      "is_advanced": false,
+      "display_as_fraction": false
     },
     {
       "key": "speed",
-      "label": "Speed",
-      "showInTable": true
+      "label": "Скорость",
+      "showInTable": true,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": false,
+      "is_advanced": false,
+      "display_as_fraction": false
     },
     {
       "key": "mana",
-      "label": "mana",
-      "showInTable": true
+      "label": "Мана",
+      "showInTable": true,
+      "log_changes": true,
+      "log_color": "#08b0e7",
+      "type": "number",
+      "width": "80px",
+      "show_in_mini_sheet": false,
+      "is_advanced": false,
+      "max_key": "max_mana",
+      "display_as_fraction": false
+    },
+    {
+      "key": "Ammo",
+      "label": "Ammo",
+      "showInTable": true,
+      "type": "number",
+      "width": "80px",
+      "log_changes": true,
+      "show_in_mini_sheet": false,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "log_color": "#ffbf00"
+    },
+    {
+      "key": "max_mana",
+      "label": "Макс мана",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": false,
+      "is_advanced": false,
+      "display_as_fraction": false
     }
   ]
 }

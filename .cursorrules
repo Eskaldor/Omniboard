@@ -1,273 +1,41 @@
-# Omniboard — Cursor AI Rules v2.0
-
-> Это руководство для Cursor AI при работе с проектом Omniboard.  
-> Последнее обновление: 01.03.2026
-
----
-
-## 🏗️ Архитектура проекта
-
-### Стек (КРИТИЧНО — НЕ ПУТАТЬ!)
-- **Backend:** Python 3.11+ + FastAPI + Pydantic v2 + Pillow
-- **Frontend:** React 19 + TypeScript + Vite 6 + Tailwind CSS v4
-- **Транспорт:** WebSocket (`/ws/master`) для state updates + REST API для мутаций
-- **База данных:** JSON-файлы в `data/` (НЕ SQLite, НЕ PostgreSQL)
-- **Локализация:** i18next + react-i18next + i18next-http-backend
-
-**⚠️ НИКОГДА не предлагай:**
-- Vue, Pinia, Vue Router (старый стек, устарел)
-- Express, Node.js backend (уже удалён)
-- SQLite, better-sqlite3 (не используется)
-- Свой WebSocket-сервер на Node.js (есть FastAPI WebSocket)
-
----
-
-## 📂 Структура проекта
-
-### Текущее состояние (требует рефакторинга!)
-```
-backend/
-├── main.py          # 31 KB — ВСЁ В ОДНОМ ФАЙЛЕ (роуты + логика + WS)
-├── models.py        # Pydantic models (хорошо)
-├── compositor.py    # рендер PNG для ESP32 (хорошо)
-└── state.py         # (будет создан при рефакторинге)
-
-src/
-├── App.tsx          # 40 KB — МОНОЛИТ (требует разбивки)
-├── types.ts         # зеркало Pydantic (ручное, рискованно)
-├── i18n.ts          # i18next init
-└── components/      # (пополняется при рефакторинге)
-```
-
-### Целевая структура (см. Refactoring_Plan.md)
-```
-backend/
-├── main.py          # ~50 строк: app init + routers
-├── state.py         # глобальный state + autosave + broadcast
-├── routers/         # FastAPI routers по доменам
-└── services/        # бизнес-логика (logger, validator)
-
-src/
-├── App.tsx          # ~100 строк: layout + context
-├── hooks/           # custom hooks (useCombatState, useActors)
-├── components/      # изолированные компоненты
-└── contexts/        # React Context
-```
-
-**ПРАВИЛО:** При создании нового функционала СРАЗУ используй целевую структуру, не добавляй в монолиты!
-
----
-
-## 🔥 КРИТИЧЕСКИЕ АРХИТЕКТУРНЫЕ ПРАВИЛА
-
-### 1. Dual History Pattern (НЕ ПУТАТЬ!)
-
-В проекте существуют **ДВЕ независимые системы истории:**
-
-| Переменная | Где живёт | Назначение | Сериализация |
-|---|---|---|---|
-| `CombatState.history: List[LogEntry]` | Pydantic-модель | Нарративный лог боя (события, HP-изменения) | Да (в JSON) |
-| `history_stack: list` + `history_index: int` | Глобальные в `main.py` | Снэпшоты для Undo/Redo (20 шт.) | Нет (только RAM) |
-
-**⚠️ НИКОГДА:**
-- Не используй `CombatState.history` для Undo/Redo
-- Не сериализуй `history_stack` в `CombatState`
-- Не путай `history_cursor` (зарезервировано) с `history_index`
-
-**Правильное использование:**
-```python
-# Лог события:
-add_log("hp_change", actor_id=actor.id, details={"delta": -10})
-
-# Снэпшот для Undo:
-await save_snapshot()  # сохраняет весь state в history_stack
-```
-
-### 2. State Sync Pattern
-
-**Backend → Frontend (только чтение):**
-```python
-# После каждого изменения state:
-await broadcast_state()  # → WebSocket → все клиенты
-```
-
-**Frontend → Backend (мутации через REST):**
-```typescript
-// ПРАВИЛЬНО:
-await fetch('/api/actors', { method: 'POST', body: ... });
-
-// НЕПРАВИЛЬНО (НЕТ ТАКОГО API):
-ws.send(JSON.stringify({ type: 'update_actor', ... }));
-```
-
-**WebSocket только для:** `state_update` (read-only push).
-
-### 3. Asset Override Pattern
-
-```
-data/assets/
-├── default/{portraits,frames,effects}     ← базовые
-└── systems/{system}/{portraits,...}        ← переопределение
-```
-
-**Логика:** `GET /api/assets/{category}?system=shadowrun` возвращает merged список, где системный файл с тем же именем **перекрывает** дефолтный.
-
-**При добавлении новых ассетов:**
-```python
-if system:
-    target_dir = ASSETS_DIR / "systems" / system / category
-else:
-    target_dir = ASSETS_DIR / "default" / category
-```
-
----
-
-## 🎯 Правила разработки
-
-### Работа с большими файлами (экономия лимитов)
-
-**НИКОГДА не модифицируй сразу весь файл >500 строк!**
-
-**Правильный подход:**
-1. Создай новый файл с извлечённой функцией/компонентом
-2. Импортируй в старый файл
-3. Удали дублирующий код
-4. Коммит
-
-**Пример (разбивка App.tsx):**
-```typescript
-// ШАГ 1: Создай src/components/Toolbar.tsx
-export function Toolbar({ onStartCombat, ... }) { ... }
-
-// ШАГ 2: В App.tsx импортируй
-import { Toolbar } from './components/Toolbar';
-
-// ШАГ 3: Замени JSX
-<Toolbar onStartCombat={handleStart} ... />
-```
-
-### Pydantic best practices
-
-**ВСЕГДА используй:**
-```python
-state.model_dump()         # dict
-state.model_dump_json()    # JSON string
-CombatState(**data)        # из dict
-```
-
-**НИКОГДА:**
-```python
-state.dict()               # deprecated в Pydantic v2
-state.json()               # deprecated
-```
-
-### TypeScript & API calls
-
-**Обработка ошибок (ОБЯЗАТЕЛЬНО):**
-```typescript
-try {
-  const res = await fetch('/api/actors', { method: 'POST', ... });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const data = await res.json();
-  // ...
-} catch (err) {
-  console.error('API error:', err);
-  toast.error(`Failed: ${err.message}`);
-}
-```
-
-**Не делай silent fails!** Мастер должен видеть что пошло не так.
-
-### React компоненты
-
-**Именование:**
-- Компоненты: `PascalCase` (InitiativeTable.tsx)
-- Хуки: `camelCase` с `use` (useCombatState.ts)
-- Утилиты: `camelCase` (apiCall.ts)
-
-**Структура компонента:**
-```typescript
-// 1. Imports
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-
-// 2. Types
-interface Props { ... }
-
-// 3. Component
-export function MyComponent({ prop }: Props) {
-  const { t } = useTranslation('core');
-  // ...
-  return <div>...</div>;
-}
-```
-
-**Используй React.memo для строк таблицы:**
-```typescript
-export const ActorRow = React.memo(function ActorRow({ actor }: Props) {
-  // ...
-}, (prev, next) => prev.actor.id === next.actor.id && /* ... */);
-```
-
-### i18n (локализация)
-
-**Namespaces:**
-- `core` — UI панели (кнопки, заголовки)
-- `systems/{system}` — термины НРИ-системы (hp, ac, wounds)
-
-**В коде:**
-```typescript
-const { t } = useTranslation('core');
-<button>{t('buttons.start_combat')}</button>
-
-// Для системных терминов:
-const { t: tSys } = useTranslation('systems/dnd5e');
-<span>{tSys('stats.hp')}</span>
-```
-
-**Файлы:** `data/locales/{lang}/core.json`, `data/locales/{lang}/systems/{system}.json`
-
----
-
-## 📋 Чек-лист перед коммитом
-
-- [ ] Код работает локально (`npm run dev`)
-- [ ] Нет TypeScript ошибок (`npm run lint` или встроенная проверка)
-- [ ] Все новые тексты вынесены в i18n (если фича UI)
-- [ ] API-вызовы обёрнуты в try/catch с toast-уведомлениями
-- [ ] Большие компоненты разбиты (не добавляю в `App.tsx`/`main.py`)
-- [ ] Pydantic: используется `model_dump()`, а не `.dict()`
-- [ ] WebSocket: только для чтения, мутации через REST
-- [ ] Комментарии на английском (код) или русском (для мастера в UI)
-
----
-
-## 🐛 Известные проблемы (НЕ ЛОМАЙ ЭТО!)
-
-1. **BUG-1:** Stat Groups — колонки разъезжаются (см. Refactoring_Plan.md)
-2. **BUG-2:** Мерцание столбцов при смене раунда (React re-render)
-3. **Монолиты:** `App.tsx` (40KB) и `main.py` (31KB) — в процессе рефакторинга
-
-**Если задача касается этих файлов:** Сначала прочитай Refactoring_Plan.md!
-
----
-
-## 📚 Полезные документы
-
-- `Omniboard_TZ.md` — техническое задание, API reference, Pydantic models
-- `Progress_and_Backlog.md` — что сделано, что в беклоге
-- `Architecture_Decisions_and_Icebox.md` — почему выбрали React/FastAPI/JSON, отклонённые идеи
-- `Refactoring_Plan.md` — приоритеты рефакторинга, баги, порядок действий
-
-**При неясностях:** Спроси разработчика, не выдумывай архитектуру!
-
----
-
-## 🚀 Текущий приоритет разработки
-
-**Идёт рефакторинг (см. Refactoring_Plan.md):**
-1. ✅ Документация обновлена
-2. ✅ Чистка package.json
-3. 🔄 **Следующее:** Автосохранение state ИЛИ разбивка App.tsx
-
-**При добавлении новых фич:** Используй целевую структуру (hooks, components), не раздувай монолиты!
+# Omniboard - Cursor AI Rules & Context
+
+You are an AI assistant helping to build "Omniboard" — a local hardware-software complex for running tabletop RPG encounters (TTRPGs like D&D 5e). 
+You report to Nevrar (System Admin / Developer) and Ingris (Tech Lead / Reviewer).
+
+## 1. TECH STACK (STRICT)
+- **Frontend:** React 19, TypeScript, Vite 6, Tailwind CSS v4, `lucide-react`, `framer-motion`. 
+- **Backend:** Python 3.11, FastAPI, Pydantic v2.
+- **NEVER use Vue.js, Pinia, or Vuex.** The project was migrated to React.
+
+## 2. PROJECT ARCHITECTURE (Monorepo)
+- `/src/` — React frontend.
+- `/backend/` — FastAPI backend (`main.py`, `models.py`, `routers/`, `services/`).
+- `/data/` — Local database (JSON/Markdown files). This is a strictly local app, no external databases (no SQL/Mongo).
+
+## 3. DATA & SYSTEM STORAGE (CRITICAL)
+All dynamic game data is stored in the `/data/` folder.
+- **Core Locales:** `/data/locales/{lang}/core.json` (UI translations: buttons, generic menus).
+- **Systems:** `/data/systems/{system_name}/` (e.g., `D&D 5e`).
+  - `columns.json` — Defines the stats/columns for actors.
+  - `effects.json` — Defines standard status effects.
+  - `locales/{lang}.json` — System-specific translations (translations for column names, effect names).
+
+## 4. LOCALIZATION (i18n Namespace Pattern)
+- Frontend uses `i18next`.
+- Do NOT hardcode strings in UI components. 
+- Use `t('key')` from `useTranslation('core')` for generic UI.
+- Use `t('key')` from `useTranslation('system')` for system-specific terms.
+- For pluralization (e.g., logs), use standard i18next suffix keys (`_one`, `_few`, `_many`, `_other`) and pass `{{count}}`.
+
+## 5. CODING GUIDELINES
+- **One Task = One File/Component.** Do not rewrite unrelated files unless explicitly asked.
+- **Backend:** Use strict type hinting. Pydantic models must inherit from `BaseModel` (v2). Always validate incoming JSON.
+- **Frontend:** Use functional components and React Hooks. Keep components modular. If a component gets too large (e.g., `Modals.tsx`), suggest splitting it.
+- **No pure CSS:** Use Tailwind CSS utility classes for styling.
+
+## 6. WORKFLOW & BEHAVIOR
+1. Read the provided prompt carefully. If referring to architecture, check `Omniboard_TZ.md` or `Architecture_Decisions_and_Icebox.md`.
+2. Write clean, self-documenting code. 
+3. After completing a logical chunk of work or a feature, remind the user (Nevrar) to update `Progress_and_Backlog.md`.
+4. If a requested feature contradicts the local-first, JSON-based architecture, politely warn the user and suggest an alternative.

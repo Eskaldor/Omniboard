@@ -155,6 +155,18 @@
     "open_logs_folder": "Открыть папку логов",
     "clear_all_logs": "Очистить все логи"
   },
+  "log": {
+    "stat_increased": "{{stat}}: +{{count}}",
+    "stat_increased_one": "{{stat}}: +{{count}}",
+    "stat_increased_few": "{{stat}}: +{{count}}",
+    "stat_increased_many": "{{stat}}: +{{count}}",
+    "stat_increased_other": "{{stat}}: +{{count}}",
+    "stat_decreased": "{{stat}}: -{{count}}",
+    "stat_decreased_one": "{{stat}}: -{{count}}",
+    "stat_decreased_few": "{{stat}}: -{{count}}",
+    "stat_decreased_many": "{{stat}}: -{{count}}",
+    "stat_decreased_other": "{{stat}}: -{{count}}"
+  },
   "miniature_layout": {
     "show_portrait": "Показывать портрет",
     "show_portrait_desc": "Отображать портрет персонажа на экране миниатюр.",

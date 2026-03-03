@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import uuid
 
 from fastapi import APIRouter
@@ -8,11 +9,43 @@ from backend import combat_engine
 from backend import state as app_state
 from backend.history import save_snapshot
 from backend.models import Actor
+from backend.paths import DATA_DIR
 from backend.routers.ws import broadcast_state
 from backend.services.logger import add_log
 
 
 router = APIRouter(prefix="/api/actors", tags=["actors"])
+
+
+def _load_system_columns(system_name: str) -> list[dict]:
+    """Load column definitions from system's columns.json. Returns list of column dicts."""
+    if not (system_name and system_name.strip()):
+        return []
+    name = system_name.strip()
+    if ".." in name or "/" in name or "\\" in name:
+        return []
+    path = (DATA_DIR / name / "columns.json").resolve()
+    try:
+        path.relative_to(DATA_DIR.resolve())
+    except ValueError:
+        return []
+    if not path.exists():
+        return []
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if isinstance(data, list):
+            return data
+        return data.get("columns") or []
+    except Exception:
+        return []
+
+
+def _column_by_key(columns: list[dict], stat_key: str) -> dict | None:
+    """Return column that matches stat_key (column 'key' or 'id')."""
+    for col in columns:
+        if isinstance(col, dict) and (col.get("key") == stat_key or col.get("id") == stat_key):
+            return col
+    return None
 
 
 @router.post("")
@@ -37,20 +70,45 @@ async def update_actor(actor_id: str, updates: dict):
         if a.id == actor_id:
             old_actor = a
             actor_dict = a.model_dump()
-            old_hp = actor_dict.get("stats", {}).get("hp")
+            old_stats = dict(actor_dict.get("stats") or {})
             if "stats" in updates:
                 actor_dict["stats"].update(updates["stats"])
                 del updates["stats"]
             actor_dict.update(updates)
             new_actor = Actor(**actor_dict)
-            new_hp = new_actor.stats.get("hp")
-            if old_hp is not None and new_hp is not None and old_hp != new_hp:
-                delta = new_hp - old_hp
+            new_stats = dict(new_actor.stats or {})
+
+            # Dynamic stat change logging from column config
+            columns = _load_system_columns(getattr(app_state.state, "system", "") or "D&D 5e")
+            all_keys = set(old_stats.keys()) | set(new_stats.keys())
+            for stat_key in all_keys:
+                old_val = old_stats.get(stat_key)
+                new_val = new_stats.get(stat_key)
+                if old_val == new_val:
+                    continue
+                try:
+                    old_num = int(old_val) if old_val is not None else None
+                    new_num = int(new_val) if new_val is not None else None
+                except (TypeError, ValueError):
+                    old_num = new_num = None
+                if old_num is None and new_num is None:
+                    continue
+                amount = (new_num or 0) - (old_num or 0)
+                col = _column_by_key(columns, stat_key)
+                if not col or not col.get("log_changes"):
+                    continue
+                stat_name = col.get("label") or col.get("name") or stat_key
+                log_color = col.get("log_color") or "#a1a1aa"
                 add_log(
-                    "hp_change",
+                    "stat_change",
                     actor_id=new_actor.id,
                     actor_name=new_actor.name,
-                    details={"delta": delta, "is_damage": delta < 0},
+                    details={
+                        "stat_key": stat_key,
+                        "stat_name": stat_name,
+                        "amount": amount,
+                        "color": log_color,
+                    },
                 )
 
             # Effect diff: added and removed

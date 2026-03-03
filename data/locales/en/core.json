@@ -155,6 +155,10 @@
     "open_logs_folder": "Open logs folder",
     "clear_all_logs": "Clear all logs"
   },
+  "log": {
+    "stat_increased": "{{stat}}: +{{count}}",
+    "stat_decreased": "{{stat}}: -{{count}}"
+  },
   "miniature_layout": {
     "show_portrait": "Show Portrait",
     "show_portrait_desc": "Display the actor's portrait on the miniature screen.",

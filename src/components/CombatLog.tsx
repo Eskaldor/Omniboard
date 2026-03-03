@@ -14,6 +14,7 @@ interface CombatLogProps {
 }
 
 function LogEvent({ entry, index }: { entry: LogEntryView; index: number }) {
+  const { t } = useTranslation('core', { useSuspense: false });
   const isGmNote = entry.type === 'text' && entry.details?.is_gm_note === true;
 
   switch (entry.type) {
@@ -57,6 +58,22 @@ function LogEvent({ entry, index }: { entry: LogEntryView; index: number }) {
               )}
             </>
           )}
+        </div>
+      );
+    }
+    case 'stat_change': {
+      const statName = (entry.details?.stat_name as string) ?? (entry.details?.stat_key as string) ?? '?';
+      const amount = typeof entry.details?.amount === 'number' ? entry.details.amount : 0;
+      const absCount = Math.abs(amount);
+      const isIncrease = amount > 0;
+      const color = typeof entry.details?.color === 'string' ? entry.details.color : '#a1a1aa';
+      const messageKey = isIncrease ? 'log.stat_increased' : 'log.stat_decreased';
+      const message = t(messageKey, { stat: statName, count: absCount });
+      return (
+        <div className="py-1.5 px-2 rounded text-sm">
+          <span className="text-zinc-300">{entry.actor_name ?? 'Unknown'}</span>
+          {' '}
+          <span style={{ color }} className="font-medium">{message}</span>
         </div>
       );
     }

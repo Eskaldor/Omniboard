@@ -69,6 +69,7 @@ export type CombatLogEntryType =
   | 'round_start'
   | 'turn_start'
   | 'hp_change'
+  | 'stat_change'
   | 'effect_added'
   | 'effect_removed'
   | 'actor_joined'
@@ -106,5 +107,22 @@ export interface ColumnConfig {
   label: string;
   showInTable: boolean;
   group?: string;
+  /** @deprecated Use max_key. Kept for backwards compatibility. */
   maxKey?: string;
+  /** Column data type; default "number" */
+  type?: 'number' | 'text' | 'string';
+  /** Column width e.g. "80px" or "1fr" */
+  width?: string;
+  min_value?: number;
+  max_value?: number;
+  /** Key of another stat for dynamic min (e.g. min_hp) */
+  min_key?: string;
+  /** Key of another stat for dynamic max (e.g. max_hp) */
+  max_key?: string;
+  /** If true, render as "Value / Max" in table when max_key is set */
+  display_as_fraction?: boolean;
+  log_changes?: boolean;
+  log_color?: string;
+  show_in_mini_sheet?: boolean;
+  is_advanced?: boolean;
 }

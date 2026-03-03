@@ -51,17 +51,11 @@ export function InitiativeTable({
   const colLabel = (col: ColumnConfig) =>
     i18n.t(`${col.key}.name`, { ns: `systems/${systemName}`, defaultValue: col.key });
   const visible = columns.filter((c) => c.showInTable);
-  const visibleKeys = new Set(visible.map((c) => c.key));
-  const mergedMaxKeys = new Set(
-    visible
-      .filter((c) => c.maxKey && visibleKeys.has(c.maxKey))
-      .map((c) => c.maxKey as string),
-  );
   const standalone = visible.filter(
-    (c) => (!c.group || String(c.group).trim() === '') && !mergedMaxKeys.has(c.key),
+    (c) => !c.group || String(c.group).trim() === '',
   );
   const grouped = visible.filter(
-    (c) => c.group && String(c.group).trim() !== '' && !mergedMaxKeys.has(c.key),
+    (c) => c.group && String(c.group).trim() !== '',
   );
   const groupNames = [...new Set(grouped.map((c) => String(c.group).trim()))];
   const columnCount = 1 + 1 + 1 + standalone.length + groupNames.length + 1 + 1;

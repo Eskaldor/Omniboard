@@ -42,6 +42,10 @@ def add_log(
         if t == "hp_change":
             delta = det.get("delta", 0)
             return f"{name} HP changed ({delta})."
+        if t == "stat_change":
+            stat_name = det.get("stat_name", det.get("stat_key", "?"))
+            amount = det.get("amount", 0)
+            return f"{name} {stat_name}: {'+' if amount >= 0 else ''}{amount}."
         if t == "effect_added":
             effect_name = det.get("effect_name", "?")
             return f"{name} gained effect: {effect_name}."

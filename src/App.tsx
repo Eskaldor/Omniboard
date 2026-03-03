@@ -4,6 +4,7 @@ import { Plus, Users, Trash, Swords } from 'lucide-react';
 import { CombatState, Actor, Effect, LegendConfig } from './types';
 import i18n from './i18n';
 import { MiniSheetModal, ConfigModal, LibraryModal, AddEffectModal, MiniaturesModal, ActorRosterModal, EncountersModal } from './components/Modals';
+import { GroupCreateModal } from './components/Modals/GroupCreateModal';
 import { CombatLog } from './components/CombatLog';
 import { InitiativeTable } from './components/InitiativeTracker/InitiativeTable';
 import { AppHeader } from './components/AppHeader';
@@ -54,6 +55,7 @@ export default function App() {
   const [groupSelectMode, setGroupSelectMode] = useState(false);
   const [selectedActorIds, setSelectedActorIds] = useState<Set<string>>(new Set());
   const [createGroupModal, setCreateGroupModal] = useState<{ name: string; color: string; groupId?: string } | null>(null);
+  const [showGroupCreateModal, setShowGroupCreateModal] = useState(false);
   const { t } = useTranslation('core', { useSuspense: false });
 
   // Ленивая загрузка локалей активной системы
@@ -213,13 +215,7 @@ export default function App() {
         onShowGroupColorsChange={setShowGroupColorsLocal}
         onShowFactionColorsChange={setShowFactionColorsLocal}
         onCreateGroup={() => {
-          const name = prompt('Group name', '');
-          if (name == null) return;
-          const color = prompt('Group color (hex)', '#10b981') || '#10b981';
-          setCreateGroupModal({ name: name.trim() || 'Group', color: color.trim() || '#10b981', groupId: crypto.randomUUID() });
-          setGroupSelectMode(true);
-          setSelectedActorIds(new Set());
-          setShowLegendPanel(false);
+          setShowGroupCreateModal(true);
         }}
         onSaveLegend={async () => {
           const payload: Record<string, unknown> = { ...(legendLocal ?? legendConfig) };
@@ -442,6 +438,17 @@ export default function App() {
           onLoad={refetchState}
         />
       )}
+
+      <GroupCreateModal
+        isOpen={showGroupCreateModal}
+        onClose={() => setShowGroupCreateModal(false)}
+        onSubmit={(name, color) => {
+          setCreateGroupModal({ name, color, groupId: crypto.randomUUID() });
+          setGroupSelectMode(true);
+          setSelectedActorIds(new Set());
+          setShowLegendPanel(false);
+        }}
+      />
     </div>
     </CombatProvider>
   );

@@ -54,17 +54,25 @@ export const ActorRow = React.memo(function ActorRow({
   const colLabel = (col: ColumnConfig) =>
     i18n.t(`${col.key}.name`, { ns: `systems/${systemName}`, defaultValue: col.label });
   const visible = columns.filter((c) => c.showInTable);
-  const visibleKeys = new Set(visible.map((c) => c.key));
-  const mergedMaxKeys = new Set(
-    visible
-      .filter((c) => c.maxKey && visibleKeys.has(c.maxKey))
-      .map((c) => c.maxKey as string),
-  );
+  const getMaxKey = (c: ColumnConfig) => c.max_key ?? c.maxKey;
+
+  /** Build stats payload for updating base stat; auto-sets max_key to same value if max is empty/0 */
+  const buildStatUpdate = (col: ColumnConfig, baseKey: string, newVal: number) => {
+    const stats = { ...actor.stats, [baseKey]: newVal };
+    const maxKey = getMaxKey(col);
+    if (maxKey) {
+      const currentMax = actor.stats[maxKey];
+      if (currentMax === undefined || currentMax === null || currentMax === 0) {
+        stats[maxKey] = newVal;
+      }
+    }
+    return stats;
+  };
   const standalone = visible.filter(
-    (c) => (!c.group || String(c.group).trim() === '') && !mergedMaxKeys.has(c.key),
+    (c) => !c.group || String(c.group).trim() === '',
   );
   const grouped = visible.filter(
-    (c) => c.group && String(c.group).trim() !== '' && !mergedMaxKeys.has(c.key),
+    (c) => c.group && String(c.group).trim() !== '',
   );
   const groupNames = [...new Set(grouped.map((c) => String(c.group).trim()))];
 
@@ -153,9 +161,12 @@ export const ActorRow = React.memo(function ActorRow({
 
       {/* Standalone stats */}
       {standalone.map((col) => {
-        const hasMaxKey = col.maxKey && typeof actor.stats[col.maxKey] === 'number';
-        if (hasMaxKey) {
-          const maxKey = col.maxKey as string;
+        const maxKey = getMaxKey(col);
+        const hasMaxKey = !!maxKey;
+        const showAsFraction = (col.display_as_fraction ?? false) && hasMaxKey;
+
+        if (showAsFraction) {
+          const maxVal = actor.stats[maxKey!];
           return (
             <td key={col.key} className="px-2 py-1 text-center align-middle">
               <div className="min-w-[5rem] w-20 mx-auto flex items-center justify-center gap-1 whitespace-nowrap">
@@ -164,40 +175,38 @@ export const ActorRow = React.memo(function ActorRow({
                   value={actor.stats[col.key] ?? 0}
                   onChange={(val) =>
                     onUpdate({
-                      stats: { ...actor.stats, [col.key]: parseInt(val) },
+                      stats: buildStatUpdate(col, col.key, parseInt(val)),
                     })
                   }
                   maxValue={
-                    typeof actor.stats[maxKey] === 'number' ? (actor.stats[maxKey] as number) : undefined
+                    typeof maxVal === 'number' ? maxVal : (col.max_value ?? undefined)
                   }
                   className="w-10 bg-zinc-950 border border-zinc-700 rounded px-1.5 py-0.5 text-xs text-zinc-200 focus:outline-none focus:border-emerald-500"
                 />
                 <span className="text-xs text-zinc-500">/</span>
-                <InlineInput
-                  type="number"
-                  value={actor.stats[maxKey] ?? 0}
-                  onChange={(val) =>
-                    onUpdate({
-                      stats: { ...actor.stats, [maxKey]: parseInt(val) },
-                    })
-                  }
-                  className="w-10 bg-zinc-950 border border-zinc-700 rounded px-1.5 py-0.5 text-xs text-zinc-200 focus:outline-none focus:border-emerald-500"
-                />
+                <span className="min-w-[1.5rem] text-xs text-zinc-400 tabular-nums">
+                  {maxVal != null ? String(maxVal) : '—'}
+                </span>
               </div>
             </td>
           );
         }
+
         return (
           <td key={col.key} className="px-2 py-1 text-center align-middle">
             <div className="min-w-[5rem] w-20 mx-auto flex items-center justify-center gap-1">
               <InlineInput
                 type="number"
                 value={actor.stats[col.key] ?? 0}
-                onChange={(val) => onUpdate({ stats: { ...actor.stats, [col.key]: parseInt(val) } })}
+                onChange={(val) =>
+                  onUpdate({
+                    stats: buildStatUpdate(col, col.key, parseInt(val)),
+                  })
+                }
                 maxValue={
-                  col.maxKey != null && typeof actor.stats[col.maxKey] === 'number'
-                    ? (actor.stats[col.maxKey] as number)
-                    : undefined
+                  maxKey && typeof actor.stats[maxKey] === 'number'
+                    ? (actor.stats[maxKey] as number)
+                    : col.max_value
                 }
                 className="w-16 bg-zinc-950 border border-zinc-700 rounded px-2 py-1 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
               />
@@ -213,9 +222,12 @@ export const ActorRow = React.memo(function ActorRow({
             {grouped
               .filter((c) => String(c.group).trim() === grp)
               .map((col) => {
-                const hasMaxKey = col.maxKey && typeof actor.stats[col.maxKey] === 'number';
-                if (hasMaxKey) {
-                  const maxKey = col.maxKey as string;
+                const maxKey = getMaxKey(col);
+                const hasMaxKey = !!maxKey;
+                const showAsFraction = (col.display_as_fraction ?? false) && hasMaxKey;
+
+                if (showAsFraction) {
+                  const maxVal = actor.stats[maxKey!];
                   return (
                     <div
                       key={col.key}
@@ -228,25 +240,18 @@ export const ActorRow = React.memo(function ActorRow({
                           value={actor.stats[col.key] ?? 0}
                           onChange={(val) =>
                             onUpdate({
-                              stats: { ...actor.stats, [col.key]: parseInt(val) },
+                              stats: buildStatUpdate(col, col.key, parseInt(val)),
                             })
                           }
                           maxValue={
-                            typeof actor.stats[maxKey] === 'number' ? (actor.stats[maxKey] as number) : undefined
+                            typeof maxVal === 'number' ? maxVal : (col.max_value ?? undefined)
                           }
                           className="w-8 bg-zinc-950 border border-zinc-700 rounded px-1 py-0.5 text-xs text-zinc-200 focus:outline-none focus:border-emerald-500"
                         />
                         <span className="text-[10px] text-zinc-500">/</span>
-                        <InlineInput
-                          type="number"
-                          value={actor.stats[maxKey] ?? 0}
-                          onChange={(val) =>
-                            onUpdate({
-                              stats: { ...actor.stats, [maxKey]: parseInt(val) },
-                            })
-                          }
-                          className="w-8 bg-zinc-950 border border-zinc-700 rounded px-1 py-0.5 text-xs text-zinc-200 focus:outline-none focus:border-emerald-500"
-                        />
+                        <span className="min-w-[1.25rem] text-[10px] text-zinc-400 tabular-nums">
+                          {maxVal != null ? String(maxVal) : '—'}
+                        </span>
                       </div>
                     </div>
                   );
@@ -263,13 +268,13 @@ export const ActorRow = React.memo(function ActorRow({
                       value={actor.stats[col.key] ?? 0}
                       onChange={(val) =>
                         onUpdate({
-                          stats: { ...actor.stats, [col.key]: parseInt(val) },
+                          stats: buildStatUpdate(col, col.key, parseInt(val)),
                         })
                       }
                       maxValue={
-                        col.maxKey != null && typeof actor.stats[col.maxKey] === 'number'
-                          ? (actor.stats[col.maxKey] as number)
-                          : undefined
+                        maxKey != null && typeof actor.stats[maxKey] === 'number'
+                          ? (actor.stats[maxKey] as number)
+                          : col.max_value
                       }
                       className="w-10 bg-zinc-950 border border-zinc-700 rounded px-1.5 py-0.5 text-xs text-zinc-200 focus:outline-none focus:border-emerald-500"
                     />
