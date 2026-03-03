@@ -3,12 +3,14 @@ import { X, Save, Download, Upload, Trash2, Plus, ChevronDown, ChevronUp, Check,
 import { Actor, ColumnConfig, Effect, MiniatureLayout, DisplayField } from '../types';
 import { slugify } from 'transliteration';
 import { useCombatState } from '../contexts/CombatStateContext';
+import { useTranslation } from 'react-i18next';
 
 export function MiniaturesModal({ 
   layout, columns, onClose 
 }: { 
   layout: MiniatureLayout, columns: ColumnConfig[], onClose: () => void 
 }) {
+  const { t } = useTranslation('core', { useSuspense: false });
   const [localLayout, setLocalLayout] = useState<MiniatureLayout>(layout);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -56,7 +58,7 @@ export function MiniaturesModal({
         <div className="flex items-center justify-between">
           <h4 className="text-sm font-medium text-zinc-300">{title}</h4>
           <label className="flex items-center gap-2 cursor-pointer">
-            <span className="text-xs text-zinc-500">Enable</span>
+            <span className="text-xs text-zinc-500">{t('miniature_layout.enable')}</span>
             <input 
               type="checkbox" 
               checked={isEnabled}
@@ -76,7 +78,7 @@ export function MiniaturesModal({
           <div className="space-y-3 pt-2 border-t border-zinc-800/50">
             <div className="flex gap-2">
               <div className="flex-1">
-                <label className="block text-xs text-zinc-500 mb-1">Field</label>
+                <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.field')}</label>
                 <select 
                   value={slot.value_path}
                   onChange={(e) => updateSlot(slotName, { value_path: e.target.value })}
@@ -86,14 +88,14 @@ export function MiniaturesModal({
                 </select>
               </div>
               <div className="flex-1">
-                <label className="block text-xs text-zinc-500 mb-1">Display As</label>
+                <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.display_as')}</label>
                 <select 
                   value={slot.type}
                   onChange={(e) => updateSlot(slotName, { type: e.target.value as 'text' | 'bar' })}
                   className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
                 >
-                  <option value="text">Text Value</option>
-                  <option value="bar">Progress Bar</option>
+                  <option value="text">{t('miniature_layout.text_value')}</option>
+                  <option value="bar">{t('miniature_layout.progress_bar')}</option>
                 </select>
               </div>
             </div>
@@ -101,19 +103,19 @@ export function MiniaturesModal({
             {slot.type === 'bar' && (
               <div className="flex gap-2">
                 <div className="flex-1">
-                  <label className="block text-xs text-zinc-500 mb-1">Max Value Field</label>
+                  <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.max_value_field')}</label>
                   <select 
                     value={slot.max_value_path || ''}
                     onChange={(e) => updateSlot(slotName, { max_value_path: e.target.value })}
                     className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
                   >
-                    <option value="">Same as Field (No Max)</option>
+                    <option value="">{t('miniature_layout.same_as_field_no_max')}</option>
                     {columns.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
-                    <option value="custom_max_hp">max_hp (Custom)</option>
+                    <option value="custom_max_hp">{t('miniature_layout.max_hp_custom')}</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs text-zinc-500 mb-1">Color</label>
+                  <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.color')}</label>
                   <input 
                     type="color" 
                     value={slot.color || '#00b400'}
@@ -133,15 +135,15 @@ export function MiniaturesModal({
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
         <div className="p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50">
-          <h3 className="text-lg font-medium text-zinc-100">Miniature Layout Config</h3>
+          <h3 className="text-lg font-medium text-zinc-100">{t('modals.miniature_layout_config')}</h3>
           <button onClick={onClose} className="text-zinc-400 hover:text-zinc-100"><X size={20} /></button>
         </div>
         
         <div className="p-6 overflow-y-auto space-y-6">
           <div className="flex items-center justify-between bg-zinc-950 p-4 rounded-xl border border-zinc-800">
             <div>
-              <h4 className="font-medium text-zinc-200">Show Portrait</h4>
-              <p className="text-xs text-zinc-500">Display the actor's portrait on the miniature screen.</p>
+              <h4 className="font-medium text-zinc-200">{t('miniature_layout.show_portrait')}</h4>
+              <p className="text-xs text-zinc-500">{t('miniature_layout.show_portrait_desc')}</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input 
@@ -155,10 +157,10 @@ export function MiniaturesModal({
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            {renderSlotConfig('top1', 'Top Left (1)')}
-            {renderSlotConfig('top2', 'Top Right (2)')}
-            {renderSlotConfig('bottom1', 'Bottom Left (1)')}
-            {renderSlotConfig('bottom2', 'Bottom Right (2)')}
+            {renderSlotConfig('top1', t('miniature_layout.slot_top_left_1'))}
+            {renderSlotConfig('top2', t('miniature_layout.slot_top_right_2'))}
+            {renderSlotConfig('bottom1', t('miniature_layout.slot_bottom_left_1'))}
+            {renderSlotConfig('bottom2', t('miniature_layout.slot_bottom_right_2'))}
           </div>
 
           <div className="pt-4 border-t border-zinc-800 flex justify-end">
@@ -167,7 +169,7 @@ export function MiniaturesModal({
               disabled={isSaving}
               className="flex items-center gap-2 px-6 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg font-medium transition-colors"
             >
-              <Save size={18} /> {isSaving ? 'Saving...' : 'Save Layout'}
+              <Save size={18} /> {isSaving ? t('miniature_layout.saving') : t('miniature_layout.save_layout')}
             </button>
           </div>
         </div>
@@ -181,6 +183,7 @@ export function MiniSheetModal({
 }: { 
   actor: Actor, columns: ColumnConfig[], systemName: string, onClose: () => void, onUpdate?: (id: string, field: string, value: any) => void, onPortraitClick?: () => void 
 }) {
+  const { t } = useTranslation('core', { useSuspense: false });
   const [localName, setLocalName] = useState(actor.name);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -228,7 +231,7 @@ export function MiniSheetModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(actor)
       });
-      alert('Actor saved to roster!');
+      alert(t('modals.actor_saved_to_roster'));
     } catch (err) {
       console.error('Failed to save actor', err);
     }
@@ -239,7 +242,7 @@ export function MiniSheetModal({
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
         <div className="p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50">
           <div className="flex items-center gap-2">
-            <span className="text-zinc-500 font-medium">Mini-Sheet:</span>
+            <span className="text-zinc-500 font-medium">{t('modals.mini_sheet')}:</span>
             <input 
               type="text"
               value={localName}
@@ -260,19 +263,19 @@ export function MiniSheetModal({
             <div onClick={onPortraitClick} className="cursor-pointer group relative">
               <img src={actor.portrait} alt={actor.name} className="w-24 h-24 rounded-xl object-cover border border-zinc-700 group-hover:opacity-80 transition-opacity" referrerPolicy="no-referrer" />
               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="bg-black/70 text-white text-xs px-2 py-1 rounded">Change</span>
+                <span className="bg-black/70 text-white text-xs px-2 py-1 rounded">{t('modals.change')}</span>
               </div>
             </div>
             <div className="flex-1 space-y-2">
-              <div className="text-sm text-zinc-400">Role: <span className="text-zinc-200 capitalize">{actor.role}</span></div>
-              <div className="text-sm text-zinc-400">Initiative: <span className="text-zinc-200">{actor.initiative}</span></div>
+              <div className="text-sm text-zinc-400">{t('modals.role')}: <span className="text-zinc-200 capitalize">{actor.role}</span></div>
+              <div className="text-sm text-zinc-400">{t('combat.initiative')}: <span className="text-zinc-200">{actor.initiative}</span></div>
             </div>
           </div>
 
           <div className="space-y-3">
-            <h4 className="text-sm font-medium text-zinc-500 uppercase tracking-wider">Group</h4>
+            <h4 className="text-sm font-medium text-zinc-500 uppercase tracking-wider">{t('modals.group')}</h4>
             <div>
-              <label className="block text-xs text-zinc-500 mb-1">Group ID</label>
+              <label className="block text-xs text-zinc-500 mb-1">{t('modals.group_id')}</label>
               <input
                 type="text"
                 value={actor.group_id ?? ''}
@@ -284,26 +287,26 @@ export function MiniSheetModal({
                     onUpdate?.(actor.id, 'group_color', null);
                   }
                 }}
-                placeholder="e.g. group-1"
+                placeholder={t('modals.group_placeholder')}
                 className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
               />
             </div>
             {actor.group_id && (
               <>
                 <div>
-                  <label className="block text-xs text-zinc-500 mb-1">Group Mode</label>
+                  <label className="block text-xs text-zinc-500 mb-1">{t('modals.group_mode')}</label>
                   <select
                     value={actor.group_mode ?? 'sequential'}
                     onChange={(e) => onUpdate?.(actor.id, 'group_mode', e.target.value === 'none' ? null : e.target.value)}
                     className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
                   >
-                    <option value="simultaneous">Simultaneous</option>
-                    <option value="sequential">Sequential</option>
-                    <option value="none">None</option>
+                    <option value="simultaneous">{t('modals.simultaneous')}</option>
+                    <option value="sequential">{t('modals.sequential')}</option>
+                    <option value="none">{t('modals.none')}</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs text-zinc-500 mb-1">Group Color</label>
+                  <label className="block text-xs text-zinc-500 mb-1">{t('modals.group_color')}</label>
                   <input
                     type="color"
                     value={actor.group_color ?? '#10b981'}
@@ -316,7 +319,7 @@ export function MiniSheetModal({
           </div>
           
           <div>
-            <h4 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-3">All Stats</h4>
+            <h4 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-3">{t('modals.all_stats')}</h4>
             <div className="grid grid-cols-2 gap-3">
               {columns.map(col => (
                 <div key={col.key} className="bg-zinc-950 p-3 rounded-lg border border-zinc-800 flex justify-between items-center">
@@ -329,14 +332,14 @@ export function MiniSheetModal({
 
           <div className="flex gap-2 pt-4 border-t border-zinc-800">
             <button onClick={handleExport} className="flex-1 flex items-center justify-center gap-2 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-xs transition-colors">
-              <Download size={14} /> Export
+              <Download size={14} /> {t('config_modal.export')}
             </button>
             <input type="file" ref={fileInputRef} onChange={handleImport} className="hidden" accept=".json" />
             <button onClick={() => fileInputRef.current?.click()} className="flex-1 flex items-center justify-center gap-2 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-xs transition-colors">
-              <Upload size={14} /> Import
+              <Upload size={14} /> {t('config_modal.import')}
             </button>
             <button onClick={handleSaveToRoster} className="flex-1 flex items-center justify-center gap-2 py-2 bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 rounded-lg text-xs transition-colors">
-              <Save size={14} /> Save
+              <Save size={14} /> {t('common.save')}
             </button>
           </div>
         </div>
@@ -354,9 +357,12 @@ export function ConfigModal({
   systemName: string, setSystemName: (s: string) => void,
   onClose: () => void 
 }) {
+  const { t, i18n } = useTranslation('core', { useSuspense: false });
   const { state } = useCombatState();
   const tableCentered = state?.table_centered !== false;
 
+  const [languages, setLanguages] = useState<{ code: string; name: string; flag: string }[]>([]);
+  const [showLangDropdown, setShowLangDropdown] = useState(false);
   const [localSystemName, setLocalSystemName] = useState(systemName);
   const [newKey, setNewKey] = useState('');
   const [newLabel, setNewLabel] = useState('');
@@ -367,6 +373,23 @@ export function ConfigModal({
   useEffect(() => {
     setLocalSystemName(systemName);
   }, [systemName]);
+
+  useEffect(() => {
+    fetch('/api/locales/languages')
+      .then(r => r.json())
+      .then(setLanguages)
+      .catch(() => setLanguages([]));
+  }, []);
+
+  const changeLanguage = (code: string) => {
+    i18n.changeLanguage(code);
+    localStorage.setItem('omniboard_language', code);
+    setShowLangDropdown(false);
+  };
+
+  const currentLangCode = (i18n.language || '').split('-')[0];
+  const currentLang = languages.find(l => l.code === currentLangCode);
+  const flagFontStyle: React.CSSProperties = { fontFamily: '"Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif' };
 
   useEffect(() => {
     fetch('/api/systems/list')
@@ -500,21 +523,21 @@ export function ConfigModal({
                 }
               }}
               className="bg-transparent text-lg font-medium text-zinc-100 border-none outline-none min-w-[8rem] placeholder-zinc-500"
-              placeholder="System name"
+              placeholder={t('config_modal.system_name')}
             />
             <button
               onClick={() => setShowPresets(!showPresets)}
               className="p-1 text-zinc-400 hover:text-emerald-400 transition-colors"
-              title="Load preset"
+              title={t('config_modal.load_preset')}
             >
               <ChevronDown size={16} className={`transition-transform ${showPresets ? 'rotate-180' : ''}`} />
             </button>
 
             {showPresets && (
               <div className="absolute top-full left-0 mt-2 w-48 bg-zinc-800 border border-zinc-700 rounded-xl shadow-xl overflow-hidden z-10">
-                <div className="px-3 py-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider bg-zinc-900/50">Saved systems</div>
+                <div className="px-3 py-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider bg-zinc-900/50">{t('config_modal.saved_systems')}</div>
                 {presets.length === 0 ? (
-                  <div className="px-4 py-2 text-sm text-zinc-500">No systems yet</div>
+                  <div className="px-4 py-2 text-sm text-zinc-500">{t('config_modal.no_systems_yet')}</div>
                 ) : (
                   presets.map(p => (
                     <button 
@@ -533,10 +556,39 @@ export function ConfigModal({
         </div>
         
         <div className="p-4 overflow-y-auto space-y-1">
+          <div className="relative mb-4">
+            <button
+              type="button"
+              onClick={() => setShowLangDropdown(!showLangDropdown)}
+              className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm font-medium text-zinc-200 flex items-center gap-2"
+            >
+              {t('language')}
+              <span className="text-lg inline-block min-w-[1.5rem] text-center" style={flagFontStyle} role="img" aria-hidden>
+                {currentLang?.flag ?? '🌐'}
+              </span>
+            </button>
+            {showLangDropdown && (
+              <div className="absolute top-full left-0 mt-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl z-50 min-w-[160px]">
+                {languages.map(lang => (
+                  <button
+                    key={lang.code}
+                    type="button"
+                    onClick={() => changeLanguage(lang.code)}
+                    className={`w-full px-4 py-2 text-left hover:bg-zinc-700 flex items-center gap-2 text-sm ${
+                      currentLangCode === lang.code ? 'text-emerald-400 font-semibold' : 'text-zinc-200'
+                    }`}
+                  >
+                    <span className="text-lg inline-block min-w-[1.5rem] text-center" style={flagFontStyle} role="img" aria-hidden>{lang.flag}</span>
+                    {lang.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <div className="flex items-center justify-between py-2 mb-2 border-b border-zinc-800/50">
-            <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">Table</span>
+            <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">{t('config_modal.table')}</span>
             <label className="flex items-center gap-2 cursor-pointer">
-              <span className="text-sm text-zinc-300">Центрировать таблицу</span>
+              <span className="text-sm text-zinc-300">{t('config_modal.center_table')}</span>
               <input
                 type="checkbox"
                 checked={tableCentered}
@@ -556,7 +608,7 @@ export function ConfigModal({
               />
             </label>
           </div>
-          <div className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">Fields / Columns</div>
+          <div className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">{t('config_modal.fields_columns')}</div>
           {columns.map((col, index) => (
             <div key={col.key} className="flex items-center gap-2 py-1.5 border-b border-zinc-800/50 last:border-0">
               <div className="flex flex-col shrink-0">
@@ -565,7 +617,7 @@ export function ConfigModal({
                   onClick={() => moveColumn(index, 'up')}
                   disabled={index === 0}
                   className="p-0.5 text-zinc-500 hover:text-zinc-300 disabled:opacity-30 disabled:cursor-not-allowed"
-                  title="Move up"
+                  title={t('config_modal.move_up')}
                 >
                   <ChevronUp size={14} />
                 </button>
@@ -574,7 +626,7 @@ export function ConfigModal({
                   onClick={() => moveColumn(index, 'down')}
                   disabled={index === columns.length - 1}
                   className="p-0.5 text-zinc-500 hover:text-zinc-300 disabled:opacity-30 disabled:cursor-not-allowed"
-                  title="Move down"
+                  title={t('config_modal.move_down')}
                 >
                   <ChevronDown size={14} />
                 </button>
@@ -583,28 +635,28 @@ export function ConfigModal({
                 type="text"
                 value={col.label}
                 onChange={(e) => updateColumn(col.key, { label: e.target.value })}
-                placeholder="Label"
+                placeholder={t('config_modal.label_placeholder')}
                 className={`${inputClass} w-24 min-w-0 flex-1 max-w-[120px]`}
               />
               <input
                 type="text"
                 value={col.key}
                 onChange={(e) => updateColumn(col.key, { key: e.target.value })}
-                placeholder="Key"
+                placeholder={t('config_modal.key_placeholder')}
                 className={`${inputClass} w-20 min-w-0 font-mono max-w-[100px]`}
               />
               <input
                 type="text"
                 value={col.group ?? ''}
                 onChange={(e) => updateColumn(col.key, { group: e.target.value.trim() || undefined })}
-                placeholder="Group"
+                placeholder={t('config_modal.group_placeholder_column')}
                 className={`${inputClass} w-20 min-w-0 flex-1 max-w-[100px]`}
               />
               <input
                 type="text"
                 value={col.maxKey ?? ''}
                 onChange={(e) => updateColumn(col.key, { maxKey: e.target.value.trim() || undefined })}
-                placeholder="Max key"
+                placeholder={t('config_modal.max_key_placeholder')}
                 className={`${inputClass} w-20 min-w-0 font-mono max-w-[100px]`}
               />
               <div className="flex items-center gap-1 shrink-0 w-16 justify-center">
@@ -613,13 +665,13 @@ export function ConfigModal({
                   checked={col.showInTable}
                   onChange={() => toggleColumn(col.key)}
                   className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-zinc-900"
-                  title="Show in table"
+                  title={t('config_modal.show_in_table')}
                 />
                 <button
                   type="button"
                   onClick={() => removeColumn(col.key)}
                   className="p-1 text-zinc-600 hover:text-red-400 transition-colors"
-                  title="Remove field"
+                  title={t('config_modal.remove_field')}
                 >
                   <Trash2 size={14} />
                 </button>
@@ -628,17 +680,17 @@ export function ConfigModal({
           ))}
 
           <div className="flex items-center gap-2 py-2 mt-2 border-t border-zinc-800">
-            <span className="text-xs text-zinc-500 shrink-0">Add field:</span>
+            <span className="text-xs text-zinc-500 shrink-0">{t('config_modal.add_field')}:</span>
             <input
               type="text"
-              placeholder="Label"
+              placeholder={t('config_modal.label_placeholder')}
               value={newLabel}
               onChange={e => setNewLabel(e.target.value)}
               className={`${inputClass} w-28`}
             />
             <input
               type="text"
-              placeholder="Key"
+              placeholder={t('config_modal.key_placeholder')}
               value={newKey}
               onChange={e => setNewKey(e.target.value)}
               className={`${inputClass} w-24 font-mono`}
@@ -647,7 +699,7 @@ export function ConfigModal({
               onClick={addColumn}
               disabled={!newKey || !newLabel}
               className="p-1.5 bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors flex items-center justify-center"
-              title="Add column"
+              title={t('config_modal.add_column')}
             >
               <Plus size={16} />
             </button>
@@ -655,14 +707,14 @@ export function ConfigModal({
 
           <div className="flex gap-2 pt-4 border-t border-zinc-800 mt-2">
             <button onClick={handleExport} className="flex-1 flex items-center justify-center gap-2 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-xs transition-colors">
-              <Download size={14} /> Export
+              <Download size={14} /> {t('config_modal.export')}
             </button>
             <input type="file" ref={fileInputRef} onChange={handleImport} className="hidden" accept=".json" />
             <button onClick={() => fileInputRef.current?.click()} className="flex-1 flex items-center justify-center gap-2 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-xs transition-colors">
-              <Upload size={14} /> Import
+              <Upload size={14} /> {t('config_modal.import')}
             </button>
             <button onClick={handleSave} className="flex-1 flex items-center justify-center gap-2 py-2 bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 rounded-lg text-xs transition-colors">
-              <Save size={14} /> Save
+              <Save size={14} /> {t('common.save')}
             </button>
           </div>
         </div>
@@ -676,6 +728,7 @@ export function AddEffectModal({
 }: { 
   actor: Actor, systemName: string, onClose: () => void, onAdd: (effect: Effect) => void 
 }) {
+  const { t } = useTranslation('core', { useSuspense: false });
   const [systemEffects, setSystemEffects] = useState<Effect[]>([]);
   const [name, setName] = useState('');
   const [technicalId, setTechnicalId] = useState('');
@@ -761,20 +814,20 @@ export function AddEffectModal({
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col">
         <div className="p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50">
-          <h3 className="text-lg font-medium text-zinc-100">Add Effect to {actor.name}</h3>
+          <h3 className="text-lg font-medium text-zinc-100">{t('modals.add_effect_to')} {actor.name}</h3>
           <button onClick={onClose} className="text-zinc-400 hover:text-zinc-100"><X size={20} /></button>
         </div>
         
         <div className="p-6 space-y-4">
           <div className="flex gap-4">
             <div className="flex-1">
-              <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">Display Name</label>
+              <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">{t('modals.display_name')}</label>
               <div className="relative">
                 <input 
                   type="text" 
                   value={name}
                   onChange={handleSelectEffect}
-                  placeholder="Type or select effect..."
+                  placeholder={t('modals.type_or_select_effect')}
                   className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
                   list="effect-suggestions"
                 />
@@ -786,23 +839,23 @@ export function AddEffectModal({
               </div>
             </div>
             <div className="flex-1">
-              <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">Technical ID</label>
+              <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">{t('modals.technical_id')}</label>
               <input 
                 type="text" 
                 value={technicalId}
                 onChange={handleTechnicalIdChange}
-                placeholder="e.g. v_plenu"
+                placeholder={t('modals.technical_id_placeholder')}
                 className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">Description</label>
+            <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">{t('modals.description')}</label>
             <textarea 
               value={description}
               onChange={e => setDescription(e.target.value)}
-              placeholder="Effect details..."
+              placeholder={t('modals.effect_details')}
               rows={3}
               className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500 resize-none"
             />
@@ -810,7 +863,7 @@ export function AddEffectModal({
 
           <div className="flex gap-4">
             <div className="flex-1">
-              <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">Duration (Rounds)</label>
+              <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">{t('modals.duration_rounds')}</label>
               <input 
                 type="number" 
                 value={duration}
@@ -828,7 +881,7 @@ export function AddEffectModal({
                   onChange={e => setIsInfinite(e.target.checked)}
                   className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-zinc-900"
                 />
-                <span className="text-sm text-zinc-300">Infinite</span>
+                <span className="text-sm text-zinc-300">{t('modals.infinite')}</span>
               </label>
             </div>
           </div>
@@ -841,7 +894,7 @@ export function AddEffectModal({
                 onChange={e => setShowOnMiniature(e.target.checked)}
                 className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-zinc-900"
               />
-              <span className="text-sm text-zinc-300">Show on Miniature</span>
+              <span className="text-sm text-zinc-300">{t('modals.show_on_miniature')}</span>
             </label>
           </div>
 
@@ -850,10 +903,10 @@ export function AddEffectModal({
               <button 
                 onClick={handleSaveToSystem}
                 className="flex items-center gap-1 text-xs text-zinc-400 hover:text-emerald-400 transition-colors"
-                title="Save this effect to the system JSON for future use"
+                title={t('modals.save_effect_to_system_title')}
               >
                 {isSavedToSystem ? <Check size={14} className="text-emerald-500" /> : <Save size={14} />}
-                {isSavedToSystem ? 'Saved!' : 'Save to System'}
+                {isSavedToSystem ? t('modals.saved') : t('modals.save_to_system')}
               </button>
             ) : <div></div>}
             
@@ -862,7 +915,7 @@ export function AddEffectModal({
               disabled={!name || !technicalId}
               className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
             >
-              Add Effect
+              {t('modals.add_effect')}
             </button>
           </div>
         </div>
@@ -872,6 +925,7 @@ export function AddEffectModal({
 }
 
 export function LibraryModal({ onClose, onSelect, systemName }: { onClose: () => void, onSelect?: (url: string) => void, systemName: string }) {
+  const { t } = useTranslation('core', { useSuspense: false });
   const [activeTab, setActiveTab] = useState<'portraits' | 'frames' | 'effects'>('portraits');
   const [assets, setAssets] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -953,7 +1007,7 @@ export function LibraryModal({ onClose, onSelect, systemName }: { onClose: () =>
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-2xl h-[600px] flex flex-col overflow-hidden shadow-2xl">
         <div className="p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50">
-          <h3 className="text-lg font-medium text-zinc-100">Asset Library</h3>
+          <h3 className="text-lg font-medium text-zinc-100">{t('modals.asset_library')}</h3>
           <button onClick={onClose} className="text-zinc-400 hover:text-zinc-100"><X size={20} /></button>
         </div>
         
@@ -965,7 +1019,7 @@ export function LibraryModal({ onClose, onSelect, systemName }: { onClose: () =>
                 onClick={() => setActiveTab(tab)}
                 className={`px-4 py-3 text-sm font-medium capitalize border-b-2 transition-colors ${activeTab === tab ? 'border-emerald-500 text-emerald-400' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
               >
-                {tab}
+                {t(`library.tab_${tab}`)}
               </button>
             ))}
           </div>
@@ -973,22 +1027,22 @@ export function LibraryModal({ onClose, onSelect, systemName }: { onClose: () =>
 
         <div className="bg-zinc-900 border-b border-zinc-800 p-4 flex gap-4 items-end">
           <div className="flex-1">
-            <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">Display Name</label>
+            <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">{t('library.display_name_label')}</label>
             <input 
               type="text" 
               value={displayName}
               onChange={handleDisplayNameChange}
-              placeholder="e.g. В плену"
+              placeholder={t('library.placeholder_display')}
               className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
             />
           </div>
           <div className="flex-1">
-            <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">Technical ID</label>
+            <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">{t('library.technical_id_label')}</label>
             <input 
               type="text" 
               value={technicalId}
               onChange={handleTechnicalIdChange}
-              placeholder="e.g. v_plenu"
+              placeholder={t('modals.technical_id_placeholder')}
               className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
             />
           </div>
@@ -999,7 +1053,7 @@ export function LibraryModal({ onClose, onSelect, systemName }: { onClose: () =>
               disabled={isUploading || (!technicalId && activeTab === 'effects')} 
               className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
             >
-              <Upload size={16} /> {isUploading ? 'Uploading...' : 'Upload'}
+              <Upload size={16} /> {isUploading ? t('library.uploading') : t('library.upload')}
             </button>
           </div>
         </div>
@@ -1011,7 +1065,7 @@ export function LibraryModal({ onClose, onSelect, systemName }: { onClose: () =>
                 <img src={url} alt="Asset" className="w-full h-full object-cover" />
                 {onSelect && (
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                    <span className="text-xs font-medium text-white">Select</span>
+                    <span className="text-xs font-medium text-white">{t('library.select')}</span>
                   </div>
                 )}
                 {!onSelect && (
@@ -1028,7 +1082,7 @@ export function LibraryModal({ onClose, onSelect, systemName }: { onClose: () =>
             ))}
             {assets.length === 0 && (
               <div className="col-span-4 text-center py-12 text-zinc-500 border border-dashed border-zinc-800 rounded-xl">
-                No assets found in this category. Upload some!
+                {t('library.no_assets_upload_some')}
               </div>
             )}
           </div>
@@ -1039,6 +1093,7 @@ export function LibraryModal({ onClose, onSelect, systemName }: { onClose: () =>
 }
 
 export function ActorRosterModal({ systemName, onClose, onAdd }: { systemName: string, onClose: () => void, onAdd: (actor: Actor) => void }) {
+  const { t } = useTranslation('core', { useSuspense: false });
   const [actors, setActors] = useState<Actor[]>([]);
   const [search, setSearch] = useState('');
 
@@ -1055,7 +1110,7 @@ export function ActorRosterModal({ systemName, onClose, onAdd }: { systemName: s
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-2xl h-[600px] flex flex-col overflow-hidden shadow-2xl">
         <div className="p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50">
-          <h3 className="text-lg font-medium text-zinc-100">Actor Roster ({systemName})</h3>
+          <h3 className="text-lg font-medium text-zinc-100">{t('modals.actor_roster_title')} ({systemName})</h3>
           <button onClick={onClose} className="text-zinc-400 hover:text-zinc-100"><X size={20} /></button>
         </div>
         
@@ -1066,7 +1121,7 @@ export function ActorRosterModal({ systemName, onClose, onAdd }: { systemName: s
               type="text" 
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Search actors..."
+              placeholder={t('modals.search_actors')}
               className="w-full bg-zinc-900 border border-zinc-700 rounded-lg pl-9 pr-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
             />
           </div>
@@ -1084,7 +1139,7 @@ export function ActorRosterModal({ systemName, onClose, onAdd }: { systemName: s
                 <button 
                   onClick={() => onAdd(actor)}
                   className="p-2 bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white rounded-lg transition-colors"
-                  title="Add to Combat"
+                  title={t('modals.add_to_combat')}
                 >
                   <Plus size={16} />
                 </button>
@@ -1092,7 +1147,7 @@ export function ActorRosterModal({ systemName, onClose, onAdd }: { systemName: s
             ))}
             {filtered.length === 0 && (
               <div className="col-span-2 text-center py-12 text-zinc-500 border border-dashed border-zinc-800 rounded-xl">
-                No actors found in the roster.
+                {t('modals.no_actors_in_roster')}
               </div>
             )}
           </div>
@@ -1113,6 +1168,7 @@ export function EncountersModal({
   onClose: () => void;
   onLoad: () => void | Promise<unknown>;
 }) {
+  const { t } = useTranslation('core', { useSuspense: false });
   const [encounters, setEncounters] = useState<{ name: string; filename: string }[]>([]);
   const [newName, setNewName] = useState('');
   const [saving, setSaving] = useState(false);
@@ -1134,7 +1190,7 @@ export function EncountersModal({
   }, [systemName]);
 
   const handleSave = async () => {
-    const name = newName.trim() || 'Unnamed Encounter';
+    const name = newName.trim() || t('modals.unnamed_encounter');
     setSaveError(null);
     setSaving(true);
     try {
@@ -1161,7 +1217,7 @@ export function EncountersModal({
   };
 
   const handleExportJson = () => {
-    const name = newName.trim() || 'Exported Encounter';
+    const name = newName.trim() || t('modals.unnamed_encounter');
     const payload = { name, actors: JSON.parse(JSON.stringify(currentActors)) };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -1182,7 +1238,7 @@ export function EncountersModal({
         const data = JSON.parse(text);
         const actors = Array.isArray(data.actors) ? data.actors : (data && Array.isArray(data) ? data : []);
         if (actors.length === 0) {
-          alert('No actors in file.');
+          alert(t('modals.no_actors_in_file'));
           e.target.value = '';
           return;
         }
@@ -1250,7 +1306,7 @@ export function EncountersModal({
   };
 
   const handleDelete = async (filename: string) => {
-    if (!confirm('Delete this encounter?')) return;
+    if (!confirm(t('modals.delete_this_encounter'))) return;
     try {
       await fetch(`/api/encounters/delete?system_name=${encodeURIComponent(systemName)}&filename=${encodeURIComponent(filename)}`, { method: 'DELETE' });
       fetchEncounters();
@@ -1264,7 +1320,7 @@ export function EncountersModal({
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden shadow-2xl">
         <div className="p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50">
           <h3 className="text-lg font-medium text-zinc-100 flex items-center gap-2">
-            <Swords size={20} className="text-emerald-400" /> Encounters ({systemName})
+            <Swords size={20} className="text-emerald-400" /> {t('modals.encounters_title')} ({systemName})
           </h3>
           <button onClick={onClose} className="text-zinc-400 hover:text-zinc-100"><X size={20} /></button>
         </div>
@@ -1275,7 +1331,7 @@ export function EncountersModal({
               type="text"
               value={newName}
               onChange={e => setNewName(e.target.value)}
-              placeholder="Encounter name"
+              placeholder={t('modals.encounter_name')}
               className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
             />
             <button
@@ -1283,7 +1339,7 @@ export function EncountersModal({
               disabled={saving || currentActors.length === 0}
               className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors"
             >
-              <Save size={16} /> Save Current Combat
+              <Save size={16} /> {t('modals.save_current_combat')}
             </button>
           </div>
           <label className="flex items-center gap-2 text-xs text-zinc-400">
@@ -1304,7 +1360,7 @@ export function EncountersModal({
                 }
               }}
             />
-            <span>Autosave encounter state</span>
+            <span>{t('modals.autosave_encounter_state')}</span>
           </label>
           {saveError && <p className="text-sm text-red-400">{saveError}</p>}
           <div className="flex gap-2 flex-wrap">
@@ -1314,14 +1370,14 @@ export function EncountersModal({
               disabled={currentActors.length === 0}
               className="flex items-center gap-2 px-3 py-1.5 bg-zinc-700 hover:bg-zinc-600 disabled:opacity-50 text-zinc-200 rounded-lg text-sm"
             >
-              <Download size={14} /> Export JSON
+              <Download size={14} /> {t('modals.export_json')}
             </button>
             <button
               type="button"
               onClick={() => importInputRef.current?.click()}
               className="flex items-center gap-2 px-3 py-1.5 bg-zinc-700 hover:bg-zinc-600 text-zinc-200 rounded-lg text-sm"
             >
-              <Upload size={14} /> Import JSON
+              <Upload size={14} /> {t('modals.import_json')}
             </button>
             <input
               ref={importInputRef}
@@ -1332,7 +1388,7 @@ export function EncountersModal({
             />
           </div>
           {currentActors.length === 0 && (
-            <p className="text-xs text-zinc-500">Add actors to combat first to save an encounter.</p>
+            <p className="text-xs text-zinc-500">{t('modals.add_actors_first')}</p>
           )}
         </div>
 
@@ -1346,14 +1402,14 @@ export function EncountersModal({
                     onClick={() => handleLoad(enc.filename)}
                     disabled={loading !== null}
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white rounded-lg transition-colors disabled:opacity-50 text-sm"
-                    title="Load into combat"
+                    title={t('modals.load_into_combat')}
                   >
-                    <Download size={14} /> Load
+                    <Download size={14} /> {t('modals.load')}
                   </button>
                   <button
                     onClick={() => handleDelete(enc.filename)}
                     className="p-2 bg-zinc-800 text-zinc-400 hover:bg-red-900/30 hover:text-red-400 rounded-lg transition-colors"
-                    title="Delete encounter"
+                    title={t('modals.delete_encounter')}
                   >
                     <Trash2 size={16} />
                   </button>
@@ -1362,7 +1418,7 @@ export function EncountersModal({
             ))}
             {encounters.length === 0 && (
               <div className="text-center py-12 text-zinc-500 border border-dashed border-zinc-800 rounded-xl">
-                No saved encounters. Save current combat to create one.
+                {t('modals.no_saved_encounters')}
               </div>
             )}
           </div>

@@ -55,7 +55,7 @@ export function AppHeader(props: AppHeaderProps) {
   return (
     <header className="relative bg-zinc-900 border-b border-zinc-800 p-4 flex justify-between items-center">
       <div>
-        <h1 className="text-xl font-bold tracking-tight text-zinc-100">Omniboard</h1>
+        <h1 className="text-xl font-bold tracking-tight text-zinc-100">{t('app.title')}</h1>
         <div className="relative inline-block">
           <div
             role="button"
@@ -69,7 +69,7 @@ export function AppHeader(props: AppHeaderProps) {
             }}
             className="text-xs text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors"
           >
-            Round: {round}
+            {t('header.round')}: {round}
           </div>
           <CombatLog
             history={history}
@@ -82,20 +82,20 @@ export function AppHeader(props: AppHeaderProps) {
       </div>
       <div className="flex gap-3">
         <button onClick={onShowMiniatures} className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-md text-sm transition-colors">
-          <MonitorSmartphone size={16} /> Miniatures
+          <MonitorSmartphone size={16} /> {t('header.miniatures')}
         </button>
         <button onClick={onShowLibrary} className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-md text-sm transition-colors">
-          <BookImage size={16} /> Library
+          <BookImage size={16} /> {t('header.library')}
         </button>
         <button onClick={onShowConfig} className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-md text-sm transition-colors">
-          <Settings size={16} /> {t('config', 'Config')}
+          <Settings size={16} /> {t('config')}
         </button>
         <button
           onClick={onToggleLegendPanel}
           className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors ${showLegendPanel ? 'bg-emerald-600/30 text-emerald-400' : 'bg-zinc-800 hover:bg-zinc-700'}`}
-          title="Groups"
+          title={t('header.groups')}
         >
-          <Layers size={16} /> Groups
+          <Layers size={16} /> {t('header.groups')}
         </button>
       </div>
       <div
@@ -104,7 +104,7 @@ export function AppHeader(props: AppHeaderProps) {
         }`}
       >
         <div className="p-4 border-b border-zinc-800">
-          <h3 className="text-sm font-semibold text-zinc-100">Groups</h3>
+          <h3 className="text-sm font-semibold text-zinc-100">{t('header.groups')}</h3>
         </div>
         <div className="p-4 space-y-4">
           <div className="space-y-2">
@@ -115,7 +115,7 @@ export function AppHeader(props: AppHeaderProps) {
                 onChange={(e) => onShowGroupColorsChange(e.target.checked)}
                 className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-emerald-500"
               />
-              <span className="text-sm text-zinc-300">Display group colors</span>
+              <span className="text-sm text-zinc-300">{t('toolbar.display_group_colors')}</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input
@@ -124,15 +124,15 @@ export function AppHeader(props: AppHeaderProps) {
                 onChange={(e) => onShowFactionColorsChange(e.target.checked)}
                 className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-emerald-500"
               />
-              <span className="text-sm text-zinc-300">Display faction (role) colors</span>
+              <span className="text-sm text-zinc-300">{t('toolbar.display_faction_colors')}</span>
             </label>
           </div>
           <div>
-            <h4 className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">Legend (role colors)</h4>
+            <h4 className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">{t('toolbar.legend')}</h4>
             <div className="space-y-2">
               {(['player', 'enemy', 'ally', 'neutral'] as const).map((role) => (
                 <div key={role} className="flex items-center justify-between gap-2">
-                  <label className="text-sm text-zinc-300 capitalize">{role === 'player' ? 'Player' : role}</label>
+                  <label className="text-sm text-zinc-300 capitalize">{role === 'player' ? t('toolbar.player') : t(`toolbar.${role}`)}</label>
                   <input
                     type="color"
                     value={editingLegend[role]}
@@ -147,13 +147,13 @@ export function AppHeader(props: AppHeaderProps) {
             onClick={onCreateGroup}
             className="w-full py-2 bg-zinc-700 hover:bg-zinc-600 text-zinc-200 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
           >
-            <Layers size={16} /> Create Group
+            <Layers size={16} /> {t('toolbar.create_group')}
           </button>
           <button
             onClick={onSaveLegend}
             className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium transition-colors"
           >
-            Save
+            {t('common.save')}
           </button>
         </div>
       </div>

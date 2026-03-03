@@ -7,6 +7,7 @@ i18n
   .use(initReactI18next)
   .init({
     fallbackLng: 'en',
+    lng: typeof localStorage !== 'undefined' ? localStorage.getItem('omniboard_language') || undefined : undefined,
     defaultNS: 'core',
     ns: ['core'], // только core при старте; системные NS загружаются лениво
     backend: {

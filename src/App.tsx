@@ -144,7 +144,7 @@ export default function App() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         id: crypto.randomUUID(),
-        name: 'New Actor',
+        name: t('main.new_actor'),
         role: 'enemy',
         portrait: '',
         stats: { hp: 10, ac: 10, speed: 30 },
@@ -250,16 +250,16 @@ export default function App() {
       <main className="flex-1 p-6 overflow-auto">
         <div className="w-full px-8">
           <div className="flex justify-between items-end mb-4">
-            <h2 className="text-lg font-medium text-zinc-300">Initiative Tracker</h2>
+            <h2 className="text-lg font-medium text-zinc-300">{systemName}</h2>
             <div className="flex gap-4">
               <button onClick={addActor} className="flex items-center gap-1 text-sm text-emerald-400 hover:text-emerald-300">
-                <Plus size={16} /> Add Actor
+                <Plus size={16} /> {t('main.add_actor')}
               </button>
               <button onClick={() => setShowEncounters(true)} className="flex items-center gap-1 text-sm text-zinc-400 hover:text-zinc-300">
-                <Swords size={16} /> Encounters
+                <Swords size={16} /> {t('main.encounters')}
               </button>
               <button onClick={() => setShowRoster(true)} className="flex items-center gap-1 text-sm text-zinc-400 hover:text-zinc-300">
-                <Users size={16} /> Roster
+                <Users size={16} /> {t('main.roster')}
               </button>
             </div>
           </div>
@@ -267,8 +267,8 @@ export default function App() {
           {groupSelectMode && createGroupModal && (
             <div className="mb-4 p-3 bg-zinc-800/80 border border-zinc-700 rounded-xl flex items-center justify-between gap-4">
               <span className="text-sm text-zinc-300">
-                Assign selected to group &quot;{createGroupModal.name}&quot;
-                {selectedActorIds.size > 0 && ` (${selectedActorIds.size} selected)`}
+                {t('main.assign_selected_to_group')} &quot;{createGroupModal.name}&quot;
+                {selectedActorIds.size > 0 && ` (${selectedActorIds.size} ${t('main.selected')})`}
               </span>
               <div className="flex gap-2">
                 <button
@@ -279,7 +279,7 @@ export default function App() {
                   }}
                   className="px-3 py-1.5 bg-zinc-700 hover:bg-zinc-600 rounded-lg text-sm text-zinc-200"
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button
                   onClick={async () => {
@@ -300,7 +300,7 @@ export default function App() {
                   disabled={selectedActorIds.size === 0}
                   className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg text-sm font-medium"
                 >
-                  Assign to Group
+                  {t('main.assign_to_group')}
                 </button>
               </div>
             </div>

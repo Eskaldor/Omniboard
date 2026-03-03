@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { FolderOpen, Trash2, Send } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { CombatLogEntry } from '../types';
 
 export type LogEntryView = CombatLogEntry;
@@ -111,6 +112,7 @@ function LogEvent({ entry, index }: { entry: LogEntryView; index: number }) {
 }
 
 export function CombatLog({ history, isOpen, onClose, enableLogging = true, onRefetch }: CombatLogProps) {
+  const { t } = useTranslation('core', { useSuspense: false });
   const listRef = useRef<HTMLDivElement>(null);
   const [noteInput, setNoteInput] = useState('');
   const [sendingNote, setSendingNote] = useState(false);
@@ -169,11 +171,11 @@ export function CombatLog({ history, isOpen, onClose, enableLogging = true, onRe
       <div
         className="absolute top-full mt-2 w-[26rem] max-w-[90vw] bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col"
         role="dialog"
-        aria-label="Combat log"
+        aria-label={t('header.combat_log')}
       >
         {/* Header */}
         <div className="px-3 py-2 border-b border-zinc-800 flex items-center justify-between gap-2 flex-wrap">
-          <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Combat Log</span>
+          <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">{t('header.combat_log')}</span>
           <div className="flex items-center gap-2">
             <label className="flex items-center gap-1.5 cursor-pointer text-xs text-zinc-400 hover:text-zinc-300">
               <input
@@ -182,13 +184,13 @@ export function CombatLog({ history, isOpen, onClose, enableLogging = true, onRe
                 onChange={(e) => setEnableLogging(e.target.checked)}
                 className="rounded border-zinc-600 bg-zinc-800 text-emerald-500 focus:ring-emerald-500/50"
               />
-              Record Log
+              {t('combat_log.record_log')}
             </label>
             <button
               type="button"
               onClick={openFolder}
               className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
-              title="Open logs folder"
+              title={t('combat_log.open_logs_folder')}
             >
               <FolderOpen size={16} />
             </button>
@@ -196,7 +198,7 @@ export function CombatLog({ history, isOpen, onClose, enableLogging = true, onRe
               type="button"
               onClick={clearLog}
               className="p-1.5 rounded-md text-zinc-400 hover:text-red-400 hover:bg-zinc-800 transition-colors"
-              title="Clear all logs"
+              title={t('combat_log.clear_all_logs')}
             >
               <Trash2 size={16} />
             </button>
@@ -209,7 +211,7 @@ export function CombatLog({ history, isOpen, onClose, enableLogging = true, onRe
           className="max-h-[28rem] overflow-y-auto p-2 space-y-2 flex-1 min-h-0"
         >
           {history.length === 0 ? (
-            <p className="text-zinc-500 text-sm py-4 text-center">No events yet.</p>
+            <p className="text-zinc-500 text-sm py-4 text-center">{t('combat_log.no_events_yet')}</p>
           ) : (
             history.map((entry, index) => (
               <div key={index} className="first:pt-0">

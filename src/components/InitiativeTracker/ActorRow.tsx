@@ -1,5 +1,6 @@
 import React from 'react';
 import { Plus, Trash } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { Actor, ColumnConfig, Effect } from '../../types';
 import { InlineInput } from './InlineInput';
 
@@ -46,6 +47,7 @@ export const ActorRow = React.memo(function ActorRow({
   onAddEffectClick,
   onToggleGroupSelect,
 }: ActorRowProps) {
+  const { t } = useTranslation('core', { useSuspense: false });
   const visible = columns.filter((c) => c.showInTable);
   const visibleKeys = new Set(visible.map((c) => c.key));
   const mergedMaxKeys = new Set(
@@ -83,7 +85,7 @@ export const ActorRow = React.memo(function ActorRow({
                 referrerPolicy="no-referrer"
               />
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/portrait:opacity-100 flex items-center justify-center transition-opacity">
-                <span className="text-[10px] uppercase font-bold text-white tracking-wider">Change</span>
+                <span className="text-[10px] uppercase font-bold text-white tracking-wider">{t('modals.change')}</span>
               </div>
             </div>
           ) : (
@@ -296,7 +298,7 @@ export const ActorRow = React.memo(function ActorRow({
               onAddEffectClick();
             }}
             className="w-5 h-5 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-emerald-400 transition-colors"
-            title="Add Effect"
+            title={t('main.add_effect')}
           >
             <Plus size={12} />
           </button>
@@ -311,7 +313,7 @@ export const ActorRow = React.memo(function ActorRow({
             onDelete();
           }}
           className="w-8 h-8 rounded-lg bg-zinc-800/50 hover:bg-red-900/50 flex items-center justify-center text-zinc-500 hover:text-red-400 transition-colors"
-          title="Delete Actor"
+          title={t('main.delete_actor')}
         >
           <Trash size={14} />
         </button>
