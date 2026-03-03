@@ -49,7 +49,7 @@ export function InitiativeTable({
 }: InitiativeTableProps) {
   const { t } = useTranslation('core', { useSuspense: false });
   const colLabel = (col: ColumnConfig) =>
-    i18n.t(`${col.key}.name`, { ns: `systems/${systemName}`, defaultValue: col.label });
+    i18n.t(`${col.key}.name`, { ns: `systems/${systemName}`, defaultValue: col.key });
   const visible = columns.filter((c) => c.showInTable);
   const visibleKeys = new Set(visible.map((c) => c.key));
   const mergedMaxKeys = new Set(
@@ -94,7 +94,25 @@ export function InitiativeTable({
 
   return (
     <div className="w-full overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-      <table className={`w-max border-collapse text-left whitespace-nowrap text-sm text-zinc-200 ${tableCentered ? 'mx-auto' : 'min-w-full'}`}>
+      <table
+        className={`border-collapse text-left whitespace-nowrap text-sm text-zinc-200 ${tableCentered ? 'mx-auto' : 'min-w-full'} ${actors.length === 0 ? 'w-full' : 'w-max'}`}
+        style={actors.length === 0 ? { tableLayout: 'fixed' } : undefined}
+      >
+        {actors.length === 0 && (
+          <colgroup>
+            <col style={{ width: 54 }} />
+            <col style={{ width: 54 }} />
+            <col style={{ width: 128 }} />
+            {standalone.map((col) => (
+              <col key={col.key} style={{ width: 80, minWidth: 80 }} />
+            ))}
+            {groupNames.map((grp) => (
+              <col key={grp} style={{ width: 112, minWidth: 112 }} />
+            ))}
+            <col style={{ width: 224, minWidth: 224 }} />
+            <col style={{ width: 48 }} />
+          </colgroup>
+        )}
         <thead>
           <tr>
             {/* Portrait column */}
@@ -177,7 +195,7 @@ export function InitiativeTable({
                 colSpan={columnCount}
                 className="text-center py-3 px-2 text-zinc-500 bg-zinc-900/50 border-t border-zinc-800 border-dashed"
               >
-                {t('no_actors_in_combat', { defaultValue: 'No actors in combat.' })}
+                {t('main.no_actors_in_combat')}
               </td>
             </tr>
           )}

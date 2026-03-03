@@ -387,7 +387,7 @@ export function ConfigModal({
       drafts[col.key] = translated;
     }
     setLabelDrafts(drafts);
-  }, [systemName, currentLangCode, columns, i18n]);
+  }, [systemName, currentLangCode, columns]);
 
   useEffect(() => {
     setLocalSystemName(systemName);

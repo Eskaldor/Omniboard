@@ -13,7 +13,6 @@
     "backend_offline_instructions": "Убедитесь, что бэкенд запущен. Запустите сервер командами:\n1. pip install -r requirements.txt\n2. uvicorn backend.main:app --reload\n3. npm install && npm run dev"
   },
   "start_combat": "Начать бой",
-  "no_actors_in_combat": "В бою нет участников.",
   "app": {
     "title": "Omniboard"
   },
@@ -99,7 +98,7 @@
     "assign_selected_to_group": "Назначить выбранных в группу",
     "selected": "выбрано",
     "assign_to_group": "Назначить в группу",
-    "no_actors_in_combat": "В бою нет участников."
+    "no_actors_in_combat": "Нет участников боя."
   },
   "modals": {
     "miniature_layout_config": "Настройка раскладки миниатюр",

@@ -13,7 +13,6 @@
     "backend_offline_instructions": "Make sure the backend is running. Start the server with:\n1. pip install -r requirements.txt\n2. uvicorn backend.main:app --reload\n3. npm install && npm run dev"
   },
   "start_combat": "Start Combat",
-  "no_actors_in_combat": "No actors in combat.",
   "app": {
     "title": "Omniboard"
   },
