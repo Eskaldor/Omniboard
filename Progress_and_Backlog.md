@@ -1,6 +1,6 @@
 # Omniboard — Progress & Backlog
 
-> Обновлено: 02.03.2026
+> Обновлено: 03.03.2026
 
 ---
 
@@ -52,7 +52,6 @@
 - [x] Faction Legend: цвета по роли (player / enemy / ally / neutral), `LegendConfig`
 - [x] Group colors: `show_group_colors` + `show_faction_colors`
 - [x] MiniatureLayout Config: выбор полей для экрана ESP32 (top1/2, bottom1/2)
-- [x] Stat Groups в конфигураторе *(визуальный баг — см. BUG-1)*
 - [x] Редактор эффектов/статусов (кнопка + в таблице, click-to-remove)
 - [x] ConfigModal: широкий grid-layout, Language Switcher
 
@@ -61,55 +60,55 @@
 - [x] `i18next` + `react-i18next` + `i18next-http-backend` установлены
 - [x] `src/i18n.ts` — инициализация с загрузкой с бэка
 - [x] `data/locales/{lang}/core.json` — файлы переводов
-- [x] Language Switcher в ConfigModal
 
-## ✅ Фаза 8: Рефакторинг UI (02.03.2026)
+## ✅ Фаза 8 — Рефакторинг UI
 
 - [x] App.tsx → модульная структура (40KB → 20KB)
-- [x] Новые компоненты:
-  - AppHeader, CombatToolbar, Toolbar
-  - InitiativeTable, ActorRow, InlineInput
+- [x] Новые компоненты: AppHeader, CombatToolbar, InitiativeTable, ActorRow
 - [x] Contexts: ColumnsContext, CombatContext, CombatStateContext
-- [x] Hooks: useCombatState
-- [x] Backend: backend/main.py оптимизирован
-- [x] Vite config + vite.config.ts обновлён
 - [x] BUG-2: Undo/Redo исправлен ✅
 - [x] BUG-3: Мигание колонок исправлено ✅
+
+## ✅ Фаза 9 — Полная локализация и полировка UI (03.03.2026)
+
+- [x] Динамическое сканирование языков (`/api/locales/languages`)
+- [x] Перевод системных статов с fallback на `col.key` (не `col.label`)
+- [x] Реактивное обновление label'ов в ConfigModal при смене языка
+- [x] Вычищены остатки Google AI Studio (title, ошибки)
+- [x] Ребрендинг: Nevrar's Omniboard
+- [x] Фикс сжатия колонок таблицы, когда трекер пуст
+- [x] README.md переписан согласно философии и ТЗ
 
 ---
 
 ## 🐛 Активные баги
 
-- [ ] **BUG-1**: Stat Groups — выравнивание колонок
-- [ ] **BUG-4**: package.json name → "omniboard"
-- [ ] **BUG-5**: package-lock.json → .gitignore
+- [ ] **BUG-1**: Stat Groups — выравнивание колонок. Если колонки сгруппированы, их ширина может разъезжаться относительно `<th>` и `<td>` в разных строках.
 
 ---
 
-## 🎯 Следующая задача: i18n Локализация 🇷🇺
+## 🎯 Следующая задача: Modals Refactoring & Hotbar
 
-- Перевести UI на русский
-- Заполнить data/locales/ru/core.json
-- Добавить Language Switcher в ConfigModal
+- Разбить `src/components/Modals.tsx` (сейчас файл слишком большой) на отдельные файлы в папке `src/components/Modals/`.
+- Добавить UI для **Hotbar** (быстрые действия актёров), так как модель на бэкенде уже готова.
 
 ---
 
 ## 📋 Беклог
 
 ### 🔧 Рефакторинг (приоритет перед новыми фичами)
-- [x] Разбить `src/App.tsx` (~40KB) на модули и кастомные хуки ✅ Фаза 8
-- [ ] Разбить `src/components/Modals.tsx` (если >20KB) на отдельные файлы
-- [ ] Полная миграция UI-строк на i18n (`useTranslation` во всех компонентах)
-- [ ] Перенести хардкодные тексты в `data/locales/ru/core.json`
+- [ ] Разбить `src/components/Modals.tsx` на отдельные файлы
+- [ ] Полная миграция UI-строк на i18n (убедиться, что не осталось хардкода)
 
 ### ✨ Новые фичи
 - [ ] **Image Cropper**: `react-image-crop` для обрезки ассетов под ESP32 (172×320px)
-- [ ] **Hotbar**: UI для `HotbarAction` (модель готова, фронт — нет)
-- [ ] **Reactions**: UI для `active_reaction_actor_id` (модель готова, логика — нет)
+- [ ] **Hotbar**: UI для `HotbarAction` (быстрые атаки, заклинания)
+- [ ] **Reactions**: UI для `active_reaction_actor_id` (отслеживание реакций)
 - [ ] **Dice Engine**: модульные броски (d20, пулы кубиков, Shadowrun d6)
 - [ ] **Sticky Columns**: фиксация колонок при широкой таблице
 
 ### 🔩 Аппаратная часть
-- [ ] ESP32 прошивка: подключение по WebSocket
+- [ ] ESP32 прошивка: C++ / MicroPython + LVGL + WebSocket client
+- [ ] Подключение по Wi-Fi / Bluetooth
 - [ ] ESP32 отображение: `GET /api/render/{actor_id}` → PNG → экран 172×320
 - [ ] LED синхронизация с цветами фракций (`sync_led_to_ui`)
