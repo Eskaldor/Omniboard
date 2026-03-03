@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import asyncio
 import json
 
 from backend.models import CombatState
@@ -41,4 +42,9 @@ def save_state_sync() -> None:
     except Exception:
         # Autosave should never break main flow
         pass
+
+
+async def save_state_async() -> None:
+    """Persist state to disk in a worker thread to avoid blocking the event loop."""
+    await asyncio.to_thread(save_state_sync)
 

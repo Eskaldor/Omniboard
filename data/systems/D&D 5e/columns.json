@@ -14,14 +14,12 @@
     {
       "key": "speed",
       "label": "Speed",
-      "showInTable": true,
-      "group": "1"
+      "showInTable": true
     },
     {
       "key": "mana",
       "label": "mana",
-      "showInTable": true,
-      "group": "1"
+      "showInTable": true
     }
   ]
 }

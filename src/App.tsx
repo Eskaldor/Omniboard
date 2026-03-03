@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Users, Trash, Swords } from 'lucide-react';
 import { CombatState, Actor, Effect, LegendConfig } from './types';
+import i18n from './i18n';
 import { MiniSheetModal, ConfigModal, LibraryModal, AddEffectModal, MiniaturesModal, ActorRosterModal, EncountersModal } from './components/Modals';
 import { CombatLog } from './components/CombatLog';
 import { InitiativeTable } from './components/InitiativeTracker/InitiativeTable';
@@ -54,6 +55,17 @@ export default function App() {
   const [selectedActorIds, setSelectedActorIds] = useState<Set<string>>(new Set());
   const [createGroupModal, setCreateGroupModal] = useState<{ name: string; color: string; groupId?: string } | null>(null);
   const { t } = useTranslation('core', { useSuspense: false });
+
+  // Ленивая загрузка локалей активной системы
+  const loadSystemLocale = async (name: string) => {
+    const ns = `systems/${name}`;
+    if (!i18n.hasResourceBundle(i18n.language, ns)) {
+      await i18n.loadNamespaces(ns);
+    }
+  };
+  useEffect(() => {
+    if (systemName) loadSystemLocale(systemName);
+  }, [systemName]);
 
   const legendConfig = effectiveState?.legend ?? { player: '#10b981', enemy: '#ef4444', ally: '#3b82f6', neutral: '#a1a1aa' };
   const showGroupColors = showGroupColorsLocal ?? effectiveState?.show_group_colors ?? true;

@@ -8,16 +8,12 @@ i18n
   .init({
     fallbackLng: 'en',
     defaultNS: 'core',
-    ns: ['core', 'system_dnd5e'],
+    ns: ['core'], // только core при старте; системные NS загружаются лениво
     backend: {
-      loadPath: '/locales/{{lng}}/{{ns}}.json',
+      loadPath: '/api/locales/{{lng}}/{{ns}}',
     },
-    interpolation: {
-      escapeValue: false, // react already safes from xss
-    },
-    react: {
-      useSuspense: false, // prevent suspend on re-render so App state is not lost (no Loading flash on next turn)
-    },
+    interpolation: { escapeValue: false },
+    react: { useSuspense: false },
   });
 
 export default i18n;

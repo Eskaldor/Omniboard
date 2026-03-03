@@ -1,7 +1,25 @@
 {
-  "config": "Configuration",
-  "start_combat": "Start Combat",
-  "language": "Language",
-  "english": "English",
-  "russian": "Russian"
+  "app": {
+    "title": "Omniboard"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "close": "Close"
+  },
+  "combat": {
+    "round": "Round",
+    "initiative": "Initiative",
+    "next": "Next",
+    "previous": "Previous"
+  },
+  "actors": {
+    "name": "Name",
+    "hp": "HP",
+    "ac": "AC",
+    "speed": "Speed"
+  }
 }

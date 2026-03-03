@@ -28,8 +28,8 @@ async def broadcast_state() -> None:
         except ValueError:
             pass
 
-    # Persist latest visible state for crash/restart recovery
-    app_state.save_state_sync()
+    # Persist latest visible state for crash/restart recovery (offloaded to thread)
+    await app_state.save_state_async()
 
 
 @router.websocket("/ws/master")

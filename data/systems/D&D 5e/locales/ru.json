@@ -1,0 +1,7 @@
+{
+  "hp": { "name": "ХП", "short": "хп" },
+  "ac": { "name": "КД", "short": "кд" },
+  "speed": { "name": "Скорость", "short": "ск" },
+  "initiative": { "name": "Инициатива", "short": "иниц" },
+  "mana": { "name": "Мана", "short": "мана" }
+}
