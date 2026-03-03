@@ -4,6 +4,7 @@ import { Actor, ColumnConfig, Effect, MiniatureLayout, DisplayField } from '../t
 import { slugify } from 'transliteration';
 import { useCombatState } from '../contexts/CombatStateContext';
 import { useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 
 export function MiniaturesModal({ 
   layout, columns, onClose 
@@ -184,6 +185,8 @@ export function MiniSheetModal({
   actor: Actor, columns: ColumnConfig[], systemName: string, onClose: () => void, onUpdate?: (id: string, field: string, value: any) => void, onPortraitClick?: () => void 
 }) {
   const { t } = useTranslation('core', { useSuspense: false });
+  const colName = (col: ColumnConfig) =>
+    i18n.t(`${col.key}.name`, { ns: `systems/${systemName}`, defaultValue: col.label });
   const [localName, setLocalName] = useState(actor.name);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -323,7 +326,7 @@ export function MiniSheetModal({
             <div className="grid grid-cols-2 gap-3">
               {columns.map(col => (
                 <div key={col.key} className="bg-zinc-950 p-3 rounded-lg border border-zinc-800 flex justify-between items-center">
-                  <span className="text-sm text-zinc-400">{col.label}</span>
+                  <span className="text-sm text-zinc-400">{colName(col)}</span>
                   <span className="font-mono text-zinc-200">{actor.stats[col.key] || 0}</span>
                 </div>
               ))}
@@ -474,11 +477,12 @@ export function ConfigModal({
   const handleSave = async () => {
     const name = localSystemName.trim() || systemName;
     if (!name) return;
+    const lang = (i18n.language || 'ru').split('-')[0];
     try {
       const res = await fetch(`/api/systems/${encodeURIComponent(name)}/columns`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(columns)
+        body: JSON.stringify({ lang, columns })
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));

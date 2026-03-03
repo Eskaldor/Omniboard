@@ -1,13 +1,21 @@
 from __future__ import annotations
 
 import json
+from typing import Any, Optional
 
-from fastapi import APIRouter, Body, HTTPException
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 
 from backend.paths import ACTORS_DIR, DATA_DIR
 
 
 router = APIRouter(prefix="/api/systems", tags=["systems"])
+SUPPORTED_LANGS = {"ru", "en"}
+
+
+class SaveColumnsRequest(BaseModel):
+    columns: list[Any]
+    lang: Optional[str] = None
 
 
 def _system_dir(system_name: str):
@@ -84,7 +92,7 @@ async def get_system_columns(system_name: str):
 
 
 @router.post("/{system_name}/columns")
-async def save_system_columns(system_name: str, columns: list = Body(...)):
+async def save_system_columns(system_name: str, body: SaveColumnsRequest):
     system_name = (system_name or "").strip()
     if not system_name:
         raise HTTPException(status_code=400, detail="system name is required")
@@ -92,9 +100,27 @@ async def save_system_columns(system_name: str, columns: list = Body(...)):
     if not sys_dir:
         raise HTTPException(status_code=400, detail="invalid system name")
     sys_dir.mkdir(parents=True, exist_ok=True)
+
     file_path = sys_dir / "columns.json"
-    payload = {"displayName": system_name, "columns": columns}
+    payload = {"displayName": system_name, "columns": body.columns}
     file_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+
+    if body.lang and body.lang in SUPPORTED_LANGS:
+        locale_path = sys_dir / "locales" / f"{body.lang}.json"
+        locale_path.parent.mkdir(parents=True, exist_ok=True)
+        existing: dict = {}
+        if locale_path.exists():
+            try:
+                existing = json.loads(locale_path.read_text(encoding="utf-8"))
+            except Exception:
+                pass
+        for col in body.columns:
+            key = col.get("key") if isinstance(col, dict) else None
+            label = col.get("label", key) if isinstance(col, dict) else key
+            if key and key not in existing:
+                existing[key] = {"name": label, "short": label}
+        locale_path.write_text(json.dumps(existing, indent=2, ensure_ascii=False), encoding="utf-8")
+
     return {"status": "ok"}
 
 

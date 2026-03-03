@@ -52,6 +52,11 @@
     "ac": "AC",
     "speed": "Speed"
   },
+  "table_header": {
+    "init": "Init",
+    "name": "Name",
+    "effects": "Effects"
+  },
   "config_modal": {
     "table": "Table",
     "center_table": "Center table",

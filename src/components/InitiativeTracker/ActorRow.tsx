@@ -1,6 +1,7 @@
 import React from 'react';
 import { Plus, Trash } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n';
 import type { Actor, ColumnConfig, Effect } from '../../types';
 import { InlineInput } from './InlineInput';
 
@@ -15,6 +16,7 @@ export interface ActorRowProps {
   showFactionColorsInTable: boolean;
   legendColor: string;
   columns: ColumnConfig[];
+  systemName: string;
   groupSelectMode: boolean;
   isSelectedForGroup: boolean;
   onUpdate: (updates: Partial<Actor>) => void;
@@ -37,6 +39,7 @@ export const ActorRow = React.memo(function ActorRow({
   showFactionColorsInTable,
   legendColor,
   columns,
+  systemName,
   groupSelectMode,
   isSelectedForGroup,
   onUpdate,
@@ -48,6 +51,8 @@ export const ActorRow = React.memo(function ActorRow({
   onToggleGroupSelect,
 }: ActorRowProps) {
   const { t } = useTranslation('core', { useSuspense: false });
+  const colLabel = (col: ColumnConfig) =>
+    i18n.t(`${col.key}.name`, { ns: `systems/${systemName}`, defaultValue: col.label });
   const visible = columns.filter((c) => c.showInTable);
   const visibleKeys = new Set(visible.map((c) => c.key));
   const mergedMaxKeys = new Set(
@@ -216,7 +221,7 @@ export const ActorRow = React.memo(function ActorRow({
                       key={col.key}
                       className="flex items-center justify-center gap-1 whitespace-nowrap text-xs text-zinc-200"
                     >
-                      <span className="text-[10px] text-zinc-500">{col.label}:</span>
+                      <span className="text-[10px] text-zinc-500">{colLabel(col)}:</span>
                       <div className="flex items-center justify-center gap-1 whitespace-nowrap">
                         <InlineInput
                           type="number"
@@ -252,7 +257,7 @@ export const ActorRow = React.memo(function ActorRow({
                     key={col.key}
                     className="flex items-center justify-center gap-1 whitespace-nowrap text-xs text-zinc-200"
                   >
-                    <span className="text-[10px] text-zinc-500">{col.label}:</span>
+                    <span className="text-[10px] text-zinc-500">{colLabel(col)}:</span>
                     <InlineInput
                       type="number"
                       value={actor.stats[col.key] ?? 0}

@@ -52,6 +52,11 @@
     "ac": "КД",
     "speed": "Скорость"
   },
+  "table_header": {
+    "init": "Иниц",
+    "name": "Имя",
+    "effects": "Эффекты"
+  },
   "config_modal": {
     "table": "Таблица",
     "center_table": "Центрировать таблицу",

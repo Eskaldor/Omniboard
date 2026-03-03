@@ -1,4 +1,6 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n';
 import type { Actor, ColumnConfig, Effect } from '../../types';
 import { ActorRow } from './ActorRow';
 
@@ -8,6 +10,7 @@ export interface InitiativeTableProps {
   currentIndex: number;
   isActive: boolean;
   columns: ColumnConfig[];
+  systemName: string;
   showGroupColorsInTable: boolean;
   showFactionColorsInTable: boolean;
   getLegendColor: (role: Actor['role']) => string;
@@ -29,6 +32,7 @@ export function InitiativeTable({
   currentIndex,
   isActive,
   columns,
+  systemName,
   showGroupColorsInTable,
   showFactionColorsInTable,
   getLegendColor,
@@ -43,6 +47,9 @@ export function InitiativeTable({
   onAddEffectClick,
   onToggleGroupSelect,
 }: InitiativeTableProps) {
+  const { t } = useTranslation('core', { useSuspense: false });
+  const colLabel = (col: ColumnConfig) =>
+    i18n.t(`${col.key}.name`, { ns: `systems/${systemName}`, defaultValue: col.label });
   const visible = columns.filter((c) => c.showInTable);
   const visibleKeys = new Set(visible.map((c) => c.key));
   const mergedMaxKeys = new Set(
@@ -93,16 +100,16 @@ export function InitiativeTable({
             {/* Portrait column */}
             <th className="px-2 py-1 align-middle w-[54px] sticky left-0 z-20 bg-zinc-950 shadow-[8px_0_15px_-3px_rgba(0,0,0,0.5)] border-r border-zinc-800/50" />
             {/* Initiative */}
-            <th className="px-2 py-1 text-center align-middle font-medium text-zinc-400 bg-zinc-900 w-[54px]">Init</th>
+            <th className="px-2 py-1 text-center align-middle font-medium text-zinc-400 bg-zinc-900 w-[54px]">{t('table_header.init')}</th>
             {/* Name */}
-            <th className="px-2 py-1 text-left align-middle font-medium text-zinc-400 bg-zinc-900 w-32">Name</th>
+            <th className="px-2 py-1 text-left align-middle font-medium text-zinc-400 bg-zinc-900 w-32">{t('table_header.name')}</th>
             {/* Standalone stat columns */}
             {standalone.map((col) => (
               <th
                 key={col.key}
                 className="px-2 py-1 text-center align-middle font-medium text-zinc-400 bg-zinc-900 min-w-[5rem] w-20"
               >
-                {col.label}
+                {colLabel(col)}
               </th>
             ))}
             {/* Grouped stat columns */}
@@ -115,14 +122,14 @@ export function InitiativeTable({
                   <span className="text-[10px] text-zinc-500 uppercase">{grp}</span>
                   {grouped.filter((c) => String(c.group).trim() === grp).map((col) => (
                     <span key={col.key} className="text-[10px] text-zinc-400">
-                      {col.label}
+                      {colLabel(col)}
                     </span>
                   ))}
                 </div>
               </th>
             ))}
             {/* Effects */}
-            <th className="px-2 py-1 text-left align-middle font-medium text-zinc-400 bg-zinc-900 max-w-[14rem] w-[14rem]">Effects</th>
+            <th className="px-2 py-1 text-left align-middle font-medium text-zinc-400 bg-zinc-900 max-w-[14rem] w-[14rem]">{t('table_header.effects')}</th>
             {/* Actions (delete) */}
             <th className="sticky right-0 z-20 bg-zinc-950 shadow-[-8px_0_15px_-3px_rgba(0,0,0,0.5)] border-l border-zinc-800/50 p-2 align-middle" />
           </tr>
@@ -151,6 +158,7 @@ export function InitiativeTable({
                 showFactionColorsInTable={showFactionColorsInTable}
                 legendColor={getLegendColor(actor.role)}
                 columns={columns}
+                systemName={systemName}
                 groupSelectMode={groupSelectMode}
                 isSelectedForGroup={isSelectedForGroup}
                 onUpdate={(updates) => onUpdateActor(actor.id, updates)}

@@ -312,6 +312,7 @@ export default function App() {
             currentIndex={effectiveState.current_index}
             isActive={effectiveState.is_active}
             columns={columns}
+            systemName={systemName}
             showGroupColorsInTable={showGroupColorsInTable}
             showFactionColorsInTable={showFactionColorsInTable}
             getLegendColor={getLegendColor}
