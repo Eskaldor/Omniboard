@@ -12,5 +12,17 @@
     "description": "Ужасная боблинизация",
     "duration": 1,
     "show_on_miniature": false
+  },
+  {
+    "id": "effect_gorenie2",
+    "name": "Горение2",
+    "description": "Персонаж горит",
+    "duration": 1,
+    "icon": "v_ogne.png",
+    "render_on_mini": true,
+    "render_on_panel": true,
+    "experimental_ai": false,
+    "ai_prompt": "",
+    "ai_variations": {}
   }
 ]

@@ -6,7 +6,14 @@ class Effect(BaseModel):
     name: str
     duration: Optional[int] = None
     description: Optional[str] = None
-    show_on_miniature: bool = False
+    icon: str = ""
+    is_base: bool = False
+    show_on_miniature: bool = False  # deprecated, use render_on_mini
+    render_on_mini: bool = True
+    render_on_panel: bool = True
+    experimental_ai: bool = False
+    ai_prompt: str = ""
+    ai_variations: dict[str, str] = Field(default_factory=dict)
 
 class Visibility(BaseModel):
     hp: bool = True

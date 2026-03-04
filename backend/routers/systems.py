@@ -1,16 +1,23 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import Any, Optional
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from backend.paths import ACTORS_DIR, DATA_DIR
+from backend.paths import ACTORS_DIR, DATA_DIR, LOCALES_DIR
 
 
 router = APIRouter(prefix="/api/systems", tags=["systems"])
 SUPPORTED_LANGS = {"ru", "en"}
+
+
+def _system_slug(system_name: str) -> str:
+    """Normalize system name for locale filename, e.g. 'D&D 5e' -> 'd_d_5_e'."""
+    s = re.sub(r"[^a-z0-9]+", "_", (system_name or "").lower().strip())
+    return s.strip("_") or "system"
 
 
 class SaveColumnsRequest(BaseModel):
@@ -65,13 +72,36 @@ async def save_system_effect(system_name: str, effect: dict):
 
     for i, e in enumerate(effects):
         if e.get("id") == effect.get("id"):
+            if e.get("is_base"):
+                raise HTTPException(status_code=403, detail="Cannot edit base effect; create a copy with a new id")
             effects[i] = effect
             file_path.write_text(json.dumps(effects, indent=2, ensure_ascii=False), encoding="utf-8")
+            _add_effect_to_locales(system_name, effect.get("id"), effect.get("name"))
             return effects
 
     effects.append(effect)
     file_path.write_text(json.dumps(effects, indent=2, ensure_ascii=False), encoding="utf-8")
+    _add_effect_to_locales(system_name, effect.get("id"), effect.get("name"))
     return effects
+
+
+def _add_effect_to_locales(system_name: str, effect_id: str, effect_name: str) -> None:
+    """If effect_id is not in system locale file yet, add it to data/locales/{lang}/system_{slug}.json."""
+    if not effect_id or not effect_name:
+        return
+    slug = _system_slug(system_name)
+    for lang in SUPPORTED_LANGS:
+        locale_path = LOCALES_DIR / lang / f"system_{slug}.json"
+        locale_path.parent.mkdir(parents=True, exist_ok=True)
+        existing: dict = {}
+        if locale_path.exists():
+            try:
+                existing = json.loads(locale_path.read_text(encoding="utf-8"))
+            except Exception:
+                pass
+        if effect_id not in existing:
+            existing[effect_id] = effect_name
+            locale_path.write_text(json.dumps(existing, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
 @router.get("/{system_name}/columns")

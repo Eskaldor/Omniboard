@@ -188,6 +188,11 @@
     "uploading": "Uploading...",
     "upload": "Upload",
     "select": "Select",
-    "no_assets_upload_some": "No assets found in this category. Upload some!"
+    "no_assets_upload_some": "No assets found in this category. Upload some!",
+    "base_effect_locked": "Base effect — cannot delete",
+    "search_assets": "Search",
+    "search_placeholder": "By filename…",
+    "no_assets_found": "No assets found",
+    "clear_search": "Clear search"
   }
 }

@@ -3,11 +3,37 @@ from __future__ import annotations
 import shutil
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 
 from backend.paths import ASSETS_DIR
 
 
 router = APIRouter(prefix="/api/assets", tags=["assets"])
+
+ALLOWED_EXT = {".png", ".jpg", ".jpeg", ".gif", ".webp"}
+
+
+def _safe_filename(name: str) -> bool:
+    """Ensure filename is a single basename, no path traversal."""
+    if not name or ".." in name or "/" in name or "\\" in name:
+        return False
+    return name.strip() == name and len(name) <= 255
+
+
+@router.get("/effects/{filename}")
+async def get_effect_icon(filename: str, system: str = None):
+    """Asset Override: serve effect icon. Lookup order: system folder → default/effects → assets/effects."""
+    if not _safe_filename(filename):
+        raise HTTPException(status_code=400, detail="Invalid filename")
+    paths_to_try = []
+    if system and system.strip() and ".." not in system and "/" not in system and "\\" not in system:
+        paths_to_try.append(ASSETS_DIR / "systems" / system.strip() / "effects" / filename)
+    paths_to_try.append(ASSETS_DIR / "default" / "effects" / filename)
+    paths_to_try.append(ASSETS_DIR / "effects" / filename)
+    for p in paths_to_try:
+        if p.is_file():
+            return FileResponse(p)
+    raise HTTPException(status_code=404, detail="Effect icon not found")
 
 
 @router.get("/{category}")

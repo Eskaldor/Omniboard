@@ -3,7 +3,14 @@ export interface Effect {
   name: string;
   duration: number | null;
   description?: string;
-  show_on_miniature: boolean;
+  icon?: string;
+  is_base?: boolean;
+  show_on_miniature?: boolean;
+  render_on_mini?: boolean;
+  render_on_panel?: boolean;
+  experimental_ai?: boolean;
+  ai_prompt?: string;
+  ai_variations?: Record<string, string>;
 }
 
 export interface Visibility {
