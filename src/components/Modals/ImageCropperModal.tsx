@@ -1,8 +1,9 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { X, Check } from 'lucide-react';
 import ReactCrop, { type Crop, type PixelCrop, centerCrop, makeAspectCrop, convertToPixelCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { useTranslation } from 'react-i18next';
+import { slugify } from 'transliteration';
 
 const OUTPUT_WIDTH = 172;
 const OUTPUT_HEIGHT = 320;
@@ -47,37 +48,80 @@ function centerAspectCrop(
   );
 }
 
+export interface CropCompletePayload {
+  blob: Blob;
+  technicalId: string;
+  displayName: string;
+}
+
 export function ImageCropperModal({
   imageSrc,
+  initialDisplayName = '',
+  initialTechnicalId = '',
   onCropComplete,
   onClose,
 }: {
   imageSrc: string;
-  onCropComplete: (blob: Blob) => void;
+  initialDisplayName?: string;
+  initialTechnicalId?: string;
+  onCropComplete: (payload: CropCompletePayload) => void;
   onClose: () => void;
 }) {
   const { t } = useTranslation('core', { useSuspense: false });
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop | null>(null);
+  const [displayName, setDisplayName] = useState(initialDisplayName);
+  const [technicalId, setTechnicalId] = useState(initialTechnicalId || slugify(initialDisplayName, { separator: '_' }) || '');
+  const [isCustomId, setIsCustomId] = useState(!!initialTechnicalId);
   const imgRef = React.useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    if (initialDisplayName) setDisplayName(initialDisplayName);
+    if (initialTechnicalId) {
+      setTechnicalId(initialTechnicalId);
+      setIsCustomId(true);
+    } else if (initialDisplayName) {
+      setTechnicalId(slugify(initialDisplayName, { separator: '_' }) || '');
+      setIsCustomId(false);
+    }
+  }, [initialDisplayName, initialTechnicalId]);
 
   const onImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
     const { width, height } = e.currentTarget;
     setCrop(centerAspectCrop(width, height, ASPECT));
   }, []);
 
+  const handleDisplayNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setDisplayName(val);
+    if (!isCustomId) {
+      setTechnicalId(slugify(val, { separator: '_' }) || '');
+    }
+  };
+
+  const handleTechnicalIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTechnicalId(e.target.value);
+    setIsCustomId(true);
+  };
+
   const handleCrop = useCallback(async () => {
     const img = imgRef.current;
     if (!img || !crop) return;
+    const rawId = (technicalId || slugify(displayName, { separator: '_' }) || 'image').trim();
+    const safeId = rawId.replace(/[^a-zA-Z0-9_\-\u0400-\u04FF]/g, '_').replace(/^_+|_+$/g, '') || 'image';
     const pixelCrop = completedCrop ?? convertToPixelCrop(crop, img.width, img.height);
     try {
       const blob = await getCroppedPngBlob(img, pixelCrop);
-      onCropComplete(blob);
+      onCropComplete({
+        blob,
+        technicalId: safeId,
+        displayName: (displayName || safeId).trim(),
+      });
       onClose();
     } catch (err) {
       console.error('Crop failed', err);
     }
-  }, [crop, completedCrop, onCropComplete, onClose]);
+  }, [crop, completedCrop, technicalId, displayName, onCropComplete, onClose]);
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
@@ -94,25 +138,53 @@ export function ImageCropperModal({
           </button>
         </div>
 
-        <div className="p-4 overflow-auto flex-1 min-h-0 bg-zinc-950 flex items-center justify-center">
-          <div className="max-w-full">
-            <ReactCrop
-              crop={crop}
-              onChange={(_, percentCrop) => setCrop(percentCrop)}
-              onComplete={(pixelCrop) => setCompletedCrop(pixelCrop)}
-              aspect={ASPECT}
-              className="max-w-full"
-              style={{ maxHeight: '60vh' }}
-            >
-              <img
-                ref={imgRef}
-                src={imageSrc}
-                alt="Crop"
-                onLoad={onImageLoad}
-                className="max-w-full max-h-[60vh] block"
-                style={{ display: 'block' }}
+        <div className="p-4 overflow-auto flex-1 min-h-0 bg-zinc-950 flex flex-col gap-4">
+          <div className="grid grid-cols-2 gap-3 shrink-0">
+            <div>
+              <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">
+                {t('library.display_name_label')}
+              </label>
+              <input
+                type="text"
+                value={displayName}
+                onChange={handleDisplayNameChange}
+                placeholder={t('library.placeholder_display')}
+                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
               />
-            </ReactCrop>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">
+                {t('library.technical_id_label')}
+              </label>
+              <input
+                type="text"
+                value={technicalId}
+                onChange={handleTechnicalIdChange}
+                placeholder={t('modals.technical_id_placeholder')}
+                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
+              />
+            </div>
+          </div>
+          <div className="flex items-center justify-center min-h-0 flex-1">
+            <div className="max-w-full">
+              <ReactCrop
+                crop={crop}
+                onChange={(_, percentCrop) => setCrop(percentCrop)}
+                onComplete={(pixelCrop) => setCompletedCrop(pixelCrop)}
+                aspect={ASPECT}
+                className="max-w-full"
+                style={{ maxHeight: '50vh' }}
+              >
+                <img
+                  ref={imgRef}
+                  src={imageSrc}
+                  alt="Crop"
+                  onLoad={onImageLoad}
+                  className="max-w-full max-h-[50vh] block"
+                  style={{ display: 'block' }}
+                />
+              </ReactCrop>
+            </div>
           </div>
         </div>
 
@@ -127,7 +199,7 @@ export function ImageCropperModal({
           <button
             type="button"
             onClick={handleCrop}
-            disabled={!crop}
+            disabled={!crop || !(technicalId || slugify(displayName, { separator: '_' }))}
             className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded-lg flex items-center gap-2 transition-colors"
           >
             <Check size={16} />

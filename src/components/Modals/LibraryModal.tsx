@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { X, Upload, Trash2, Lock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { slugify } from 'transliteration';
 import type { Effect } from '../../types';
-import { ImageCropperModal } from './ImageCropperModal';
+import { ImageCropperModal, type CropCompletePayload } from './ImageCropperModal';
 
 export function LibraryModal({
   onClose,
@@ -11,14 +10,18 @@ export function LibraryModal({
   systemName,
   initialTab,
   searchQuery: initialSearchQuery = '',
+  initialDisplayName = '',
+  initialTechnicalId = '',
 }: {
   onClose: () => void;
   onSelect?: (url: string) => void;
   systemName: string;
   initialTab?: 'portraits' | 'frames' | 'effects';
   searchQuery?: string;
+  initialDisplayName?: string;
+  initialTechnicalId?: string;
 }) {
-  const { t } = useTranslation('core', { useSuspense: false });
+  const { t, i18n } = useTranslation('core', { useSuspense: false });
   const [activeTab, setActiveTab] = useState<'portraits' | 'frames' | 'effects'>(initialTab ?? 'portraits');
   const [assets, setAssets] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
@@ -29,11 +32,8 @@ export function LibraryModal({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [pngFormatWarning, setPngFormatWarning] = useState<string | null>(null);
   const [cropperImageSrc, setCropperImageSrc] = useState<string | null>(null);
-  const [cropperContext, setCropperContext] = useState<{ tab: typeof activeTab; technicalId: string } | null>(null);
+  const [cropperTab, setCropperTab] = useState<'portraits' | 'frames' | 'effects'>('portraits');
   const [deleteConfirmUrl, setDeleteConfirmUrl] = useState<string | null>(null);
-  const [displayName, setDisplayName] = useState('');
-  const [technicalId, setTechnicalId] = useState('');
-  const [isCustomId, setIsCustomId] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const OPTIMAL_EFFECT_SIZE = { width: 172, height: 320 };
@@ -80,7 +80,8 @@ export function LibraryModal({
       .then((data: Effect[]) => {
         const set = new Set<string>();
         (Array.isArray(data) ? data : []).forEach((e) => {
-          if (e.is_base && e.icon) set.add(e.icon.split('/').pop() || e.icon);
+          const iconFile = e.icon?.split('/').pop() || e.icon;
+          if (iconFile && e.is_base) set.add(iconFile);
         });
         setBaseEffectIcons(set);
       })
@@ -92,28 +93,51 @@ export function LibraryModal({
     return baseEffectIcons.has(filename);
   };
 
+  const systemNamespace = `systems/${systemName}`;
+
+  useEffect(() => {
+    if (!systemName) return;
+    try {
+      const lang = i18n.language || (i18n.options?.fallbackLng as string) || 'en';
+      const langCode = typeof lang === 'string' ? lang.split('-')[0] : 'en';
+      if (langCode && !i18n.hasResourceBundle(langCode, systemNamespace)) {
+        i18n.loadNamespaces(systemNamespace).catch(() => {});
+      }
+    } catch {
+      // ignore
+    }
+  }, [systemName, systemNamespace, i18n.language]);
+
+  const getDisplayLabel = useCallback(
+    (filename: string) => {
+      const key = filename.replace(/\.[^.]+$/, '').trim();
+      if (!key) return filename;
+      if (!systemName) return key.replace(/_/g, ' ').trim() || key;
+      try {
+        const translated = t(key, { ns: systemNamespace, defaultValue: key });
+        if (translated && translated !== key) return translated;
+      } catch {
+        // ignore
+      }
+      return key.replace(/_/g, ' ').trim() || key;
+    },
+    [t, systemNamespace, systemName]
+  );
+
   const filteredAssets = useMemo(() => {
     if (!searchQuery.trim()) return assets;
     const q = searchQuery.toLowerCase().trim();
     return assets.filter((url) => {
       const filename = url.split('/').pop() || '';
       const nameWithoutExt = filename.replace(/\.[^.]+$/, '');
-      return filename.toLowerCase().includes(q) || nameWithoutExt.toLowerCase().includes(q);
+      const displayLabel = getDisplayLabel(filename);
+      return (
+        filename.toLowerCase().includes(q) ||
+        nameWithoutExt.toLowerCase().includes(q) ||
+        displayLabel.toLowerCase().includes(q)
+      );
     });
-  }, [assets, searchQuery]);
-
-  const handleDisplayNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setDisplayName(val);
-    if (!isCustomId) {
-      setTechnicalId(slugify(val, { separator: '_' }));
-    }
-  };
-
-  const handleTechnicalIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTechnicalId(e.target.value);
-    setIsCustomId(true);
-  };
+  }, [assets, searchQuery, getDisplayLabel]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -136,22 +160,20 @@ export function LibraryModal({
     }
 
     const objectUrl = URL.createObjectURL(file);
-    setCropperContext({ tab: activeTab, technicalId });
+    setCropperTab(activeTab);
     setCropperImageSrc(objectUrl);
   };
 
   const handleCropperClose = () => {
     if (cropperImageSrc) URL.revokeObjectURL(cropperImageSrc);
     setCropperImageSrc(null);
-    setCropperContext(null);
   };
 
-  const handleCropComplete = async (blob: Blob) => {
-    if (!cropperContext) return;
-    const { tab, technicalId: ctxTechnicalId } = cropperContext;
-    const baseName = ctxTechnicalId?.trim() || 'image';
-    const fileName = `${baseName}.png`;
+  const handleCropComplete = async (payload: CropCompletePayload) => {
+    const { blob, technicalId: techId, displayName: dispName } = payload;
+    const fileName = `${techId}.png`;
     const file = new File([blob], fileName, { type: 'image/png' });
+    const tab = cropperTab;
 
     let hasResolutionWarning = false;
     if (tab === 'effects') {
@@ -177,10 +199,17 @@ export function LibraryModal({
       });
       const data = await res.json().catch(() => ({}));
       const newUrl = data?.url;
+      const lang = (i18n.language || 'en').split('-')[0];
+      await fetch(`/api/locales/systems/${encodeURIComponent(systemName)}/entry`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: techId, value: dispName, lang }),
+      }).catch(() => {});
       fetchAssets();
-      setDisplayName('');
-      setTechnicalId('');
-      setIsCustomId(false);
+      const lng = i18n.language || 'en';
+      if (lng && i18n.hasResourceBundle(lng, systemNamespace)) {
+        i18n.addResource(lng, systemNamespace, techId, dispName);
+      }
       if (onSelect && tab === 'effects' && newUrl) {
         if (hasResolutionWarning) {
           setLastUploadedUrlWithWarning(newUrl);
@@ -197,7 +226,6 @@ export function LibraryModal({
       handleCropperClose();
     }
   };
-
   const handleDelete = async (url: string) => {
     if (isBaseAsset(url)) return;
     setDeleteConfirmUrl(url);
@@ -268,30 +296,6 @@ export function LibraryModal({
               className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
             />
           </div>
-          <div className="flex-1">
-            <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">
-              {t('library.display_name_label')}
-            </label>
-            <input
-              type="text"
-              value={displayName}
-              onChange={handleDisplayNameChange}
-              placeholder={t('library.placeholder_display')}
-              className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
-            />
-          </div>
-          <div className="flex-1">
-            <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">
-              {t('library.technical_id_label')}
-            </label>
-            <input
-              type="text"
-              value={technicalId}
-              onChange={handleTechnicalIdChange}
-              placeholder={t('modals.technical_id_placeholder')}
-              className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
-            />
-          </div>
           <div className="pb-0.5">
             <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*" />
             <button
@@ -326,14 +330,11 @@ export function LibraryModal({
         )}
 
         <div className="flex-1 p-6 overflow-auto bg-zinc-950">
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
             {filteredAssets.map((url, i) => {
               const base = isBaseAsset(url);
-              const displayLabel = (() => {
-                const filename = url.split('/').pop() ?? '';
-                const name = filename.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim();
-                return name || filename;
-              })();
+              const filename = url.split('/').pop() ?? '';
+              const displayLabel = getDisplayLabel(filename);
               return (
                 <div
                   key={url}
@@ -379,7 +380,7 @@ export function LibraryModal({
               );
             })}
             {filteredAssets.length === 0 && assets.length > 0 && (
-              <div className="col-span-4 flex flex-col items-center justify-center py-12 text-zinc-500 border border-dashed border-zinc-800 rounded-xl gap-3">
+              <div className="col-span-full flex flex-col items-center justify-center py-12 text-zinc-500 border border-dashed border-zinc-800 rounded-xl gap-3">
                 <span>{t('library.no_assets_found')}</span>
                 <button
                   type="button"
@@ -391,7 +392,7 @@ export function LibraryModal({
               </div>
             )}
             {assets.length === 0 && (
-              <div className="col-span-4 text-center py-12 text-zinc-500 border border-dashed border-zinc-800 rounded-xl">
+              <div className="col-span-full text-center py-12 text-zinc-500 border border-dashed border-zinc-800 rounded-xl">
                 {t('library.no_assets_upload_some')}
               </div>
             )}
@@ -402,22 +403,22 @@ export function LibraryModal({
       {deleteConfirmUrl && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-10 rounded-2xl">
           <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-4 max-w-sm shadow-xl">
-            <h4 className="text-sm font-semibold text-zinc-100 mb-2">{t('library.delete_asset_title')}</h4>
-            <p className="text-sm text-zinc-400 mb-4">{t('library.delete_asset_confirm')}</p>
+            <h4 className="text-sm font-semibold text-zinc-100 mb-2">{t('library.confirm_delete_title')}</h4>
+            <p className="text-sm text-zinc-400 mb-4">{t('library.confirm_delete_message')}</p>
             <div className="flex justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setDeleteConfirmUrl(null)}
                 className="px-3 py-1.5 text-sm font-medium text-zinc-300 hover:text-zinc-100 rounded-lg border border-zinc-600 hover:bg-zinc-700 transition-colors"
               >
-                {t('library.delete_asset_cancel')}
+                {t('library.confirm_delete_cancel')}
               </button>
               <button
                 type="button"
                 onClick={handleDeleteConfirm}
                 className="px-3 py-1.5 text-sm font-medium text-white bg-red-600 hover:bg-red-500 rounded-lg transition-colors"
               >
-                {t('library.delete_asset_confirm_btn')}
+                {t('library.confirm_delete_btn')}
               </button>
             </div>
           </div>
@@ -427,6 +428,8 @@ export function LibraryModal({
       {cropperImageSrc && (
         <ImageCropperModal
           imageSrc={cropperImageSrc}
+          initialDisplayName={initialDisplayName}
+          initialTechnicalId={initialTechnicalId}
           onCropComplete={handleCropComplete}
           onClose={handleCropperClose}
         />

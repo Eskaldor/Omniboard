@@ -34,9 +34,14 @@ export function AddEffectModal({
   const [showIconLibrary, setShowIconLibrary] = useState(false);
   const [quickSearch, setQuickSearch] = useState('');
   const [previewError, setPreviewError] = useState(false);
+  const [previewResolutionWarning, setPreviewResolutionWarning] = useState(false);
 
+  const OPTIMAL_PREVIEW_SIZE = { width: 172, height: 320 };
+
+  // Reset preview error and resolution warning when icon changes (no dependency cycle: icon is user-driven only).
   useEffect(() => {
     setPreviewError(false);
+    setPreviewResolutionWarning(false);
   }, [icon]);
 
   useEffect(() => {
@@ -163,6 +168,7 @@ export function AddEffectModal({
     setIcon(filename);
     setShowIconLibrary(false);
     setPreviewError(false);
+    // Name and technicalId are separate from the asset: only suggest name when empty, and id is always derived from name.
     if (!name.trim() && filename) {
       const base = filename.replace(/\.[^.]+$/, '').replace(/_/g, ' ');
       const suggestedName = base
@@ -212,6 +218,12 @@ export function AddEffectModal({
                   alt=""
                   className="w-full h-full object-contain"
                   onError={() => setPreviewError(true)}
+                  onLoad={(e) => {
+                    const img = e.currentTarget;
+                    if (img.naturalWidth !== OPTIMAL_PREVIEW_SIZE.width || img.naturalHeight !== OPTIMAL_PREVIEW_SIZE.height) {
+                      setPreviewResolutionWarning(true);
+                    }
+                  }}
                 />
               ) : effectIconUrl && previewError ? (
                 <span className="flex flex-col items-center gap-2 text-zinc-500">
@@ -225,6 +237,11 @@ export function AddEffectModal({
                 </span>
               )}
             </div>
+            {previewResolutionWarning && effectIconUrl && (
+              <p className="mt-1.5 text-[10px] text-red-500 text-center leading-tight">
+                {t('modals.preview_size_warning')}
+              </p>
+            )}
           </div>
 
           {/* Right: Settings */}
@@ -444,6 +461,8 @@ export function AddEffectModal({
           systemName={systemName}
           initialTab="effects"
           searchQuery={name}
+          initialDisplayName={name}
+          initialTechnicalId={technicalId}
           onClose={() => setShowIconLibrary(false)}
           onSelect={handleIconSelect}
         />

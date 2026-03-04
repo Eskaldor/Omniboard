@@ -66,6 +66,39 @@ async def refresh_languages():
     return {"status": "ok", "languages": sorted(_SUPPORTED_LANGS_CACHE)}
 
 
+@router.post("/systems/{system_name}/entry")
+async def set_system_locale_entry(system_name: str, body: dict):
+    """
+    Save or update a single key in the system locale file.
+    Body: {"key": str, "value": str, "lang": str}.
+    Key is the technical id (e.g. asset filename without extension), value is the display name.
+    """
+    if ".." in system_name or "/" in system_name or "\\" in system_name:
+        raise HTTPException(status_code=400, detail="Invalid system name")
+    key = body.get("key")
+    value = body.get("value")
+    lang = (body.get("lang") or "en").split("-")[0]
+    if not key or not isinstance(key, str):
+        raise HTTPException(status_code=400, detail="Missing or invalid 'key'")
+    if value is None or (isinstance(value, str) and value.strip() == ""):
+        raise HTTPException(status_code=400, detail="Missing or empty 'value'")
+    locale_path = DATA_DIR / "systems" / system_name / "locales" / f"{lang}.json"
+    locale_path.parent.mkdir(parents=True, exist_ok=True)
+    data = {}
+    if locale_path.exists():
+        try:
+            with locale_path.open(encoding="utf-8") as f:
+                data = json.load(f)
+        except Exception:
+            data = {}
+    if not isinstance(data, dict):
+        data = {}
+    data[str(key).strip()] = value if isinstance(value, str) else str(value)
+    with locale_path.open("w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    return {"status": "ok", "key": key, "lang": lang}
+
+
 @router.get("/{lang}/{namespace:path}")
 async def get_locale(lang: str, namespace: str):
     supported = get_supported_langs()
