@@ -218,6 +218,10 @@
     "delete_asset_title": "Удалить ресурс?",
     "delete_asset_confirm": "Ресурс будет удалён из библиотеки. Это действие нельзя отменить.",
     "delete_asset_cancel": "Отмена",
-    "delete_asset_confirm_btn": "Удалить"
+    "delete_asset_confirm_btn": "Удалить",
+    "technical_id_validation_error": "Только строчные латинские буквы, цифры и подчеркивание.",
+    "asset_id_exists_error": "Файл с таким ID уже существует. Пожалуйста, измените Имя файла (Technical ID).",
+    "asset_id_exists_hint": "Измените имя выше или перезапишите существующий файл.",
+    "overwrite_anyway": "Перезаписать"
   }
 }

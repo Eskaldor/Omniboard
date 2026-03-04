@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import shutil
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
@@ -11,6 +12,9 @@ from backend.paths import ASSETS_DIR
 router = APIRouter(prefix="/api/assets", tags=["assets"])
 
 ALLOWED_EXT = {".png", ".jpg", ".jpeg", ".gif", ".webp"}
+
+# Only list files that match: lowercase id + image extension (excludes .DS_Store, etc.)
+ASSET_FILENAME_RE = re.compile(r"^[a-z0-9_]+\.(png|jpg|jpeg|webp|gif)$")
 
 
 def _safe_filename(name: str) -> bool:
@@ -47,7 +51,7 @@ async def list_assets(category: str, system: str = None):
     default_dir = ASSETS_DIR / "default" / category
     if default_dir.exists():
         for f in default_dir.iterdir():
-            if f.is_file() and f.suffix.lower() in [".png", ".jpg", ".jpeg", ".gif", ".webp"]:
+            if f.is_file() and ASSET_FILENAME_RE.fullmatch(f.name):
                 files_dict[f.name] = f"/assets/default/{category}/{f.name}"
 
     # System assets
@@ -55,14 +59,14 @@ async def list_assets(category: str, system: str = None):
         system_dir = ASSETS_DIR / "systems" / system / category
         if system_dir.exists():
             for f in system_dir.iterdir():
-                if f.is_file() and f.suffix.lower() in [".png", ".jpg", ".jpeg", ".gif", ".webp"]:
+                if f.is_file() and ASSET_FILENAME_RE.fullmatch(f.name):
                     files_dict[f.name] = f"/assets/systems/{system}/{category}/{f.name}"
 
     return list(files_dict.values())
 
 
 @router.post("/{category}")
-async def upload_asset(category: str, system: str = None, file: UploadFile = File(...)):
+async def upload_asset(category: str, system: str = None, overwrite: bool = False, file: UploadFile = File(...)):
     if category not in ["portraits", "frames", "effects"]:
         raise HTTPException(status_code=400, detail="Invalid category")
 
@@ -75,6 +79,8 @@ async def upload_asset(category: str, system: str = None, file: UploadFile = Fil
 
     target_dir.mkdir(parents=True, exist_ok=True)
     file_path = target_dir / file.filename
+    if file_path.exists() and not overwrite:
+        raise HTTPException(status_code=409, detail="Asset with this ID already exists")
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 

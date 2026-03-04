@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { X, Check } from 'lucide-react';
 import ReactCrop, { type Crop, type PixelCrop, centerCrop, makeAspectCrop, convertToPixelCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
@@ -8,6 +8,8 @@ import { slugify } from 'transliteration';
 const OUTPUT_WIDTH = 172;
 const OUTPUT_HEIGHT = 320;
 const ASPECT = OUTPUT_WIDTH / OUTPUT_HEIGHT;
+
+const TECHNICAL_ID_REGEX = /^[a-z0-9_]+$/;
 
 function getCroppedPngBlob(image: HTMLImageElement, crop: PixelCrop): Promise<Blob> {
   return new Promise((resolve, reject) => {
@@ -58,23 +60,41 @@ export function ImageCropperModal({
   imageSrc,
   initialDisplayName = '',
   initialTechnicalId = '',
+  conflictError: conflictErrorProp = null,
+  setConflictNotifier,
+  onOverwriteRequested,
+  isOverwriteLoading = false,
   onCropComplete,
   onClose,
 }: {
   imageSrc: string;
   initialDisplayName?: string;
   initialTechnicalId?: string;
+  conflictError?: string | null;
+  setConflictNotifier?: (fn: ((msg: string | null) => void) | null) => void;
+  onOverwriteRequested?: () => void;
+  isOverwriteLoading?: boolean;
   onCropComplete: (payload: CropCompletePayload) => void;
   onClose: () => void;
 }) {
   const { t } = useTranslation('core', { useSuspense: false });
+  const [localConflict, setLocalConflict] = useState<string | null>(null);
+  const displayConflict = conflictErrorProp ?? localConflict;
+
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop | null>(null);
   const [displayName, setDisplayName] = useState(initialDisplayName);
   const [technicalId, setTechnicalId] = useState(initialTechnicalId || slugify(initialDisplayName, { separator: '_' }) || '');
   const [isCustomId, setIsCustomId] = useState(!!initialTechnicalId);
   const imgRef = React.useRef<HTMLImageElement>(null);
+  const setConflictNotifierRef = useRef(setConflictNotifier);
+  setConflictNotifierRef.current = setConflictNotifier;
 
+  if (setConflictNotifier) setConflictNotifier(setLocalConflict);
+  useEffect(() => () => setConflictNotifierRef.current?.(null), []);
+  useEffect(() => {
+    if (!conflictErrorProp) setLocalConflict(null);
+  }, [conflictErrorProp]);
   useEffect(() => {
     if (initialDisplayName) setDisplayName(initialDisplayName);
     if (initialTechnicalId) {
@@ -104,24 +124,25 @@ export function ImageCropperModal({
     setIsCustomId(true);
   };
 
+  const technicalIdTrimmed = technicalId.trim();
+  const isTechnicalIdValid = technicalIdTrimmed.length > 0 && TECHNICAL_ID_REGEX.test(technicalIdTrimmed);
+
   const handleCrop = useCallback(async () => {
     const img = imgRef.current;
-    if (!img || !crop) return;
-    const rawId = (technicalId || slugify(displayName, { separator: '_' }) || 'image').trim();
-    const safeId = rawId.replace(/[^a-zA-Z0-9_\-\u0400-\u04FF]/g, '_').replace(/^_+|_+$/g, '') || 'image';
+    if (!img || !crop || !isTechnicalIdValid) return;
+    const rawId = technicalIdTrimmed.toLowerCase();
     const pixelCrop = completedCrop ?? convertToPixelCrop(crop, img.width, img.height);
     try {
       const blob = await getCroppedPngBlob(img, pixelCrop);
       onCropComplete({
         blob,
-        technicalId: safeId,
-        displayName: (displayName || safeId).trim(),
+        technicalId: rawId,
+        displayName: (displayName || rawId).trim(),
       });
-      onClose();
     } catch (err) {
       console.error('Crop failed', err);
     }
-  }, [crop, completedCrop, technicalId, displayName, onCropComplete, onClose]);
+  }, [crop, completedCrop, technicalIdTrimmed, displayName, isTechnicalIdValid, onCropComplete]);
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
@@ -161,8 +182,15 @@ export function ImageCropperModal({
                 value={technicalId}
                 onChange={handleTechnicalIdChange}
                 placeholder={t('modals.technical_id_placeholder')}
-                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
+                className={`w-full bg-zinc-900 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:ring-2 ${
+                  technicalIdTrimmed.length > 0 && !isTechnicalIdValid
+                    ? 'border-2 border-red-500 focus:border-red-500 focus:ring-red-500/30'
+                    : 'border border-zinc-700 focus:border-emerald-500'
+                }`}
               />
+              {technicalIdTrimmed.length > 0 && !isTechnicalIdValid && (
+                <p className="mt-1 text-xs text-red-400">{t('library.technical_id_validation_error')}</p>
+              )}
             </div>
           </div>
           <div className="flex items-center justify-center min-h-0 flex-1">
@@ -188,6 +216,23 @@ export function ImageCropperModal({
           </div>
         </div>
 
+        {displayConflict && (
+          <div className="px-4 pt-2 pb-1 border-t border-red-500/30 bg-red-500/5 shrink-0">
+            <p className="text-sm text-red-300 mb-2">{displayConflict}</p>
+            <p className="text-xs text-zinc-400 mb-2">{t('library.asset_id_exists_hint')}</p>
+            {onOverwriteRequested && (
+              <button
+                type="button"
+                onClick={onOverwriteRequested}
+                disabled={isOverwriteLoading}
+                className="px-3 py-1.5 text-sm font-medium text-white bg-amber-600 hover:bg-amber-500 disabled:opacity-50 rounded-lg transition-colors"
+              >
+                {isOverwriteLoading ? t('library.uploading') : t('library.overwrite_anyway')}
+              </button>
+            )}
+          </div>
+        )}
+
         <div className="p-4 border-t border-zinc-800 flex justify-end gap-2 bg-zinc-900/50 shrink-0">
           <button
             type="button"
@@ -199,7 +244,7 @@ export function ImageCropperModal({
           <button
             type="button"
             onClick={handleCrop}
-            disabled={!crop || !(technicalId || slugify(displayName, { separator: '_' }))}
+            disabled={!crop || !isTechnicalIdValid}
             className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded-lg flex items-center gap-2 transition-colors"
           >
             <Check size={16} />

@@ -210,6 +210,10 @@
     "delete_asset_title": "Delete asset?",
     "delete_asset_confirm": "This asset will be removed from the library. This cannot be undone.",
     "delete_asset_cancel": "Cancel",
-    "delete_asset_confirm_btn": "Delete"
+    "delete_asset_confirm_btn": "Delete",
+    "technical_id_validation_error": "Only lowercase Latin letters, numbers, and underscores.",
+    "asset_id_exists_error": "A file with this ID already exists. Please change the File name (Technical ID).",
+    "asset_id_exists_hint": "Change the name above or overwrite the existing file.",
+    "overwrite_anyway": "Overwrite"
   }
 }

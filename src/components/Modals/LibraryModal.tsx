@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { X, Upload, Trash2, Lock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Effect } from '../../types';
@@ -33,6 +33,15 @@ export function LibraryModal({
   const [pngFormatWarning, setPngFormatWarning] = useState<string | null>(null);
   const [cropperImageSrc, setCropperImageSrc] = useState<string | null>(null);
   const [cropperTab, setCropperTab] = useState<'portraits' | 'frames' | 'effects'>('portraits');
+  const [cropperConflictError, setCropperConflictError] = useState<string | null>(null);
+  const cropperConflictErrorRef = useRef<string | null>(null);
+  const conflictNotifierRef = useRef<((msg: string | null) => void) | null>(null);
+  const setConflictNotifier = useCallback((fn: ((msg: string | null) => void) | null) => {
+    conflictNotifierRef.current = fn;
+  }, []);
+  const [conflictVersion, setConflictVersion] = useState(0);
+  const [pendingOverwritePayload, setPendingOverwritePayload] = useState<CropCompletePayload | null>(null);
+  const [overwrittenUrlCacheBust, setOverwrittenUrlCacheBust] = useState<{ url: string; t: number } | null>(null);
   const [deleteConfirmUrl, setDeleteConfirmUrl] = useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -160,13 +169,21 @@ export function LibraryModal({
     }
 
     const objectUrl = URL.createObjectURL(file);
+    setCropperConflictError(null);
+    cropperConflictErrorRef.current = null;
+    conflictNotifierRef.current = null;
+    setPendingOverwritePayload(null);
     setCropperTab(activeTab);
     setCropperImageSrc(objectUrl);
   };
 
   const handleCropperClose = () => {
     if (cropperImageSrc) URL.revokeObjectURL(cropperImageSrc);
+    conflictNotifierRef.current = null;
     setCropperImageSrc(null);
+    setCropperConflictError(null);
+    cropperConflictErrorRef.current = null;
+    setPendingOverwritePayload(null);
   };
 
   const handleCropComplete = async (payload: CropCompletePayload) => {
@@ -192,11 +209,27 @@ export function LibraryModal({
     formData.append('file', file);
 
     setIsUploading(true);
+    let skipCloseOnConflict = false;
     try {
       const res = await fetch(`/api/assets/${tab}?system=${encodeURIComponent(systemName)}`, {
         method: 'POST',
         body: formData,
       });
+      if (res.status === 409) {
+        skipCloseOnConflict = true;
+        const message = t('library.asset_id_exists_error');
+        cropperConflictErrorRef.current = message;
+        setCropperConflictError(message);
+        setPendingOverwritePayload({
+          blob: blob.slice(0),
+          technicalId: techId,
+          displayName: dispName,
+        });
+        setConflictVersion((v) => v + 1);
+        conflictNotifierRef.current?.(message);
+        setIsUploading(false);
+        return;
+      }
       const data = await res.json().catch(() => ({}));
       const newUrl = data?.url;
       const lang = (i18n.language || 'en').split('-')[0];
@@ -223,9 +256,61 @@ export function LibraryModal({
       setUploadError(t('library.upload_error_failed'));
     } finally {
       setIsUploading(false);
-      handleCropperClose();
+      if (!skipCloseOnConflict) handleCropperClose();
     }
   };
+
+  const handleOverwriteClick = async () => {
+    const payload = pendingOverwritePayload;
+    if (!payload || !systemName) return;
+    const { blob, technicalId: techId, displayName: dispName } = payload;
+    const fileName = `${techId}.png`;
+    const file = new File([blob], fileName, { type: 'image/png' });
+    const tab = cropperTab;
+    const formData = new FormData();
+    formData.append('file', file);
+    setIsUploading(true);
+    setCropperConflictError(null);
+    try {
+      const res = await fetch(
+        `/api/assets/${tab}?system=${encodeURIComponent(systemName)}&overwrite=true`,
+        { method: 'POST', body: formData }
+      );
+      if (res.status === 409) {
+        setCropperConflictError(t('library.asset_id_exists_error'));
+        return;
+      }
+      if (!res.ok) {
+        setCropperConflictError(t('library.upload_error_failed'));
+        return;
+      }
+      const data = await res.json().catch(() => ({}));
+      const lang = (i18n.language || 'en').split('-')[0];
+      await fetch(`/api/locales/systems/${encodeURIComponent(systemName)}/entry`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: techId, value: dispName, lang }),
+      }).catch(() => {});
+      fetchAssets();
+      const lng = i18n.language || 'en';
+      if (lng && i18n.hasResourceBundle(lng, systemNamespace)) {
+        i18n.addResource(lng, systemNamespace, techId, dispName);
+      }
+      setPendingOverwritePayload(null);
+      setOverwrittenUrlCacheBust({ url: data.url, t: Date.now() });
+      handleCropperClose();
+      if (onSelect && tab === 'effects' && data?.url) {
+        onSelect(data.url);
+        onClose();
+      }
+    } catch (err) {
+      console.error('Overwrite failed', err);
+      setCropperConflictError(t('library.upload_error_failed'));
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleDelete = async (url: string) => {
     if (isBaseAsset(url)) return;
     setDeleteConfirmUrl(url);
@@ -344,7 +429,11 @@ export function LibraryModal({
                   }`}
                 >
                   <div className="relative flex-1 min-h-0">
-                    <img src={url} alt={displayLabel} className="w-full h-full object-cover" />
+                    <img
+                      src={overwrittenUrlCacheBust?.url === url ? `${url}?t=${overwrittenUrlCacheBust.t}` : url}
+                      alt={displayLabel}
+                      className="w-full h-full object-cover"
+                    />
                     <div className="absolute inset-x-0 top-0 pt-2 pb-6 bg-gradient-to-b from-black/70 to-transparent pointer-events-none">
                       <span className="line-clamp-2 px-2 text-xs font-medium text-white text-center drop-shadow-sm">
                         {displayLabel}
@@ -430,6 +519,10 @@ export function LibraryModal({
           imageSrc={cropperImageSrc}
           initialDisplayName={initialDisplayName}
           initialTechnicalId={initialTechnicalId}
+          conflictError={cropperConflictError ?? cropperConflictErrorRef.current}
+          setConflictNotifier={setConflictNotifier}
+          onOverwriteRequested={pendingOverwritePayload ? handleOverwriteClick : undefined}
+          isOverwriteLoading={isUploading && !!pendingOverwritePayload}
           onCropComplete={handleCropComplete}
           onClose={handleCropperClose}
         />
