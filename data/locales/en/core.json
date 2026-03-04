@@ -129,6 +129,7 @@
     "type_or_select_effect": "Type or select effect...",
     "effect_details": "Effect details...",
     "save_effect_to_system_title": "Save this effect to the system JSON for future use",
+    "preview_size_warning": "Image is not 172×320; may display incorrectly.",
     "search_actors": "Search actors...",
     "add_to_combat": "Add to Combat",
     "no_actors_in_roster": "No actors found in the compendium.",
@@ -147,7 +148,10 @@
     "delete_this_encounter": "Delete this encounter?",
     "unnamed_encounter": "Unnamed Encounter",
     "group_placeholder": "e.g. group-1",
-    "technical_id_placeholder": "e.g. v_plenu"
+    "technical_id_placeholder": "e.g. v_plenu",
+    "crop_title": "Crop Image",
+    "crop_apply": "Apply",
+    "crop_cancel": "Cancel"
   },
   "combat_log": {
     "record_log": "Record Log",
@@ -193,6 +197,15 @@
     "search_assets": "Search",
     "search_placeholder": "By filename…",
     "no_assets_found": "No assets found",
-    "clear_search": "Clear search"
+    "clear_search": "Clear search",
+    "effect_size_warning": "Warning! Optimal size for the miniature icon is 172×320. The image may display incorrectly.",
+    "select_anyway": "Select anyway",
+    "upload_error_not_image": "Please select an image file (e.g. PNG, JPEG).",
+    "upload_error_failed": "Upload failed. Try again.",
+    "png_transparency_warning": "Note: JPEG does not support transparency. Use PNG for correct display of layers.",
+    "delete_asset_title": "Delete asset?",
+    "delete_asset_confirm": "This asset will be removed from the library. This cannot be undone.",
+    "delete_asset_cancel": "Cancel",
+    "delete_asset_confirm_btn": "Delete"
   }
 }

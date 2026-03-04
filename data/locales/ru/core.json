@@ -129,6 +129,7 @@
     "type_or_select_effect": "Введите или выберите эффект...",
     "effect_details": "Описание эффекта...",
     "save_effect_to_system_title": "Сохранить эффект в JSON системы для дальнейшего использования",
+    "preview_size_warning": "Размер не 172×320 — может отображаться некорректно.",
     "search_actors": "Поиск персонажей...",
     "add_to_combat": "В бой",
     "no_actors_in_roster": "В компендиуме нет персонажей.",
@@ -147,7 +148,10 @@
     "delete_this_encounter": "Удалить это столкновение?",
     "unnamed_encounter": "Без названия",
     "group_placeholder": "напр. group-1",
-    "technical_id_placeholder": "напр. v_plenu"
+    "technical_id_placeholder": "напр. v_plenu",
+    "crop_title": "Обрезка изображения",
+    "crop_apply": "Применить",
+    "crop_cancel": "Отмена"
   },
   "combat_log": {
     "record_log": "Записывать журнал",
@@ -201,6 +205,15 @@
     "search_assets": "Поиск",
     "search_placeholder": "По имени файла…",
     "no_assets_found": "Ассеты не найдены",
-    "clear_search": "Очистить поиск"
+    "clear_search": "Очистить поиск",
+    "effect_size_warning": "Внимание! Оптимальный размер для миниатюры — 172×320. Картинка может отображаться некорректно.",
+    "select_anyway": "Всё равно выбрать",
+    "upload_error_not_image": "Выберите файл изображения (PNG, JPEG и т.д.).",
+    "upload_error_failed": "Загрузка не удалась. Попробуйте снова.",
+    "png_transparency_warning": "Внимание: JPEG не поддерживает необходимую прозрачность. Используйте PNG для корректного отображения слоёв.",
+    "delete_asset_title": "Удалить ресурс?",
+    "delete_asset_confirm": "Ресурс будет удалён из библиотеки. Это действие нельзя отменить.",
+    "delete_asset_cancel": "Отмена",
+    "delete_asset_confirm_btn": "Удалить"
   }
 }
