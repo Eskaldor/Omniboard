@@ -103,6 +103,7 @@ export interface CombatState {
   can_undo?: boolean;
   can_redo?: boolean;
   table_centered?: boolean;
+  autosave_enabled?: boolean;
 }
 
 export interface ColumnConfig {
