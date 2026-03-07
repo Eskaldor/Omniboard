@@ -65,7 +65,10 @@ export interface DisplayField {
   value_path: string;
   max_value_path?: string;
   color?: string;
+  bar_bg_color?: string;
   theme_id?: string;
+  offset_x?: number;
+  offset_y?: number;
   rotation?: number;
   /** Показывать текст поверх бара (по умолчанию true) */
   show_text?: boolean;
@@ -73,6 +76,27 @@ export interface DisplayField {
   show_label?: boolean;
   /** Показывать максимум в формате "val / max" (по умолчанию true) */
   show_max?: boolean;
+  /** Переопределение шрифта профиля для этого поля */
+  font_id?: string;
+  /** Переопределение размера шрифта для этого поля */
+  font_size?: number;
+  /** Стиль бара: сплошной цвет или текстура */
+  bar_style?: 'solid' | 'textured';
+}
+
+export interface BarProfileConfig {
+  id: string;
+  name: string;
+  mode: 'solid' | 'textured';
+  fg_color: string;
+  fg_color_end?: string | null;
+  fg_color_mid?: string | null;
+  gradient_stop?: number | null;
+  gradient_mid_stop?: number | null;
+  bg_color: string;
+  border_color: string;
+  border_width: number;
+  border_radius?: number;
 }
 
 export interface LayoutProfile {

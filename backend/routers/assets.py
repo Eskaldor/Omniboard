@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import json
 import re
 import shutil
 
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from PIL import Image
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 
+from backend.models import BarProfileConfig
 from backend.paths import ASSETS_DIR
 
 
@@ -38,6 +41,140 @@ async def get_effect_icon(filename: str, system: str = None):
         if p.is_file():
             return FileResponse(p)
     raise HTTPException(status_code=404, detail="Effect icon not found")
+
+
+def _load_bar_config(config_path) -> BarProfileConfig | None:
+    """Загружает BarProfileConfig из config.json. Возвращает None при ошибке."""
+    if not config_path.is_file():
+        return None
+    try:
+        data = json.loads(config_path.read_text(encoding="utf-8"))
+        return BarProfileConfig.model_validate(data)
+    except (OSError, ValueError, Exception):
+        return None
+
+
+@router.get("/bars")
+async def list_bar_profiles(system: str | None = None):
+    """
+    Сканирует data/assets/default/bars/ и при наличии system — data/assets/systems/{system}/bars/.
+    В каждой подпапке читает config.json, парсит в BarProfileConfig. Возвращает объединённый список.
+    Если конфигов нет — возвращает один дефолтный (id=default).
+    """
+    result: list[BarProfileConfig] = []
+    seen_ids: set[str] = set()
+
+    for base_dir in [
+        ASSETS_DIR / "default" / "bars",
+        ASSETS_DIR / "systems" / system / "bars" if system and system.strip() and ".." not in system else None,
+    ]:
+        if base_dir is None or not base_dir.is_dir():
+            continue
+        for sub in base_dir.iterdir():
+            if not sub.is_dir():
+                continue
+            config_path = sub / "config.json"
+            cfg = _load_bar_config(config_path)
+            if cfg and cfg.id not in seen_ids:
+                seen_ids.add(cfg.id)
+                result.append(cfg)
+
+    if not result:
+        result = [BarProfileConfig(id="default", name="default")]
+    return result
+
+
+@router.post("/bars")
+async def save_bar_profile(config: BarProfileConfig, system: str | None = None):
+    """
+    Сохраняет конфиг в data/assets/default/bars/{config.id}/config.json
+    или в data/assets/systems/{system}/bars/{config.id}/config.json при указании system.
+    Создаёт директории при необходимости.
+    """
+    if not config.id or ".." in config.id or "/" in config.id or "\\" in config.id:
+        raise HTTPException(status_code=400, detail="Invalid bar profile id")
+    if system and (".." in system or "/" in system or "\\" in system):
+        raise HTTPException(status_code=400, detail="Invalid system name")
+
+    if system and system.strip():
+        target_dir = ASSETS_DIR / "systems" / system.strip() / "bars" / config.id
+    else:
+        target_dir = ASSETS_DIR / "default" / "bars" / config.id
+
+    target_dir.mkdir(parents=True, exist_ok=True)
+    config_path = target_dir / "config.json"
+    config_path.write_text(config.model_dump_json(indent=2), encoding="utf-8")
+    return {"status": "ok", "id": config.id}
+
+
+ALLOWED_BAR_TEXTURE_TYPES = {"bg", "fg", "mask", "overlay"}
+
+
+@router.post("/bars/{bar_id}/textures")
+async def upload_bar_texture(
+    bar_id: str,
+    texture_type: str = Form(...),
+    file: UploadFile = File(...),
+    system: str | None = None,
+):
+    """
+    Загружает текстуру (bg, fg, mask, overlay) для профиля бара.
+    При переданном system — в data/assets/systems/{system}/bars/{bar_id}/, иначе в data/assets/default/bars/{bar_id}/.
+    Сохранение в PNG через Pillow; папки создаются при необходимости.
+    """
+    if not bar_id or ".." in bar_id or "/" in bar_id or "\\" in bar_id:
+        raise HTTPException(status_code=400, detail="Invalid bar_id")
+    if texture_type not in ALLOWED_BAR_TEXTURE_TYPES:
+        raise HTTPException(status_code=400, detail="texture_type must be one of: bg, fg, mask, overlay")
+    if system and (".." in system or "/" in system or "\\" in system):
+        raise HTTPException(status_code=400, detail="Invalid system name")
+
+    if system and system.strip():
+        target_dir = ASSETS_DIR / "systems" / system.strip() / "bars" / bar_id
+    else:
+        target_dir = ASSETS_DIR / "default" / "bars" / bar_id
+
+    target_dir.mkdir(parents=True, exist_ok=True)
+    out_path = target_dir / f"{texture_type}.png"
+
+    try:
+        img = Image.open(file.file)
+        img.save(out_path, format="PNG")
+    except Exception:
+        file.file.seek(0)
+        with open(out_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+    return {"status": "ok", "type": texture_type}
+
+
+@router.get("/bars/{bar_id}/textures/{texture_type}")
+async def get_bar_texture(
+    bar_id: str,
+    texture_type: str,
+    system: str | None = None,
+):
+    """
+    Возвращает файл текстуры (bg.png, fg.png, mask.png, overlay.png).
+    Приоритет: data/assets/systems/{system}/bars/{bar_id}/ затем data/assets/default/bars/{bar_id}/.
+    """
+    if not bar_id or ".." in bar_id or "/" in bar_id or "\\" in bar_id:
+        raise HTTPException(status_code=400, detail="Invalid bar_id")
+    if texture_type not in ALLOWED_BAR_TEXTURE_TYPES:
+        raise HTTPException(status_code=400, detail="texture_type must be one of: bg, fg, mask, overlay")
+    if system and (".." in system or "/" in system or "\\" in system):
+        raise HTTPException(status_code=400, detail="Invalid system name")
+
+    paths_to_try = []
+    if system and system.strip():
+        paths_to_try.append(ASSETS_DIR / "systems" / system.strip() / "bars" / bar_id / f"{texture_type}.png")
+    paths_to_try.append(ASSETS_DIR / "default" / "bars" / bar_id / f"{texture_type}.png")
+
+    for p in paths_to_try:
+        if p.is_file():
+            return FileResponse(p)
+
+    raise HTTPException(status_code=404, detail="Texture not found")
 
 
 @router.get("/{category}")

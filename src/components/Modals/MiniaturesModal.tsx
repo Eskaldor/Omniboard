@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Save, Plus, RefreshCw } from 'lucide-react';
-import { ColumnConfig, LayoutProfile, DisplayField } from '../../types';
+import { X, Save, Plus, RefreshCw, Settings } from 'lucide-react';
+import { ColumnConfig, LayoutProfile, DisplayField, BarProfileConfig } from '../../types';
 import { useCombatState } from '../../contexts/CombatStateContext';
 import { useTranslation } from 'react-i18next';
+import { BarCustomizerModal, getBarDisplayName } from './BarCustomizerModal';
 
 const SLOT_KEYS_SLOTS_ONLY = ['top1', 'top2', 'bottom1', 'bottom2', 'left1', 'right1'] as const;
 
@@ -54,7 +55,7 @@ export function MiniaturesModal({
   columns: ColumnConfig[];
   onClose: () => void;
 }) {
-  const { t } = useTranslation('core', { useSuspense: false });
+  const { t, i18n } = useTranslation('core', { useSuspense: false });
   const { state, refetchState } = useCombatState();
   const actors = state?.actors ?? [];
   const initialProfiles = normalizeProfiles(state ?? null);
@@ -67,6 +68,10 @@ export function MiniaturesModal({
   const [availableFrames, setAvailableFrames] = useState<string[]>(['default_frame.png']);
   const [testEffects, setTestEffects] = useState<string[]>([]);
   const [availableEffects, setAvailableEffects] = useState<{ id: string; name?: string }[]>([]);
+  const [isExpertMode, setIsExpertMode] = useState(false);
+  const [availableFonts, setAvailableFonts] = useState<string[]>(['default.ttf']);
+  const [availableBarProfiles, setAvailableBarProfiles] = useState<BarProfileConfig[]>([]);
+  const [isBarForgeOpen, setIsBarForgeOpen] = useState(false);
 
   useEffect(() => {
     const system = state?.system || '';
@@ -77,7 +82,27 @@ export function MiniaturesModal({
         setAvailableFrames(Array.from(new Set([...filenames, 'default_frame.png'])));
       })
       .catch((err) => console.error('Failed to fetch frames', err));
+    fetch(`/api/assets/fonts?system=${encodeURIComponent(system)}`)
+      .then((res) => res.json())
+      .then((data: string[]) => {
+        const filenames = (Array.isArray(data) ? data : []).map((path) => path.split('/').pop() || path);
+        setAvailableFonts(Array.from(new Set([...filenames, 'default.ttf'])));
+      })
+      .catch((err) => console.error('Failed to fetch fonts', err));
+    fetch(`/api/assets/bars?system=${encodeURIComponent(system)}`)
+      .then((res) => res.json())
+      .then((data: BarProfileConfig[]) => setAvailableBarProfiles(Array.isArray(data) ? data : []))
+      .catch((err) => {
+        console.error('Failed to fetch bar profiles', err);
+        setAvailableBarProfiles([]);
+      });
   }, [state?.system]);
+
+  useEffect(() => {
+    const sys = state?.system || '';
+    if (!sys) return;
+    i18n.loadNamespaces(`systems/${sys}`).catch(() => {});
+  }, [state?.system, i18n]);
 
   useEffect(() => {
     const system = state?.system || '';
@@ -137,10 +162,18 @@ export function MiniaturesModal({
         value_path: field.value_path ?? current?.value_path ?? '',
         label: field.label !== undefined ? field.label : current?.label,
         max_value_path: field.max_value_path !== undefined ? field.max_value_path : current?.max_value_path,
-        color: field.color ?? current?.color ?? '#00b400',
+        color: field.color !== undefined ? field.color : current?.color,
+        bar_bg_color: field.bar_bg_color !== undefined ? field.bar_bg_color : current?.bar_bg_color,
         show_text: field.show_text !== undefined ? field.show_text : (current as DisplayField)?.show_text ?? true,
         show_label: field.show_label !== undefined ? field.show_label : (current as DisplayField)?.show_label ?? true,
         show_max: field.show_max !== undefined ? field.show_max : (current as DisplayField)?.show_max ?? true,
+        offset_x: field.offset_x !== undefined ? field.offset_x : (current as DisplayField)?.offset_x ?? 0,
+        offset_y: field.offset_y !== undefined ? field.offset_y : (current as DisplayField)?.offset_y ?? 0,
+        font_id: field.font_id !== undefined ? field.font_id : (current as DisplayField)?.font_id,
+        font_size: field.font_size !== undefined ? field.font_size : (current as DisplayField)?.font_size,
+        bar_style: field.bar_style !== undefined ? field.bar_style : (current as DisplayField)?.bar_style,
+        rotation: field.rotation !== undefined ? field.rotation : (current as DisplayField)?.rotation ?? 0,
+        theme_id: field.theme_id !== undefined ? field.theme_id : (current as DisplayField)?.theme_id,
       },
     });
   };
@@ -300,17 +333,106 @@ export function MiniaturesModal({
                       <option value="custom_max_hp">{t('miniature_layout.max_hp_custom')}</option>
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.color')}</label>
-                    <input
-                      type="color"
-                      value={slot.color || '#00b400'}
-                      onChange={(e) => updateSlot(slotName, { color: e.target.value })}
-                      className="w-8 h-8 rounded bg-zinc-900 border border-zinc-700 cursor-pointer"
-                    />
-                  </div>
                 </div>
               </>
+            )}
+
+            {isEnabled && slot && isExpertMode && (
+              <div className="pt-3 mt-3 border-t border-zinc-800/50 space-y-3">
+                <div className="text-xs font-medium text-zinc-400 uppercase tracking-wider">
+                  {t('miniature_layout.fine_tuning', { defaultValue: 'Тонкая настройка' })}
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  <div>
+                    <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.offset_x', { defaultValue: 'Сдвиг X' })}</label>
+                    <input
+                      type="number"
+                      value={slot.offset_x ?? 0}
+                      onChange={(e) => updateSlot(slotName, { offset_x: Number(e.target.value) || 0 })}
+                      className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.offset_y', { defaultValue: 'Сдвиг Y' })}</label>
+                    <input
+                      type="number"
+                      value={slot.offset_y ?? 0}
+                      onChange={(e) => updateSlot(slotName, { offset_y: Number(e.target.value) || 0 })}
+                      className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.font_family', { defaultValue: 'Шрифт (файл)' })}</label>
+                    <select
+                      value={slot.font_id ?? ''}
+                      onChange={(e) => updateSlot(slotName, { font_id: e.target.value || undefined })}
+                      className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
+                    >
+                      <option value="">{t('miniature_layout.font_as_profile', { defaultValue: 'Как в профиле' })}</option>
+                      {availableFonts.map((font) => (
+                        <option key={font} value={font}>
+                          {font}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.font_size', { defaultValue: 'Размер' })}</label>
+                    <input
+                      type="number"
+                      min={8}
+                      max={72}
+                      value={slot.font_size ?? ''}
+                      placeholder={String(selectedProfile?.font_size ?? 18)}
+                      onChange={(e) => {
+                        const v = e.target.value === '' ? undefined : Math.max(8, Math.min(72, Number(e.target.value) || 18));
+                        updateSlot(slotName, { font_size: v });
+                      }}
+                      className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.rotation', { defaultValue: 'Поворот (Угол)' })}</label>
+                    <select
+                      value={slot.rotation ?? 0}
+                      onChange={(e) => updateSlot(slotName, { rotation: Number(e.target.value) })}
+                      className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
+                    >
+                      <option value={0}>{t('miniature_layout.rot_0', { defaultValue: '0° (Горизонтально)' })}</option>
+                      <option value={90}>{t('miniature_layout.rot_90', { defaultValue: '90° (Снизу вверх)' })}</option>
+                      <option value={270}>{t('miniature_layout.rot_270', { defaultValue: '270° (Сверху вниз)' })}</option>
+                    </select>
+                  </div>
+                </div>
+                {slot.type === 'bar' && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex-1 min-w-[120px]">
+                      <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.bar_style_profile', { defaultValue: 'Стиль бара (профиль)' })}</label>
+                      <select
+                        value={slot.theme_id ?? 'default'}
+                        onChange={(e) => updateSlot(slotName, { theme_id: e.target.value || undefined })}
+                        className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
+                      >
+                        {availableBarProfiles.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {getBarDisplayName(i18n, state?.system ?? '', p.id, p.name || p.id)}
+                          </option>
+                        ))}
+                        {availableBarProfiles.length === 0 && <option value="default">default</option>}
+                      </select>
+                    </div>
+                    <div className="pt-6">
+                      <button
+                        type="button"
+                        onClick={() => setIsBarForgeOpen(true)}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-zinc-700 hover:bg-zinc-600 text-zinc-300 rounded-lg text-sm transition-colors"
+                      >
+                        <Settings size={14} /> {t('miniature_layout.bar_forge', { defaultValue: 'Конфигуратор шкал' })}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         )}
@@ -328,6 +450,7 @@ export function MiniaturesModal({
   };
 
   return (
+    <>
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-6xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
         <div className="p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50">
@@ -374,6 +497,21 @@ export function MiniaturesModal({
             <div className="flex flex-col gap-4 min-w-0">
               {selectedProfile && (
                 <>
+                  <div className="flex items-center justify-between bg-zinc-950 p-4 rounded-xl border border-zinc-800">
+                    <span className="text-sm font-medium text-zinc-200">
+                      {t('miniature_layout.expert_mode', { defaultValue: 'Экспертный режим' })}
+                    </span>
+                    <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                      <input
+                        type="checkbox"
+                        className="sr-only peer"
+                        checked={isExpertMode}
+                        onChange={(e) => setIsExpertMode(e.target.checked)}
+                      />
+                      <div className="w-11 h-6 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500" />
+                    </label>
+                  </div>
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.profile_name', { defaultValue: 'Название профиля' })}</label>
@@ -398,6 +536,35 @@ export function MiniaturesModal({
                         ))}
                       </select>
                     </div>
+                    {isExpertMode && (
+                      <>
+                        <div>
+                          <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.font_family', { defaultValue: 'Шрифт (файл)' })}</label>
+                          <select
+                            value={selectedProfile.font_id || 'default.ttf'}
+                            onChange={(e) => setSelectedProfile({ font_id: e.target.value })}
+                            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
+                          >
+                            {availableFonts.map((font) => (
+                              <option key={font} value={font}>
+                                {font}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.font_size', { defaultValue: 'Размер шрифта' })}</label>
+                          <input
+                            type="number"
+                            min={8}
+                            max={72}
+                            value={selectedProfile.font_size ?? 18}
+                            onChange={(e) => setSelectedProfile({ font_size: Math.max(8, Math.min(72, Number(e.target.value) || 18)) })}
+                            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
+                          />
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   <div className="flex items-center justify-between bg-zinc-950 p-4 rounded-xl border border-zinc-800">
@@ -467,7 +634,7 @@ export function MiniaturesModal({
                   </div>
                   <div className="mt-3">
                     <label className="block text-xs text-zinc-400 mb-1.5">
-                      {t('miniature_layout.test_effects', { defaultValue: 'Тестовые эффекты' })}
+                      {t('miniature_layout.test_effects', { defaultValue: 'Effects' })}
                     </label>
                     <div className="flex flex-wrap gap-2">
                       {availableEffects.map((eff) => (
@@ -518,5 +685,18 @@ export function MiniaturesModal({
         </div>
       </div>
     </div>
+    <BarCustomizerModal
+      isOpen={isBarForgeOpen}
+      onClose={() => {
+        setIsBarForgeOpen(false);
+        const system = state?.system || '';
+        fetch(`/api/assets/bars?system=${encodeURIComponent(system)}`)
+          .then((res) => res.json())
+          .then((data: BarProfileConfig[]) => setAvailableBarProfiles(Array.isArray(data) ? data : []))
+          .catch(() => setAvailableBarProfiles([]));
+      }}
+      system={state?.system ?? ''}
+    />
+    </>
   );
 }

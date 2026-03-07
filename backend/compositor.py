@@ -2,10 +2,12 @@
 Композитор миниатюр: строго 172x320 px, послойный RGBA-сэндвич.
 Использует backend.render_utils и backend.models.
 """
+import json
 import os
-import hashlib
+from pathlib import Path
+
 from PIL import Image, ImageDraw
-from backend.models import Actor, LayoutProfile, DisplayField
+from backend.models import Actor, LayoutProfile, DisplayField, BarProfileConfig
 from backend.paths import ASSETS_DIR
 from backend.render_utils import (
     get_font,
@@ -52,13 +54,25 @@ def draw_display_field(
     y: int,
     width: int,
     height: int,
-    font,
+    profile: LayoutProfile,
     system_name: str | None,
 ) -> None:
     """
     Рисует одно поле (бар или текст) на canvas в прямоугольнике (x, y, width, height).
-    Учитывает rotation и theme_id для баров.
+    Шрифт и размер берутся из field, при отсутствии — из profile. Учитывает rotation, theme_id, bar_style.
     """
+    x += getattr(field, "offset_x", 0)
+    y += getattr(field, "offset_y", 0)
+
+    # Если элемент будет повёрнут на 90 или 270°, рисуем его "лежащим", чтобы после поворота он вписался в (width, height).
+    is_rotated = field.rotation in (90, 270)
+    draw_w, draw_h = (height, width) if is_rotated else (width, height)
+
+    current_font_id = field.font_id or profile.font_id
+    current_font_size = field.font_size if field.font_size is not None else profile.font_size
+    font_path = str(ASSETS_DIR / "default" / "fonts" / current_font_id)
+    font = get_font(font_path, current_font_size)
+
     if field.value_path == "name":
         val = actor.name
     elif field.value_path == "initiative":
@@ -80,15 +94,33 @@ def draw_display_field(
             percent = 0
         percent = max(0.0, min(1.0, percent))
 
-        theme_dir = str(ASSETS_DIR / "default" / "bars" / (field.theme_id or "default"))
-        bar_img = create_textured_bar(width, height, percent, theme_dir)
+        theme_id = field.theme_id or "default"
+        # Папка стиля: systems/<system>/bars/<theme_id> или default/bars/<theme_id>.
+        # В ней должны лежать bg.png, fg.png, опционально mask.png и overlay.png.
+        theme_dir = None
+        config_path = None
+        if system_name and system_name.strip() and ".." not in system_name and "/" not in system_name and "\\" not in system_name:
+            sys_bars = ASSETS_DIR / "systems" / system_name.strip() / "bars" / theme_id
+            if (sys_bars / "config.json").is_file():
+                config_path = sys_bars / "config.json"
+                theme_dir = sys_bars
+        if theme_dir is None:
+            default_bars = ASSETS_DIR / "default" / "bars" / theme_id
+            theme_dir = default_bars
+            config_path = default_bars / "config.json"
+        try:
+            if config_path and config_path.is_file():
+                config = BarProfileConfig.model_validate(json.loads(config_path.read_text(encoding="utf-8")))
+            else:
+                config = BarProfileConfig(id=theme_id, name=theme_id)
+        except (OSError, ValueError, Exception):
+            config = BarProfileConfig(id=theme_id, name=theme_id)
 
-        if field.rotation in (90, 270):
-            apply_rotated_element(canvas, bar_img, x, y, field.rotation)
-        else:
-            canvas.paste(bar_img, (x, y), bar_img)
+        bar_img = create_textured_bar(
+            draw_w, draw_h, percent, theme_id, system_name, config,
+        )
 
-        # Текст поверх бара (если включён)
+        # Текст поверх бара (если включён) — рисуем на bar_img до поворота/вставки
         show_text = getattr(field, "show_text", True)
         if show_text:
             show_label = getattr(field, "show_label", True)
@@ -98,30 +130,27 @@ def draw_display_field(
             max_str = f" / {max_val}" if (field.max_value_path and show_max) else ""
             text = f"{label_str}{val_str}{max_str}"
             fill = (255, 255, 255)
-            box = (0, 0, width, height)
+            text_box = (0, 0, draw_w, draw_h)
+            draw_bar = ImageDraw.Draw(bar_img)
+            draw_text_centered(draw_bar, text_box, text, font, fill)
 
-            if field.rotation in (90, 270):
-                text_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-                draw_layer = ImageDraw.Draw(text_layer)
-                draw_text_centered(draw_layer, box, text, font, fill)
-                apply_rotated_element(canvas, text_layer, x, y, field.rotation)
-            else:
-                draw = ImageDraw.Draw(canvas)
-                draw_text_centered(draw, (x, y, x + width, y + height), text, font, fill)
+        if is_rotated:
+            apply_rotated_element(canvas, bar_img, x, y, field.rotation)
+        else:
+            canvas.paste(bar_img, (x, y), bar_img)
 
     else:  # text
         text = f"{field.label + ': ' if field.label else ''}{val}"
         fill = (255, 255, 255)
-        box = (x, y, x + width, y + height)
 
-        if field.rotation in (90, 270):
-            layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        if is_rotated:
+            layer = Image.new("RGBA", (draw_w, draw_h), (0, 0, 0, 0))
             draw_layer = ImageDraw.Draw(layer)
-            draw_text_centered(draw_layer, (0, 0, width, height), text, font, fill)
+            draw_text_centered(draw_layer, (0, 0, draw_w, draw_h), text, font, fill)
             apply_rotated_element(canvas, layer, x, y, field.rotation)
         else:
             draw = ImageDraw.Draw(canvas)
-            draw_text_centered(draw, box, text, font, fill)
+            draw_text_centered(draw, (x, y, x + width, y + height), text, font, fill)
 
 
 def render_miniature(
@@ -154,7 +183,8 @@ def render_miniature(
     for effect in actor.effects:
         if not effect.render_on_mini:
             continue
-        path = get_asset_path("effects", f"{effect.id}.png", system_name)
+        filename = effect.icon if effect.icon else f"{effect.id}.png"
+        path = get_asset_path("effects", filename, system_name)
         if not path:
             continue
         try:
@@ -177,8 +207,6 @@ def render_miniature(
             pass
 
     # —— СЛОЙ 4: UI Overlay ——
-    font_path = str(ASSETS_DIR / "default" / "fonts" / profile.font_id)
-    font = get_font(font_path, profile.font_size)
     bh = profile.bar_height
     slot_w = CANVAS_WIDTH - 2 * PAD
 
@@ -187,25 +215,25 @@ def render_miniature(
         draw_display_field(
             canvas, profile.top1, actor,
             PAD, PAD, slot_w, bh,
-            font, system_name,
+            profile, system_name,
         )
     if profile.top2:
         draw_display_field(
             canvas, profile.top2, actor,
             PAD, PAD + bh + 4, slot_w, bh,
-            font, system_name,
+            profile, system_name,
         )
     if profile.bottom1:
         draw_display_field(
             canvas, profile.bottom1, actor,
             PAD, CANVAS_HEIGHT - PAD - 2 * (bh + 4), slot_w, bh,
-            font, system_name,
+            profile, system_name,
         )
     if profile.bottom2:
         draw_display_field(
             canvas, profile.bottom2, actor,
             PAD, CANVAS_HEIGHT - PAD - (bh + 4), slot_w, bh,
-            font, system_name,
+            profile, system_name,
         )
 
     # Вертикальные слоты (боковые)
@@ -214,13 +242,13 @@ def render_miniature(
         draw_display_field(
             canvas, profile.left1, actor,
             0, vert_y, bh, SLOT_HEIGHT_VERT,
-            font, system_name,
+            profile, system_name,
         )
     if profile.right1:
         draw_display_field(
             canvas, profile.right1, actor,
             CANVAS_WIDTH - bh, vert_y, bh, SLOT_HEIGHT_VERT,
-            font, system_name,
+            profile, system_name,
         )
 
     # —— ЭКСПОРТ ——

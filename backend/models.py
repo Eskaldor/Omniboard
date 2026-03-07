@@ -36,11 +36,31 @@ class DisplayField(BaseModel):
     value_path: str
     max_value_path: Optional[str] = None
     color: Optional[str] = None
+    bar_bg_color: Optional[str] = None  # Цвет подложки бара (HEX)
     theme_id: Optional[str] = None  # Идентификатор темы/папки для текстурированных баров
+    offset_x: int = 0
+    offset_y: int = 0
     rotation: int = 0  # Угол поворота в градусах: 0, 90, 270 (для боковых слотов)
     show_text: bool = True   # Показывать текст поверх бара
     show_label: bool = True  # Показывать подпись (label)
     show_max: bool = True    # Показывать максимум (например в "10/20")
+    font_id: Optional[str] = None      # Переопределение шрифта профиля
+    font_size: Optional[int] = None    # Переопределение размера шрифта профиля
+    bar_style: Literal["solid", "textured"] = "solid"  # solid = цветная заливка, textured = текстуры из theme_id
+
+class BarProfileConfig(BaseModel):
+    id: str
+    name: str
+    mode: Literal["solid", "textured"] = "solid"
+    fg_color: str = "#00c800"
+    fg_color_end: Optional[str] = None  # Для градиента (конец)
+    fg_color_mid: Optional[str] = None  # Средняя точка градиента (опционально)
+    gradient_stop: Optional[float] = None  # 0..1 — доля ширины, на которой заканчивается переход (по умолчанию 1)
+    gradient_mid_stop: Optional[float] = None  # 0..1 — позиция средней точки (по умолчанию 0.5)
+    bg_color: str = "#323232"
+    border_color: str = "#000000"
+    border_width: int = 1
+    border_radius: int = 0
 
 class LayoutProfile(BaseModel):
     id: str

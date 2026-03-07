@@ -7,7 +7,7 @@ from typing import Any, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from backend.paths import ACTORS_DIR, DATA_DIR, LOCALES_DIR
+from backend.paths import ACTORS_DIR, ASSETS_DIR, DATA_DIR, LOCALES_DIR
 
 
 router = APIRouter(prefix="/api/systems", tags=["systems"])
@@ -130,6 +130,8 @@ async def save_system_columns(system_name: str, body: SaveColumnsRequest):
     if not sys_dir:
         raise HTTPException(status_code=400, detail="invalid system name")
     sys_dir.mkdir(parents=True, exist_ok=True)
+    # Папка для кастомных стилей баров системы (Asset Override)
+    (ASSETS_DIR / "systems" / system_name.strip() / "bars").mkdir(parents=True, exist_ok=True)
 
     file_path = sys_dir / "columns.json"
     payload = {"displayName": system_name, "columns": body.columns}

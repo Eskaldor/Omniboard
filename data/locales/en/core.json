@@ -194,7 +194,19 @@
     "save_layout": "Save Layout",
     "preview_172_320": "Preview (172×320)",
     "preview_no_actors": "Add actors to combat to preview.",
-    "save_and_refresh_preview": "Save and Refresh Preview"
+    "save_and_refresh_preview": "Save and Refresh Preview",
+    "bar_forge": "Scale Configurator",
+    "fg_color": "Bar color (Start)",
+    "fg_color_end": "Bar color (Gradient end)",
+    "fg_color_mid": "Bar color (Gradient mid)",
+    "gradient_stop": "Transition extent (width fraction)",
+    "gradient_mid_stop": "Gradient mid position",
+    "border_color": "Border color",
+    "border_width": "Border width",
+    "border_radius": "Corner radius",
+    "new_style": "New style",
+    "bar_style_profile": "Bar style (profile)",
+    "configure_styles": "Configure styles"
   },
   "library": {
     "tab_portraits": "Portraits",
