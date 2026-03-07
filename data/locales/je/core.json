@@ -1,17 +1,10 @@
 {
   "_meta": {
-    "language_name": "Русский",
-    "flag": "🇷🇺",
-    "app_name_short": "Omniboard",
-    "app_name_full": "Nevrar's Omniboard",
-    "app_author": "Nevrar"
+    "language_name": "Jedinski",
+    "flag": "🇯"
   },
-  "language": "Язык",
+  "language": "Jedinski",
   "config": "Настройки",
-  "errors": {
-    "connection_failed": "Ошибка подключения",
-    "backend_offline_instructions": "Убедитесь, что бэкенд запущен. Запустите сервер командами:\n1. pip install -r requirements.txt\n2. uvicorn backend.main:app --reload\n3. npm install && npm run dev"
-  },
   "start_combat": "Начать бой",
   "app": {
     "title": "Omniboard"
@@ -49,7 +42,7 @@
   },
   "combat": {
     "round": "Раунд",
-    "initiative": "Инициатива",
+    "initiative": "Iniciative",
     "next": "Далее",
     "previous": "Назад"
   },
@@ -97,8 +90,7 @@
     "default_value": "Значение по умолчанию",
     "assign_selected_to_group": "Назначить выбранных в группу",
     "selected": "выбрано",
-    "assign_to_group": "Назначить в группу",
-    "no_actors_in_combat": "Нет участников боя."
+    "assign_to_group": "Назначить в группу"
   },
   "modals": {
     "miniature_layout_config": "Настройка раскладки миниатюр",
@@ -129,7 +121,6 @@
     "type_or_select_effect": "Введите или выберите эффект...",
     "effect_details": "Описание эффекта...",
     "save_effect_to_system_title": "Сохранить эффект в JSON системы для дальнейшего использования",
-    "preview_size_warning": "Размер не 172×320 — может отображаться некорректно.",
     "search_actors": "Поиск персонажей...",
     "add_to_combat": "В бой",
     "no_actors_in_roster": "В компендиуме нет персонажей.",
@@ -148,28 +139,13 @@
     "delete_this_encounter": "Удалить это столкновение?",
     "unnamed_encounter": "Без названия",
     "group_placeholder": "напр. group-1",
-    "technical_id_placeholder": "напр. v_plenu",
-    "crop_title": "Обрезка изображения",
-    "crop_apply": "Применить",
-    "crop_cancel": "Отмена"
+    "technical_id_placeholder": "напр. v_plenu"
   },
   "combat_log": {
     "record_log": "Записывать журнал",
     "no_events_yet": "Пока нет событий.",
     "open_logs_folder": "Открыть папку логов",
     "clear_all_logs": "Очистить все логи"
-  },
-  "log": {
-    "stat_increased": "{{stat}}: +{{count}}",
-    "stat_increased_one": "{{stat}}: +{{count}}",
-    "stat_increased_few": "{{stat}}: +{{count}}",
-    "stat_increased_many": "{{stat}}: +{{count}}",
-    "stat_increased_other": "{{stat}}: +{{count}}",
-    "stat_decreased": "{{stat}}: -{{count}}",
-    "stat_decreased_one": "{{stat}}: -{{count}}",
-    "stat_decreased_few": "{{stat}}: -{{count}}",
-    "stat_decreased_many": "{{stat}}: -{{count}}",
-    "stat_decreased_other": "{{stat}}: -{{count}}"
   },
   "miniature_layout": {
     "profiles": "Профили",
@@ -213,28 +189,6 @@
     "uploading": "Загрузка...",
     "upload": "Загрузить",
     "select": "Выбрать",
-    "no_assets_upload_some": "В этой категории нет ресурсов. Загрузите что-нибудь!",
-    "base_effect_locked": "Базовый эффект — удаление запрещено",
-    "search_assets": "Поиск",
-    "search_placeholder": "По имени файла…",
-    "no_assets_found": "Ассеты не найдены",
-    "clear_search": "Очистить поиск",
-    "effect_size_warning": "Внимание! Оптимальный размер для миниатюры — 172×320. Картинка может отображаться некорректно.",
-    "select_anyway": "Всё равно выбрать",
-    "upload_error_not_image": "Выберите файл изображения (PNG, JPEG и т.д.).",
-    "upload_error_failed": "Загрузка не удалась. Попробуйте снова.",
-    "png_transparency_warning": "Внимание: JPEG не поддерживает необходимую прозрачность. Используйте PNG для корректного отображения слоёв.",
-    "confirm_delete_title": "Удалить ресурс?",
-    "confirm_delete_message": "Ресурс будет удалён из библиотеки. Это действие нельзя отменить.",
-    "confirm_delete_cancel": "Отмена",
-    "confirm_delete_btn": "Удалить",
-    "delete_asset_title": "Удалить ресурс?",
-    "delete_asset_confirm": "Ресурс будет удалён из библиотеки. Это действие нельзя отменить.",
-    "delete_asset_cancel": "Отмена",
-    "delete_asset_confirm_btn": "Удалить",
-    "technical_id_validation_error": "Только строчные латинские буквы, цифры и подчеркивание.",
-    "asset_id_exists_error": "Файл с таким ID уже существует. Пожалуйста, измените Имя файла (Technical ID).",
-    "asset_id_exists_hint": "Измените имя выше или перезапишите существующий файл.",
-    "overwrite_anyway": "Перезаписать"
+    "no_assets_upload_some": "В этой категории нет ресурсов. Загрузите что-нибудь!"
   }
 }

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from typing import Literal, Optional, List, Dict, Any
 
 class Effect(BaseModel):
@@ -38,8 +38,14 @@ class DisplayField(BaseModel):
     color: Optional[str] = None
     theme_id: Optional[str] = None  # Идентификатор темы/папки для текстурированных баров
     rotation: int = 0  # Угол поворота в градусах: 0, 90, 270 (для боковых слотов)
+    show_text: bool = True   # Показывать текст поверх бара
+    show_label: bool = True  # Показывать подпись (label)
+    show_max: bool = True    # Показывать максимум (например в "10/20")
 
-class MiniatureLayout(BaseModel):
+class LayoutProfile(BaseModel):
+    id: str
+    name: str
+    frame_asset: str = "default_frame.png"  # Кастомная рамка
     show_portrait: bool = True
     top1: Optional[DisplayField] = None
     top2: Optional[DisplayField] = None
@@ -87,6 +93,7 @@ class Actor(BaseModel):
     portrait: str
     show_portrait: bool = False
     miniature_id: Optional[str] = None
+    layout_profile_id: Optional[str] = None  # Привязка к профилю отображения
     stats: Dict[str, Any] = {}
     effects: List[Effect] = []
     visibility: Visibility = Visibility()
@@ -117,7 +124,9 @@ class CombatState(BaseModel):
     current_index: int = 0
     round: int = 1
     system: str = "D&D 5e"
-    layout: MiniatureLayout = MiniatureLayout(show_portrait=True)
+    layout_profiles: List[LayoutProfile] = Field(
+        default_factory=lambda: [LayoutProfile(id="default", name="Default")]
+    )
     legend: LegendConfig = Field(default_factory=LegendConfig)
     show_group_colors: bool = True
     show_faction_colors: bool = True
@@ -129,3 +138,17 @@ class CombatState(BaseModel):
     enable_logging: bool = True
     autosave_enabled: bool = True
     table_centered: bool = True
+
+    @model_validator(mode="before")
+    @classmethod
+    def migrate_layout_to_profiles(cls, data: Any) -> Any:
+        """Миграция: старый layout -> layout_profiles с профилем default."""
+        if not isinstance(data, dict):
+            return data
+        if "layout" in data and "layout_profiles" not in data:
+            old = data.pop("layout")
+            if isinstance(old, dict):
+                old.setdefault("id", "default")
+                old.setdefault("name", "Default")
+                data["layout_profiles"] = [old]
+        return data

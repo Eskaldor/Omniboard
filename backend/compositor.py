@@ -5,7 +5,7 @@
 import os
 import hashlib
 from PIL import Image, ImageDraw
-from backend.models import Actor, MiniatureLayout, DisplayField
+from backend.models import Actor, LayoutProfile, DisplayField
 from backend.paths import ASSETS_DIR
 from backend.render_utils import (
     get_font,
@@ -83,6 +83,27 @@ def draw_display_field(
         else:
             canvas.paste(bar_img, (x, y), bar_img)
 
+        # Текст поверх бара (если включён)
+        show_text = getattr(field, "show_text", True)
+        if show_text:
+            show_label = getattr(field, "show_label", True)
+            show_max = getattr(field, "show_max", True)
+            label_str = f"{field.label}: " if (field.label and show_label) else ""
+            val_str = str(val)
+            max_str = f" / {max_val}" if (field.max_value_path and show_max) else ""
+            text = f"{label_str}{val_str}{max_str}"
+            fill = (255, 255, 255)
+            box = (0, 0, width, height)
+
+            if field.rotation in (90, 270):
+                text_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+                draw_layer = ImageDraw.Draw(text_layer)
+                draw_text_centered(draw_layer, box, text, font, fill)
+                apply_rotated_element(canvas, text_layer, x, y, field.rotation)
+            else:
+                draw = ImageDraw.Draw(canvas)
+                draw_text_centered(draw, (x, y, x + width, y + height), text, font, fill)
+
     else:  # text
         text = f"{field.label + ': ' if field.label else ''}{val}"
         fill = (255, 255, 255)
@@ -100,7 +121,7 @@ def draw_display_field(
 
 def render_miniature(
     actor: Actor,
-    layout: MiniatureLayout,
+    profile: LayoutProfile,
     system_name: str,
 ) -> str:
     """
@@ -110,7 +131,7 @@ def render_miniature(
     canvas = Image.new("RGBA", (CANVAS_WIDTH, CANVAS_HEIGHT), (0, 0, 0, 255))
 
     # —— СЛОЙ 1: Base (портрет) ——
-    if layout.show_portrait and actor.portrait:
+    if profile.show_portrait and actor.portrait:
         portrait_path = get_asset_path(
             "portraits",
             os.path.basename(actor.portrait),
@@ -140,7 +161,7 @@ def render_miniature(
             pass
 
     # —— СЛОЙ 3: Frame ——
-    frame_path = get_asset_path("frames", "default_frame.png", system_name)
+    frame_path = get_asset_path("frames", profile.frame_asset, system_name)
     if frame_path:
         try:
             frame_img = Image.open(frame_path).convert("RGBA")
@@ -151,48 +172,48 @@ def render_miniature(
             pass
 
     # —— СЛОЙ 4: UI Overlay ——
-    font_path = str(ASSETS_DIR / "default" / "fonts" / layout.font_id)
-    font = get_font(font_path, layout.font_size)
-    bh = layout.bar_height
+    font_path = str(ASSETS_DIR / "default" / "fonts" / profile.font_id)
+    font = get_font(font_path, profile.font_size)
+    bh = profile.bar_height
     slot_w = CANVAS_WIDTH - 2 * PAD
 
     # Горизонтальные слоты
-    if layout.top1:
+    if profile.top1:
         draw_display_field(
-            canvas, layout.top1, actor,
+            canvas, profile.top1, actor,
             PAD, PAD, slot_w, bh,
             font, system_name,
         )
-    if layout.top2:
+    if profile.top2:
         draw_display_field(
-            canvas, layout.top2, actor,
+            canvas, profile.top2, actor,
             PAD, PAD + bh + 4, slot_w, bh,
             font, system_name,
         )
-    if layout.bottom1:
+    if profile.bottom1:
         draw_display_field(
-            canvas, layout.bottom1, actor,
+            canvas, profile.bottom1, actor,
             PAD, CANVAS_HEIGHT - PAD - 2 * (bh + 4), slot_w, bh,
             font, system_name,
         )
-    if layout.bottom2:
+    if profile.bottom2:
         draw_display_field(
-            canvas, layout.bottom2, actor,
+            canvas, profile.bottom2, actor,
             PAD, CANVAS_HEIGHT - PAD - (bh + 4), slot_w, bh,
             font, system_name,
         )
 
     # Вертикальные слоты (боковые)
     vert_y = (CANVAS_HEIGHT - SLOT_HEIGHT_VERT) // 2
-    if layout.left1:
+    if profile.left1:
         draw_display_field(
-            canvas, layout.left1, actor,
+            canvas, profile.left1, actor,
             0, vert_y, bh, SLOT_HEIGHT_VERT,
             font, system_name,
         )
-    if layout.right1:
+    if profile.right1:
         draw_display_field(
-            canvas, layout.right1, actor,
+            canvas, profile.right1, actor,
             CANVAS_WIDTH - bh, vert_y, bh, SLOT_HEIGHT_VERT,
             font, system_name,
         )

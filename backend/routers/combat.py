@@ -7,7 +7,7 @@ from fastapi import APIRouter, Body, HTTPException
 from backend import combat_engine
 from backend import state as app_state
 from backend.history import save_snapshot
-from backend.models import CombatState, LegendConfig, LogEntry, MiniatureLayout
+from backend.models import CombatState, LegendConfig, LogEntry, LayoutProfile
 from backend.paths import LOGS_DIR
 from backend.routers.ws import broadcast_state
 from backend.services.logger import add_log
@@ -21,6 +21,13 @@ async def get_state():
     out = app_state.state.model_dump()
     out["can_undo"] = app_state.history_index > 0
     out["can_redo"] = app_state.history_index < len(app_state.history_stack) - 1
+    # Обратная совместимость: фронт может ожидать единый layout (профиль default)
+    default_layout = next(
+        (p for p in app_state.state.layout_profiles if p.id == "default"),
+        app_state.state.layout_profiles[0] if app_state.state.layout_profiles else None,
+    )
+    if default_layout is not None:
+        out["layout"] = default_layout.model_dump()
     return out
 
 
@@ -167,10 +174,20 @@ async def clear_combat_log():
 @router.patch("/layout")
 async def update_layout(layout: dict):
     await save_snapshot()
-    app_state.state.layout = MiniatureLayout(**layout)
+    profile_id = layout.get("id", "default")
+    profile_name = layout.get("name", "Default")
+    profile_data = {**layout, "id": profile_id, "name": profile_name}
+    new_profile = LayoutProfile(**profile_data)
+    profiles = list(app_state.state.layout_profiles)
+    idx = next((i for i, p in enumerate(profiles) if p.id == profile_id), None)
+    if idx is not None:
+        profiles[idx] = new_profile
+    else:
+        profiles.append(new_profile)
+    app_state.state.layout_profiles = profiles
     await save_snapshot()
     await broadcast_state()
-    return app_state.state.layout
+    return new_profile
 
 
 @router.post("/load")

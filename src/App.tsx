@@ -429,7 +429,7 @@ export default function App() {
           systemName={systemName}
         />
       )}
-      {showMiniatures && <MiniaturesModal layout={effectiveState.layout} columns={columns} onClose={() => setShowMiniatures(false)} />}
+      {showMiniatures && <MiniaturesModal columns={columns} onClose={() => setShowMiniatures(false)} />}
       {showRoster && <ActorRosterModal systemName={systemName} onClose={() => setShowRoster(false)} onAdd={addFromRoster} />}
       {showEncounters && (
         <EncountersModal

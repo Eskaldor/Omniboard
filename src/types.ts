@@ -44,6 +44,8 @@ export interface Actor {
   portrait: string;
   show_portrait?: boolean;
   miniature_id: string | null;
+  /** Привязка к профилю отображения миниатюры */
+  layout_profile_id?: string | null;
   stats: Record<string, any>;
   effects: Effect[];
   visibility: Visibility;
@@ -63,14 +65,30 @@ export interface DisplayField {
   value_path: string;
   max_value_path?: string;
   color?: string;
+  theme_id?: string;
+  rotation?: number;
+  /** Показывать текст поверх бара (по умолчанию true) */
+  show_text?: boolean;
+  /** Показывать подпись / ярлык (по умолчанию true) */
+  show_label?: boolean;
+  /** Показывать максимум в формате "val / max" (по умолчанию true) */
+  show_max?: boolean;
 }
 
-export interface MiniatureLayout {
+export interface LayoutProfile {
+  id: string;
+  name: string;
+  frame_asset?: string;
   show_portrait: boolean;
   top1: DisplayField | null;
   top2: DisplayField | null;
   bottom1: DisplayField | null;
   bottom2: DisplayField | null;
+  left1?: DisplayField | null;
+  right1?: DisplayField | null;
+  font_id?: string;
+  font_size?: number;
+  bar_height?: number;
 }
 
 export type CombatLogEntryType =
@@ -101,7 +119,10 @@ export interface CombatState {
   round: number;
   system: string;
   is_active: boolean;
-  layout: MiniatureLayout;
+  /** Список профилей отображения миниатюр */
+  layout_profiles: LayoutProfile[];
+  /** Единый профиль (обратная совместимость, может приходить с бэка как default) */
+  layout?: LayoutProfile;
   legend?: LegendConfig;
   show_group_colors?: boolean;
   show_faction_colors?: boolean;

@@ -1,26 +1,77 @@
-import React, { useState, useEffect } from 'react';
-import { X, Save } from 'lucide-react';
-import { ColumnConfig, MiniatureLayout, DisplayField } from '../../types';
+import React, { useState, useEffect, useMemo } from 'react';
+import { X, Save, Plus } from 'lucide-react';
+import { ColumnConfig, LayoutProfile, DisplayField } from '../../types';
 import { useCombatState } from '../../contexts/CombatStateContext';
 import { useTranslation } from 'react-i18next';
 
+const SLOT_KEYS_SLOTS_ONLY = ['top1', 'top2', 'bottom1', 'bottom2', 'left1', 'right1'] as const;
+
+function defaultProfile(id: string, name: string): LayoutProfile {
+  return {
+    id,
+    name,
+    frame_asset: 'default_frame.png',
+    show_portrait: true,
+    top1: null,
+    top2: null,
+    bottom1: null,
+    bottom2: null,
+    left1: null,
+    right1: null,
+    font_id: 'default.ttf',
+    font_size: 18,
+    bar_height: 16,
+  };
+}
+
+/** Приводит данные с бэка (layout_profiles или старый layout) к списку LayoutProfile с id/name. */
+function normalizeProfiles(state: { layout_profiles?: LayoutProfile[]; layout?: LayoutProfile } | null): LayoutProfile[] {
+  if (!state) return [defaultProfile('default', 'Default')];
+  if (state.layout_profiles && Array.isArray(state.layout_profiles) && state.layout_profiles.length > 0) {
+    return state.layout_profiles.map((p) => ({
+      ...defaultProfile(p.id ?? 'default', p.name ?? 'Default'),
+      ...p,
+      id: p.id ?? 'default',
+      name: p.name ?? 'Default',
+    }));
+  }
+  if (state.layout && typeof state.layout === 'object') {
+    const old = state.layout as Record<string, unknown>;
+    return [{
+      ...defaultProfile('default', 'Default'),
+      ...old,
+      id: (old.id as string) ?? 'default',
+      name: (old.name as string) ?? 'Default',
+    } as LayoutProfile];
+  }
+  return [defaultProfile('default', 'Default')];
+}
+
 export function MiniaturesModal({
-  layout,
   columns,
   onClose,
 }: {
-  layout: MiniatureLayout;
   columns: ColumnConfig[];
   onClose: () => void;
 }) {
   const { t } = useTranslation('core', { useSuspense: false });
-  const { state } = useCombatState();
+  const { state, refetchState } = useCombatState();
   const actors = state?.actors ?? [];
+  const initialProfiles = normalizeProfiles(state ?? null);
 
-  const [localLayout, setLocalLayout] = useState<MiniatureLayout>(layout);
+  const [localProfiles, setLocalProfiles] = useState<LayoutProfile[]>(initialProfiles);
+  const [selectedProfileId, setSelectedProfileId] = useState<string>(() => initialProfiles[0]?.id ?? 'default');
   const [isSaving, setIsSaving] = useState(false);
   const [previewActorId, setPreviewActorId] = useState<string>(() => actors[0]?.id ?? '');
   const [previewKey, setPreviewKey] = useState<number>(() => Date.now());
+
+  useEffect(() => {
+    const list = normalizeProfiles(state ?? null);
+    setLocalProfiles(list);
+    if (list.length > 0 && !list.some((p) => p.id === selectedProfileId)) {
+      setSelectedProfileId(list[0].id);
+    }
+  }, [state?.layout_profiles, state?.layout]);
 
   useEffect(() => {
     if (actors.length === 0) {
@@ -33,14 +84,55 @@ export function MiniaturesModal({
     }
   }, [actors, previewActorId]);
 
+  const selectedProfile = useMemo(
+    () => localProfiles.find((p) => p.id === selectedProfileId) ?? localProfiles[0],
+    [localProfiles, selectedProfileId]
+  );
+
+  const setSelectedProfile = (updates: Partial<LayoutProfile>) => {
+    if (!selectedProfile) return;
+    const next = { ...selectedProfile, ...updates };
+    setLocalProfiles((prev) => prev.map((p) => (p.id === selectedProfileId ? next : p)));
+  };
+
+  const updateSlot = (slotName: typeof SLOT_KEYS_SLOTS_ONLY[number], field: Partial<DisplayField> | null) => {
+    if (!selectedProfile) return;
+    if (field === null) {
+      setSelectedProfile({ [slotName]: null });
+      return;
+    }
+    const current = selectedProfile[slotName] as DisplayField | null | undefined;
+    setSelectedProfile({
+      [slotName]: {
+        type: field.type ?? current?.type ?? 'text',
+        value_path: field.value_path ?? current?.value_path ?? '',
+        label: field.label !== undefined ? field.label : current?.label,
+        max_value_path: field.max_value_path !== undefined ? field.max_value_path : current?.max_value_path,
+        color: field.color ?? current?.color ?? '#00b400',
+        show_text: field.show_text !== undefined ? field.show_text : (current as DisplayField)?.show_text ?? true,
+        show_label: field.show_label !== undefined ? field.show_label : (current as DisplayField)?.show_label ?? true,
+        show_max: field.show_max !== undefined ? field.show_max : (current as DisplayField)?.show_max ?? true,
+      },
+    });
+  };
+
+  const handleAddProfile = () => {
+    const id = Date.now().toString();
+    const newProfile = defaultProfile(id, t('miniature_layout.new_profile', { defaultValue: 'New profile' }));
+    setLocalProfiles((prev) => [...prev, newProfile]);
+    setSelectedProfileId(id);
+  };
+
   const handleSave = async () => {
+    if (!selectedProfile) return;
     setIsSaving(true);
     try {
       await fetch('/api/combat/layout', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(localLayout),
+        body: JSON.stringify(selectedProfile),
       });
+      await refetchState();
       onClose();
     } catch (err) {
       console.error('Failed to save layout', err);
@@ -50,12 +142,13 @@ export function MiniaturesModal({
   };
 
   const handleSaveAndRefreshPreview = async () => {
+    if (!selectedProfile) return;
     setIsSaving(true);
     try {
       const res = await fetch('/api/combat/layout', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(localLayout),
+        body: JSON.stringify(selectedProfile),
       });
       if (res.ok) {
         setPreviewKey(Date.now());
@@ -67,31 +160,12 @@ export function MiniaturesModal({
     }
   };
 
-  const updateSlot = (slotName: keyof MiniatureLayout, field: Partial<DisplayField> | null) => {
-    if (field === null) {
-      setLocalLayout({ ...localLayout, [slotName]: null });
-      return;
-    }
-
-    const current = localLayout[slotName] as DisplayField | null;
-    setLocalLayout({
-      ...localLayout,
-      [slotName]: {
-        type: field.type ?? current?.type ?? 'text',
-        value_path: field.value_path ?? current?.value_path ?? '',
-        label: field.label !== undefined ? field.label : current?.label,
-        max_value_path: field.max_value_path !== undefined ? field.max_value_path : current?.max_value_path,
-        color: field.color ?? current?.color ?? '#00b400',
-      },
-    });
-  };
-
-  const renderSlotConfig = (slotName: keyof MiniatureLayout, title: string) => {
-    const slot = localLayout[slotName] as DisplayField | null;
-    const isEnabled = slot !== null;
+  const renderSlotConfig = (slotName: typeof SLOT_KEYS_SLOTS_ONLY[number], title: string) => {
+    const slot = (selectedProfile?.[slotName] ?? null) as DisplayField | null;
+    const isEnabled = slot !== null && slot !== undefined;
 
     return (
-      <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 space-y-3">
+      <div key={slotName} className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 space-y-3">
         <div className="flex items-center justify-between">
           <h4 className="text-sm font-medium text-zinc-300">{title}</h4>
           <label className="flex items-center gap-2 cursor-pointer">
@@ -111,7 +185,7 @@ export function MiniaturesModal({
           </label>
         </div>
 
-        {isEnabled && (
+        {isEnabled && slot && (
           <div className="space-y-3 pt-2 border-t border-zinc-800/50">
             <div className="flex gap-2">
               <div className="flex-1">
@@ -142,33 +216,64 @@ export function MiniaturesModal({
             </div>
 
             {slot.type === 'bar' && (
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.max_value_field')}</label>
-                  <select
-                    value={slot.max_value_path || ''}
-                    onChange={(e) => updateSlot(slotName, { max_value_path: e.target.value })}
-                    className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
-                  >
-                    <option value="">{t('miniature_layout.same_as_field_no_max')}</option>
-                    {columns.map((c) => (
-                      <option key={c.key} value={c.key}>
-                        {c.label}
-                      </option>
-                    ))}
-                    <option value="custom_max_hp">{t('miniature_layout.max_hp_custom')}</option>
-                  </select>
+              <>
+                <div className="flex flex-wrap gap-3 pt-1">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={slot.show_text !== false}
+                      onChange={(e) => updateSlot(slotName, { show_text: e.target.checked })}
+                      className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500"
+                    />
+                    <span className="text-xs text-zinc-400">{t('miniature_layout.show_text', { defaultValue: 'Показывать текст' })}</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={slot.show_label !== false}
+                      onChange={(e) => updateSlot(slotName, { show_label: e.target.checked })}
+                      className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500"
+                    />
+                    <span className="text-xs text-zinc-400">{t('miniature_layout.show_label', { defaultValue: 'Показывать ярлык (label)' })}</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={slot.show_max !== false}
+                      onChange={(e) => updateSlot(slotName, { show_max: e.target.checked })}
+                      className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500"
+                    />
+                    <span className="text-xs text-zinc-400">{t('miniature_layout.show_max', { defaultValue: 'Показывать максимум' })}</span>
+                  </label>
                 </div>
-                <div>
-                  <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.color')}</label>
-                  <input
-                    type="color"
-                    value={slot.color || '#00b400'}
-                    onChange={(e) => updateSlot(slotName, { color: e.target.value })}
-                    className="w-8 h-8 rounded bg-zinc-900 border border-zinc-700 cursor-pointer"
-                  />
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.max_value_field')}</label>
+                    <select
+                      value={slot.max_value_path || ''}
+                      onChange={(e) => updateSlot(slotName, { max_value_path: e.target.value })}
+                      className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
+                    >
+                      <option value="">{t('miniature_layout.same_as_field_no_max')}</option>
+                      {columns.map((c) => (
+                        <option key={c.key} value={c.key}>
+                          {c.label}
+                        </option>
+                      ))}
+                      <option value="custom_max_hp">{t('miniature_layout.max_hp_custom')}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.color')}</label>
+                    <input
+                      type="color"
+                      value={slot.color || '#00b400'}
+                      onChange={(e) => updateSlot(slotName, { color: e.target.value })}
+                      className="w-8 h-8 rounded bg-zinc-900 border border-zinc-700 cursor-pointer"
+                    />
+                  </div>
                 </div>
-              </div>
+              </>
             )}
           </div>
         )}
@@ -176,9 +281,18 @@ export function MiniaturesModal({
     );
   };
 
+  const slotTitles: Record<typeof SLOT_KEYS_SLOTS_ONLY[number], string> = {
+    top1: t('miniature_layout.slot_top_left_1'),
+    top2: t('miniature_layout.slot_top_right_2'),
+    bottom1: t('miniature_layout.slot_bottom_left_1'),
+    bottom2: t('miniature_layout.slot_bottom_right_2'),
+    left1: t('miniature_layout.slot_left_1', { defaultValue: 'Слева (верт.)' }),
+    right1: t('miniature_layout.slot_right_1', { defaultValue: 'Справа (верт.)' }),
+  };
+
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-6xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
         <div className="p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50">
           <h3 className="text-lg font-medium text-zinc-100">{t('modals.miniature_layout_config')}</h3>
           <button onClick={onClose} className="text-zinc-400 hover:text-zinc-100">
@@ -187,45 +301,99 @@ export function MiniaturesModal({
         </div>
 
         <div className="p-6 overflow-y-auto flex-1 min-h-0">
-          <div className="flex flex-col lg:flex-row gap-6">
-            {/* Левая колонка: настройки слотов */}
-            <div className="flex-1 min-w-0 space-y-6">
-          <div className="flex items-center justify-between bg-zinc-950 p-4 rounded-xl border border-zinc-800">
-            <div>
-              <h4 className="font-medium text-zinc-200">{t('miniature_layout.show_portrait')}</h4>
-              <p className="text-xs text-zinc-500">{t('miniature_layout.show_portrait_desc')}</p>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                className="sr-only peer"
-                checked={localLayout.show_portrait}
-                onChange={(e) => setLocalLayout({ ...localLayout, show_portrait: e.target.checked })}
-              />
-              <div className="w-11 h-6 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
-            </label>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            {renderSlotConfig('top1', t('miniature_layout.slot_top_left_1'))}
-            {renderSlotConfig('top2', t('miniature_layout.slot_top_right_2'))}
-            {renderSlotConfig('bottom1', t('miniature_layout.slot_bottom_left_1'))}
-            {renderSlotConfig('bottom2', t('miniature_layout.slot_bottom_right_2'))}
-          </div>
-
-          <div className="pt-4 border-t border-zinc-800 flex flex-wrap gap-2">
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="flex items-center gap-2 px-6 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg font-medium transition-colors"
-            >
-              <Save size={18} /> {isSaving ? t('miniature_layout.saving') : t('miniature_layout.save_layout')}
-            </button>
-          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-[180px_1fr_220px] gap-6">
+            {/* Левая колонка: список профилей */}
+            <div className="flex flex-col gap-2">
+              <div className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                {t('miniature_layout.profiles', { defaultValue: 'Профили' })}
+              </div>
+              <ul className="space-y-1">
+                {localProfiles.map((p) => (
+                  <li key={p.id}>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedProfileId(p.id)}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                        selectedProfileId === p.id
+                          ? 'bg-emerald-600/30 text-emerald-300 border border-emerald-500/50'
+                          : 'bg-zinc-800/50 text-zinc-300 hover:bg-zinc-700 border border-transparent'
+                      }`}
+                    >
+                      {p.name || p.id}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <button
+                type="button"
+                onClick={handleAddProfile}
+                className="flex items-center justify-center gap-2 py-2 mt-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-sm transition-colors"
+              >
+                <Plus size={16} /> {t('miniature_layout.add_profile', { defaultValue: 'Добавить профиль' })}
+              </button>
             </div>
 
-            {/* Правая колонка: предпросмотр (172x320) */}
-            <div className="lg:w-[220px] shrink-0 space-y-2 border-t lg:border-t-0 lg:border-l border-zinc-800 pt-6 lg:pt-0 lg:pl-6">
+            {/* Центральная колонка: настройки выбранного профиля */}
+            <div className="flex flex-col gap-4 min-w-0">
+              {selectedProfile && (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.profile_name', { defaultValue: 'Название профиля' })}</label>
+                      <input
+                        type="text"
+                        value={selectedProfile.name}
+                        onChange={(e) => setSelectedProfile({ name: e.target.value })}
+                        className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.frame_asset', { defaultValue: 'Рамка (файл)' })}</label>
+                      <input
+                        type="text"
+                        value={selectedProfile.frame_asset ?? 'default_frame.png'}
+                        onChange={(e) => setSelectedProfile({ frame_asset: e.target.value || 'default_frame.png' })}
+                        placeholder="default_frame.png"
+                        className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between bg-zinc-950 p-4 rounded-xl border border-zinc-800">
+                    <div>
+                      <h4 className="font-medium text-zinc-200">{t('miniature_layout.show_portrait')}</h4>
+                      <p className="text-xs text-zinc-500">{t('miniature_layout.show_portrait_desc')}</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="sr-only peer"
+                        checked={selectedProfile.show_portrait}
+                        onChange={(e) => setSelectedProfile({ show_portrait: e.target.checked })}
+                      />
+                      <div className="w-11 h-6 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500" />
+                    </label>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    {SLOT_KEYS_SLOTS_ONLY.map((slotName) => renderSlotConfig(slotName, slotTitles[slotName]))}
+                  </div>
+
+                  <div className="pt-4 border-t border-zinc-800 flex flex-wrap gap-2">
+                    <button
+                      onClick={handleSave}
+                      disabled={isSaving}
+                      className="flex items-center gap-2 px-6 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg font-medium transition-colors"
+                    >
+                      <Save size={18} /> {isSaving ? t('miniature_layout.saving') : t('miniature_layout.save_layout')}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Правая колонка: предпросмотр */}
+            <div className="lg:border-l border-zinc-800 lg:pl-6 space-y-2">
               <div className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
                 {t('miniature_layout.preview_172_320', { defaultValue: 'Предпросмотр (172×320)' })}
               </div>
@@ -242,7 +410,7 @@ export function MiniaturesModal({
                   >
                     {actors.map((a) => (
                       <option key={a.id} value={a.id}>
-                        {a.name}
+                        {a.layout_profile_id === selectedProfileId ? `✓ ${a.name}` : a.name}
                       </option>
                     ))}
                   </select>
