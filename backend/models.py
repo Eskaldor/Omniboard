@@ -40,6 +40,8 @@ class DisplayField(BaseModel):
     theme_id: Optional[str] = None  # Идентификатор темы/папки для текстурированных баров
     offset_x: int = 0
     offset_y: int = 0
+    width: Optional[int] = None   # Переопределение ширины поля в рендере (пиксели)
+    height: Optional[int] = None  # Переопределение высоты поля в рендере (пиксели)
     rotation: int = 0  # Угол поворота в градусах: 0, 90, 270 (для боковых слотов)
     show_text: bool = True   # Показывать текст поверх бара
     show_label: bool = True  # Показывать подпись (label)
@@ -145,7 +147,19 @@ class CombatState(BaseModel):
     round: int = 1
     system: str = "D&D 5e"
     layout_profiles: List[LayoutProfile] = Field(
-        default_factory=lambda: [LayoutProfile(id="default", name="Default")]
+        default_factory=lambda: [
+            LayoutProfile(
+                id="default",
+                name="Default",
+                frame_asset="",
+                top1=None,
+                top2=None,
+                bottom1=None,
+                bottom2=None,
+                left1=None,
+                right1=None,
+            )
+        ]
     )
     legend: LegendConfig = Field(default_factory=LegendConfig)
     show_group_colors: bool = True

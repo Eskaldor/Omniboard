@@ -87,7 +87,7 @@ export const ActorRow = React.memo(function ActorRow({
                   }`}
                 >
                   <img
-                    src={actor.miniature_id ? `/api/render/${actor.id}` : actor.portrait!}
+                    src={actor.miniature_id ? `/api/render/${actor.id}?t=${Date.now()}` : actor.portrait!}
                     alt={actor.name}
                     className="w-full h-full object-cover"
                     referrerPolicy="no-referrer"

@@ -49,9 +49,19 @@ async def get_rendered_miniature(
     if not profile:
         profile = next((p for p in state.layout_profiles if p.id == "default"), None)
 
-    # Если state.layout_profiles пуст, создаем базовый в памяти
+    # Если state.layout_profiles пуст, создаем базовый в памяти (пустой — только портрет)
     if not profile:
-        profile = LayoutProfile(id="default", name="Default")
+        profile = LayoutProfile(
+            id="default",
+            name="Default",
+            frame_asset="",
+            top1=None,
+            top2=None,
+            bottom1=None,
+            bottom2=None,
+            left1=None,
+            right1=None,
+        )
 
     system_name = state.system
 

@@ -6,9 +6,6 @@
     "app_name_full": "Nevrar's Omniboard",
     "app_author": "Nevrar"
   },
-  "miniature_layout.styles": "Стили",
-  "miniature_layout.preview": "Превью",
-  "miniature_layout.name_hint": "В интерфейсе отображается это имя. При сохранении ID = транскрипция (напр. БарЗдоровье → barzdorovie).",
   "language": "Язык",
   "config": "Настройки",
   "errors": {
