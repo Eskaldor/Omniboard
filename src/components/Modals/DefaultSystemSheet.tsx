@@ -207,6 +207,20 @@ export function DefaultSystemSheet({
                 </select>
               </div>
 
+              <div>
+                <label className="block text-xs text-zinc-500 mb-1">{t('actor.layout_profile', { defaultValue: 'Display profile (ESP32)' })}</label>
+                <select
+                  value={actor.layout_profile_id ?? ''}
+                  onChange={(e) => onUpdate?.(actor.id, 'layout_profile_id', e.target.value || null)}
+                  className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
+                >
+                  <option value="">{t('actor.layout_profile_default', { defaultValue: 'Default' })}</option>
+                  {state?.layout_profiles?.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+
               <div className="text-sm text-zinc-400">
                 {t('combat.initiative')}: <span className="text-zinc-200">{actor.initiative}</span>
               </div>

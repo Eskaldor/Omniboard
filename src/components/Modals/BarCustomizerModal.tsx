@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Plus, ImageIcon } from 'lucide-react';
+import { X, Save, Plus, ImageIcon, Trash2 } from 'lucide-react';
 import { slugify } from 'transliteration';
 import { BarProfileConfig } from '../../types';
 import { useTranslation } from 'react-i18next';
@@ -32,6 +32,7 @@ export function BarCustomizerModal({
   const [editing, setEditing] = useState<BarProfileConfig | null>(null);
   const [saving, setSaving] = useState(false);
   const [textureKey, setTextureKey] = useState(Date.now());
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (!isOpen || !system) return;
@@ -104,10 +105,10 @@ export function BarCustomizerModal({
 
   const handleTextureUpload = async (type: 'bg' | 'fg' | 'mask' | 'overlay', file: File) => {
     if (!editing) return;
-    // system из контекста (проп) — текстуры сохраняются в папку системы при её выборе
     const formData = new FormData();
     formData.append('texture_type', type);
     formData.append('file', file);
+    setIsLoading(true);
     try {
       const res = await fetch(
         `/api/assets/bars/${encodeURIComponent(editing.id)}/textures?system=${encodeURIComponent(system || '')}`,
@@ -116,6 +117,24 @@ export function BarCustomizerModal({
       if (res.ok) setTextureKey(Date.now());
     } catch (err) {
       console.error('Failed to upload texture', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleTextureDelete = async (type: 'bg' | 'fg' | 'mask' | 'overlay') => {
+    if (!editing) return;
+    setIsLoading(true);
+    try {
+      const res = await fetch(
+        `/api/assets/bars/${encodeURIComponent(editing.id)}/textures/${type}?system=${encodeURIComponent(system || '')}`,
+        { method: 'DELETE' }
+      );
+      if (res.ok) setTextureKey(Date.now());
+    } catch (err) {
+      console.error('Failed to delete texture', err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -178,7 +197,7 @@ export function BarCustomizerModal({
           {/* Слева: список стилей */}
           <div className="w-48 flex-shrink-0 flex flex-col gap-2">
             <div className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
-              Стили
+              {t('miniature_layout.styles', { defaultValue: 'Styles' })}
             </div>
             <ul className="space-y-1">
               {profiles.map((p) => (
@@ -216,15 +235,15 @@ export function BarCustomizerModal({
                     type="text"
                     value={editing.name}
                     onChange={(e) => setEditing((prev) => prev ? { ...prev, name: e.target.value } : null)}
-                    placeholder={t('miniature_layout.bar_forge', { defaultValue: 'Конфигуратор шкал' })}
+                    placeholder={t('miniature_layout.profile_name', { defaultValue: 'Profile name' })}
                     className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
                   />
                   <p className="mt-1 text-xs text-zinc-500">
-                    В интерфейсе отображается это имя. При сохранении ID = транскрипция (БарЗдоровье → barzdorovie).
+                    {t('miniature_layout.name_hint', { defaultValue: 'Display name in UI. On save, ID = transliteration (e.g. HealthBar → healthbar).' })}
                   </p>
                 </div>
                 <div>
-                  <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.bar_style', { defaultValue: 'Режим' })}</label>
+                  <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.bar_style', { defaultValue: 'Bar style' })}</label>
                   <select
                     value={editing.mode}
                     onChange={(e) =>
@@ -267,7 +286,7 @@ export function BarCustomizerModal({
                           }
                           className="rounded border-zinc-600 bg-zinc-800 text-emerald-500 focus:ring-emerald-500"
                         />
-                        <span className="text-sm text-zinc-400">Градиент</span>
+                        <span className="text-sm text-zinc-400">{t('miniature_layout.gradient', { defaultValue: 'Gradient' })}</span>
                       </label>
                       {(editing.fg_color_end && editing.fg_color_end.trim() !== '') && (
                         <input
@@ -295,7 +314,7 @@ export function BarCustomizerModal({
                               }
                               className="rounded border-zinc-600 bg-zinc-800 text-emerald-500 focus:ring-emerald-500"
                             />
-                            <span className="text-sm text-zinc-400">Три точки</span>
+                            <span className="text-sm text-zinc-400">{t('miniature_layout.three_stops', { defaultValue: 'Three stops' })}</span>
                           </label>
                           {(editing.fg_color_mid && editing.fg_color_mid.trim() !== '') && (
                             <input
@@ -402,12 +421,18 @@ export function BarCustomizerModal({
                 )}
                 {editing.mode === 'textured' && (
                   <div className="space-y-4">
+                    {isLoading && (
+                      <p className="text-xs text-amber-400 flex items-center gap-1">
+                        <span className="inline-block w-3 h-3 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+                        {t('miniature_layout.uploading', { defaultValue: 'Загрузка...' })}
+                      </p>
+                    )}
                     {(['bg', 'fg', 'mask', 'overlay'] as const).map((type) => {
                       const labels: Record<typeof type, string> = {
-                        bg: 'Подложка (bg.png)',
-                        fg: 'Шкала (fg.png)',
-                        mask: 'Маска скругления (mask.png — опционально)',
-                        overlay: 'Стекло / Блики (overlay.png)',
+                        bg: t('miniature_layout.texture_bg', { defaultValue: 'Background (bg.png)' }),
+                        fg: t('miniature_layout.texture_fg', { defaultValue: 'Bar fill (fg.png)' }),
+                        mask: t('miniature_layout.texture_mask', { defaultValue: 'Round mask (mask.png — optional)' }),
+                        overlay: t('miniature_layout.texture_overlay', { defaultValue: 'Glass / Highlights (overlay.png)' }),
                       };
                       const textureUrl = `/api/assets/bars/${encodeURIComponent(editing.id)}/textures/${type}?system=${encodeURIComponent(system || '')}&t=${textureKey}`;
                       return (
@@ -417,13 +442,22 @@ export function BarCustomizerModal({
                             <input
                               type="file"
                               accept="image/*"
-                              className="block w-full text-sm text-zinc-300 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-zinc-700 file:text-zinc-200 file:text-sm"
+                              disabled={isLoading}
+                              className="block w-full text-sm text-zinc-300 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-zinc-700 file:text-zinc-200 file:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                               onChange={(e) => {
                                 const f = e.target.files?.[0];
                                 if (f) handleTextureUpload(type, f);
                                 e.target.value = '';
                               }}
                             />
+                            <button
+                              type="button"
+                              onClick={() => handleTextureDelete(type)}
+                              disabled={isLoading}
+                              className="mt-1 flex items-center gap-1 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded px-2 py-1 w-fit transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <Trash2 size={12} /> {t('miniature_layout.delete_texture', { defaultValue: 'Удалить' })}
+                            </button>
                           </div>
                           <div className="w-16 h-10 flex-shrink-0 rounded border border-zinc-600 overflow-hidden bg-zinc-900 flex items-center justify-center relative">
                             <div className="absolute inset-0 flex items-center justify-center text-zinc-500 z-0">
@@ -460,7 +494,7 @@ export function BarCustomizerModal({
           {/* Справа: превью */}
           <div className="w-40 flex-shrink-0">
             <div className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">
-              Превью
+              {t('miniature_layout.preview', { defaultValue: 'Preview' })}
             </div>
             {editing && editing.mode === 'textured' && (
               <div className="relative h-8 rounded border border-zinc-600 overflow-hidden bg-zinc-900" title="Превью: основа → жидкость (60%) → стекло/блики (как на рендере)">

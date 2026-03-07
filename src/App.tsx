@@ -54,7 +54,7 @@ export default function App() {
   const [showFactionColorsLocal, setShowFactionColorsLocal] = useState<boolean | null>(null);
   const [groupSelectMode, setGroupSelectMode] = useState(false);
   const [selectedActorIds, setSelectedActorIds] = useState<Set<string>>(new Set());
-  const [createGroupModal, setCreateGroupModal] = useState<{ name: string; color: string; groupId?: string } | null>(null);
+  const [createGroupModal, setCreateGroupModal] = useState<{ name: string; color: string; groupId?: string; layoutProfileId?: string } | null>(null);
   const [showGroupCreateModal, setShowGroupCreateModal] = useState(false);
   const { t } = useTranslation('core', { useSuspense: false });
 
@@ -273,11 +273,18 @@ export default function App() {
                     const gid = createGroupModal.groupId ?? crypto.randomUUID();
                     const color = createGroupModal.color;
                     const groupName = createGroupModal.name;
+                    const layoutProfileId = createGroupModal.layoutProfileId ?? null;
                     for (const actorId of selectedActorIds) {
                       await fetch(`/api/actors/${actorId}`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ group_id: gid, group_name: groupName, group_mode: 'simultaneous', group_color: color }),
+                        body: JSON.stringify({
+                          group_id: gid,
+                          group_name: groupName,
+                          group_mode: 'simultaneous',
+                          group_color: color,
+                          layout_profile_id: layoutProfileId,
+                        }),
                       });
                     }
                     setGroupSelectMode(false);
@@ -443,8 +450,8 @@ export default function App() {
       <GroupCreateModal
         isOpen={showGroupCreateModal}
         onClose={() => setShowGroupCreateModal(false)}
-        onSubmit={(name, color) => {
-          setCreateGroupModal({ name, color, groupId: crypto.randomUUID() });
+        onSubmit={(name, color, layoutProfileId) => {
+          setCreateGroupModal({ name, color, groupId: crypto.randomUUID(), layoutProfileId });
           setGroupSelectMode(true);
           setSelectedActorIds(new Set());
           setShowLegendPanel(false);

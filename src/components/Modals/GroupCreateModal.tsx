@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
+import { useCombatState } from '../../contexts/CombatStateContext';
 
 const PRESET_COLORS = [
   { name: 'Red', hex: '#ef4444' },
@@ -14,18 +15,21 @@ const PRESET_COLORS = [
 export interface GroupCreateModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (name: string, color: string) => void;
+  onSubmit: (name: string, color: string, layoutProfileId?: string) => void;
 }
 
 export function GroupCreateModal({ isOpen, onClose, onSubmit }: GroupCreateModalProps) {
   const { t } = useTranslation('core', { useSuspense: false });
+  const { state } = useCombatState();
   const [name, setName] = useState('');
   const [color, setColor] = useState('#10b981');
+  const [groupProfileId, setGroupProfileId] = useState<string>('');
 
   useEffect(() => {
     if (isOpen) {
       setName('');
       setColor('#10b981');
+      setGroupProfileId('');
     }
   }, [isOpen]);
 
@@ -33,7 +37,7 @@ export function GroupCreateModal({ isOpen, onClose, onSubmit }: GroupCreateModal
     e.preventDefault();
     const trimmedName = name.trim() || 'Group';
     const trimmedColor = color.trim() || '#10b981';
-    onSubmit(trimmedName, trimmedColor);
+    onSubmit(trimmedName, trimmedColor, groupProfileId || undefined);
     onClose();
   };
 
@@ -108,6 +112,22 @@ export function GroupCreateModal({ isOpen, onClose, onSubmit }: GroupCreateModal
                 ))}
               </div>
             </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1.5">
+              {t('actor.layout_profile', { defaultValue: 'Display profile (ESP32)' })}
+            </label>
+            <select
+              value={groupProfileId}
+              onChange={(e) => setGroupProfileId(e.target.value)}
+              className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
+            >
+              <option value="">{t('actor.layout_profile_default', { defaultValue: 'Default' })}</option>
+              {state?.layout_profiles?.map((p) => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
           </div>
 
           <div className="flex gap-3 pt-2 border-t border-zinc-800">

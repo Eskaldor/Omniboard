@@ -169,6 +169,8 @@ export function MiniaturesModal({
         show_max: field.show_max !== undefined ? field.show_max : (current as DisplayField)?.show_max ?? true,
         offset_x: field.offset_x !== undefined ? field.offset_x : (current as DisplayField)?.offset_x ?? 0,
         offset_y: field.offset_y !== undefined ? field.offset_y : (current as DisplayField)?.offset_y ?? 0,
+        width: field.width !== undefined ? field.width : (current as DisplayField)?.width,
+        height: field.height !== undefined ? field.height : (current as DisplayField)?.height,
         font_id: field.font_id !== undefined ? field.font_id : (current as DisplayField)?.font_id,
         font_size: field.font_size !== undefined ? field.font_size : (current as DisplayField)?.font_size,
         bar_style: field.bar_style !== undefined ? field.bar_style : (current as DisplayField)?.bar_style,
@@ -342,7 +344,7 @@ export function MiniaturesModal({
                 <div className="text-xs font-medium text-zinc-400 uppercase tracking-wider">
                   {t('miniature_layout.fine_tuning', { defaultValue: 'Тонкая настройка' })}
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <div className="grid grid-cols-4 gap-2">
                   <div>
                     <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.offset_x', { defaultValue: 'Сдвиг X' })}</label>
                     <input
@@ -361,6 +363,30 @@ export function MiniaturesModal({
                       className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
                     />
                   </div>
+                  <div>
+                    <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.width', { defaultValue: 'Шир. (px)' })}</label>
+                    <input
+                      type="number"
+                      min={1}
+                      value={slot.width ?? ''}
+                      placeholder="—"
+                      onChange={(e) => updateSlot(slotName, { width: e.target.value ? Number(e.target.value) : undefined })}
+                      className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.height', { defaultValue: 'Высота (px)' })}</label>
+                    <input
+                      type="number"
+                      min={1}
+                      value={slot.height ?? ''}
+                      placeholder="—"
+                      onChange={(e) => updateSlot(slotName, { height: e.target.value ? Number(e.target.value) : undefined })}
+                      className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   <div>
                     <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.font_family', { defaultValue: 'Шрифт (файл)' })}</label>
                     <select

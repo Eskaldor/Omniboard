@@ -6,6 +6,9 @@
     "app_name_full": "Nevrar's Omniboard",
     "app_author": "Nevrar"
   },
+  "miniature_layout.styles": "Стили",
+  "miniature_layout.preview": "Превью",
+  "miniature_layout.name_hint": "В интерфейсе отображается это имя. При сохранении ID = транскрипция (напр. БарЗдоровье → barzdorovie).",
   "language": "Язык",
   "config": "Настройки",
   "errors": {
@@ -18,6 +21,10 @@
   },
   "name": "Имя",
   "initiative": "Инициатива",
+  "actor": {
+    "layout_profile": "Профиль экрана (ESP32)",
+    "layout_profile_default": "По умолчанию (Default)"
+  },
   "common": {
     "save": "Сохранить",
     "cancel": "Отмена",
@@ -214,6 +221,8 @@
     "font_size": "Размер шрифта",
     "offset_x": "Сдвиг X",
     "offset_y": "Сдвиг Y",
+    "width": "Шир. (px)",
+    "height": "Высота (px)",
     "bar_color": "Цвет шкалы",
     "bar_bg_color": "Цвет подложки",
     "fine_tuning": "Тонкая настройка",
@@ -226,6 +235,16 @@
     "rot_90": "90° (Снизу вверх)",
     "rot_270": "270° (Сверху вниз)",
     "bar_forge": "Конфигуратор шкал",
+    "bar_forge_empty": "Создайте стиль или выберите из списка",
+    "styles": "Стили",
+    "name_hint": "В интерфейсе отображается это имя. При сохранении ID = транскрипция (напр. БарЗдоровье → barzdorovie).",
+    "gradient": "Градиент",
+    "three_stops": "Три точки",
+    "texture_bg": "Подложка (bg.png)",
+    "texture_fg": "Шкала (fg.png)",
+    "texture_mask": "Маска скругления (mask.png — опционально)",
+    "texture_overlay": "Стекло / Блики (overlay.png)",
+    "preview": "Превью",
     "fg_color": "Цвет шкалы (Начало)",
     "fg_color_end": "Цвет шкалы (Конец градиента)",
     "fg_color_mid": "Цвет шкалы (Середина градиента)",
@@ -238,8 +257,9 @@
     "bar_style_profile": "Стиль бара (профиль)",
     "create_style": "Создать стиль",
     "new_style": "Новый стиль",
-    "textured_hint": "Загрузите fg.png и bg.png в папку data/assets/default/bars/{id}/",
-    "bar_forge_empty": "Создайте стиль или выберите из списка"
+    "uploading": "Загрузка...",
+    "delete_texture": "Удалить",
+    "textured_hint": "Загрузите fg.png и bg.png в папку data/assets/default/bars/{id}/"
   },
   "library": {
     "tab_portraits": "Портреты",

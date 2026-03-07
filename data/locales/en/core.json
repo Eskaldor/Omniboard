@@ -16,6 +16,10 @@
   "app": {
     "title": "Omniboard"
   },
+  "actor": {
+    "layout_profile": "Display profile (ESP32)",
+    "layout_profile_default": "Default"
+  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",
@@ -171,6 +175,7 @@
     "frame_asset": "Frame (filename)",
     "show_portrait": "Show Portrait",
     "show_portrait_desc": "Display the actor's portrait on the miniature screen.",
+    "expert_mode": "Expert mode",
     "slot_top_left_1": "Top slot 1",
     "slot_top_right_2": "Top slot 2",
     "slot_bottom_left_1": "Bottom slot 1",
@@ -196,6 +201,16 @@
     "preview_no_actors": "Add actors to combat to preview.",
     "save_and_refresh_preview": "Save and Refresh Preview",
     "bar_forge": "Scale Configurator",
+    "bar_forge_empty": "Create a style or select from the list",
+    "styles": "Styles",
+    "name_hint": "Display name in UI. On save, ID = transliteration (e.g. HealthBar → healthbar).",
+    "gradient": "Gradient",
+    "three_stops": "Three stops",
+    "texture_bg": "Background (bg.png)",
+    "texture_fg": "Bar fill (fg.png)",
+    "texture_mask": "Round mask (mask.png — optional)",
+    "texture_overlay": "Glass / Highlights (overlay.png)",
+    "preview": "Preview",
     "fg_color": "Bar color (Start)",
     "fg_color_end": "Bar color (Gradient end)",
     "fg_color_mid": "Bar color (Gradient mid)",
@@ -204,7 +219,12 @@
     "border_color": "Border color",
     "border_width": "Border width",
     "border_radius": "Corner radius",
+    "width": "Width (px)",
+    "height": "Height (px)",
     "new_style": "New style",
+    "uploading": "Uploading...",
+    "delete_texture": "Delete",
+    "bar_style": "Bar style",
     "bar_style_profile": "Bar style (profile)",
     "configure_styles": "Configure styles"
   },
