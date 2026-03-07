@@ -267,7 +267,7 @@ export function ConfigModal({
           </button>
         </div>
 
-        <div className="p-4 overflow-y-auto space-y-1">
+        <div className="p-4 overflow-y-auto flex-1 min-h-0 space-y-1">
           <div className="relative mb-4">
             <button
               type="button"

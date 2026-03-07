@@ -1,102 +1,203 @@
+"""
+Композитор миниатюр: строго 172x320 px, послойный RGBA-сэндвич.
+Использует backend.render_utils и backend.models.
+"""
 import os
-import requests
-from io import BytesIO
-from PIL import Image, ImageDraw, ImageFont
+import hashlib
+from PIL import Image, ImageDraw
 from backend.models import Actor, MiniatureLayout, DisplayField
+from backend.paths import ASSETS_DIR
+from backend.render_utils import (
+    get_font,
+    draw_text_centered,
+    create_textured_bar,
+    apply_rotated_element,
+)
 
 RENDER_DIR = "data/render"
 os.makedirs(RENDER_DIR, exist_ok=True)
 
-def hex_to_rgb(hex_color: str):
-    hex_color = hex_color.lstrip('#')
-    if len(hex_color) != 6:
-        return (0, 180, 0) # default green
-    return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+CANVAS_WIDTH = 172
+CANVAS_HEIGHT = 320
 
-def draw_display_field(draw: ImageDraw.ImageDraw, field: DisplayField, actor: Actor, x: int, y: int, width: int, font: ImageFont.FreeTypeFont):
+# Отступы и размеры для слотов UI
+PAD = 10
+SLOT_HEIGHT_VERT = 80  # высота вертикальных слотов (left1, right1)
+
+
+def get_asset_path(
+    category: str,
+    filename: str,
+    system_name: str | None = None,
+) -> str | None:
+    """
+    Asset Override: сначала systems/<system_name>/<category>/<filename>,
+    затем default/<category>/<filename>. Возвращает путь строкой или None.
+    """
+    if system_name:
+        sys_path = ASSETS_DIR / "systems" / system_name / category / filename
+        if sys_path.is_file():
+            return str(sys_path)
+    default_path = ASSETS_DIR / "default" / category / filename
+    if default_path.is_file():
+        return str(default_path)
+    return None
+
+
+def draw_display_field(
+    canvas: Image.Image,
+    field: DisplayField,
+    actor: Actor,
+    x: int,
+    y: int,
+    width: int,
+    height: int,
+    font,
+    system_name: str | None,
+) -> None:
+    """
+    Рисует одно поле (бар или текст) на canvas в прямоугольнике (x, y, width, height).
+    Учитывает rotation и theme_id для баров.
+    """
     val = actor.stats.get(field.value_path, 0)
-    
-    if field.type == "text":
-        text = f"{field.label + ': ' if field.label else ''}{val}"
-        draw.text((x, y), text, fill=(255, 255, 255), font=font)
-    elif field.type == "bar":
-        max_val = val
-        if field.max_value_path:
-            max_val = actor.stats.get(field.max_value_path, val if val > 0 else 10)
-        if max_val == 0: max_val = 1
-        
-        pct = max(0, min(1, val / max_val))
-        bar_h = 16
-        
-        color = hex_to_rgb(field.color) if field.color else (0, 180, 0)
-        bg_color = (max(0, color[0]-100), max(0, color[1]-100), max(0, color[2]-100))
-        
-        # Background
-        draw.rectangle([x, y, x + width, y + bar_h], fill=bg_color)
-        # Foreground
-        draw.rectangle([x, y, x + int(width * pct), y + bar_h], fill=color)
-        
-        # Text
-        text = f"{val}/{max_val}"
-        # Center text in bar
-        # For default font, approximate width
-        text_w = len(text) * 6
-        draw.text((x + width//2 - text_w//2, y + 2), text, fill=(255, 255, 255), font=font)
 
-def render_miniature(actor: Actor, layout: MiniatureLayout, width: int = 240, height: int = 240) -> str:
-    img = Image.new('RGB', (width, height), color=(20, 20, 20))
-    draw = ImageDraw.Draw(img)
-    
-    portrait_height = 160
-    if actor.portrait and layout.show_portrait:
+    if field.type == "bar":
+        max_val = actor.stats.get(field.max_value_path, val) if field.max_value_path else val
+        if isinstance(max_val, (int, float)):
+            max_val = max(1, max_val)
+        else:
+            max_val = 1
         try:
-            if actor.portrait.startswith('http'):
-                response = requests.get(actor.portrait, timeout=5)
-                portrait_img = Image.open(BytesIO(response.content))
-            else:
-                portrait_img = Image.open(actor.portrait)
-            
-            portrait_img = portrait_img.convert('RGBA')
-            portrait_img = portrait_img.resize((width, portrait_height))
-            img.paste(portrait_img, (0, 0))
-        except Exception as e:
-            print(f"Ошибка загрузки портрета: {e}")
-            draw.rectangle([0, 0, width, portrait_height], fill=(50, 50, 50))
-            draw.text((width//2 - 40, portrait_height//2), "No Portrait", fill=(255, 255, 255))
-    
-    font = ImageFont.load_default()
-    
-    # Base Y for stats area
-    stats_y = portrait_height + 5 if layout.show_portrait else 5
-    
-    # Draw Name
-    draw.text((10, stats_y), actor.name, fill=(255, 255, 255), font=font)
-    
-    # Draw Layout Slots
-    slot_y = stats_y + 20
-    slot_width = (width - 30) // 2 # Two columns, 10px padding sides, 10px middle
-    
-    if layout.top1:
-        draw_display_field(draw, layout.top1, actor, 10, slot_y, slot_width, font)
-    if layout.top2:
-        draw_display_field(draw, layout.top2, actor, 20 + slot_width, slot_y, slot_width, font)
-        
-    slot_y += 25
-    
-    if layout.bottom1:
-        draw_display_field(draw, layout.bottom1, actor, 10, slot_y, slot_width, font)
-    if layout.bottom2:
-        draw_display_field(draw, layout.bottom2, actor, 20 + slot_width, slot_y, slot_width, font)
-    
-    # Draw Effects
-    if actor.visibility.effects:
-        visible_effects = [e.name for e in actor.effects if e.show_on_miniature]
-        if visible_effects:
-            effects_text = ", ".join(visible_effects)
-            if len(effects_text) > 35:
-                effects_text = effects_text[:32] + "..."
-            draw.text((10, height - 20), f"Fx: {effects_text}", fill=(200, 200, 255), font=font)
+            num_val = float(val) if val is not None else 0
+            num_max = float(max_val)
+            percent = num_val / num_max if num_max else 0
+        except (TypeError, ValueError):
+            percent = 0
+        percent = max(0.0, min(1.0, percent))
 
-    output_path = os.path.join(RENDER_DIR, f"{actor.id}.png")
-    img.save(output_path)
-    return output_path
+        theme_dir = str(ASSETS_DIR / "default" / "bars" / (field.theme_id or "default"))
+        bar_img = create_textured_bar(width, height, percent, theme_dir)
+
+        if field.rotation in (90, 270):
+            apply_rotated_element(canvas, bar_img, x, y, field.rotation)
+        else:
+            canvas.paste(bar_img, (x, y), bar_img)
+
+    else:  # text
+        text = f"{field.label + ': ' if field.label else ''}{val}"
+        fill = (255, 255, 255)
+        box = (x, y, x + width, y + height)
+
+        if field.rotation in (90, 270):
+            layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+            draw_layer = ImageDraw.Draw(layer)
+            draw_text_centered(draw_layer, (0, 0, width, height), text, font, fill)
+            apply_rotated_element(canvas, layer, x, y, field.rotation)
+        else:
+            draw = ImageDraw.Draw(canvas)
+            draw_text_centered(draw, box, text, font, fill)
+
+
+def render_miniature(
+    actor: Actor,
+    layout: MiniatureLayout,
+    system_name: str,
+) -> str:
+    """
+    Рендер миниатюры 172x320: base → effects → frame → UI overlay.
+    Сохраняет JPEG в RENDER_DIR, возвращает путь к файлу.
+    """
+    canvas = Image.new("RGBA", (CANVAS_WIDTH, CANVAS_HEIGHT), (0, 0, 0, 255))
+
+    # —— СЛОЙ 1: Base (портрет) ——
+    if layout.show_portrait and actor.portrait:
+        portrait_path = get_asset_path(
+            "portraits",
+            os.path.basename(actor.portrait),
+            system_name,
+        ) or (actor.portrait if os.path.isfile(actor.portrait) else None)
+        if portrait_path:
+            try:
+                portrait = Image.open(portrait_path).convert("RGBA")
+                portrait = portrait.resize((CANVAS_WIDTH, CANVAS_HEIGHT))
+                canvas.paste(portrait, (0, 0), portrait)
+            except (OSError, IOError):
+                pass
+
+    # —— СЛОЙ 2: Effects ——
+    for effect in actor.effects:
+        if not effect.render_on_mini:
+            continue
+        path = get_asset_path("effects", f"{effect.id}.png", system_name)
+        if not path:
+            continue
+        try:
+            eff_img = Image.open(path).convert("RGBA")
+            if eff_img.size != (CANVAS_WIDTH, CANVAS_HEIGHT):
+                eff_img = eff_img.resize((CANVAS_WIDTH, CANVAS_HEIGHT))
+            canvas = Image.alpha_composite(canvas, eff_img)
+        except (OSError, IOError):
+            pass
+
+    # —— СЛОЙ 3: Frame ——
+    frame_path = get_asset_path("frames", "default_frame.png", system_name)
+    if frame_path:
+        try:
+            frame_img = Image.open(frame_path).convert("RGBA")
+            if frame_img.size != (CANVAS_WIDTH, CANVAS_HEIGHT):
+                frame_img = frame_img.resize((CANVAS_WIDTH, CANVAS_HEIGHT))
+            canvas = Image.alpha_composite(canvas, frame_img)
+        except (OSError, IOError):
+            pass
+
+    # —— СЛОЙ 4: UI Overlay ——
+    font_path = str(ASSETS_DIR / "default" / "fonts" / layout.font_id)
+    font = get_font(font_path, layout.font_size)
+    bh = layout.bar_height
+    slot_w = CANVAS_WIDTH - 2 * PAD
+
+    # Горизонтальные слоты
+    if layout.top1:
+        draw_display_field(
+            canvas, layout.top1, actor,
+            PAD, PAD, slot_w, bh,
+            font, system_name,
+        )
+    if layout.top2:
+        draw_display_field(
+            canvas, layout.top2, actor,
+            PAD, PAD + bh + 4, slot_w, bh,
+            font, system_name,
+        )
+    if layout.bottom1:
+        draw_display_field(
+            canvas, layout.bottom1, actor,
+            PAD, CANVAS_HEIGHT - PAD - 2 * (bh + 4), slot_w, bh,
+            font, system_name,
+        )
+    if layout.bottom2:
+        draw_display_field(
+            canvas, layout.bottom2, actor,
+            PAD, CANVAS_HEIGHT - PAD - (bh + 4), slot_w, bh,
+            font, system_name,
+        )
+
+    # Вертикальные слоты (боковые)
+    vert_y = (CANVAS_HEIGHT - SLOT_HEIGHT_VERT) // 2
+    if layout.left1:
+        draw_display_field(
+            canvas, layout.left1, actor,
+            0, vert_y, bh, SLOT_HEIGHT_VERT,
+            font, system_name,
+        )
+    if layout.right1:
+        draw_display_field(
+            canvas, layout.right1, actor,
+            CANVAS_WIDTH - bh, vert_y, bh, SLOT_HEIGHT_VERT,
+            font, system_name,
+        )
+
+    # —— ЭКСПОРТ ——
+    out_path = os.path.join(RENDER_DIR, f"{actor.id}.jpg")
+    canvas.convert("RGB").save(out_path, "JPEG", quality=85)
+    return out_path

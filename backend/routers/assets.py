@@ -11,10 +11,10 @@ from backend.paths import ASSETS_DIR
 
 router = APIRouter(prefix="/api/assets", tags=["assets"])
 
-ALLOWED_EXT = {".png", ".jpg", ".jpeg", ".gif", ".webp"}
+ALLOWED_EXT = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".ttf", ".otf"}
 
-# Only list files that match: lowercase id + image extension (excludes .DS_Store, etc.)
-ASSET_FILENAME_RE = re.compile(r"^[a-z0-9_]+\.(png|jpg|jpeg|webp|gif)$")
+# Only list files that match: lowercase id + allowed extension (excludes .DS_Store, etc.)
+ASSET_FILENAME_RE = re.compile(r"^[a-z0-9_-]+\.(png|jpg|jpeg|webp|gif|ttf|otf)$")
 
 
 def _safe_filename(name: str) -> bool:
@@ -42,7 +42,7 @@ async def get_effect_icon(filename: str, system: str = None):
 
 @router.get("/{category}")
 async def list_assets(category: str, system: str = None):
-    if category not in ["portraits", "frames", "effects"]:
+    if category not in ["portraits", "frames", "effects", "fonts", "bars"]:
         raise HTTPException(status_code=400, detail="Invalid category")
 
     files_dict = {}
@@ -67,7 +67,7 @@ async def list_assets(category: str, system: str = None):
 
 @router.post("/{category}")
 async def upload_asset(category: str, system: str = None, overwrite: bool = False, file: UploadFile = File(...)):
-    if category not in ["portraits", "frames", "effects"]:
+    if category not in ["portraits", "frames", "effects", "fonts", "bars"]:
         raise HTTPException(status_code=400, detail="Invalid category")
 
     if system:
@@ -89,7 +89,7 @@ async def upload_asset(category: str, system: str = None, overwrite: bool = Fals
 
 @router.delete("/{category}/{filename}")
 async def delete_asset(category: str, filename: str, system: str = None):
-    if category not in ["portraits", "frames", "effects"]:
+    if category not in ["portraits", "frames", "effects", "fonts", "bars"]:
         raise HTTPException(status_code=400, detail="Invalid category")
 
     if system:

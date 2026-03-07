@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Save } from 'lucide-react';
 import { ColumnConfig, MiniatureLayout, DisplayField } from '../../types';
+import { useCombatState } from '../../contexts/CombatStateContext';
 import { useTranslation } from 'react-i18next';
 
 export function MiniaturesModal({
@@ -13,8 +14,24 @@ export function MiniaturesModal({
   onClose: () => void;
 }) {
   const { t } = useTranslation('core', { useSuspense: false });
+  const { state } = useCombatState();
+  const actors = state?.actors ?? [];
+
   const [localLayout, setLocalLayout] = useState<MiniatureLayout>(layout);
   const [isSaving, setIsSaving] = useState(false);
+  const [previewActorId, setPreviewActorId] = useState<string>(() => actors[0]?.id ?? '');
+  const [previewKey, setPreviewKey] = useState<number>(() => Date.now());
+
+  useEffect(() => {
+    if (actors.length === 0) {
+      setPreviewActorId('');
+      return;
+    }
+    const ids = new Set(actors.map((a) => a.id));
+    if (!previewActorId || !ids.has(previewActorId)) {
+      setPreviewActorId(actors[0].id);
+    }
+  }, [actors, previewActorId]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -25,6 +42,24 @@ export function MiniaturesModal({
         body: JSON.stringify(localLayout),
       });
       onClose();
+    } catch (err) {
+      console.error('Failed to save layout', err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSaveAndRefreshPreview = async () => {
+    setIsSaving(true);
+    try {
+      const res = await fetch('/api/combat/layout', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(localLayout),
+      });
+      if (res.ok) {
+        setPreviewKey(Date.now());
+      }
     } catch (err) {
       console.error('Failed to save layout', err);
     } finally {
@@ -151,7 +186,10 @@ export function MiniaturesModal({
           </button>
         </div>
 
-        <div className="p-6 overflow-y-auto space-y-6">
+        <div className="p-6 overflow-y-auto flex-1 min-h-0">
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Левая колонка: настройки слотов */}
+            <div className="flex-1 min-w-0 space-y-6">
           <div className="flex items-center justify-between bg-zinc-950 p-4 rounded-xl border border-zinc-800">
             <div>
               <h4 className="font-medium text-zinc-200">{t('miniature_layout.show_portrait')}</h4>
@@ -175,7 +213,7 @@ export function MiniaturesModal({
             {renderSlotConfig('bottom2', t('miniature_layout.slot_bottom_right_2'))}
           </div>
 
-          <div className="pt-4 border-t border-zinc-800 flex justify-end">
+          <div className="pt-4 border-t border-zinc-800 flex flex-wrap gap-2">
             <button
               onClick={handleSave}
               disabled={isSaving}
@@ -183,6 +221,52 @@ export function MiniaturesModal({
             >
               <Save size={18} /> {isSaving ? t('miniature_layout.saving') : t('miniature_layout.save_layout')}
             </button>
+          </div>
+            </div>
+
+            {/* Правая колонка: предпросмотр (172x320) */}
+            <div className="lg:w-[220px] shrink-0 space-y-2 border-t lg:border-t-0 lg:border-l border-zinc-800 pt-6 lg:pt-0 lg:pl-6">
+              <div className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                {t('miniature_layout.preview_172_320', { defaultValue: 'Предпросмотр (172×320)' })}
+              </div>
+              {actors.length === 0 ? (
+                <p className="text-sm text-zinc-500 py-4">
+                  {t('miniature_layout.preview_no_actors', { defaultValue: 'Добавьте акторов в бой для предпросмотра' })}
+                </p>
+              ) : (
+                <>
+                  <select
+                    value={previewActorId}
+                    onChange={(e) => setPreviewActorId(e.target.value)}
+                    className="w-full py-1.5 px-2 text-sm bg-zinc-950 border border-zinc-800 rounded hover:border-zinc-700 focus:border-emerald-500 focus:outline-none text-zinc-200"
+                  >
+                    {actors.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.name}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="w-[172px] h-[320px] bg-black border-2 border-gray-700 rounded-md overflow-hidden flex items-center justify-center relative mt-4">
+                    <img
+                      src={`/api/render/${previewActorId}?t=${previewKey}`}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleSaveAndRefreshPreview}
+                    disabled={isSaving}
+                    className="w-full flex items-center justify-center gap-2 py-2 mt-2 bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 disabled:opacity-50 rounded-lg text-sm transition-colors"
+                  >
+                    <Save size={16} /> {t('miniature_layout.save_and_refresh_preview', { defaultValue: 'Сохранить и Обновить Превью' })}
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>

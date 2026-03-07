@@ -16,6 +16,7 @@ async def get_rendered_miniature(actor_id: str):
     if not actor:
         return {"error": "Actor not found"}
 
-    output_path = render_miniature(actor, app_state.state.layout)
+    system_name = app_state.state.system
+    output_path = render_miniature(actor, app_state.state.layout, system_name)
     return FileResponse(output_path)
 

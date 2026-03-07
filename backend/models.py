@@ -36,6 +36,8 @@ class DisplayField(BaseModel):
     value_path: str
     max_value_path: Optional[str] = None
     color: Optional[str] = None
+    theme_id: Optional[str] = None  # Идентификатор темы/папки для текстурированных баров
+    rotation: int = 0  # Угол поворота в градусах: 0, 90, 270 (для боковых слотов)
 
 class MiniatureLayout(BaseModel):
     show_portrait: bool = True
@@ -43,6 +45,11 @@ class MiniatureLayout(BaseModel):
     top2: Optional[DisplayField] = None
     bottom1: Optional[DisplayField] = None
     bottom2: Optional[DisplayField] = None
+    left1: Optional[DisplayField] = None   # Левый вертикальный слот
+    right1: Optional[DisplayField] = None  # Правый вертикальный слот
+    font_id: str = "default.ttf"   # Идентификатор/путь к шрифту
+    font_size: int = 18             # Размер шрифта по умолчанию
+    bar_height: int = 16            # Толщина баров
 
 
 class ColumnDef(BaseModel):
