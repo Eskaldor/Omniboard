@@ -29,14 +29,18 @@ def _load_system_effects(system_name: str) -> list[dict]:
 
 
 @router.get("/{actor_id}")
-async def get_rendered_miniature(actor_id: str, test_effects: str | None = Query(None, alias="test_effects")):
+async def get_rendered_miniature(
+    actor_id: str,
+    test_effects: str | None = Query(None, alias="test_effects"),
+    profile_id: str | None = Query(None, description="Override profile for preview (e.g. in layout editor)"),
+):
     actor = next((a for a in app_state.state.actors if a.id == actor_id), None)
     if not actor:
         return {"error": "Actor not found"}
 
     state = app_state.state
-    # 1. Берем ID профиля из актора, если нет - "default"
-    target_profile_id = actor.layout_profile_id or "default"
+    # 1. Для превью можно переопределить профиль (profile_id); иначе берём из актора
+    target_profile_id = profile_id or actor.layout_profile_id or "default"
 
     # 2. Ищем его в state.layout_profiles
     profile = next((p for p in state.layout_profiles if p.id == target_profile_id), None)

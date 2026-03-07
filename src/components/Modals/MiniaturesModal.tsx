@@ -650,7 +650,7 @@ export function MiniaturesModal({
                   </select>
                   <div className="w-[172px] h-[320px] bg-black border-2 border-gray-700 rounded-md overflow-hidden flex items-center justify-center relative mt-4">
                     <img
-                      src={`/api/render/${previewActorId}?t=${previewKey}${testEffects.length ? '&test_effects=' + encodeURIComponent(testEffects.join(',')) : ''}`}
+                      src={`/api/render/${previewActorId}?t=${previewKey}&profile_id=${encodeURIComponent(selectedProfileId)}${testEffects.length ? '&test_effects=' + encodeURIComponent(testEffects.join(',')) : ''}`}
                       alt="Preview"
                       className="w-full h-full object-cover"
                       onError={(e) => {
