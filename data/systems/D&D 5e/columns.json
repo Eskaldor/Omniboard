@@ -8,7 +8,7 @@
       "type": "number",
       "width": "80px",
       "log_changes": false,
-      "show_in_mini_sheet": false,
+      "show_in_mini_sheet": true,
       "is_advanced": false,
       "display_as_fraction": false
     },
@@ -19,7 +19,7 @@
       "type": "number",
       "width": "80px",
       "log_changes": false,
-      "show_in_mini_sheet": false,
+      "show_in_mini_sheet": true,
       "is_advanced": false,
       "display_as_fraction": false
     },
@@ -64,6 +64,17 @@
       "label": "Макс мана",
       "showInTable": false,
       "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": false,
+      "is_advanced": false,
+      "display_as_fraction": false
+    },
+    {
+      "key": "com",
+      "label": "com",
+      "showInTable": true,
+      "type": "text",
       "width": "80px",
       "log_changes": false,
       "show_in_mini_sheet": false,

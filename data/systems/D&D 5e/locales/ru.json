@@ -1,7 +1,44 @@
 {
-  "hp": { "name": "ХП", "short": "хп" },
-  "ac": { "name": "КД", "short": "кд" },
-  "speed": { "name": "Скорость", "short": "ск" },
-  "initiative": { "name": "Инициатива", "short": "иниц" },
-  "mana": { "name": "Мана", "short": "мана" }
+  "hp": {
+    "name": "ХП",
+    "short": "хп"
+  },
+  "ac": {
+    "name": "КД",
+    "short": "кд"
+  },
+  "speed": {
+    "name": "Скорость",
+    "short": "ск"
+  },
+  "initiative": {
+    "name": "Инициатива",
+    "short": "иниц"
+  },
+  "mana": {
+    "name": "Мана",
+    "short": "мана"
+  },
+  "Ammo": {
+    "name": "Ammo",
+    "short": "Ammo"
+  },
+  "max_mana": {
+    "name": "Макс мана",
+    "short": "Макс мана"
+  },
+  "com": {
+    "name": "com",
+    "short": "com"
+  },
+  "zmeya": "Змея",
+  "elita": "Элита",
+  "gorenie": "Горение",
+  "smeh": "смех",
+  "bandit": "бандит",
+  "bandit1": "бандит",
+  "bandit4": "bandit",
+  "bandit565": "бандит",
+  "banddf": "бандит",
+  "1": "1"
 }

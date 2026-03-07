@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Save, Plus } from 'lucide-react';
+import { X, Save, Plus, RefreshCw } from 'lucide-react';
 import { ColumnConfig, LayoutProfile, DisplayField } from '../../types';
 import { useCombatState } from '../../contexts/CombatStateContext';
 import { useTranslation } from 'react-i18next';
@@ -64,6 +64,35 @@ export function MiniaturesModal({
   const [isSaving, setIsSaving] = useState(false);
   const [previewActorId, setPreviewActorId] = useState<string>(() => actors[0]?.id ?? '');
   const [previewKey, setPreviewKey] = useState<number>(() => Date.now());
+  const [availableFrames, setAvailableFrames] = useState<string[]>(['default_frame.png']);
+  const [testEffects, setTestEffects] = useState<string[]>([]);
+  const [availableEffects, setAvailableEffects] = useState<{ id: string; name?: string }[]>([]);
+
+  useEffect(() => {
+    const system = state?.system || '';
+    fetch(`/api/assets/frames?system=${encodeURIComponent(system)}`)
+      .then((res) => res.json())
+      .then((data: string[]) => {
+        const filenames = (Array.isArray(data) ? data : []).map((path) => path.split('/').pop() || path);
+        setAvailableFrames(Array.from(new Set([...filenames, 'default_frame.png'])));
+      })
+      .catch((err) => console.error('Failed to fetch frames', err));
+  }, [state?.system]);
+
+  useEffect(() => {
+    const system = state?.system || '';
+    if (!system) {
+      setAvailableEffects([]);
+      return;
+    }
+    fetch(`/api/systems/${encodeURIComponent(system)}/effects`)
+      .then((res) => res.json())
+      .then((data: { id: string; name?: string }[]) => setAvailableEffects(Array.isArray(data) ? data : []))
+      .catch((err) => {
+        console.error('Failed to fetch effects', err);
+        setAvailableEffects([]);
+      });
+  }, [state?.system]);
 
   useEffect(() => {
     const list = normalizeProfiles(state ?? null);
@@ -165,13 +194,13 @@ export function MiniaturesModal({
     const isEnabled = slot !== null && slot !== undefined;
 
     return (
-      <div key={slotName} className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 space-y-3">
-        <div className="flex items-center justify-between">
+      <div key={slotName} className={`bg-zinc-950 border rounded-xl p-4 space-y-3 transition-colors ${isEnabled ? 'border-emerald-500/40' : 'border-zinc-800'}`}>
+        <div className="flex items-center justify-between gap-2">
           <h4 className="text-sm font-medium text-zinc-300">{title}</h4>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <span className="text-xs text-zinc-500">{t('miniature_layout.enable')}</span>
+          <label className="relative inline-flex items-center cursor-pointer shrink-0">
             <input
               type="checkbox"
+              className="sr-only peer"
               checked={isEnabled}
               onChange={(e) => {
                 if (e.target.checked) {
@@ -180,10 +209,16 @@ export function MiniaturesModal({
                   updateSlot(slotName, null);
                 }
               }}
-              className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500"
             />
+            <div className="w-11 h-6 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500" />
+            <span className={`ml-2 text-sm font-medium whitespace-nowrap ${isEnabled ? 'text-emerald-400' : 'text-zinc-500'}`}>
+              {t('miniature_layout.enable')}
+            </span>
           </label>
         </div>
+        {!isEnabled && (
+          <p className="text-xs text-zinc-500 italic">{t('miniature_layout.enable_hint', { defaultValue: 'Включите слот, чтобы настроить поле' })}</p>
+        )}
 
         {isEnabled && slot && (
           <div className="space-y-3 pt-2 border-t border-zinc-800/50">
@@ -195,6 +230,8 @@ export function MiniaturesModal({
                   onChange={(e) => updateSlot(slotName, { value_path: e.target.value })}
                   className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
                 >
+                  <option value="name">{t('actors.name', { defaultValue: 'Имя' })}</option>
+                  <option value="initiative">{t('combat.initiative', { defaultValue: 'Инициатива' })}</option>
                   {columns.map((c) => (
                     <option key={c.key} value={c.key}>
                       {c.label}
@@ -349,13 +386,17 @@ export function MiniaturesModal({
                     </div>
                     <div>
                       <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.frame_asset', { defaultValue: 'Рамка (файл)' })}</label>
-                      <input
-                        type="text"
-                        value={selectedProfile.frame_asset ?? 'default_frame.png'}
-                        onChange={(e) => setSelectedProfile({ frame_asset: e.target.value || 'default_frame.png' })}
-                        placeholder="default_frame.png"
+                      <select
+                        value={selectedProfile.frame_asset || 'default_frame.png'}
+                        onChange={(e) => setSelectedProfile({ frame_asset: e.target.value })}
                         className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
-                      />
+                      >
+                        {availableFrames.map((frame) => (
+                          <option key={frame} value={frame}>
+                            {frame}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 
@@ -416,7 +457,7 @@ export function MiniaturesModal({
                   </select>
                   <div className="w-[172px] h-[320px] bg-black border-2 border-gray-700 rounded-md overflow-hidden flex items-center justify-center relative mt-4">
                     <img
-                      src={`/api/render/${previewActorId}?t=${previewKey}`}
+                      src={`/api/render/${previewActorId}?t=${previewKey}${testEffects.length ? '&test_effects=' + encodeURIComponent(testEffects.join(',')) : ''}`}
                       alt="Preview"
                       className="w-full h-full object-cover"
                       onError={(e) => {
@@ -424,14 +465,52 @@ export function MiniaturesModal({
                       }}
                     />
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleSaveAndRefreshPreview}
-                    disabled={isSaving}
-                    className="w-full flex items-center justify-center gap-2 py-2 mt-2 bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 disabled:opacity-50 rounded-lg text-sm transition-colors"
-                  >
-                    <Save size={16} /> {t('miniature_layout.save_and_refresh_preview', { defaultValue: 'Сохранить и Обновить Превью' })}
-                  </button>
+                  <div className="mt-3">
+                    <label className="block text-xs text-zinc-400 mb-1.5">
+                      {t('miniature_layout.test_effects', { defaultValue: 'Тестовые эффекты' })}
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {availableEffects.map((eff) => (
+                        <label
+                          key={eff.id}
+                          className="inline-flex items-center gap-1.5 cursor-pointer text-sm text-zinc-300"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={testEffects.includes(eff.id)}
+                            onChange={() => {
+                              setTestEffects((prev) =>
+                                prev.includes(eff.id) ? prev.filter((id) => id !== eff.id) : [...prev, eff.id]
+                              );
+                            }}
+                            className="rounded border-zinc-600 bg-zinc-900 text-emerald-500 focus:ring-emerald-500"
+                          />
+                          <span>{eff.name ?? eff.id}</span>
+                        </label>
+                      ))}
+                      {availableEffects.length === 0 && (
+                        <span className="text-xs text-zinc-500">{t('miniature_layout.no_effects', { defaultValue: 'Нет эффектов' })}</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-2 mt-3">
+                    <button
+                      type="button"
+                      onClick={handleSaveAndRefreshPreview}
+                      disabled={isSaving}
+                      className="w-full flex items-center justify-center gap-2 py-2 bg-zinc-700/50 text-zinc-300 hover:bg-zinc-600/50 disabled:opacity-50 rounded-lg text-sm transition-colors"
+                    >
+                      <RefreshCw size={16} /> {t('miniature_layout.refresh_preview', { defaultValue: 'Обновить превью' })}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSave}
+                      disabled={isSaving}
+                      className="w-full flex items-center justify-center gap-2 py-2 bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 disabled:opacity-50 rounded-lg text-sm transition-colors"
+                    >
+                      <Save size={16} /> {t('miniature_layout.save_profile', { defaultValue: 'Сохранить профиль' })}
+                    </button>
+                  </div>
                 </>
               )}
             </div>

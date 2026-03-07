@@ -24,5 +24,29 @@
     "experimental_ai": false,
     "ai_prompt": "",
     "ai_variations": {}
+  },
+  {
+    "id": "effect_sme",
+    "name": "Сме",
+    "description": "",
+    "duration": 1,
+    "icon": "smeh.png",
+    "render_on_mini": true,
+    "render_on_panel": true,
+    "experimental_ai": false,
+    "ai_prompt": "",
+    "ai_variations": {}
+  },
+  {
+    "id": "effect_razrusheni",
+    "name": "Разрушени",
+    "description": "Разрушительность",
+    "duration": 1,
+    "icon": "image.png",
+    "render_on_mini": true,
+    "render_on_panel": true,
+    "experimental_ai": false,
+    "ai_prompt": "",
+    "ai_variations": {}
   }
 ]

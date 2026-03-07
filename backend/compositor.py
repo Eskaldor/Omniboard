@@ -59,7 +59,12 @@ def draw_display_field(
     Рисует одно поле (бар или текст) на canvas в прямоугольнике (x, y, width, height).
     Учитывает rotation и theme_id для баров.
     """
-    val = actor.stats.get(field.value_path, 0)
+    if field.value_path == "name":
+        val = actor.name
+    elif field.value_path == "initiative":
+        val = actor.initiative
+    else:
+        val = actor.stats.get(field.value_path, 0)
 
     if field.type == "bar":
         max_val = actor.stats.get(field.max_value_path, val) if field.max_value_path else val

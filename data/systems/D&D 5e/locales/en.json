@@ -1,7 +1,23 @@
 {
-  "hp": { "name": "HP", "short": "hp" },
-  "ac": { "name": "AC", "short": "ac" },
-  "speed": { "name": "Speed", "short": "spd" },
-  "initiative": { "name": "Initiative", "short": "init" },
-  "mana": { "name": "Mana", "short": "mana" }
+  "hp": {
+    "name": "HP",
+    "short": "hp"
+  },
+  "ac": {
+    "name": "AC",
+    "short": "ac"
+  },
+  "speed": {
+    "name": "Speed",
+    "short": "spd"
+  },
+  "initiative": {
+    "name": "Initiative",
+    "short": "init"
+  },
+  "mana": {
+    "name": "Mana",
+    "short": "mana"
+  },
+  "1": "1"
 }
