@@ -80,10 +80,14 @@ export const ActorRow = React.memo(function ActorRow({
         <td className="px-2 py-1 align-middle sticky left-0 z-10 bg-zinc-950 shadow-[8px_0_15px_-3px_rgba(0,0,0,0.5)] border-r border-zinc-800/50">
           {actor.show_portrait ? (
             <div className="relative w-[54px] h-[96px]">
-              {actor.portrait ? (
-                <div className="w-full h-full rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 flex items-center justify-center shadow-md">
+              {actor.portrait || actor.miniature_id ? (
+                <div
+                  className={`w-full h-full rounded-xl overflow-hidden bg-zinc-900 flex items-center justify-center shadow-md ${
+                    actor.miniature_id ? 'border border-emerald-500/50' : 'border border-zinc-800'
+                  }`}
+                >
                   <img
-                    src={actor.portrait}
+                    src={actor.miniature_id ? `/api/render/${actor.id}` : actor.portrait!}
                     alt={actor.name}
                     className="w-full h-full object-cover"
                     referrerPolicy="no-referrer"
