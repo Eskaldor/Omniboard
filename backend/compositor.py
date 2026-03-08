@@ -64,9 +64,12 @@ def draw_display_field(
     x += getattr(field, "offset_x", 0)
     y += getattr(field, "offset_y", 0)
 
-    # Если элемент будет повёрнут на 90 или 270°, рисуем его "лежащим", чтобы после поворота он вписался в (width, height).
+    # Пользовательские размеры поля (field.width, field.height) переопределяют переданные width/height
+    base_w = field.width if field.width is not None else width
+    base_h = field.height if field.height is not None else height
+
     is_rotated = field.rotation in (90, 270)
-    draw_w, draw_h = (height, width) if is_rotated else (width, height)
+    draw_w, draw_h = (base_h, base_w) if is_rotated else (base_w, base_h)
 
     current_font_id = field.font_id or profile.font_id
     current_font_size = field.font_size if field.font_size is not None else profile.font_size
@@ -160,7 +163,7 @@ def render_miniature(
 ) -> str:
     """
     Рендер миниатюры 172x320: base → effects → frame → UI overlay.
-    Сохраняет JPEG в RENDER_DIR, возвращает путь к файлу.
+    Сохраняет PNG в RENDER_DIR (172x320), возвращает путь к файлу.
     """
     canvas = Image.new("RGBA", (CANVAS_WIDTH, CANVAS_HEIGHT), (0, 0, 0, 255))
 
@@ -251,7 +254,7 @@ def render_miniature(
             profile, system_name,
         )
 
-    # —— ЭКСПОРТ ——
-    out_path = os.path.join(RENDER_DIR, f"{actor.id}.jpg")
-    canvas.convert("RGB").save(out_path, "JPEG", quality=85)
+    # —— ЭКСПОРТ (PNG 172x320) ——
+    out_path = os.path.join(RENDER_DIR, f"{actor.id}.png")
+    canvas.save(out_path, "PNG")
     return out_path

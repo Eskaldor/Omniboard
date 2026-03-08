@@ -40,5 +40,12 @@
   "bandit4": "bandit",
   "bandit565": "бандит",
   "banddf": "бандит",
-  "1": "1"
+  "1": "1",
+  "bar_mana": "Мана",
+  "pozhar": "Пожар",
+  "bar_default": "ХПБар",
+  "bar_test_tekstury": "Тест текстуры",
+  "goblin": "Гоблин",
+  "goblin_mag": "Гоблин маг",
+  "ognennyy_elemental": "Огненный элементаль"
 }

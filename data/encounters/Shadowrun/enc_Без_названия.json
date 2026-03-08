@@ -1,0 +1,101 @@
+{
+  "name": "\u0411\u0435\u0437 \u043d\u0430\u0437\u0432\u0430\u043d\u0438\u044f",
+  "actors": [
+    {
+      "id": "512a3dc9-b376-4513-a0dc-f0ed74c51cba",
+      "name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+      "role": "enemy",
+      "is_revealed": true,
+      "group_id": null,
+      "group_mode": null,
+      "group_color": null,
+      "initiative": 7,
+      "portrait": "",
+      "miniature_id": null,
+      "stats": {
+        "hp": 10,
+        "ac": 10,
+        "speed": 30
+      },
+      "effects": [],
+      "visibility": {
+        "hp": true,
+        "stats": true,
+        "effects": true,
+        "name": true
+      },
+      "hotbar": []
+    }
+  ],
+  "history": [
+    {
+      "type": "combat_start",
+      "round": 1,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 2,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 2,
+      "actor_id": "512a3dc9-b376-4513-a0dc-f0ed74c51cba",
+      "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 3,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 3,
+      "actor_id": "512a3dc9-b376-4513-a0dc-f0ed74c51cba",
+      "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 4,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 4,
+      "actor_id": "512a3dc9-b376-4513-a0dc-f0ed74c51cba",
+      "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 5,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 5,
+      "actor_id": "512a3dc9-b376-4513-a0dc-f0ed74c51cba",
+      "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+      "details": {}
+    }
+  ],
+  "round": 5,
+  "turn_queue": [
+    "512a3dc9-b376-4513-a0dc-f0ed74c51cba"
+  ],
+  "current_index": 0,
+  "is_active": true
+}

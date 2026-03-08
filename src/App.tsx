@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Plus, Users, Trash, Swords } from 'lucide-react';
 import { CombatState, Actor, Effect, LegendConfig } from './types';
 import i18n from './i18n';
-import { MiniSheetModal, ConfigModal, LibraryModal, AddEffectModal, MiniaturesModal, ActorRosterModal, EncountersModal } from './components/Modals';
+import { MiniSheetModal, ConfigModal, LibraryModal, AddEffectModal, MiniaturesModal, ActorRosterModal, EncountersModal, HardwareModal } from './components/Modals';
 import { GroupCreateModal } from './components/Modals/GroupCreateModal';
 import { CombatLog } from './components/CombatLog';
 import { InitiativeTable } from './components/InitiativeTracker/InitiativeTable';
@@ -46,6 +46,7 @@ export default function App() {
   const [showMiniatures, setShowMiniatures] = useState(false);
   const [showRoster, setShowRoster] = useState(false);
   const [showEncounters, setShowEncounters] = useState(false);
+  const [showHardware, setShowHardware] = useState(false);
   const [showLog, setShowLog] = useState(false);
   const [portraitSelectActorId, setPortraitSelectActorId] = useState<string | null>(null);
   const [showLegendPanel, setShowLegendPanel] = useState(false);
@@ -203,6 +204,7 @@ export default function App() {
         onShowMiniatures={() => setShowMiniatures(true)}
         onShowLibrary={() => setShowLibrary(true)}
         onShowConfig={() => setShowConfig(true)}
+        onShowHardware={() => setShowHardware(true)}
         showLegendPanel={showLegendPanel}
         onToggleLegendPanel={() => setShowLegendPanel((v) => !v)}
         legendConfig={legendConfig}
@@ -446,6 +448,7 @@ export default function App() {
           onLoad={refetchState}
         />
       )}
+      {showHardware && <HardwareModal onClose={() => setShowHardware(false)} />}
 
       <GroupCreateModal
         isOpen={showGroupCreateModal}

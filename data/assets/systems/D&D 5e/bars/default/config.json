@@ -1,0 +1,14 @@
+{
+  "id": "default",
+  "name": "ХПБар",
+  "mode": "textured",
+  "fg_color": "#00c800",
+  "fg_color_end": null,
+  "fg_color_mid": null,
+  "gradient_stop": null,
+  "gradient_mid_stop": null,
+  "bg_color": "#eb0000",
+  "border_color": "#c6bebe",
+  "border_width": 1,
+  "border_radius": 23
+}

@@ -1,0 +1,25 @@
+{
+  "id": "512a3dc9-b376-4513-a0dc-f0ed74c51cba",
+  "name": "Новый участник",
+  "role": "enemy",
+  "is_revealed": true,
+  "group_id": null,
+  "group_mode": null,
+  "group_color": null,
+  "initiative": 7,
+  "portrait": "",
+  "miniature_id": null,
+  "stats": {
+    "hp": 10,
+    "ac": 10,
+    "speed": 30
+  },
+  "effects": [],
+  "visibility": {
+    "hp": true,
+    "stats": true,
+    "effects": true,
+    "name": true
+  },
+  "hotbar": []
+}

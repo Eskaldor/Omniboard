@@ -1,0 +1,211 @@
+{
+  "name": "\u0411\u043e\u0431\u043b\u0438\u043d\u044b",
+  "actors": [
+    {
+      "id": "c322d771-8349-46b8-be05-6e0777e5d562",
+      "name": "New Actor",
+      "role": "enemy",
+      "is_revealed": true,
+      "group_id": "4e7d964d-1e7d-49ac-ba8f-6e13b05d0789",
+      "group_mode": "simultaneous",
+      "group_color": "#10b981",
+      "initiative": 55,
+      "portrait": "",
+      "miniature_id": null,
+      "stats": {
+        "hp": 10,
+        "ac": 10,
+        "speed": 30
+      },
+      "effects": [],
+      "visibility": {
+        "hp": true,
+        "stats": true,
+        "effects": true,
+        "name": true
+      },
+      "hotbar": []
+    },
+    {
+      "id": "edec20c9-9d33-410c-8830-d3ac5dcc8ea3",
+      "name": "\u0411\u043e\u0431\u043b\u0438\u043d",
+      "role": "enemy",
+      "is_revealed": true,
+      "group_id": null,
+      "group_mode": null,
+      "group_color": null,
+      "initiative": 16,
+      "portrait": "/assets/systems/D&D 5e/portraits/bandit.png",
+      "miniature_id": null,
+      "stats": {
+        "hp": 10,
+        "ac": 25,
+        "speed": 300,
+        "mana": 33
+      },
+      "effects": [],
+      "visibility": {
+        "hp": true,
+        "stats": true,
+        "effects": true,
+        "name": true
+      },
+      "hotbar": []
+    },
+    {
+      "id": "e9ed986c-226d-4279-a66a-12e3c852483e",
+      "name": "\u0411\u043e\u0431\u043b\u0438\u043d",
+      "role": "enemy",
+      "is_revealed": true,
+      "group_id": null,
+      "group_mode": null,
+      "group_color": null,
+      "initiative": 0,
+      "portrait": "/assets/systems/D&D 5e/portraits/bandit.png",
+      "miniature_id": null,
+      "stats": {
+        "hp": 10,
+        "ac": 25,
+        "speed": 300,
+        "mana": 33
+      },
+      "effects": [],
+      "visibility": {
+        "hp": true,
+        "stats": true,
+        "effects": true,
+        "name": true
+      },
+      "hotbar": []
+    }
+  ],
+  "history": [
+    {
+      "type": "combat_start",
+      "round": 1,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 2,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 2,
+      "actor_id": "c322d771-8349-46b8-be05-6e0777e5d562",
+      "actor_name": "New Actor",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 2,
+      "actor_id": "d20ebc9a-1638-4e25-8ecd-2b93cf502aac",
+      "actor_name": "New Actor",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 2,
+      "actor_id": "edec20c9-9d33-410c-8830-d3ac5dcc8ea3",
+      "actor_name": "New Actor",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 3,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 3,
+      "actor_id": "c322d771-8349-46b8-be05-6e0777e5d562",
+      "actor_name": "New Actor",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 3,
+      "actor_id": "d20ebc9a-1638-4e25-8ecd-2b93cf502aac",
+      "actor_name": "New Actor",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 3,
+      "actor_id": "edec20c9-9d33-410c-8830-d3ac5dcc8ea3",
+      "actor_name": "New Actor",
+      "details": {}
+    },
+    {
+      "type": "actor_left",
+      "round": 3,
+      "actor_id": "d20ebc9a-1638-4e25-8ecd-2b93cf502aac",
+      "actor_name": "New Actor",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 4,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 4,
+      "actor_id": "c322d771-8349-46b8-be05-6e0777e5d562",
+      "actor_name": "New Actor",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 4,
+      "actor_id": "edec20c9-9d33-410c-8830-d3ac5dcc8ea3",
+      "actor_name": "New Actor",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 5,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 5,
+      "actor_id": "c322d771-8349-46b8-be05-6e0777e5d562",
+      "actor_name": "New Actor",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 5,
+      "actor_id": "edec20c9-9d33-410c-8830-d3ac5dcc8ea3",
+      "actor_name": "New Actor",
+      "details": {}
+    },
+    {
+      "type": "actor_joined",
+      "round": 5,
+      "actor_id": "e9ed986c-226d-4279-a66a-12e3c852483e",
+      "actor_name": "\u0411\u043e\u0431\u043b\u0438\u043d",
+      "details": {}
+    }
+  ],
+  "round": 5,
+  "turn_queue": [
+    "c322d771-8349-46b8-be05-6e0777e5d562",
+    "edec20c9-9d33-410c-8830-d3ac5dcc8ea3",
+    "e9ed986c-226d-4279-a66a-12e3c852483e"
+  ],
+  "current_index": 1,
+  "is_active": true
+}

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 
 from fastapi import APIRouter, Query
 from fastapi.responses import FileResponse
@@ -8,7 +9,8 @@ from fastapi.responses import FileResponse
 from backend import state as app_state
 from backend.compositor import render_miniature
 from backend.models import Effect, LayoutProfile
-from backend.paths import DATA_DIR
+from backend.paths import DATA_DIR, RENDER_DIR
+from backend.routers import hardware
 
 
 router = APIRouter(prefix="/api/render", tags=["render"])
@@ -28,11 +30,21 @@ def _load_system_effects(system_name: str) -> list[dict]:
         return []
 
 
+@router.get("/output/{filename}")
+async def get_render_output(filename: str):
+    """Отдача готового PNG миньке по URL (для img_url). Только файлы из data/render."""
+    path = RENDER_DIR / filename
+    if not path.is_file():
+        return {"error": "File not found"}
+    return FileResponse(path, media_type="image/png")
+
+
 @router.get("/{actor_id}")
 async def get_rendered_miniature(
     actor_id: str,
     test_effects: str | None = Query(None, alias="test_effects"),
     profile_id: str | None = Query(None, description="Override profile for preview (e.g. in layout editor)"),
+    mac: str | None = Query(None, description="MAC миньки: после сохранения PNG отправить уведомление на устройство"),
 ):
     actor = next((a for a in app_state.state.actors if a.id == actor_id), None)
     if not actor:
@@ -84,6 +96,14 @@ async def get_rendered_miniature(
         output_path = render_miniature(render_actor, profile, system_name)
     else:
         output_path = render_miniature(actor, profile, system_name)
+
+    filename = os.path.basename(output_path)
+    target_mac = mac or (actor.miniature_id if actor.miniature_id in hardware._esp.devices else None)
+    if target_mac:
+        try:
+            hardware._esp.announce_image_update(target_mac, filename, screen_bri=200)
+        except ValueError:
+            pass
 
     return FileResponse(output_path)
 

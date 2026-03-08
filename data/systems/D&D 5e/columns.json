@@ -3,18 +3,19 @@
   "columns": [
     {
       "key": "hp",
-      "label": "ХП",
+      "label": "HP",
       "showInTable": true,
       "type": "number",
       "width": "80px",
-      "log_changes": false,
+      "log_changes": true,
       "show_in_mini_sheet": true,
       "is_advanced": false,
-      "display_as_fraction": false
+      "display_as_fraction": false,
+      "log_color": "#e70808"
     },
     {
       "key": "ac",
-      "label": "КД",
+      "label": "AC",
       "showInTable": true,
       "type": "number",
       "width": "80px",
@@ -25,7 +26,7 @@
     },
     {
       "key": "speed",
-      "label": "Скорость",
+      "label": "Speed",
       "showInTable": true,
       "type": "number",
       "width": "80px",
@@ -36,7 +37,7 @@
     },
     {
       "key": "mana",
-      "label": "Мана",
+      "label": "Mana",
       "showInTable": true,
       "log_changes": true,
       "log_color": "#08b0e7",
@@ -61,7 +62,7 @@
     },
     {
       "key": "max_mana",
-      "label": "Макс мана",
+      "label": "max_mana",
       "showInTable": false,
       "type": "number",
       "width": "80px",

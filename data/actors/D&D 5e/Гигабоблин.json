@@ -1,0 +1,26 @@
+{
+  "id": "50e536b4-272d-4b5d-81f5-c3991198463a",
+  "name": "\u0413\u0438\u0433\u0430\u0431\u043e\u0431\u043b\u0438\u043d",
+  "role": "enemy",
+  "is_revealed": true,
+  "group_id": null,
+  "group_mode": null,
+  "group_color": null,
+  "initiative": 17,
+  "portrait": "",
+  "miniature_id": null,
+  "stats": {
+    "hp": 10,
+    "ac": 10,
+    "speed": 30
+    "max_hp": 30
+  },
+  "effects": [],
+  "visibility": {
+    "hp": true,
+    "stats": true,
+    "effects": true,
+    "name": true
+  },
+  "hotbar": []
+}

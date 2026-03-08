@@ -1,0 +1,26 @@
+{
+  "id": "99b4ba57-43d2-4b1e-9162-ac15d6345af4",
+  "name": "\u0411\u043e\u0431\u043b\u0438\u043d",
+  "role": "enemy",
+  "is_revealed": true,
+  "group_id": null,
+  "group_mode": null,
+  "group_color": null,
+  "initiative": 0,
+  "portrait": "/assets/systems/D&D 5e/portraits/bandit.png",
+  "miniature_id": null,
+  "stats": {
+    "hp": 10,
+    "ac": 25,
+    "speed": 300,
+    "mana": 33
+  },
+  "effects": [],
+  "visibility": {
+    "hp": true,
+    "stats": true,
+    "effects": true,
+    "name": true
+  },
+  "hotbar": []
+}

@@ -1,0 +1,15 @@
+{
+  "displayName": "Shadowrun",
+  "columns": [
+    {
+      "key": "HP",
+      "label": "HP",
+      "showInTable": true
+    },
+    {
+      "key": "ammo",
+      "label": "Боеприпасы",
+      "showInTable": true
+    }
+  ]
+}

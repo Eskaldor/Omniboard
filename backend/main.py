@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,12 +9,22 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from backend.paths import ensure_dirs
-from backend.routers import actors, assets, combat, encounters, locales, logs, render, systems, ws
+from backend.routers import actors, assets, combat, encounters, hardware, locales, logs, render, systems, ws
 
 
 ensure_dirs()
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await hardware._esp.start_discovery_listener()
+    try:
+        yield
+    finally:
+        hardware._esp.stop_discovery_listener()
+
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -36,6 +47,7 @@ app.include_router(assets.router)
 app.include_router(render.router)
 app.include_router(logs.router)
 app.include_router(locales.router)
+app.include_router(hardware.router)
 
 # Serve Vite frontend in production (only when SERVE_DIST=1 to avoid catch-all in dev)
 if os.path.isdir("dist") and os.environ.get("SERVE_DIST") == "1":

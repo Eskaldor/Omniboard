@@ -1,0 +1,26 @@
+{
+  "id": "e32fbd73-a74c-44af-93ff-0d915fe2ddf8",
+  "name": "New Actor",
+  "role": "enemy",
+  "is_revealed": true,
+  "group_id": "6a008de1-560c-4ea6-b49f-a703ca233abf",
+  "group_mode": "simultaneous",
+  "group_color": "#10b981",
+  "initiative": 4,
+  "portrait": "",
+  "miniature_id": null,
+  "stats": {
+    "hp": 10,
+    "ac": 10,
+    "speed": 30,
+    "max_hp": 10
+  },
+  "effects": [],
+  "visibility": {
+    "hp": true,
+    "stats": true,
+    "effects": true,
+    "name": true
+  },
+  "hotbar": []
+}

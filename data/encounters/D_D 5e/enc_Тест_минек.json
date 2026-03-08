@@ -1,0 +1,192 @@
+{
+  "name": "\u0422\u0435\u0441\u0442 \u043c\u0438\u043d\u0435\u043a",
+  "actors": [
+    {
+      "id": "757605d4-6312-412a-86ff-c58fad0429b9",
+      "name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+      "role": "enemy",
+      "is_revealed": true,
+      "is_pinned": false,
+      "group_id": null,
+      "group_name": null,
+      "group_mode": null,
+      "group_color": null,
+      "initiative": 9,
+      "portrait": "",
+      "show_portrait": false,
+      "miniature_id": null,
+      "layout_profile_id": null,
+      "stats": {
+        "hp": 10,
+        "ac": 10,
+        "speed": 30
+      },
+      "effects": [],
+      "visibility": {
+        "hp": true,
+        "stats": true,
+        "effects": true,
+        "name": true
+      },
+      "hotbar": []
+    },
+    {
+      "id": "e600fa99-55ae-48eb-9b1e-1f9704f93c51",
+      "name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+      "role": "enemy",
+      "is_revealed": true,
+      "is_pinned": false,
+      "group_id": null,
+      "group_name": null,
+      "group_mode": null,
+      "group_color": null,
+      "initiative": 0,
+      "portrait": "/assets/systems/D&D 5e/portraits/goblin_mag.png",
+      "show_portrait": true,
+      "miniature_id": "1",
+      "layout_profile_id": "1772900222099",
+      "stats": {
+        "hp": 50,
+        "ac": 10,
+        "speed": 30,
+        "mana": 55,
+        "max_mana": 60
+      },
+      "effects": [],
+      "visibility": {
+        "hp": true,
+        "stats": true,
+        "effects": true,
+        "name": true
+      },
+      "hotbar": []
+    },
+    {
+      "id": "06b6da20-3ab1-4ce1-941e-fe9675ea9793",
+      "name": "\u0413\u043e\u0431\u043b\u0438\u043d",
+      "role": "enemy",
+      "is_revealed": true,
+      "is_pinned": false,
+      "group_id": "8050bd79-16ef-4e2d-963d-7cb118b08fb8",
+      "group_name": "\u0413\u043e\u0431\u043b\u0438\u043d\u044b",
+      "group_mode": "simultaneous",
+      "group_color": "#10b981",
+      "initiative": 0,
+      "portrait": "/assets/systems/D&D 5e/portraits/goblin.png",
+      "show_portrait": true,
+      "miniature_id": "1",
+      "layout_profile_id": "1772900222099",
+      "stats": {
+        "hp": 10,
+        "ac": 10,
+        "speed": 30,
+        "mana": 5,
+        "max_mana": 5
+      },
+      "effects": [],
+      "visibility": {
+        "hp": true,
+        "stats": true,
+        "effects": true,
+        "name": true
+      },
+      "hotbar": []
+    },
+    {
+      "id": "31af139e-3c17-4a72-b521-7bfdaeb19f85",
+      "name": "\u0413\u043e\u0431\u043b\u0438\u043d",
+      "role": "enemy",
+      "is_revealed": true,
+      "is_pinned": false,
+      "group_id": "8050bd79-16ef-4e2d-963d-7cb118b08fb8",
+      "group_name": "\u0413\u043e\u0431\u043b\u0438\u043d\u044b",
+      "group_mode": "simultaneous",
+      "group_color": "#10b981",
+      "initiative": 0,
+      "portrait": "/assets/systems/D&D 5e/portraits/goblin.png",
+      "show_portrait": true,
+      "miniature_id": "2",
+      "layout_profile_id": "1772900222099",
+      "stats": {
+        "hp": 10,
+        "ac": 10,
+        "speed": 30,
+        "mana": 5,
+        "max_mana": 5
+      },
+      "effects": [],
+      "visibility": {
+        "hp": true,
+        "stats": true,
+        "effects": true,
+        "name": true
+      },
+      "hotbar": []
+    },
+    {
+      "id": "1982c4ff-a5c4-46b7-b757-56233e5fb01c",
+      "name": "\u0413\u043e\u0431\u043b\u0438\u043d",
+      "role": "enemy",
+      "is_revealed": true,
+      "is_pinned": false,
+      "group_id": "8050bd79-16ef-4e2d-963d-7cb118b08fb8",
+      "group_name": "\u0413\u043e\u0431\u043b\u0438\u043d\u044b",
+      "group_mode": "simultaneous",
+      "group_color": "#10b981",
+      "initiative": 0,
+      "portrait": "/assets/systems/D&D 5e/portraits/goblin.png",
+      "show_portrait": true,
+      "miniature_id": "2",
+      "layout_profile_id": "1772900222099",
+      "stats": {
+        "hp": 10,
+        "ac": 10,
+        "speed": 30,
+        "mana": 5,
+        "max_mana": 5
+      },
+      "effects": [],
+      "visibility": {
+        "hp": true,
+        "stats": true,
+        "effects": true,
+        "name": true
+      },
+      "hotbar": []
+    },
+    {
+      "id": "0b78bd1e-71a6-4ed4-8abd-ce368e19128b",
+      "name": "\u0427\u0435\u0440\u043d\u043e\u043a\u043d\u0438\u0436\u043d\u0438\u043a",
+      "role": "character",
+      "is_revealed": true,
+      "is_pinned": false,
+      "group_id": null,
+      "group_name": null,
+      "group_mode": "sequential",
+      "group_color": null,
+      "initiative": 0,
+      "portrait": "/assets/systems/D&D 5e/portraits/bandit.png",
+      "show_portrait": true,
+      "miniature_id": null,
+      "layout_profile_id": null,
+      "stats": {
+        "hp": 5,
+        "ac": 17,
+        "speed": 30
+      },
+      "effects": [],
+      "visibility": {
+        "hp": true,
+        "stats": true,
+        "effects": true,
+        "name": true
+      },
+      "hotbar": []
+    }
+  ],
+  "history": [],
+  "round": 1,
+  "turn_queue": [],
+  "current_index": 0,
+  "is_active": false
+}

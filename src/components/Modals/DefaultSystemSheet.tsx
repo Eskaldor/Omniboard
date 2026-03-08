@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Download, Upload, Plus } from 'lucide-react';
+import { Save, Download, Upload, Plus, RefreshCcw } from 'lucide-react';
 import { Actor, ColumnConfig } from '../../types';
 import { useCombatState } from '../../contexts/CombatStateContext';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
 import { getMaxKey, buildStatUpdate } from '../../utils/stats';
 import { InlineInput } from '../InitiativeTracker/InlineInput';
+
+type DeviceInfo = { name?: string; ip?: string; status?: string };
 
 /** Internal form content for the mini-sheet. Used by MiniSheetModal; future systems can render DnD5eSheet, etc. */
 export function DefaultSystemSheet({
@@ -26,8 +28,8 @@ export function DefaultSystemSheet({
   const colName = (col: ColumnConfig) =>
     i18n.t(`${col.key}.name`, { ns: `systems/${systemName}`, defaultValue: col.key });
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const [localMiniatureId, setLocalMiniatureId] = useState(actor.miniature_id ?? '');
   const [expertMode, setExpertMode] = useState(false);
+  const [devices, setDevices] = useState<Record<string, DeviceInfo>>({});
 
   const actors = state?.actors ?? [];
   const activeGroups = React.useMemo(() => {
@@ -48,8 +50,11 @@ export function DefaultSystemSheet({
   }, [actors]);
 
   useEffect(() => {
-    setLocalMiniatureId(actor.miniature_id ?? '');
-  }, [actor.miniature_id]);
+    fetch('/api/hardware/')
+      .then((r) => (r.ok ? r.json() : {}))
+      .then((data) => setDevices(typeof data === 'object' && data !== null ? data : {}))
+      .catch(() => setDevices({}));
+  }, []);
 
   const handleGroupChange = (value: string) => {
     if (!onUpdate) return;
@@ -253,14 +258,45 @@ export function DefaultSystemSheet({
                 <label className="block text-xs text-zinc-500 mb-1">
                   {t('modals.bind_miniature', { defaultValue: 'Bind Miniature (MAC/ID)' })}
                 </label>
-                <input
-                  type="text"
-                  value={localMiniatureId}
-                  onChange={(e) => setLocalMiniatureId(e.target.value)}
-                  onBlur={(e) => onUpdate?.(actor.id, 'miniature_id', e.target.value.trim() || null)}
-                  placeholder="e.g. AA:BB:CC:DD:EE:FF"
-                  className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
-                />
+                <div className="flex gap-2">
+                  <select
+                    value={actor.miniature_id ?? ''}
+                    onChange={(e) => {
+                      const mac = e.target.value || null;
+                      onUpdate?.(actor.id, 'miniature_id', mac);
+                      fetch(`/api/actors/${actor.id}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ miniature_id: mac }),
+                      }).catch(console.error);
+                    }}
+                    className="flex-1 min-w-0 bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
+                  >
+                    <option value="">{t('modals.select_miniature')}</option>
+                    {Object.entries(devices).length === 0 ? (
+                      <option value="" disabled>{t('modals.no_miniatures_found')}</option>
+                    ) : (
+                      Object.entries(devices).map(([mac, info]) => (
+                        <option key={mac} value={mac}>
+                          {info.name || mac} — {info.status === 'online' ? t('hardware.status_online', { defaultValue: 'Online' }) : t('hardware.status_offline', { defaultValue: 'Offline' })}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const mac = actor.miniature_id;
+                      if (!mac) return;
+                      fetch(`/api/render/${actor.id}?mac=${encodeURIComponent(mac)}`).catch(console.error);
+                    }}
+                    disabled={!actor.miniature_id}
+                    title={t('modals.refresh_miniature_screen', { defaultValue: 'Update screen on miniature' })}
+                    className="shrink-0 p-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <RefreshCcw size={18} />
+                  </button>
+                </div>
               </div>
             </div>
           </div>

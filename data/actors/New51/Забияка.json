@@ -1,0 +1,25 @@
+{
+  "id": "403ba69d-fd15-481a-af2b-7c5c6c3b7567",
+  "name": "Забияка",
+  "role": "enemy",
+  "is_revealed": true,
+  "group_id": null,
+  "group_mode": null,
+  "group_color": null,
+  "initiative": 14,
+  "portrait": "",
+  "miniature_id": null,
+  "stats": {
+    "hp": 10,
+    "ac": 10,
+    "speed": 30
+  },
+  "effects": [],
+  "visibility": {
+    "hp": true,
+    "stats": true,
+    "effects": true,
+    "name": true
+  },
+  "hotbar": []
+}

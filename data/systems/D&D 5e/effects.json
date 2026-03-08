@@ -48,5 +48,17 @@
     "experimental_ai": false,
     "ai_prompt": "",
     "ai_variations": {}
+  },
+  {
+    "id": "effect_pozhar",
+    "name": "Пожар",
+    "description": "",
+    "duration": 1,
+    "icon": "pozhar.png",
+    "render_on_mini": true,
+    "render_on_panel": true,
+    "experimental_ai": false,
+    "ai_prompt": "",
+    "ai_variations": {}
   }
 ]

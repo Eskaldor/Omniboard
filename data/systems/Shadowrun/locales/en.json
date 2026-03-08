@@ -1,0 +1,10 @@
+{
+  "HP": {
+    "name": "HP",
+    "short": "HP"
+  },
+  "ammo": {
+    "name": "Ammo",
+    "short": "Ammo"
+  }
+}

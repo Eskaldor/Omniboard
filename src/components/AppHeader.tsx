@@ -1,5 +1,6 @@
-import { Settings, BookImage, MonitorSmartphone, Layers } from 'lucide-react';
+import { Settings, BookImage, MonitorSmartphone, Layers, Link2, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useRef, useState, useEffect } from 'react';
 import i18n from '../i18n';
 import type { CombatLogEntry, LegendConfig } from '../types';
 import { CombatLog } from './CombatLog';
@@ -14,6 +15,7 @@ export interface AppHeaderProps {
   enableLogging: boolean;
   onRefetch: () => void;
   onShowMiniatures: () => void;
+  onShowHardware: () => void;
   onShowLibrary: () => void;
   onShowConfig: () => void;
   showLegendPanel: boolean;
@@ -39,6 +41,7 @@ export function AppHeader(props: AppHeaderProps) {
     enableLogging,
     onRefetch,
     onShowMiniatures,
+    onShowHardware,
     onShowLibrary,
     onShowConfig,
     showLegendPanel,
@@ -55,6 +58,25 @@ export function AppHeader(props: AppHeaderProps) {
 
   const appAuthor = i18n.t('_meta.app_author', { ns: 'core', defaultValue: 'Nevrar' });
   const appName = i18n.t('_meta.app_name_short', { ns: 'core', defaultValue: 'Omniboard' });
+
+  const [miniaturesDropdownOpen, setMiniaturesDropdownOpen] = useState(false);
+  const miniaturesDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!miniaturesDropdownOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (miniaturesDropdownRef.current && !miniaturesDropdownRef.current.contains(e.target as Node)) {
+        setMiniaturesDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [miniaturesDropdownOpen]);
+
+  const handleMiniaturesAction = (fn: () => void) => {
+    fn();
+    setMiniaturesDropdownOpen(false);
+  };
 
   return (
     <header className="relative bg-zinc-900 border-b border-zinc-800 p-4 flex justify-between items-center">
@@ -88,9 +110,41 @@ export function AppHeader(props: AppHeaderProps) {
         </div>
       </div>
       <div className="flex gap-3">
-        <button onClick={onShowMiniatures} className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-md text-sm transition-colors">
-          <MonitorSmartphone size={16} /> {t('header.miniatures')}
-        </button>
+        <div className="relative" ref={miniaturesDropdownRef}>
+          <button
+            type="button"
+            onClick={() => setMiniaturesDropdownOpen((v) => !v)}
+            className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-md text-sm transition-colors"
+            aria-expanded={miniaturesDropdownOpen}
+            aria-haspopup="true"
+          >
+            <MonitorSmartphone size={16} />
+            {t('header.miniatures')}
+            <ChevronDown size={14} className={`transition-transform ${miniaturesDropdownOpen ? 'rotate-180' : ''}`} />
+          </button>
+          <div
+            className={`absolute top-full left-0 mt-1 min-w-[200px] py-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl z-50 transition-all duration-200 ${
+              miniaturesDropdownOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-1 pointer-events-none'
+            }`}
+          >
+            <button
+              type="button"
+              onClick={() => handleMiniaturesAction(onShowMiniatures)}
+              className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-zinc-200 hover:bg-zinc-700 hover:text-zinc-100 transition-colors"
+            >
+              <Link2 size={16} className="text-zinc-400 shrink-0" />
+              {t('header.table_binding')}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleMiniaturesAction(onShowHardware)}
+              className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-zinc-200 hover:bg-zinc-700 hover:text-zinc-100 transition-colors"
+            >
+              <MonitorSmartphone size={16} className="text-zinc-400 shrink-0" />
+              {t('header.device_manager')}
+            </button>
+          </div>
+        </div>
         <button onClick={onShowLibrary} className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-md text-sm transition-colors">
           <BookImage size={16} /> {t('header.library')}
         </button>

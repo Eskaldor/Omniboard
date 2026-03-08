@@ -6,3 +6,4 @@ export { AddEffectModal } from './Modals/AddEffectModal';
 export { LibraryModal } from './Modals/LibraryModal';
 export { ActorRosterModal } from './Modals/ActorRosterModal';
 export { EncountersModal } from './Modals/EncountersModal';
+export { HardwareModal } from './Modals/HardwareModal';

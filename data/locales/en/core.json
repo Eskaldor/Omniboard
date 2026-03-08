@@ -34,7 +34,9 @@
     "groups": "Groups",
     "round": "Round",
     "next_turn": "Next Turn",
-    "combat_log": "Combat Log"
+    "combat_log": "Combat Log",
+    "table_binding": "View settings",
+    "device_manager": "Device manager"
   },
   "toolbar": {
     "undo": "Undo",
@@ -155,13 +157,32 @@
     "technical_id_placeholder": "e.g. v_plenu",
     "crop_title": "Crop Image",
     "crop_apply": "Apply",
-    "crop_cancel": "Cancel"
+    "crop_cancel": "Cancel",
+    "miniature_selection": "Physical Miniature",
+    "no_miniatures_found": "No miniatures found",
+    "select_miniature": "Select miniature"
   },
   "combat_log": {
     "record_log": "Record Log",
     "no_events_yet": "No events yet.",
     "open_logs_folder": "Open logs folder",
     "clear_all_logs": "Clear all logs"
+  },
+  "hardware": {
+    "discover": "Search for new",
+    "refresh": "Refresh",
+    "name": "Name",
+    "mac": "MAC",
+    "ip": "IP",
+    "battery": "Battery",
+    "status": "Status",
+    "actions": "Actions",
+    "blink_led": "Blink LED",
+    "test_screen": "Test screen",
+    "no_devices": "No devices found. Use «Search for new» to discover.",
+    "loading": "Loading…",
+    "status_online": "Online",
+    "status_offline": "Offline"
   },
   "log": {
     "stat_increased": "{{stat}}: +{{count}}",

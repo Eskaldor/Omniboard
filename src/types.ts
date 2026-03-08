@@ -69,6 +69,10 @@ export interface DisplayField {
   theme_id?: string;
   offset_x?: number;
   offset_y?: number;
+  /** Переопределение ширины поля в рендере (пиксели) */
+  width?: number;
+  /** Переопределение высоты поля в рендере (пиксели) */
+  height?: number;
   rotation?: number;
   /** Показывать текст поверх бара (по умолчанию true) */
   show_text?: boolean;

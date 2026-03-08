@@ -1,0 +1,31 @@
+{
+  "id": "a861550e-54a1-4989-954e-15caf712bae5",
+  "name": "Гоблин",
+  "role": "enemy",
+  "is_revealed": true,
+  "is_pinned": false,
+  "group_id": "8050bd79-16ef-4e2d-963d-7cb118b08fb8",
+  "group_name": "Гоблины",
+  "group_mode": "simultaneous",
+  "group_color": "#10b981",
+  "initiative": 1,
+  "portrait": "/assets/systems/D&D 5e/portraits/goblin.png",
+  "show_portrait": true,
+  "miniature_id": null,
+  "layout_profile_id": "1772900222099",
+  "stats": {
+    "hp": 10,
+    "ac": 10,
+    "speed": 30,
+    "mana": 5,
+    "max_mana": 5
+  },
+  "effects": [],
+  "visibility": {
+    "hp": true,
+    "stats": true,
+    "effects": true,
+    "name": true
+  },
+  "hotbar": []
+}

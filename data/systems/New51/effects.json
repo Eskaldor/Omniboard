@@ -1,0 +1,9 @@
+[
+  {
+    "id": "bolezn",
+    "name": "Болезнь",
+    "description": "Ужасная болезнь",
+    "duration": 1,
+    "show_on_miniature": false
+  }
+]

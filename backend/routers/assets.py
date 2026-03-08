@@ -111,7 +111,7 @@ ALLOWED_BAR_TEXTURE_TYPES = {"bg", "fg", "mask", "overlay"}
 
 
 @router.post("/bars/{bar_id}/textures")
-async def upload_bar_texture(
+def upload_bar_texture(
     bar_id: str,
     texture_type: str = Form(...),
     file: UploadFile = File(...),
@@ -119,8 +119,8 @@ async def upload_bar_texture(
 ):
     """
     Загружает текстуру (bg, fg, mask, overlay) для профиля бара.
+    Синхронная функция — тяжёлые операции Pillow не блокируют event loop (FastAPI выполняет в thread pool).
     При переданном system — в data/assets/systems/{system}/bars/{bar_id}/, иначе в data/assets/default/bars/{bar_id}/.
-    Сохранение в PNG через Pillow; папки создаются при необходимости.
     """
     if not bar_id or ".." in bar_id or "/" in bar_id or "\\" in bar_id:
         raise HTTPException(status_code=400, detail="Invalid bar_id")
@@ -175,6 +175,36 @@ async def get_bar_texture(
             return FileResponse(p)
 
     raise HTTPException(status_code=404, detail="Texture not found")
+
+
+@router.delete("/bars/{bar_id}/textures/{texture_type}")
+def delete_bar_texture(
+    bar_id: str,
+    texture_type: str,
+    system: str | None = None,
+):
+    """
+    Удаляет файл текстуры (bg.png, fg.png, mask.png, overlay.png).
+    Asset Override: при указанном system — data/assets/systems/{system}/bars/{bar_id}/,
+    иначе data/assets/default/bars/{bar_id}/.
+    Возвращает {"status": "ok", "deleted": True} при удалении, {"status": "not_found", "deleted": False} если файла нет.
+    """
+    if not bar_id or ".." in bar_id or "/" in bar_id or "\\" in bar_id:
+        raise HTTPException(status_code=400, detail="Invalid bar_id")
+    if texture_type not in ALLOWED_BAR_TEXTURE_TYPES:
+        raise HTTPException(status_code=400, detail="texture_type must be one of: bg, fg, mask, overlay")
+    if system and (".." in system or "/" in system or "\\" in system):
+        raise HTTPException(status_code=400, detail="Invalid system name")
+
+    if system and system.strip():
+        file_path = ASSETS_DIR / "systems" / system.strip() / "bars" / bar_id / f"{texture_type}.png"
+    else:
+        file_path = ASSETS_DIR / "default" / "bars" / bar_id / f"{texture_type}.png"
+
+    if file_path.is_file():
+        file_path.unlink()
+        return {"status": "ok", "deleted": True}
+    return {"status": "not_found", "deleted": False}
 
 
 @router.get("/{category}")

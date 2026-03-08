@@ -1,0 +1,14 @@
+{
+  "id": "test_tekstury",
+  "name": "Тест текстуры",
+  "mode": "textured",
+  "fg_color": "#00c800",
+  "fg_color_end": null,
+  "fg_color_mid": null,
+  "gradient_stop": 1.0,
+  "gradient_mid_stop": 0.5,
+  "bg_color": "#323232",
+  "border_color": "#000000",
+  "border_width": 1,
+  "border_radius": 0
+}

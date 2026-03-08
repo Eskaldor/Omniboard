@@ -1,0 +1,28 @@
+{
+  "id": "10c4fe06-f0f5-4943-91e7-c07d1cf8e239",
+  "name": "Новый участник",
+  "role": "character",
+  "is_revealed": true,
+  "is_pinned": true,
+  "group_id": "cd42dec6-6550-49c5-925c-b9127c6705f7",
+  "group_mode": "simultaneous",
+  "group_color": "#10b981",
+  "initiative": 18,
+  "portrait": "/assets/systems/D&D 5e/portraits/bandit.png",
+  "miniature_id": null,
+  "stats": {
+    "hp": 12,
+    "ac": 10,
+    "speed": 30,
+    "mana": 0,
+    "max_mana": 12
+  },
+  "effects": [],
+  "visibility": {
+    "hp": true,
+    "stats": true,
+    "effects": true,
+    "name": true
+  },
+  "hotbar": []
+}

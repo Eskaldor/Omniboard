@@ -1,0 +1,31 @@
+{
+  "id": "efe6d1a1-0d6c-44f1-a6b2-a17df665f653",
+  "name": "Гоблин маг",
+  "role": "enemy",
+  "is_revealed": true,
+  "is_pinned": true,
+  "group_id": null,
+  "group_name": null,
+  "group_mode": null,
+  "group_color": null,
+  "initiative": 0,
+  "portrait": "/assets/systems/D&D 5e/portraits/goblin_mag.png",
+  "show_portrait": true,
+  "miniature_id": "192.168.50.214",
+  "layout_profile_id": null,
+  "stats": {
+    "hp": 50,
+    "ac": 10,
+    "speed": 30,
+    "mana": 55,
+    "max_mana": 60
+  },
+  "effects": [],
+  "visibility": {
+    "hp": true,
+    "stats": true,
+    "effects": true,
+    "name": true
+  },
+  "hotbar": []
+}

@@ -1,0 +1,10 @@
+{
+  "displayName": "New51",
+  "columns": [
+    {
+      "key": "hp",
+      "label": "Health",
+      "showInTable": true
+    }
+  ]
+}

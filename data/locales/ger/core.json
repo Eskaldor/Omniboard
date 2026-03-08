@@ -23,7 +23,9 @@
     "groups": "Группы",
     "round": "Раунд",
     "next_turn": "След. ход",
-    "combat_log": "Журнал боя"
+    "combat_log": "Журнал боя",
+    "table_binding": "Настройка вида",
+    "device_manager": "Диспетчер устройств"
   },
   "toolbar": {
     "undo": "Отмена",
@@ -139,13 +141,32 @@
     "delete_this_encounter": "Удалить это столкновение?",
     "unnamed_encounter": "Без названия",
     "group_placeholder": "напр. group-1",
-    "technical_id_placeholder": "напр. v_plenu"
+    "technical_id_placeholder": "напр. v_plenu",
+    "miniature_selection": "Физическая миниатюра",
+    "no_miniatures_found": "Миниатюры не найдены",
+    "select_miniature": "Выберите миниатюру"
   },
   "combat_log": {
     "record_log": "Записывать журнал",
     "no_events_yet": "Пока нет событий.",
     "open_logs_folder": "Открыть папку логов",
     "clear_all_logs": "Очистить все логи"
+  },
+  "hardware": {
+    "discover": "Искать новые",
+    "refresh": "Обновить",
+    "name": "Имя",
+    "mac": "MAC",
+    "ip": "IP",
+    "battery": "Заряд",
+    "status": "Статус",
+    "actions": "Действия",
+    "blink_led": "Моргнуть диодом",
+    "test_screen": "Тест экрана",
+    "no_devices": "Устройства не найдены. Нажмите «Искать новые» для поиска.",
+    "loading": "Загрузка…",
+    "status_online": "В сети",
+    "status_offline": "Не в сети"
   },
   "miniature_layout": {
     "profiles": "Профили",
