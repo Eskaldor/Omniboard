@@ -254,7 +254,12 @@ def render_miniature(
             profile, system_name,
         )
 
-    # —— ЭКСПОРТ (PNG 172x320) ——
+    # —— ЭКСПОРТ (PNG 172x320, оптимизировано для ESP32) ——
     out_path = os.path.join(RENDER_DIR, f"{actor.id}.png")
-    canvas.save(out_path, "PNG")
+
+    # Конвертируем RGBA → RGB (на чёрном фоне) → 8-битную палитру
+    rgb_canvas = canvas.convert("RGB")
+    paletted_canvas = rgb_canvas.convert("P", palette=Image.ADAPTIVE, colors=256)
+
+    paletted_canvas.save(out_path, "PNG", optimize=True, bits=8)
     return out_path
