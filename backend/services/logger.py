@@ -1,11 +1,19 @@
 from __future__ import annotations
 
 import json
+import logging
 import threading
 
 from backend import state as app_state
 from backend.models import LogEntry
 from backend.paths import LOGS_DIR
+
+_esp_logger = logging.getLogger("omniboard.esp")
+
+
+def log_esp_warning(message: str, *args: object) -> None:
+    """Structured warnings for ESP / Omnimini hardware (combat log is separate)."""
+    _esp_logger.warning(message, *args)
 
 
 def add_log(

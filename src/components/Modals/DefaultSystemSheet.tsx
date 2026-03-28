@@ -264,11 +264,6 @@ export function DefaultSystemSheet({
                     onChange={(e) => {
                       const mac = e.target.value || null;
                       onUpdate?.(actor.id, 'miniature_id', mac);
-                      fetch(`/api/actors/${actor.id}`, {
-                        method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ miniature_id: mac }),
-                      }).catch(console.error);
                     }}
                     className="flex-1 min-w-0 bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
                   >

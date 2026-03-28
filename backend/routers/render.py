@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
+import shutil
 
 from fastapi import APIRouter, Query
 from fastapi.responses import FileResponse
@@ -11,9 +13,11 @@ from backend.compositor import render_miniature
 from backend.models import Effect, LayoutProfile
 from backend.paths import DATA_DIR, RENDER_DIR
 from backend.routers import hardware
+from backend.services.esp_manager import sanitize_mac_for_filename
 
 
 router = APIRouter(prefix="/api/render", tags=["render"])
+_log = logging.getLogger(__name__)
 
 
 def _load_system_effects(system_name: str) -> list[dict]:
@@ -28,15 +32,6 @@ def _load_system_effects(system_name: str) -> list[dict]:
         return data if isinstance(data, list) else []
     except (OSError, ValueError):
         return []
-
-
-@router.get("/output/{filename}")
-async def get_render_output(filename: str):
-    """Отдача готового PNG миньке по URL (для img_url). Только файлы из data/render."""
-    path = RENDER_DIR / filename
-    if not path.is_file():
-        return {"error": "File not found"}
-    return FileResponse(path, media_type="image/png")
 
 
 @router.get("/{actor_id}")
@@ -98,11 +93,17 @@ async def get_rendered_miniature(
         output_path = render_miniature(actor, profile, system_name)
 
     filename = os.path.basename(output_path)
-    target_mac = mac or (actor.miniature_id if actor.miniature_id in hardware._esp.devices else None)
+    devices = hardware._esp.devices
+    target_mac = (mac if (mac and mac in devices) else None) or (actor.miniature_id if (actor.miniature_id and actor.miniature_id in devices) else None)
+    if (mac or actor.miniature_id) and not target_mac:
+        _log.warning("ESP device not in list (run Discover in Device manager): mac=%s miniature_id=%s", mac, actor.miniature_id)
     if target_mac:
         try:
-            hardware._esp.announce_image_update(target_mac, filename, screen_bri=200)
-        except ValueError:
+            safe_name = sanitize_mac_for_filename(target_mac) + ".png"
+            dest_path = RENDER_DIR / safe_name
+            shutil.copy2(output_path, dest_path)
+            await hardware._esp.announce_image_update(target_mac, safe_name, screen_bri=200)
+        except OSError:
             pass
 
     return FileResponse(output_path)

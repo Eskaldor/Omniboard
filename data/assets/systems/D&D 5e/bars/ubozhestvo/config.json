@@ -1,0 +1,14 @@
+{
+  "id": "ubozhestvo",
+  "name": "Убожество",
+  "mode": "solid",
+  "fg_color": "#00c800",
+  "fg_color_end": "#00c800",
+  "fg_color_mid": "#c70074",
+  "gradient_stop": 1.0,
+  "gradient_mid_stop": 0.5,
+  "bg_color": "#cc0000",
+  "border_color": "#ff0000",
+  "border_width": 1,
+  "border_radius": 0
+}

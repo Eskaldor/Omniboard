@@ -12,6 +12,7 @@ import { CombatToolbar } from './components/CombatToolbar';
 import { useCombatState } from './contexts/CombatStateContext';
 import { useColumns } from './contexts/ColumnsContext';
 import { CombatProvider } from './contexts/CombatContext';
+import { useDebouncedActorSync } from './hooks/useDebouncedActorSync';
 
 // Survives remounts and HMR: when context state is temporarily null, keep showing last state
 let lastKnownState: CombatState | null = null;
@@ -28,7 +29,8 @@ function getRehydratedState(): CombatState | null {
 }
 
 export default function App() {
-  const { state, wsError, refetchState } = useCombatState();
+  const { state, wsError, refetchState, setState } = useCombatState();
+  const { updateActor, updateActorField } = useDebouncedActorSync({ setState, refetchState });
   const { columns, setColumns, systemName } = useColumns();
   if (state != null) {
     lastKnownState = state;
@@ -77,24 +79,6 @@ export default function App() {
   const getLegendColor = (role: Actor['role']) => legendConfig[roleToLegendKey[role]] ?? '#a1a1aa';
   const showGroupColorsInTable = effectiveState?.show_group_colors !== false;
   const showFactionColorsInTable = effectiveState?.show_faction_colors !== false;
-
-  const updateActorField = async (actorId: string, field: string, value: any) => {
-    await fetch(`/api/actors/${actorId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ [field]: value })
-    });
-    refetchState();
-  };
-
-  const updateActor = async (actorId: string, updates: Partial<Actor>) => {
-    await fetch(`/api/actors/${actorId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updates)
-    });
-    refetchState();
-  };
 
   const nextTurn = async () => {
     await fetch('/api/combat/next-turn', { method: 'POST' });

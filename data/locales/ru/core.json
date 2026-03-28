@@ -10,7 +10,7 @@
   "config": "Настройки",
   "errors": {
     "connection_failed": "Ошибка подключения",
-    "backend_offline_instructions": "Убедитесь, что бэкенд запущен. Запустите сервер командами:\n1. pip install -r requirements.txt\n2. uvicorn backend.main:app --reload\n3. npm install && npm run dev"
+    "backend_offline_instructions": "Убедитесь, что бэкенд запущен. Запустите сервер командами:\n1. pip install -r requirements.txt\n2. uvicorn backend.main:app --reload --host 0.0.0.0 --port 80\n3. npm install && npm run dev"
   },
   "start_combat": "Начать бой",
   "app": {

@@ -115,7 +115,7 @@ src/
 ```bash
 npm install --save-dev openapi-typescript
 # В package.json scripts:
-"generate-types": "openapi-typescript http://localhost:8001/openapi.json -o src/types/api.ts"
+"generate-types": "openapi-typescript http://localhost/openapi.json -o src/types/api.ts"
 ```
 
 **Запускать:** После изменения моделей на бэке. Можно автоматизировать в `predev` hook.

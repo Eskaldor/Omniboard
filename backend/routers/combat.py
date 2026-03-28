@@ -9,6 +9,7 @@ from backend import state as app_state
 from backend.history import save_snapshot
 from backend.models import CombatState, LegendConfig, LogEntry, LayoutProfile
 from backend.paths import LOGS_DIR
+from backend.routers.hardware import get_esp_manager
 from backend.routers.ws import broadcast_state
 from backend.services.logger import add_log
 
@@ -109,6 +110,7 @@ async def clear_combat():
     (LOGS_DIR / "latest_combat.md").write_text("", encoding="utf-8")
     await save_snapshot()
     await broadcast_state()
+    await get_esp_manager().sleep_all()
     return app_state.state
 
 

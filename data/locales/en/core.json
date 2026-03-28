@@ -10,7 +10,7 @@
   "config": "Config",
   "errors": {
     "connection_failed": "Connection Error",
-    "backend_offline_instructions": "Make sure the backend is running. Start the server with:\n1. pip install -r requirements.txt\n2. uvicorn backend.main:app --reload\n3. npm install && npm run dev"
+    "backend_offline_instructions": "Make sure the backend is running. Start the server with:\n1. pip install -r requirements.txt\n2. uvicorn backend.main:app --reload --host 0.0.0.0 --port 80\n3. npm install && npm run dev"
   },
   "start_combat": "Start Combat",
   "app": {

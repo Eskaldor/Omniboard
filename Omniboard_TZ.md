@@ -112,7 +112,7 @@ data/
 
 ## 4. API Reference (`backend/routers/`)
 
-### WebSocket (`ws://127.0.0.1:8001/ws/master`)
+### WebSocket (`ws://127.0.0.1/ws/master`)
 - Рассылает `{ "type": "state_update", "payload": CombatState }` при любых изменениях.
 - Рассылает `{ "can_undo": bool, "can_redo": bool }` при изменении стека истории.
 

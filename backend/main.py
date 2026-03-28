@@ -17,11 +17,11 @@ ensure_dirs()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await hardware._esp.start_discovery_listener()
+    await hardware._esp.startup()
     try:
         yield
     finally:
-        hardware._esp.stop_discovery_listener()
+        await hardware._esp.shutdown()
 
 
 app = FastAPI(lifespan=lifespan)
@@ -36,6 +36,7 @@ app.add_middleware(
 
 app.mount("/assets", StaticFiles(directory="data/assets"), name="assets")
 app.mount("/render", StaticFiles(directory="data/render"), name="render")
+app.mount("/api/render/output", StaticFiles(directory="data/render"), name="render_output")
 app.mount("/locales", StaticFiles(directory="data/locales"), name="locales")
 
 app.include_router(ws.router)

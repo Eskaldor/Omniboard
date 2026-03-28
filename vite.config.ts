@@ -22,24 +22,24 @@ export default defineConfig(({mode}) => {
       },
       proxy: {
         '/api': {
-          target: 'http://127.0.0.1:8001',
+          target: 'http://127.0.0.1',
           changeOrigin: true,
         },
         '/ws': {
-          target: 'http://127.0.0.1:8001',
+          target: 'http://127.0.0.1',
           ws: true,
           changeOrigin: true,
         },
         '/assets': {
-          target: 'http://127.0.0.1:8001',
+          target: 'http://127.0.0.1',
           changeOrigin: true,
         },
         '/render': {
-          target: 'http://127.0.0.1:8001',
+          target: 'http://127.0.0.1',
           changeOrigin: true,
         },
         '/locales': {
-          target: 'http://127.0.0.1:8001',
+          target: 'http://127.0.0.1',
           changeOrigin: true,
         }
       }
