@@ -105,12 +105,17 @@ async def reset_combat():
 async def clear_combat():
     """Fully clear the tracker: all actors, queue, round, history, log files."""
     await save_snapshot()
+    bound_miniature_ids = {
+        m
+        for m in (str(a.miniature_id).strip() for a in app_state.state.actors if a.miniature_id)
+        if m
+    }
     combat_engine.clear_combat_state()
     (LOGS_DIR / "latest_combat.json").write_text("[]", encoding="utf-8")
     (LOGS_DIR / "latest_combat.md").write_text("", encoding="utf-8")
     await save_snapshot()
     await broadcast_state()
-    await get_esp_manager().sleep_all()
+    await get_esp_manager().sleep_all(extra_ids=bound_miniature_ids)
     return app_state.state
 
 

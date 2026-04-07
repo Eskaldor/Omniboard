@@ -7,7 +7,7 @@ import asyncio
 import ipaddress
 import socket
 import threading
-from typing import Any
+from typing import Any, Iterable
 
 import httpx
 from zeroconf import ServiceBrowser, ServiceListener, Zeroconf
@@ -88,6 +88,7 @@ class ESPManager:
     def __init__(self) -> None:
         self._lock = threading.Lock()
         self.active_minis: dict[str, str] = {}
+        self._known_ids: set[str] = set()
         self._online: dict[str, bool] = {}
         self._zeroconf: Zeroconf | None = None
         self._browser: ServiceBrowser | None = None
@@ -184,6 +185,7 @@ class ESPManager:
         return await asyncio.to_thread(_resolve_omnimini_host, esp_id)
 
     async def send_update(self, esp_id: str, payload: dict[str, Any]) -> bool:
+        self._known_ids.add(esp_id)
         if self._http is None:
             await self.startup()
         assert self._http is not None
@@ -235,18 +237,24 @@ class ESPManager:
         esp_id: str,
         image_filename: str,
         screen_bri: int = 200,
+        led_payload: dict[str, Any] | None = None,
     ) -> bool:
         base_url = f"http://{self.get_local_ip()}:{self.SERVER_PORT}"
         img_url = f"{base_url}/api/render/output/{image_filename}"
-        payload: dict[str, Any] = {
-            "img_url": img_url,
-            "screen_bri": max(0, min(255, screen_bri)),
-            "led": {
+        led: dict[str, Any] = (
+            led_payload
+            if led_payload is not None
+            else {
                 "mode": "static",
                 "colors": ["#000000"],
                 "speed": 0,
                 "brightness": 0,
-            },
+            }
+        )
+        payload: dict[str, Any] = {
+            "img_url": img_url,
+            "screen_bri": max(0, min(255, screen_bri)),
+            "led": led,
         }
         return await self.send_update(esp_id, payload)
 
@@ -260,12 +268,15 @@ class ESPManager:
         },
     }
 
-    async def sleep_all(self) -> None:
-        """Turn off TFT backlight and LEDs on every discovered Omnimini (e.g. combat tracker cleared)."""
-        esp_ids = list(self.get_active_minis().keys())
-        if not esp_ids:
+    async def sleep_all(self, extra_ids: Iterable[str] | None = None) -> None:
+        """Turn off TFT backlight and LEDs on every discovered Omnimini."""
+        active = set(self.get_active_minis().keys())
+        extras = {s.strip() for s in (extra_ids or ()) if (s or "").strip()}
+        all_targets = self._known_ids.union(active).union(extras)
+        if not all_targets:
             return
-        await asyncio.gather(*(self.send_update(eid, self._SLEEP_PAYLOAD) for eid in esp_ids))
+        tasks = [self.send_update(eid, self._SLEEP_PAYLOAD) for eid in all_targets]
+        await asyncio.gather(*tasks, return_exceptions=True)
 
     async def test_screen(self, esp_id: str) -> bool:
         return await self.send_update(

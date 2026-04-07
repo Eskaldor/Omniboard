@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Plus, ImageIcon, Trash2 } from 'lucide-react';
+import { X, Save, Plus, ImageIcon, Trash2, Lightbulb } from 'lucide-react';
 import { slugify } from 'transliteration';
 import { BarProfileConfig } from '../../types';
 import { useTranslation } from 'react-i18next';
@@ -21,10 +21,13 @@ export function BarCustomizerModal({
   isOpen,
   onClose,
   system,
+  onOpenLedProfiles,
 }: {
   isOpen: boolean;
   onClose: () => void;
   system: string;
+  /** Opens LED profile editor (layout / Omnimini effects). */
+  onOpenLedProfiles?: () => void;
 }) {
   const { t, i18n } = useTranslation('core', { useSuspense: false });
   const [profiles, setProfiles] = useState<BarProfileConfig[]>([]);
@@ -184,13 +187,25 @@ export function BarCustomizerModal({
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-4xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
-        <div className="p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50">
+        <div className="p-4 border-b border-zinc-800 flex justify-between items-center gap-2 bg-zinc-900/50">
           <h3 className="text-lg font-medium text-zinc-100">
             {t('miniature_layout.bar_forge', { defaultValue: 'Конфигуратор шкал' })}
           </h3>
-          <button onClick={onClose} className="text-zinc-400 hover:text-zinc-100">
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+            {onOpenLedProfiles && (
+              <button
+                type="button"
+                onClick={onOpenLedProfiles}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm bg-zinc-800 hover:bg-zinc-700 text-amber-200/90 border border-amber-900/40 transition-colors"
+              >
+                <Lightbulb size={16} />
+                {t('miniature_layout.edit_led_profiles', { defaultValue: 'LED profiles' })}
+              </button>
+            )}
+            <button type="button" onClick={onClose} className="text-zinc-400 hover:text-zinc-100 p-1" aria-label={t('common.close', { defaultValue: 'Close' })}>
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         <div className="p-6 overflow-y-auto flex-1 min-h-0 flex gap-6">

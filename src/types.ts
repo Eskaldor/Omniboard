@@ -88,6 +88,15 @@ export interface DisplayField {
   bar_style?: 'solid' | 'textured';
 }
 
+export interface LedProfile {
+  id: string;
+  name: string;
+  mode: string;
+  speed: number;
+  brightness: number;
+  colors: string[];
+}
+
 export interface BarProfileConfig {
   id: string;
   name: string;
@@ -117,6 +126,10 @@ export interface LayoutProfile {
   font_id?: string;
   font_size?: number;
   bar_height?: number;
+  /** Default Omnimini LED profile id (from system led_profiles.json) */
+  led_profile_id?: string;
+  led_color_source?: 'role' | 'group' | 'custom';
+  led_custom_color?: string;
 }
 
 export type CombatLogEntryType =

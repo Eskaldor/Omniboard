@@ -10,6 +10,7 @@ from fastapi.responses import FileResponse
 
 from backend import state as app_state
 from backend.compositor import render_miniature
+from backend.led_resolver import resolve_led_payload
 from backend.models import Effect, LayoutProfile
 from backend.paths import DATA_DIR, RENDER_DIR
 from backend.routers import hardware
@@ -102,7 +103,10 @@ async def get_rendered_miniature(
             safe_name = sanitize_mac_for_filename(target_mac) + ".png"
             dest_path = RENDER_DIR / safe_name
             shutil.copy2(output_path, dest_path)
-            await hardware._esp.announce_image_update(target_mac, safe_name, screen_bri=200)
+            led_payload = resolve_led_payload(actor_id)
+            await hardware._esp.announce_image_update(
+                target_mac, safe_name, screen_bri=200, led_payload=led_payload
+            )
         except OSError:
             pass
 

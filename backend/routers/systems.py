@@ -7,6 +7,7 @@ from typing import Any, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from backend.models import LedProfile
 from backend.paths import ACTORS_DIR, ASSETS_DIR, DATA_DIR, LOCALES_DIR
 
 
@@ -23,6 +24,35 @@ def _system_slug(system_name: str) -> str:
 class SaveColumnsRequest(BaseModel):
     columns: list[Any]
     lang: Optional[str] = None
+
+
+def _default_led_profiles() -> list[LedProfile]:
+    return [
+        LedProfile(
+            id="default_static",
+            name="Basic Static",
+            mode="static",
+            speed=0,
+            brightness=255,
+            colors=["$ROLE_COLOR"],
+        ),
+        LedProfile(
+            id="default_blink",
+            name="Fast Blink",
+            mode="blink",
+            speed=200,
+            brightness=255,
+            colors=["$ROLE_COLOR", "#000000"],
+        ),
+        LedProfile(
+            id="default_pulse",
+            name="Smooth Pulse",
+            mode="pulse",
+            speed=1000,
+            brightness=255,
+            colors=["$ROLE_COLOR", "#000000"],
+        ),
+    ]
 
 
 def _system_dir(system_name: str):
@@ -46,6 +76,38 @@ async def list_systems():
         if p.is_dir() and not p.name.startswith("."):
             names.append(p.name)
     return sorted(names)
+
+
+@router.get("/{system_name}/led_profiles")
+async def get_system_led_profiles(system_name: str):
+    sys_dir = _system_dir(system_name)
+    if not sys_dir:
+        raise HTTPException(status_code=400, detail="invalid system name")
+    file_path = sys_dir / "led_profiles.json"
+    if not file_path.exists():
+        return _default_led_profiles()
+    try:
+        raw = json.loads(file_path.read_text(encoding="utf-8"))
+        if not isinstance(raw, list):
+            return _default_led_profiles()
+        return [LedProfile.model_validate(item) for item in raw]
+    except Exception:
+        return _default_led_profiles()
+
+
+@router.post("/{system_name}/led_profiles")
+async def save_system_led_profiles(system_name: str, profiles: list[LedProfile]):
+    sys_dir = _system_dir(system_name)
+    if not sys_dir:
+        raise HTTPException(status_code=400, detail="invalid system name")
+    sys_dir.mkdir(parents=True, exist_ok=True)
+    file_path = sys_dir / "led_profiles.json"
+    serialized = [p.model_dump(mode="json") for p in profiles]
+    file_path.write_text(
+        json.dumps(serialized, indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    return profiles
 
 
 @router.get("/{system_name}/effects")

@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { X, Save, Plus, RefreshCw, Settings } from 'lucide-react';
-import { ColumnConfig, LayoutProfile, DisplayField, BarProfileConfig } from '../../types';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { X, Save, Plus, RefreshCw, Settings, Lightbulb } from 'lucide-react';
+import { ColumnConfig, LayoutProfile, DisplayField, BarProfileConfig, LedProfile } from '../../types';
 import { useCombatState } from '../../contexts/CombatStateContext';
 import { useTranslation } from 'react-i18next';
 import { BarCustomizerModal, getBarDisplayName } from './BarCustomizerModal';
+import { LedEffectsModal } from './LedEffectsModal';
 
 const SLOT_KEYS_SLOTS_ONLY = ['top1', 'top2', 'bottom1', 'bottom2', 'left1', 'right1'] as const;
 
@@ -22,6 +23,9 @@ function defaultProfile(id: string, name: string): LayoutProfile {
     font_id: 'default.ttf',
     font_size: 18,
     bar_height: 16,
+    led_profile_id: 'default_static',
+    led_color_source: 'role',
+    led_custom_color: '#FFFFFF',
   };
 }
 
@@ -72,6 +76,27 @@ export function MiniaturesModal({
   const [availableFonts, setAvailableFonts] = useState<string[]>(['default.ttf']);
   const [availableBarProfiles, setAvailableBarProfiles] = useState<BarProfileConfig[]>([]);
   const [isBarForgeOpen, setIsBarForgeOpen] = useState(false);
+  const [ledEffectsOpen, setLedEffectsOpen] = useState(false);
+  const [availableLedProfiles, setAvailableLedProfiles] = useState<LedProfile[]>([]);
+
+  const refetchLedProfiles = useCallback(() => {
+    const system = state?.system || '';
+    if (!system) {
+      setAvailableLedProfiles([]);
+      return;
+    }
+    fetch(`/api/systems/${encodeURIComponent(system)}/led_profiles`)
+      .then((res) => res.json())
+      .then((data: LedProfile[]) => setAvailableLedProfiles(Array.isArray(data) ? data : []))
+      .catch((err) => {
+        console.error('Failed to fetch LED profiles', err);
+        setAvailableLedProfiles([]);
+      });
+  }, [state?.system]);
+
+  useEffect(() => {
+    refetchLedProfiles();
+  }, [refetchLedProfiles]);
 
   useEffect(() => {
     const system = state?.system || '';
@@ -609,6 +634,110 @@ export function MiniaturesModal({
                     </label>
                   </div>
 
+                  <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4 space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                      <div>
+                        <h4 className="font-medium text-zinc-200">
+                          {t('miniature_layout.default_led_section', { defaultValue: 'Default LED (Omnimini)' })}
+                        </h4>
+                        <p className="text-xs text-zinc-500 mt-0.5">
+                          {t('miniature_layout.default_led_section_desc', {
+                            defaultValue: 'Applied when syncing LEDs for actors using this layout profile.',
+                          })}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setLedEffectsOpen(true)}
+                        className="flex items-center justify-center gap-2 px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-amber-200/90 border border-amber-900/40 rounded-lg text-sm shrink-0 transition-colors"
+                      >
+                        <Lightbulb size={16} />
+                        {t('miniature_layout.edit_led_profiles', { defaultValue: 'Edit LED profiles' })}
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs text-zinc-500 mb-1">
+                          {t('miniature_layout.led_effect_profile', { defaultValue: 'LED effect profile' })}
+                        </label>
+                        <select
+                          value={selectedProfile.led_profile_id ?? 'default_static'}
+                          onChange={(e) => setSelectedProfile({ led_profile_id: e.target.value })}
+                          className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
+                        >
+                          {(selectedProfile.led_profile_id &&
+                            !availableLedProfiles.some((p) => p.id === selectedProfile.led_profile_id) && (
+                              <option value={selectedProfile.led_profile_id}>
+                                {selectedProfile.led_profile_id}{' '}
+                                {t('miniature_layout.led_profile_custom_hint', { defaultValue: '(custom id)' })}
+                              </option>
+                            )) ||
+                            null}
+                          {availableLedProfiles.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.name || p.id}
+                            </option>
+                          ))}
+                          {availableLedProfiles.length === 0 && (
+                            <option value={selectedProfile.led_profile_id ?? 'default_static'}>
+                              {selectedProfile.led_profile_id ?? 'default_static'}
+                            </option>
+                          )}
+                        </select>
+                      </div>
+                      <div>
+                        <span className="block text-xs text-zinc-500 mb-2">
+                          {t('miniature_layout.led_color_source', { defaultValue: 'LED color source' })}
+                        </span>
+                        <div className="flex flex-col gap-2">
+                          {(
+                            [
+                              ['role', t('miniature_layout.led_source_role', { defaultValue: 'Role color' })],
+                              ['group', t('miniature_layout.led_source_group', { defaultValue: 'Group color' })],
+                              ['custom', t('miniature_layout.led_source_custom', { defaultValue: 'Custom color' })],
+                            ] as const
+                          ).map(([value, label]) => (
+                            <label key={value} className="flex items-center gap-2 cursor-pointer text-sm text-zinc-300">
+                              <input
+                                type="radio"
+                                name="led_color_source"
+                                className="text-emerald-500 border-zinc-600 bg-zinc-900 focus:ring-emerald-500"
+                                checked={(selectedProfile.led_color_source ?? 'role') === value}
+                                onChange={() => setSelectedProfile({ led_color_source: value })}
+                              />
+                              {label}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    {(selectedProfile.led_color_source ?? 'role') === 'custom' && (
+                      <div>
+                        <label className="block text-xs text-zinc-500 mb-1">
+                          {t('miniature_layout.led_custom_color', { defaultValue: 'Custom color' })}
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={
+                              /^#[0-9A-Fa-f]{6}$/.test(selectedProfile.led_custom_color ?? '')
+                                ? (selectedProfile.led_custom_color as string)
+                                : '#FFFFFF'
+                            }
+                            onChange={(e) => setSelectedProfile({ led_custom_color: e.target.value })}
+                            className="w-12 h-10 rounded border border-zinc-600 cursor-pointer bg-zinc-900 p-0 shrink-0"
+                          />
+                          <input
+                            type="text"
+                            value={selectedProfile.led_custom_color ?? '#FFFFFF'}
+                            onChange={(e) => setSelectedProfile({ led_custom_color: e.target.value })}
+                            className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 font-mono focus:outline-none focus:border-emerald-500"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   <div className="grid grid-cols-2 gap-4">
                     {SLOT_KEYS_SLOTS_ONLY.map((slotName) => renderSlotConfig(slotName, slotTitles[slotName]))}
                   </div>
@@ -722,6 +851,13 @@ export function MiniaturesModal({
           .catch(() => setAvailableBarProfiles([]));
       }}
       system={state?.system ?? ''}
+      onOpenLedProfiles={() => setLedEffectsOpen(true)}
+    />
+    <LedEffectsModal
+      isOpen={ledEffectsOpen}
+      onClose={() => setLedEffectsOpen(false)}
+      system={state?.system ?? ''}
+      onSaved={refetchLedProfiles}
     />
     </>
   );

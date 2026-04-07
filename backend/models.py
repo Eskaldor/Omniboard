@@ -1,6 +1,15 @@
 from pydantic import BaseModel, Field, model_validator
 from typing import Literal, Optional, List, Dict, Any
 
+class LedProfile(BaseModel):
+    id: str
+    name: str
+    mode: str  # e.g. "static", "blink", "pulse", "rainbow", "breathe"
+    speed: int
+    brightness: int
+    colors: list[str]  # e.g. ["#FF0000", "#000000"] or ["$ROLE_COLOR"]
+
+
 class Effect(BaseModel):
     id: str
     name: str
@@ -78,6 +87,9 @@ class LayoutProfile(BaseModel):
     font_id: str = "default.ttf"   # Идентификатор/путь к шрифту
     font_size: int = 18             # Размер шрифта по умолчанию
     bar_height: int = 16            # Толщина баров
+    led_profile_id: str = "default_static"
+    led_color_source: Literal["role", "group", "custom"] = "role"
+    led_custom_color: str = "#FFFFFF"
 
 
 class ColumnDef(BaseModel):
