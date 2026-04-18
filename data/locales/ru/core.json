@@ -312,6 +312,23 @@
     "load_failed": "Не удалось загрузить профили LED",
     "save_failed": "Не удалось сохранить профили LED"
   },
+  "led_triggers": {
+    "title": "Триггеры подсветки",
+    "add_trigger": "Добавить триггер",
+    "configure_triggers": "Настроить триггеры событий",
+    "event_turn_start": "Начало хода",
+    "event_stat_change": "Изменение характеристики",
+    "event_type": "Событие",
+    "target_stat": "ID характеристики",
+    "led_profile": "Профиль подсветки",
+    "duration": "Длительность",
+    "duration_time": "По таймеру",
+    "duration_turn": "До конца хода",
+    "duration_ms": "Время (мс)",
+    "load_failed": "Не удалось загрузить триггеры",
+    "save_failed": "Не удалось сохранить триггеры",
+    "no_rules": "Пока нет правил. Добавьте триггер ниже."
+  },
   "library": {
     "tab_portraits": "Портреты",
     "tab_frames": "Рамки",

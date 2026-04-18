@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { X, Save, Plus, RefreshCw, Settings, Lightbulb } from 'lucide-react';
+import { X, Save, Plus, RefreshCw, Settings, Lightbulb, Zap } from 'lucide-react';
 import { ColumnConfig, LayoutProfile, DisplayField, BarProfileConfig, LedProfile } from '../../types';
 import { useCombatState } from '../../contexts/CombatStateContext';
 import { useTranslation } from 'react-i18next';
 import { BarCustomizerModal, getBarDisplayName } from './BarCustomizerModal';
 import { LedEffectsModal } from './LedEffectsModal';
+import { LedTriggersModal } from './LedTriggersModal';
 
 const SLOT_KEYS_SLOTS_ONLY = ['top1', 'top2', 'bottom1', 'bottom2', 'left1', 'right1'] as const;
 
@@ -77,6 +78,7 @@ export function MiniaturesModal({
   const [availableBarProfiles, setAvailableBarProfiles] = useState<BarProfileConfig[]>([]);
   const [isBarForgeOpen, setIsBarForgeOpen] = useState(false);
   const [ledEffectsOpen, setLedEffectsOpen] = useState(false);
+  const [isTriggersModalOpen, setIsTriggersModalOpen] = useState(false);
   const [availableLedProfiles, setAvailableLedProfiles] = useState<LedProfile[]>([]);
 
   const refetchLedProfiles = useCallback(() => {
@@ -646,14 +648,24 @@ export function MiniaturesModal({
                           })}
                         </p>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setLedEffectsOpen(true)}
-                        className="flex items-center justify-center gap-2 px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-amber-200/90 border border-amber-900/40 rounded-lg text-sm shrink-0 transition-colors"
-                      >
-                        <Lightbulb size={16} />
-                        {t('miniature_layout.edit_led_profiles', { defaultValue: 'Edit LED profiles' })}
-                      </button>
+                      <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setLedEffectsOpen(true)}
+                          className="flex items-center justify-center gap-2 px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-amber-200/90 border border-amber-900/40 rounded-lg text-sm transition-colors"
+                        >
+                          <Lightbulb size={16} />
+                          {t('miniature_layout.edit_led_profiles', { defaultValue: 'Edit LED profiles' })}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setIsTriggersModalOpen(true)}
+                          className="flex items-center justify-center gap-2 px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-emerald-200/90 border border-emerald-900/40 rounded-lg text-sm transition-colors"
+                        >
+                          <Zap size={16} />
+                          {t('led_triggers.configure_triggers', { defaultValue: 'Configure event triggers' })}
+                        </button>
+                      </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
@@ -859,6 +871,7 @@ export function MiniaturesModal({
       system={state?.system ?? ''}
       onSaved={refetchLedProfiles}
     />
+    <LedTriggersModal isOpen={isTriggersModalOpen} onClose={() => setIsTriggersModalOpen(false)} />
     </>
   );
 }

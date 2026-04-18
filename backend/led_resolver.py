@@ -129,6 +129,37 @@ def _resolve_color_tokens(colors: list[str], base_color: str) -> list[str]:
     return out if out else [base_color]
 
 
+def resolve_led_payload_for_profile(actor_id: str, led_profile_id: str) -> dict[str, Any] | None:
+    """
+    Build ESP32 ``led`` dict using a specific system LED profile id (e.g. LED triggers),
+    with faction / layout color resolution like ``resolve_led_payload``.
+    """
+    st = app_state.state
+    actor = next((a for a in st.actors if a.id == actor_id), None)
+    if actor is None:
+        return None
+
+    layout = _layout_for_actor(actor, st.layout_profiles)
+    pid = (led_profile_id or "").strip() or "default_static"
+    led_prof = _find_led_profile(st.system, pid)
+
+    base = _base_color_for_layout(layout, actor, st.legend)
+    resolved_colors = _resolve_color_tokens(list(led_prof.colors), base)
+
+    speed = int(led_prof.speed) if led_prof.speed is not None else 0
+    brightness = int(led_prof.brightness) if led_prof.brightness is not None else 255
+    speed = max(0, min(2000, speed))
+    brightness = max(0, min(255, brightness))
+    mode = (led_prof.mode or "static").strip() or "static"
+
+    return {
+        "mode": mode,
+        "colors": resolved_colors,
+        "speed": speed,
+        "brightness": brightness,
+    }
+
+
 def resolve_led_payload(actor_id: str) -> dict[str, Any] | None:
     """
     Build ESP32 ``led`` object dict for ``announce_image_update``.

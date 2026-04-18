@@ -9,6 +9,43 @@ from backend.models import CombatState, Actor
 LogFn = Callable[..., None]
 
 
+def current_turn_slot_actor_ids() -> list[str]:
+    """Actor ids sharing the current initiative slot (one actor or a simultaneous group)."""
+    st = app_state.state
+    if not st.turn_queue:
+        return []
+    idx = st.current_index
+    if idx < 0 or idx >= len(st.turn_queue):
+        return []
+
+    def get_actor(aid: str) -> Actor | None:
+        return next((a for a in st.actors if a.id == aid), None)
+
+    current_actor = get_actor(st.turn_queue[idx])
+    slot_size = 1
+    if (
+        current_actor
+        and getattr(current_actor, "group_id", None)
+        and getattr(current_actor, "group_mode", None) == "simultaneous"
+    ):
+        gid = current_actor.group_id
+        while idx + slot_size < len(st.turn_queue):
+            next_actor = get_actor(st.turn_queue[idx + slot_size])
+            if (
+                not next_actor
+                or getattr(next_actor, "group_id", None) != gid
+                or getattr(next_actor, "group_mode", None) != "simultaneous"
+            ):
+                break
+            slot_size += 1
+    out: list[str] = []
+    for i in range(slot_size):
+        aid = st.turn_queue[idx + i]
+        if aid:
+            out.append(aid)
+    return out
+
+
 def reorder_turn_queue() -> None:
     """Re-sort turn_queue by initiative (desc) while keeping the current actor's turn active."""
     if not app_state.state.is_active or not app_state.state.turn_queue:

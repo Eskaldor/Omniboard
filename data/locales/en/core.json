@@ -282,6 +282,23 @@
     "load_failed": "Failed to load LED profiles",
     "save_failed": "Failed to save LED profiles"
   },
+  "led_triggers": {
+    "title": "LED triggers",
+    "add_trigger": "Add trigger",
+    "configure_triggers": "Configure event triggers",
+    "event_turn_start": "Turn start",
+    "event_stat_change": "Stat change",
+    "event_type": "Event",
+    "target_stat": "Stat ID",
+    "led_profile": "LED profile",
+    "duration": "Duration",
+    "duration_time": "Timed",
+    "duration_turn": "Until end of turn",
+    "duration_ms": "Duration (ms)",
+    "load_failed": "Failed to load triggers",
+    "save_failed": "Failed to save triggers",
+    "no_rules": "No rules yet. Add a trigger below."
+  },
   "library": {
     "tab_portraits": "Portraits",
     "tab_frames": "Frames",

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 
 from fastapi import APIRouter, Body, HTTPException
@@ -11,6 +12,7 @@ from backend.models import CombatState, LegendConfig, LogEntry, LayoutProfile
 from backend.paths import LOGS_DIR
 from backend.routers.hardware import get_esp_manager
 from backend.routers.ws import broadcast_state
+from backend.services import led_interceptor
 from backend.services.logger import add_log
 
 
@@ -65,9 +67,16 @@ async def next_turn():
     await save_snapshot()
     if not app_state.state.turn_queue:
         return {"error": "Queue empty"}
+    prev_ids = combat_engine.current_turn_slot_actor_ids()
+    await asyncio.gather(
+        *[led_interceptor.reset_actor_led_to_default(aid) for aid in prev_ids],
+        return_exceptions=True,
+    )
     combat_engine.next_turn(add_log)
     await save_snapshot()
     await broadcast_state()
+    for aid in combat_engine.current_turn_slot_actor_ids():
+        asyncio.create_task(led_interceptor.process_led_trigger(aid, "turn_start"))
     return app_state.state
 
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import uuid
 
@@ -11,6 +12,7 @@ from backend.history import save_snapshot
 from backend.models import Actor
 from backend.paths import DATA_DIR
 from backend.routers.ws import broadcast_state
+from backend.services import led_interceptor
 from backend.services.logger import add_log
 
 
@@ -71,6 +73,12 @@ async def update_actor(actor_id: str, updates: dict):
             old_actor = a
             actor_dict = a.model_dump()
             old_stats = dict(actor_dict.get("stats") or {})
+            changed_stat_keys: list[str] = []
+            stats_patch = updates.get("stats")
+            if isinstance(stats_patch, dict):
+                for stat_key, new_val in stats_patch.items():
+                    if old_stats.get(stat_key) != new_val:
+                        changed_stat_keys.append(str(stat_key))
             if "stats" in updates:
                 actor_dict["stats"].update(updates["stats"])
                 del updates["stats"]
@@ -135,6 +143,9 @@ async def update_actor(actor_id: str, updates: dict):
                     )
 
             app_state.state.actors[i] = new_actor
+
+            for sk in changed_stat_keys:
+                asyncio.create_task(led_interceptor.process_led_trigger(actor_id, "stat_change", sk))
 
             # Sync initiative to all actors in the same simultaneous group
             if (

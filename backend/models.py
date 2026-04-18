@@ -10,6 +10,15 @@ class LedProfile(BaseModel):
     colors: list[str]  # e.g. ["#FF0000", "#000000"] or ["$ROLE_COLOR"]
 
 
+class LedTriggerRule(BaseModel):
+    id: str
+    event_type: Literal["turn_start", "stat_change"]
+    target_stat: Optional[str] = None  # e.g. "hp" or "mana"
+    led_profile_id: str  # references LedProfile.id
+    duration_type: Literal["time", "turn"]
+    duration_ms: Optional[int] = 1000  # ms when duration_type == "time"
+
+
 class Effect(BaseModel):
     id: str
     name: str

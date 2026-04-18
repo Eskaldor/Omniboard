@@ -97,6 +97,15 @@ export interface LedProfile {
   colors: string[];
 }
 
+export interface LedTriggerRule {
+  id: string;
+  event_type: 'turn_start' | 'stat_change';
+  target_stat?: string | null;
+  led_profile_id: string;
+  duration_type: 'time' | 'turn';
+  duration_ms?: number | null;
+}
+
 export interface BarProfileConfig {
   id: string;
   name: string;

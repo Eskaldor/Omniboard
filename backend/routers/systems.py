@@ -7,7 +7,7 @@ from typing import Any, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from backend.models import LedProfile
+from backend.models import LedProfile, LedTriggerRule
 from backend.paths import ACTORS_DIR, ASSETS_DIR, DATA_DIR, LOCALES_DIR
 
 
@@ -108,6 +108,38 @@ async def save_system_led_profiles(system_name: str, profiles: list[LedProfile])
         encoding="utf-8",
     )
     return profiles
+
+
+@router.get("/{system_name}/led_triggers")
+async def get_system_led_triggers(system_name: str):
+    sys_dir = _system_dir(system_name)
+    if not sys_dir:
+        raise HTTPException(status_code=400, detail="invalid system name")
+    file_path = sys_dir / "led_triggers.json"
+    if not file_path.exists():
+        return []
+    try:
+        raw = json.loads(file_path.read_text(encoding="utf-8"))
+        if not isinstance(raw, list):
+            return []
+        return [LedTriggerRule.model_validate(item) for item in raw]
+    except Exception:
+        return []
+
+
+@router.post("/{system_name}/led_triggers")
+async def save_system_led_triggers(system_name: str, rules: list[LedTriggerRule]):
+    sys_dir = _system_dir(system_name)
+    if not sys_dir:
+        raise HTTPException(status_code=400, detail="invalid system name")
+    sys_dir.mkdir(parents=True, exist_ok=True)
+    file_path = sys_dir / "led_triggers.json"
+    serialized = [r.model_dump(mode="json") for r in rules]
+    file_path.write_text(
+        json.dumps(serialized, indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    return rules
 
 
 @router.get("/{system_name}/effects")
