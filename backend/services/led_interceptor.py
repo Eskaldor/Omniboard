@@ -7,7 +7,7 @@ import asyncio
 import json
 
 from backend import state as app_state
-from backend.led_resolver import resolve_led_payload, resolve_led_payload_for_profile
+from backend.led_resolver import ACTIVE_OVERRIDES, resolve_led_payload, resolve_led_payload_for_profile
 from backend.models import LedTriggerRule
 from backend.paths import DATA_DIR
 from backend.routers.hardware import _esp
@@ -62,6 +62,10 @@ def _find_matching_rule(
 
 async def reset_actor_led_to_default(actor_id: str) -> None:
     """Restore layout default LED for an actor's bound miniature if it is online."""
+    if actor_id in ACTIVE_OVERRIDES:
+        ACTIVE_OVERRIDES[actor_id].pop("turn", None)
+        if not ACTIVE_OVERRIDES[actor_id]:
+            del ACTIVE_OVERRIDES[actor_id]
     actor = next((a for a in app_state.state.actors if a.id == actor_id), None)
     if not actor or not actor.miniature_id:
         return
@@ -77,6 +81,10 @@ async def reset_actor_led_to_default(actor_id: str) -> None:
 async def _revert_led_after_delay(actor_id: str, miniature_id: str, delay_s: float) -> None:
     try:
         await asyncio.sleep(delay_s)
+        if actor_id in ACTIVE_OVERRIDES:
+            ACTIVE_OVERRIDES[actor_id].pop("time", None)
+            if not ACTIVE_OVERRIDES[actor_id]:
+                del ACTIVE_OVERRIDES[actor_id]
         led = resolve_led_payload(actor_id)
         if led:
             await _esp.send_update(miniature_id, {"led": led})
@@ -104,6 +112,7 @@ async def process_led_trigger(actor_id: str, event_type: str, target_stat: str |
     if not led:
         return
 
+    ACTIVE_OVERRIDES[actor_id][rule.duration_type] = rule.led_profile_id
     await _esp.send_update(mid, {"led": led})
 
     if rule.duration_type == "time":

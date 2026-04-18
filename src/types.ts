@@ -88,10 +88,12 @@ export interface DisplayField {
   bar_style?: 'solid' | 'textured';
 }
 
+export type LedProfileMode = 'static' | 'cycle' | 'blink' | 'breathe' | 'pulse' | 'rainbow';
+
 export interface LedProfile {
   id: string;
   name: string;
-  mode: string;
+  mode: LedProfileMode;
   speed: number;
   brightness: number;
   colors: string[];

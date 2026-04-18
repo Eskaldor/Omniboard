@@ -4,11 +4,15 @@ Resolve Omnimini LED payload from combat state, layout profile, and system LED p
 from __future__ import annotations
 
 import json
+from collections import defaultdict
 from typing import Any
 
 from backend import state as app_state
 from backend.models import Actor, LayoutProfile, LedProfile, LegendConfig
 from backend.paths import DATA_DIR
+
+# actor_id -> { "time" | "turn" -> led_profile_id } stacked overrides (see led_interceptor)
+ACTIVE_OVERRIDES: dict[str, dict[str, str]] = defaultdict(dict)
 
 _DEFAULT_LED_FALLBACK = LedProfile(
     id="default_static",
@@ -171,7 +175,11 @@ def resolve_led_payload(actor_id: str) -> dict[str, Any] | None:
         return None
 
     layout = _layout_for_actor(actor, st.layout_profiles)
-    led_profile_id = (layout.led_profile_id or "default_static").strip() or "default_static"
+    overrides = ACTIVE_OVERRIDES.get(actor_id, {})
+    # Short flash (time) wins over sustained (turn); then layout default
+    led_profile_id = overrides.get("time") or overrides.get("turn")
+    if not led_profile_id:
+        led_profile_id = (layout.led_profile_id or "default_static").strip() or "default_static"
     led_prof = _find_led_profile(st.system, led_profile_id)
 
     base = _base_color_for_layout(layout, actor, st.legend)

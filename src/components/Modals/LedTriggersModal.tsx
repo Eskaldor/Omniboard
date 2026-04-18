@@ -1,8 +1,26 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { X, Trash2, Loader2, Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n';
+import { ColumnsContext } from '../../contexts/ColumnsContext';
 import { useCombatState } from '../../contexts/CombatStateContext';
-import type { LedProfile, LedTriggerRule } from '../../types';
+import type { ColumnConfig, LedProfile, LedTriggerRule } from '../../types';
+
+/** Value stored in LedTriggerRule.target_stat (API column id if set, else key). */
+function columnStatId(col: ColumnConfig): string {
+  const ext = col as ColumnConfig & { id?: string };
+  return (ext.id && String(ext.id).trim()) || col.key;
+}
+
+function localizedStatName(systemName: string, col: ColumnConfig): string {
+  const ns = `systems/${systemName}`;
+  return i18n.t(`${col.key}.name`, { ns, defaultValue: col.label || col.key });
+}
+
+function localizedStatNameById(systemName: string, statId: string): string {
+  const ns = `systems/${systemName}`;
+  return i18n.t(`${statId}.name`, { ns, defaultValue: statId });
+}
 
 function newRuleId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -46,8 +64,11 @@ function normalizeLoadedRule(raw: unknown, profiles: LedProfile[]): LedTriggerRu
 
 export function LedTriggersModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { t } = useTranslation('core', { useSuspense: false });
+  const columnsCtx = useContext(ColumnsContext);
   const { state } = useCombatState();
+  const columns = columnsCtx?.columns ?? [];
   const system = (state?.system ?? '').trim();
+  const systemNameForI18n = system || 'D&D 5e';
 
   const [profiles, setProfiles] = useState<LedProfile[]>([]);
   const [rules, setRules] = useState<LedTriggerRule[]>([]);
@@ -209,16 +230,39 @@ export function LedTriggersModal({ isOpen, onClose }: { isOpen: boolean; onClose
                     </div>
                     <div>
                       <label className="block text-xs text-zinc-500 mb-1">
-                        {t('led_triggers.target_stat', { defaultValue: 'Stat ID' })}
+                        {t('led_triggers.stat_characteristic', { defaultValue: 'Characteristic' })}
                       </label>
-                      <input
-                        type="text"
-                        value={rule.target_stat ?? ''}
-                        disabled={rule.event_type !== 'stat_change'}
-                        onChange={(e) => updateRule(rule.id, { target_stat: e.target.value })}
-                        className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed font-mono"
-                        placeholder="hp"
-                      />
+                      {rule.event_type === 'stat_change' ? (
+                        <select
+                          value={rule.target_stat ?? ''}
+                          onChange={(e) =>
+                            updateRule(rule.id, {
+                              target_stat: e.target.value || null,
+                            })
+                          }
+                          className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
+                        >
+                          <option value="">{t('modals.none', { defaultValue: '—' })}</option>
+                          {rule.target_stat &&
+                            !columns.some(
+                              (col) => columnStatId(col) === (rule.target_stat || '').trim()
+                            ) && (
+                              <option value={rule.target_stat}>
+                                {localizedStatNameById(systemNameForI18n, rule.target_stat)}
+                              </option>
+                            )}
+                          {columns.map((col) => {
+                            const val = columnStatId(col);
+                            return (
+                              <option key={val} value={val}>
+                                {localizedStatName(systemNameForI18n, col)}
+                              </option>
+                            );
+                          })}
+                        </select>
+                      ) : (
+                        <div className="h-[42px] rounded-lg border border-zinc-800/80 bg-zinc-950/50" aria-hidden />
+                      )}
                     </div>
                     <div>
                       <label className="block text-xs text-zinc-500 mb-1">

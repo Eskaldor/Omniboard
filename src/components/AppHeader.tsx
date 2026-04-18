@@ -1,4 +1,4 @@
-import { Settings, BookImage, MonitorSmartphone, Layers, Link2, ChevronDown } from 'lucide-react';
+import { Settings, BookImage, MonitorSmartphone, Layers, Link2, ChevronDown, Lightbulb, Zap } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useRef, useState, useEffect } from 'react';
 import i18n from '../i18n';
@@ -16,6 +16,8 @@ export interface AppHeaderProps {
   onRefetch: () => void;
   onShowMiniatures: () => void;
   onShowHardware: () => void;
+  onShowLedProfiles: () => void;
+  onShowLedTriggers: () => void;
   onShowLibrary: () => void;
   onShowConfig: () => void;
   showLegendPanel: boolean;
@@ -42,6 +44,8 @@ export function AppHeader(props: AppHeaderProps) {
     onRefetch,
     onShowMiniatures,
     onShowHardware,
+    onShowLedProfiles,
+    onShowLedTriggers,
     onShowLibrary,
     onShowConfig,
     showLegendPanel,
@@ -134,6 +138,22 @@ export function AppHeader(props: AppHeaderProps) {
             >
               <Link2 size={16} className="text-zinc-400 shrink-0" />
               {t('header.table_binding')}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleMiniaturesAction(onShowLedProfiles)}
+              className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-zinc-200 hover:bg-zinc-700 hover:text-zinc-100 transition-colors"
+            >
+              <Lightbulb size={16} className="text-zinc-400 shrink-0" />
+              {t('miniature_layout.edit_led_profiles', { defaultValue: 'Edit LED profiles' })}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleMiniaturesAction(onShowLedTriggers)}
+              className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-zinc-200 hover:bg-zinc-700 hover:text-zinc-100 transition-colors"
+            >
+              <Zap size={16} className="text-zinc-400 shrink-0" />
+              {t('led_triggers.configure_triggers', { defaultValue: 'Configure event triggers' })}
             </button>
             <button
               type="button"

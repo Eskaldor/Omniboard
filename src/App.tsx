@@ -3,7 +3,18 @@ import { useTranslation } from 'react-i18next';
 import { Plus, Users, Trash, Swords } from 'lucide-react';
 import { CombatState, Actor, Effect, LegendConfig } from './types';
 import i18n from './i18n';
-import { MiniSheetModal, ConfigModal, LibraryModal, AddEffectModal, MiniaturesModal, ActorRosterModal, EncountersModal, HardwareModal } from './components/Modals';
+import {
+  MiniSheetModal,
+  ConfigModal,
+  LibraryModal,
+  AddEffectModal,
+  MiniaturesModal,
+  ActorRosterModal,
+  EncountersModal,
+  HardwareModal,
+  LedEffectsModal,
+  LedTriggersModal,
+} from './components/Modals';
 import { GroupCreateModal } from './components/Modals/GroupCreateModal';
 import { CombatLog } from './components/CombatLog';
 import { InitiativeTable } from './components/InitiativeTracker/InitiativeTable';
@@ -49,6 +60,8 @@ export default function App() {
   const [showRoster, setShowRoster] = useState(false);
   const [showEncounters, setShowEncounters] = useState(false);
   const [showHardware, setShowHardware] = useState(false);
+  const [showLedEffects, setShowLedEffects] = useState(false);
+  const [showLedTriggers, setShowLedTriggers] = useState(false);
   const [showLog, setShowLog] = useState(false);
   const [portraitSelectActorId, setPortraitSelectActorId] = useState<string | null>(null);
   const [showLegendPanel, setShowLegendPanel] = useState(false);
@@ -189,6 +202,8 @@ export default function App() {
         onShowLibrary={() => setShowLibrary(true)}
         onShowConfig={() => setShowConfig(true)}
         onShowHardware={() => setShowHardware(true)}
+        onShowLedProfiles={() => setShowLedEffects(true)}
+        onShowLedTriggers={() => setShowLedTriggers(true)}
         showLegendPanel={showLegendPanel}
         onToggleLegendPanel={() => setShowLegendPanel((v) => !v)}
         legendConfig={legendConfig}
@@ -422,7 +437,20 @@ export default function App() {
           systemName={systemName}
         />
       )}
-      {showMiniatures && <MiniaturesModal columns={columns} onClose={() => setShowMiniatures(false)} />}
+      {showMiniatures && (
+        <MiniaturesModal
+          columns={columns}
+          onClose={() => setShowMiniatures(false)}
+          onOpenLedProfiles={() => setShowLedEffects(true)}
+        />
+      )}
+      <LedEffectsModal
+        isOpen={showLedEffects}
+        onClose={() => setShowLedEffects(false)}
+        system={systemName}
+        onSaved={refetchState}
+      />
+      <LedTriggersModal isOpen={showLedTriggers} onClose={() => setShowLedTriggers(false)} />
       {showRoster && <ActorRosterModal systemName={systemName} onClose={() => setShowRoster(false)} onAdd={addFromRoster} />}
       {showEncounters && (
         <EncountersModal

@@ -4,7 +4,7 @@ from typing import Literal, Optional, List, Dict, Any
 class LedProfile(BaseModel):
     id: str
     name: str
-    mode: str  # e.g. "static", "blink", "pulse", "rainbow", "breathe"
+    mode: Literal["static", "cycle", "blink", "breathe", "pulse", "rainbow"]
     speed: int
     brightness: int
     colors: list[str]  # e.g. ["#FF0000", "#000000"] or ["$ROLE_COLOR"]

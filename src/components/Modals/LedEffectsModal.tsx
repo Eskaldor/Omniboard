@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import { X, Plus, Save, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import type { LedProfile } from '../../types';
+import type { LedProfile, LedProfileMode } from '../../types';
 
-const LED_MODES = ['static', 'blink', 'pulse', 'rainbow', 'breathe'] as const;
+const LED_MODES = ['static', 'cycle', 'blink', 'breathe', 'pulse', 'rainbow'] as const;
 type LedMode = (typeof LED_MODES)[number];
 
 function isLedMode(m: string): m is LedMode {
@@ -49,6 +49,24 @@ function LedPreviewBubble({
       <div
         className="mx-auto shrink-0 border border-zinc-600"
         style={{ ...base, backgroundColor: c0 }}
+        key={styleKey}
+      />
+    );
+  }
+
+  if (mode === 'cycle') {
+    const half = Math.max(100, speed || 200);
+    return (
+      <div
+        className="mx-auto shrink-0 border border-zinc-600 led-blink-preview"
+        style={
+          {
+            ...base,
+            ['--led-c0' as string]: c0,
+            ['--led-c1' as string]: c1,
+            animation: `ledBlinkPreview ${half * 2}ms steps(2, end) infinite`,
+          } as React.CSSProperties
+        }
         key={styleKey}
       />
     );
@@ -232,7 +250,7 @@ export function LedEffectsModal({
     if (!draft || !draft.id.trim() || !selectedId) return null;
     const name = (draft.name || draft.id).trim();
     const id = draft.id.trim();
-    const mode = draft.mode || 'static';
+    const mode: LedProfileMode = isLedMode(draft.mode) ? draft.mode : 'static';
     const speed = Math.max(0, Math.min(2000, Number(draft.speed) || 0));
     const brightness = Math.max(0, Math.min(255, Number(draft.brightness) || 0));
     const colors = draft.colors.length > 0 ? draft.colors.map((c) => c.trim() || '#000000') : ['#000000'];
@@ -387,14 +405,15 @@ export function LedEffectsModal({
                       <label className="block text-xs text-zinc-500 mb-1">{t('led_profiles.mode', { defaultValue: 'Mode' })}</label>
                       <select
                         value={isLedMode(selected.mode) ? selected.mode : 'static'}
-                        onChange={(e) => updateDraft({ mode: e.target.value })}
+                        onChange={(e) => updateDraft({ mode: e.target.value as LedProfileMode })}
                         className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-amber-500"
                       >
                         <option value="static">{t('led_profiles.mode_static', { defaultValue: 'Static' })}</option>
+                        <option value="cycle">{t('led_profiles.mode_cycle', { defaultValue: 'Cycle' })}</option>
                         <option value="blink">{t('led_profiles.mode_blink', { defaultValue: 'Blink' })}</option>
+                        <option value="breathe">{t('led_profiles.mode_breathe', { defaultValue: 'Breathe' })}</option>
                         <option value="pulse">{t('led_profiles.mode_pulse', { defaultValue: 'Pulse' })}</option>
                         <option value="rainbow">{t('led_profiles.mode_rainbow', { defaultValue: 'Rainbow' })}</option>
-                        <option value="breathe">{t('led_profiles.mode_breathe', { defaultValue: 'Breathe' })}</option>
                       </select>
                     </div>
 

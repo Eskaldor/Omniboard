@@ -15,7 +15,7 @@ type ColumnsContextValue = {
   normalizeSystemKey: (s: string) => string;
 };
 
-const ColumnsContext = createContext<ColumnsContextValue | null>(null);
+export const ColumnsContext = createContext<ColumnsContextValue | null>(null);
 
 export function useColumns(): ColumnsContextValue {
   const ctx = useContext(ColumnsContext);
