@@ -24,6 +24,9 @@ export interface InitiativeTableProps {
   onEffectClick: (actorId: string, effect: Effect) => void;
   onAddEffectClick: (actor: Actor) => void;
   onToggleGroupSelect: (actorId: string, selected: boolean) => void;
+  /** ADR-14: when true and combat is active, clicking a row requests that turn */
+  isManualMode?: boolean;
+  onManualActorClick?: (actorId: string) => void | Promise<void>;
 }
 
 export function InitiativeTable({
@@ -46,6 +49,8 @@ export function InitiativeTable({
   onEffectClick,
   onAddEffectClick,
   onToggleGroupSelect,
+  isManualMode = false,
+  onManualActorClick,
 }: InitiativeTableProps) {
   const { t } = useTranslation('core', { useSuspense: false });
   const colLabel = (col: ColumnConfig) =>
@@ -184,6 +189,13 @@ export function InitiativeTable({
                 onAddEffectClick={() => onAddEffectClick(actor)}
                 onToggleGroupSelect={(selected) => onToggleGroupSelect(actor.id, selected)}
                 showPortraitColumn={showPortraitColumn}
+                isManualMode={isManualMode}
+                isActiveCombat={isActive}
+                onManualRowActivate={
+                  onManualActorClick && isManualMode && isActive
+                    ? () => onManualActorClick(actor.id)
+                    : undefined
+                }
               />
             );
           })}

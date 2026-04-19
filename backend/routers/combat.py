@@ -7,6 +7,7 @@ from fastapi import APIRouter, Body, HTTPException
 
 from backend import combat_engine
 from backend import state as app_state
+from backend.engines.manager import get_engine_for_state, system_has_custom_logic_file
 from backend.history import save_snapshot
 from backend.models import CombatState, LegendConfig, LogEntry, LayoutProfile
 from backend.paths import LOGS_DIR
@@ -17,6 +18,30 @@ from backend.services.logger import add_log
 
 
 router = APIRouter(prefix="/api/combat", tags=["combat"])
+
+
+def _log_turn_progression(prev: CombatState, new: CombatState) -> None:
+    """Mirror legacy combat_engine.next_turn logging (round, effects, turn starts)."""
+    if new.round > prev.round:
+        add_log("round_start")
+    prev_by_id = {a.id: a for a in prev.actors}
+    for a in new.actors:
+        p = prev_by_id.get(a.id)
+        if not p:
+            continue
+        new_eids = {e.id for e in a.effects}
+        for e in p.effects:
+            if e.id not in new_eids:
+                add_log(
+                    "effect_removed",
+                    actor_id=a.id,
+                    actor_name=a.name,
+                    details={"effect_name": e.name},
+                )
+    for aid in combat_engine.current_turn_slot_actor_ids():
+        actor = next((x for x in app_state.state.actors if x.id == aid), None)
+        if actor:
+            add_log("turn_start", actor_id=actor.id, actor_name=actor.name)
 
 
 @router.get("/state")
@@ -31,6 +56,7 @@ async def get_state():
     )
     if default_layout is not None:
         out["layout"] = default_layout.model_dump()
+    out["initiative_engine_locked"] = system_has_custom_logic_file(app_state.state.system)
     return out
 
 
@@ -40,7 +66,19 @@ async def update_combat_system(payload: dict):
     if not system_name:
         raise HTTPException(status_code=400, detail="system is required")
     await save_snapshot()
+    tq = list(app_state.state.turn_queue)
+    idx = app_state.state.current_index
+    current_actor_id = tq[idx] if tq and 0 <= idx < len(tq) else None
     app_state.state.system = system_name
+    engine = get_engine_for_state(app_state.state)
+    new_queue = engine.build_queue(app_state.state)
+    app_state.state.turn_queue = new_queue
+    if current_actor_id and current_actor_id in new_queue:
+        app_state.state.current_index = new_queue.index(current_actor_id)
+    else:
+        app_state.state.current_index = (
+            min(idx, len(new_queue) - 1) if new_queue else 0
+        )
     await save_snapshot()
     await broadcast_state()
     return {"system": app_state.state.system}
@@ -63,16 +101,27 @@ async def redo_combat():
 
 
 @router.post("/next-turn")
-async def next_turn():
-    await save_snapshot()
-    if not app_state.state.turn_queue:
+async def next_turn(payload: dict = Body(default_factory=dict)):
+    raw_target = payload.get("target_actor_id")
+    if isinstance(raw_target, str):
+        target_actor_id = raw_target.strip() or None
+    else:
+        target_actor_id = None
+
+    st = app_state.state
+    if not st.turn_queue and not (st.is_manual_mode and target_actor_id):
         return {"error": "Queue empty"}
+
+    await save_snapshot()
     prev_ids = combat_engine.current_turn_slot_actor_ids()
     await asyncio.gather(
         *[led_interceptor.reset_actor_led_to_default(aid) for aid in prev_ids],
         return_exceptions=True,
     )
-    combat_engine.next_turn(add_log)
+    prev_snapshot = app_state.state.model_copy(deep=True)
+    engine = get_engine_for_state(st)
+    app_state.state = engine.next_turn(st, target_actor_id)
+    _log_turn_progression(prev_snapshot, app_state.state)
     await save_snapshot()
     await broadcast_state()
     for aid in combat_engine.current_turn_slot_actor_ids():
@@ -83,7 +132,12 @@ async def next_turn():
 @router.post("/start")
 async def start_combat():
     await save_snapshot()
-    combat_engine.start_combat(add_log)
+    engine = get_engine_for_state(app_state.state)
+    app_state.state.is_active = True
+    app_state.state.round = 1
+    app_state.state.turn_queue = engine.build_queue(app_state.state)
+    app_state.state.current_index = 0
+    add_log("combat_start")
     await save_snapshot()
     await broadcast_state()
     return app_state.state
@@ -137,6 +191,12 @@ async def update_combat_settings(payload: dict):
         app_state.state.autosave_enabled = bool(payload["autosave_enabled"])
     if "table_centered" in payload:
         app_state.state.table_centered = bool(payload["table_centered"])
+    if "is_manual_mode" in payload:
+        app_state.state.is_manual_mode = bool(payload["is_manual_mode"])
+    if "engine_type" in payload and not system_has_custom_logic_file(app_state.state.system):
+        raw = str(payload.get("engine_type") or "").strip().lower()
+        if raw in ("standard", "phase", "popcorn"):
+            app_state.state.engine_type = raw
 
     await save_snapshot()
     # Persist current state of settings immediately to disk (non-blocking)
@@ -146,6 +206,8 @@ async def update_combat_settings(payload: dict):
         "enable_logging": app_state.state.enable_logging,
         "autosave_enabled": app_state.state.autosave_enabled,
         "table_centered": app_state.state.table_centered,
+        "is_manual_mode": app_state.state.is_manual_mode,
+        "engine_type": app_state.state.engine_type,
     }
 
 

@@ -170,6 +170,7 @@ class CombatState(BaseModel):
     current_pass: int = 1
     round: int = 1
     is_manual_mode: bool = False
+    engine_type: str = "standard"
     system: str = "D&D 5e"
     layout_profiles: List[LayoutProfile] = Field(
         default_factory=lambda: [

@@ -53,7 +53,9 @@
     "enemy": "Противник",
     "ally": "Союзник",
     "neutral": "Нейтральный",
-    "create_group": "Создать группу"
+    "create_group": "Создать группу",
+    "manual_mode": "Вручную",
+    "manual_mode_hint": "Ручная инициатива: клик по строке задаёт текущий ход"
   },
   "combat": {
     "round": "Раунд",
@@ -74,6 +76,15 @@
   },
   "config_modal": {
     "table": "Таблица",
+    "combat_system": "Боевая система",
+    "initiative_engine": "Механика инициативы",
+    "initiative_engine_hint": "Логика очереди ходов (отдельно от папки правил выше).",
+    "engine_standard": "Стандарт (по убыванию)",
+    "engine_phase": "Фазовая",
+    "engine_popcorn": "Попкорн",
+    "engine_custom_system": "Своя (задана системой)",
+    "manual_mode": "Ручная инициатива",
+    "manual_mode_hint": "Мастер сам выбирает, чей ход",
     "center_table": "Центрировать таблицу",
     "fields_columns": "Поля / Колонки",
     "saved_systems": "Сохранённые системы",

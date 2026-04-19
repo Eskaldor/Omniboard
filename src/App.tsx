@@ -19,7 +19,7 @@ import { GroupCreateModal } from './components/Modals/GroupCreateModal';
 import { CombatLog } from './components/CombatLog';
 import { InitiativeTable } from './components/InitiativeTracker/InitiativeTable';
 import { AppHeader } from './components/AppHeader';
-import { CombatToolbar } from './components/CombatToolbar';
+import { CombatToolbar, ManualModeToggle } from './components/CombatToolbar';
 import { useCombatState } from './contexts/CombatStateContext';
 import { useColumns } from './contexts/ColumnsContext';
 import { CombatProvider } from './contexts/CombatContext';
@@ -239,7 +239,7 @@ export default function App() {
         <div className="w-full px-8">
           <div className="flex justify-between items-end mb-4">
             <h2 className="text-lg font-medium text-zinc-300">{systemName}</h2>
-            <div className="flex gap-4">
+            <div className="flex flex-wrap items-center gap-3">
               <button onClick={addActor} className="flex items-center gap-1 text-sm text-emerald-400 hover:text-emerald-300">
                 <Plus size={16} /> {t('main.add_actor')}
               </button>
@@ -249,6 +249,21 @@ export default function App() {
               <button onClick={() => setShowRoster(true)} className="flex items-center gap-1 text-sm text-zinc-400 hover:text-zinc-300">
                 <Users size={16} /> {t('main.roster')}
               </button>
+              <ManualModeToggle
+                isManualMode={effectiveState.is_manual_mode ?? false}
+                onToggle={async (next) => {
+                  try {
+                    await fetch('/api/combat/settings', {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ is_manual_mode: next }),
+                    });
+                    await refetchState();
+                  } catch (err) {
+                    console.error('Failed to toggle manual mode', err);
+                  }
+                }}
+              />
             </div>
           </div>
 
@@ -327,6 +342,15 @@ export default function App() {
                 if (selected) next.add(actorId);
                 else next.delete(actorId);
                 return next;
+              });
+            }}
+            isManualMode={effectiveState.is_manual_mode ?? false}
+            onManualActorClick={async (actorId) => {
+              if (!effectiveState.is_manual_mode || !effectiveState.is_active) return;
+              await fetch('/api/combat/next-turn', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ target_actor_id: actorId }),
               });
             }}
           />
@@ -416,13 +440,6 @@ export default function App() {
             columns={columns}
             setColumns={setColumns}
             systemName={systemName}
-            setSystemName={(val) =>
-              fetch('/api/combat/system', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ system: val })
-              })
-            }
             onClose={() => setShowConfig(false)}
           />
         )}

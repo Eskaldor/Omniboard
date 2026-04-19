@@ -29,6 +29,10 @@ export interface ActorRowProps {
   onToggleGroupSelect: (selected: boolean) => void;
   /** When false, portrait column is hidden (cell not rendered). When true, portrait cell is shown only if actor.show_portrait. */
   showPortraitColumn: boolean;
+  /** ADR-14 manual mode: row click assigns turn */
+  isManualMode?: boolean;
+  isActiveCombat?: boolean;
+  onManualRowActivate?: () => void | Promise<void>;
 }
 
 export const ActorRow = React.memo(function ActorRow({
@@ -53,6 +57,9 @@ export const ActorRow = React.memo(function ActorRow({
   onAddEffectClick,
   onToggleGroupSelect,
   showPortraitColumn,
+  isManualMode = false,
+  isActiveCombat = false,
+  onManualRowActivate,
 }: ActorRowProps) {
   const { t } = useTranslation('core', { useSuspense: false });
   const colLabel = (col: ColumnConfig) =>
@@ -68,12 +75,26 @@ export const ActorRow = React.memo(function ActorRow({
   );
   const groupNames = [...new Set(grouped.map((c) => String(c.group).trim()))];
 
+  const manualRowActive = isManualMode && isActiveCombat && !!onManualRowActivate;
+  const hasActedDim = isManualMode && !!actor.has_acted;
+
+  const handleRowClick = (e: React.MouseEvent<HTMLTableRowElement>) => {
+    if (!manualRowActive) return;
+    if (e.detail !== 1) return;
+    const t = e.target as HTMLElement;
+    if (t.closest('button, input, textarea, select, a')) return;
+    void onManualRowActivate?.();
+  };
+
   return (
     <tr
+      onClick={handleRowClick}
       onDoubleClick={onRowDoubleClick}
       className={`group bg-zinc-900/50 hover:bg-zinc-800/50 transition-colors [&>td:not(:first-child):not(:last-child)]:border-b [&>td:not(:first-child):not(:last-child)]:border-zinc-800/50 ${
         isPastTurn ? 'opacity-40 grayscale-[50%]' : ''
-      }       ${isCurrent ? 'bg-zinc-800/40' : ''}`}
+      } ${hasActedDim ? 'opacity-55 grayscale' : ''} ${isCurrent ? 'bg-zinc-800/40' : ''} ${
+        manualRowActive ? 'cursor-pointer' : ''
+      }`}
     >
       {/* Portrait: only render when column is shown and actor has show_portrait */}
       {showPortraitColumn && (

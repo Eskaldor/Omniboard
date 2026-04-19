@@ -8,18 +8,17 @@ export function ConfigModal({
   columns,
   setColumns,
   systemName,
-  setSystemName,
   onClose,
 }: {
   columns: ColumnConfig[];
   setColumns: (c: ColumnConfig[]) => void;
   systemName: string;
-  setSystemName: (s: string) => void;
   onClose: () => void;
 }) {
   const { t, i18n } = useTranslation('core', { useSuspense: false });
-  const { state } = useCombatState();
+  const { state, refetchState } = useCombatState();
   const tableCentered = state?.table_centered !== false;
+  const engineLocked = state?.initiative_engine_locked ?? false;
 
   const [languages, setLanguages] = useState<{ code: string; name: string; flag: string }[]>([]);
   const [showLangDropdown, setShowLangDropdown] = useState(false);
@@ -76,9 +75,39 @@ export function ConfigModal({
       .catch(() => setPresets([]));
   }, []);
 
+  const applyCombatSystem = async (name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    setLocalSystemName(trimmed);
+    try {
+      await fetch('/api/combat/system', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ system: trimmed }),
+      });
+      await refetchState();
+    } catch (err) {
+      console.error('Failed to set combat system', err);
+    }
+  };
+
   const commitSystemName = () => {
     const trimmed = localSystemName.trim();
-    if (trimmed) setSystemName(trimmed);
+    if (trimmed) void applyCombatSystem(trimmed);
+  };
+
+  const applyEngineType = async (engineType: string) => {
+    if (engineLocked) return;
+    try {
+      await fetch('/api/combat/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ engine_type: engineType }),
+      });
+      await refetchState();
+    } catch (err) {
+      console.error('Failed to set initiative engine', err);
+    }
   };
 
   const toggleColumn = (key: string) => {
@@ -122,9 +151,8 @@ export function ConfigModal({
   };
 
   const loadPreset = async (preset: string) => {
-    setSystemName(preset);
-    setLocalSystemName(preset);
     setShowPresets(false);
+    await applyCombatSystem(preset);
     try {
       const res = await fetch(`/api/systems/${encodeURIComponent(preset)}/columns`);
       const data = await res.json();
@@ -299,6 +327,58 @@ export function ConfigModal({
               </div>
             )}
           </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-2 mb-2 border-b border-zinc-800/50">
+            <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider shrink-0">
+              {t('config_modal.combat_system')}
+            </span>
+            <select
+              value={localSystemName}
+              onChange={(e) => applyCombatSystem(e.target.value)}
+              className={`${inputClass} min-w-[12rem] max-w-full`}
+              title={t('config_modal.combat_system')}
+            >
+              {!presets.includes(localSystemName) && localSystemName.trim() ? (
+                <option value={localSystemName}>{localSystemName}</option>
+              ) : null}
+              {presets.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-2 mb-2 border-b border-zinc-800/50">
+            <div className="flex flex-col gap-0.5 min-w-0 shrink-0">
+              <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                {t('config_modal.initiative_engine')}
+              </span>
+              <span className="text-xs text-zinc-500">{t('config_modal.initiative_engine_hint')}</span>
+            </div>
+            <select
+              disabled={engineLocked}
+              value={engineLocked ? 'custom' : (state?.engine_type ?? 'standard')}
+              onChange={(e) => applyEngineType(e.target.value)}
+              className={`${inputClass} min-w-[12rem] max-w-full disabled:opacity-60 disabled:cursor-not-allowed`}
+              title={t('config_modal.initiative_engine')}
+            >
+              {engineLocked ? (
+                <option value="custom">{t('config_modal.engine_custom_system')}</option>
+              ) : (
+                <>
+                  <option value="standard">{t('config_modal.engine_standard')}</option>
+                  <option value="phase" disabled>
+                    {t('config_modal.engine_phase')} (soon)
+                  </option>
+                  <option value="popcorn" disabled>
+                    {t('config_modal.engine_popcorn')} (soon)
+                  </option>
+                </>
+              )}
+            </select>
+          </div>
+
           <div className="flex items-center justify-between py-2 mb-2 border-b border-zinc-800/50">
             <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">{t('config_modal.table')}</span>
             <label className="flex items-center gap-2 cursor-pointer">

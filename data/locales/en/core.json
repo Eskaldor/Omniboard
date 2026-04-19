@@ -51,7 +51,9 @@
     "enemy": "Enemy",
     "ally": "Ally",
     "neutral": "Neutral",
-    "create_group": "Create Group"
+    "create_group": "Create Group",
+    "manual_mode": "Manual",
+    "manual_mode_hint": "Manual initiative: click a row to set whose turn it is"
   },
   "combat": {
     "round": "Round",
@@ -72,6 +74,15 @@
   },
   "config_modal": {
     "table": "Table",
+    "combat_system": "Combat system",
+    "initiative_engine": "Initiative mechanic",
+    "initiative_engine_hint": "Turn order logic (independent of the rules folder above).",
+    "engine_standard": "Standard (descending)",
+    "engine_phase": "Phase-based",
+    "engine_popcorn": "Popcorn",
+    "engine_custom_system": "Custom (system-defined)",
+    "manual_mode": "Manual initiative",
+    "manual_mode_hint": "GM selects whose turn it is",
     "center_table": "Center table",
     "fields_columns": "Fields / Columns",
     "saved_systems": "Saved systems",

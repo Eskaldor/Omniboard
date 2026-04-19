@@ -43,6 +43,8 @@ export interface Actor {
   group_mode: "sequential" | "simultaneous" | null;
   group_color: string | null;
   initiative: number;
+  /** Popcorn / manual initiative: GM marked actor as having acted this round */
+  has_acted?: boolean;
   portrait: string;
   show_portrait?: boolean;
   miniature_id: string | null;
@@ -170,8 +172,16 @@ export interface CombatState {
   actors: Actor[];
   turn_queue: string[];
   current_index: number;
+  /** Multi-pass rounds (e.g. Shadowrun); standard D&D uses 1 */
+  current_pass?: number;
   round: number;
   system: string;
+  /** GM manually picks current turn (ADR-14) */
+  is_manual_mode?: boolean;
+  /** Initiative engine id: standard | phase | popcorn (ADR-12/14) */
+  engine_type?: string;
+  /** True when ``data/systems/<system>/logic.py`` exists — engine is system-defined */
+  initiative_engine_locked?: boolean;
   is_active: boolean;
   /** Список профилей отображения миниатюр */
   layout_profiles: LayoutProfile[];

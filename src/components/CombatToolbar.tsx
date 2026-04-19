@@ -1,5 +1,32 @@
-import { Play, Square, RotateCcw, Trash, Undo, Redo, SkipForward } from 'lucide-react';
+import { Play, Square, RotateCcw, Trash, Undo, Redo, SkipForward, Hand } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+
+export interface ManualModeToggleProps {
+  isManualMode: boolean;
+  onToggle: (next: boolean) => void | Promise<void>;
+}
+
+/** Toolbar control for ADR-14 manual initiative; place next to main combat actions. */
+export function ManualModeToggle({ isManualMode, onToggle }: ManualModeToggleProps) {
+  const { t } = useTranslation('core', { useSuspense: false });
+
+  return (
+    <button
+      type="button"
+      onClick={() => onToggle(!isManualMode)}
+      title={t('toolbar.manual_mode_hint')}
+      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
+        isManualMode
+          ? 'bg-amber-500/20 text-amber-200 border-amber-400/70 shadow-[0_0_12px_rgba(251,191,36,0.25)]'
+          : 'bg-zinc-800/80 text-zinc-400 border-zinc-700 hover:border-zinc-600 hover:text-zinc-200'
+      }`}
+      aria-pressed={isManualMode}
+    >
+      <Hand size={16} className={isManualMode ? 'text-amber-300' : 'text-zinc-500'} />
+      {t('toolbar.manual_mode')}
+    </button>
+  );
+}
 
 export interface CombatToolbarProps {
   isActive: boolean;
