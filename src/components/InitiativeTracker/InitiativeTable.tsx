@@ -24,8 +24,9 @@ export interface InitiativeTableProps {
   onEffectClick: (actorId: string, effect: Effect) => void;
   onAddEffectClick: (actor: Actor) => void;
   onToggleGroupSelect: (actorId: string, selected: boolean) => void;
-  /** ADR-14: when true and combat is active, clicking a row requests that turn */
   isManualMode?: boolean;
+  /** initiative engine id (e.g. popcorn) — used with isManualMode for click-to-act */
+  engineType?: string;
   onManualActorClick?: (actorId: string) => void | Promise<void>;
 }
 
@@ -50,8 +51,12 @@ export function InitiativeTable({
   onAddEffectClick,
   onToggleGroupSelect,
   isManualMode = false,
+  engineType = 'standard',
   onManualActorClick,
 }: InitiativeTableProps) {
+  const engineKey = engineType.toLowerCase();
+  const clickToActEngine = isManualMode || engineKey === 'popcorn' || engineKey === 'phase';
+  const showInitColumn = engineKey !== 'popcorn';
   const { t } = useTranslation('core', { useSuspense: false });
   const colLabel = (col: ColumnConfig) =>
     i18n.t(`${col.key}.name`, { ns: `systems/${systemName}`, defaultValue: col.key });
@@ -63,9 +68,16 @@ export function InitiativeTable({
     (c) => c.group && String(c.group).trim() !== '',
   );
   const groupNames = [...new Set(grouped.map((c) => String(c.group).trim()))];
-  const columnCount = 1 + 1 + 1 + standalone.length + groupNames.length + 1 + 1;
   const showPortraitColumn = actors.some((a) => a.show_portrait === true);
-  const effectiveColumnCount = showPortraitColumn ? columnCount : columnCount - 1;
+  /** Portrait + optional initiative + name + stats + effects + actions */
+  const effectiveColumnCount =
+    (showPortraitColumn ? 1 : 0) +
+    (showInitColumn ? 1 : 0) +
+    1 +
+    standalone.length +
+    groupNames.length +
+    1 +
+    1;
 
   const rows = isActive
     ? turnQueue
@@ -76,6 +88,14 @@ export function InitiativeTable({
         .map((actor, index) => ({ actor, index }));
 
   const sortedActors = rows.map((r) => r.actor);
+
+  const unactedActors = actors.filter(
+    (a) => !a.has_acted && turnQueue.includes(a.id),
+  );
+  const activePhase =
+    unactedActors.length > 0
+      ? Math.max(...unactedActors.map((a) => a.initiative))
+      : -Infinity;
 
   const activeActorIds = (() => {
     if (!isActive || !turnQueue.length) return new Set<string>();
@@ -96,13 +116,13 @@ export function InitiativeTable({
   return (
     <div className="w-full overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
       <table
-        className={`border-collapse text-left whitespace-nowrap text-sm text-zinc-200 ${tableCentered ? 'mx-auto' : 'min-w-full'} ${actors.length === 0 ? 'w-full' : 'w-max'}`}
+        className={`border-separate border-spacing-0 text-left whitespace-nowrap text-sm text-zinc-200 ${tableCentered ? 'mx-auto' : 'min-w-full'} ${actors.length === 0 ? 'w-full' : 'w-max'}`}
         style={actors.length === 0 ? { tableLayout: 'fixed' } : undefined}
       >
         {actors.length === 0 && (
           <colgroup>
             {showPortraitColumn && <col style={{ width: 54 }} />}
-            <col style={{ width: 54 }} />
+            {showInitColumn && <col style={{ width: 54 }} />}
             <col style={{ width: 128 }} />
             {standalone.map((col) => (
               <col key={col.key} style={{ width: 80, minWidth: 80 }} />
@@ -119,8 +139,11 @@ export function InitiativeTable({
             {showPortraitColumn && (
               <th className="px-2 py-1 align-middle w-[54px] sticky left-0 z-20 bg-zinc-950 shadow-[8px_0_15px_-3px_rgba(0,0,0,0.5)] border-r border-zinc-800/50" />
             )}
-            {/* Initiative */}
-            <th className="px-2 py-1 text-center align-middle font-medium text-zinc-400 bg-zinc-900 w-[54px]">{t('table_header.init')}</th>
+            {showInitColumn && (
+              <th className="px-2 py-1 text-center align-middle font-medium text-zinc-400 bg-zinc-900 w-[54px]">
+                {engineKey === 'phase' ? t('table_header.phase') : t('table_header.init')}
+              </th>
+            )}
             {/* Name */}
             <th className="px-2 py-1 text-left align-middle font-medium text-zinc-400 bg-zinc-900 w-32">{t('table_header.name')}</th>
             {/* Standalone stat columns */}
@@ -156,7 +179,17 @@ export function InitiativeTable({
         </thead>
         <tbody>
             {rows.map(({ actor, index }) => {
-            const isPastTurn = isActive && index < currentIndex;
+            let rowClickEnabled = false;
+            if (isManualMode) {
+              rowClickEnabled = true;
+            } else if (engineKey === 'popcorn') {
+              rowClickEnabled = !actor.has_acted;
+            } else if (engineKey === 'phase') {
+              rowClickEnabled = !actor.has_acted && actor.initiative === activePhase;
+            }
+            const isPastTurn =
+              isActive &&
+              (clickToActEngine ? !!actor.has_acted : index < currentIndex);
             const isGrouped = !!(actor.group_id && actor.group_mode === 'simultaneous');
             const prevActor = sortedActors[index - 1];
             const nextActor = sortedActors[index + 1];
@@ -189,11 +222,22 @@ export function InitiativeTable({
                 onAddEffectClick={() => onAddEffectClick(actor)}
                 onToggleGroupSelect={(selected) => onToggleGroupSelect(actor.id, selected)}
                 showPortraitColumn={showPortraitColumn}
-                isManualMode={isManualMode}
+                showInitColumn={showInitColumn}
+                clickToActEngine={clickToActEngine}
+                rowClickEnabled={rowClickEnabled}
+                phaseRowInactive={
+                  engineKey === 'phase' &&
+                  !isManualMode &&
+                  clickToActEngine &&
+                  !actor.has_acted &&
+                  actor.initiative !== activePhase
+                }
                 isActiveCombat={isActive}
                 onManualRowActivate={
-                  onManualActorClick && isManualMode && isActive
-                    ? () => onManualActorClick(actor.id)
+                  onManualActorClick && clickToActEngine && isActive
+                    ? () => {
+                        void onManualActorClick(actor.id);
+                      }
                     : undefined
                 }
               />

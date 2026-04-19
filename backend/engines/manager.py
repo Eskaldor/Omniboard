@@ -3,12 +3,16 @@ from __future__ import annotations
 from pathlib import Path
 
 from backend.engines.base import BaseInitiativeEngine
+from backend.engines.phase import PhaseInitiativeEngine
+from backend.engines.popcorn import PopcornInitiativeEngine
 from backend.engines.standard import StandardInitiativeEngine
 from backend.models import CombatState
 from backend.paths import DATA_DIR
 
-# Stateless default engine; one instance shared until Phase/Popcorn engines exist.
+# Stateless default engine; one instance shared until Phase engines exist.
 _standard_singleton = StandardInitiativeEngine()
+_popcorn_singleton = PopcornInitiativeEngine()
+_phase_singleton = PhaseInitiativeEngine()
 
 
 def _logic_path(system_name: str) -> Path:
@@ -42,7 +46,10 @@ def get_engine_for_state(state: CombatState) -> BaseInitiativeEngine:
     if custom is not None:
         return custom
     et = (state.engine_type or "standard").strip().lower()
-    # Future: "phase", "popcorn", etc.
-    if et in ("standard", "phase", "popcorn"):
+    if et == "popcorn":
+        return _popcorn_singleton
+    if et == "phase":
+        return _phase_singleton
+    if et == "standard":
         return _standard_singleton
     return _standard_singleton

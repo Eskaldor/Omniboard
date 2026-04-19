@@ -368,12 +368,8 @@ export function ConfigModal({
               ) : (
                 <>
                   <option value="standard">{t('config_modal.engine_standard')}</option>
-                  <option value="phase" disabled>
-                    {t('config_modal.engine_phase')} (soon)
-                  </option>
-                  <option value="popcorn" disabled>
-                    {t('config_modal.engine_popcorn')} (soon)
-                  </option>
+                  <option value="phase">{t('config_modal.engine_phase')}</option>
+                  <option value="popcorn">{t('config_modal.engine_popcorn')}</option>
                 </>
               )}
             </select>

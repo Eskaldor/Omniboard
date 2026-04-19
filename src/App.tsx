@@ -148,7 +148,7 @@ export default function App() {
         role: 'enemy',
         portrait: '',
         stats: { hp: 10, ac: 10, speed: 30 },
-        initiative: Math.floor(Math.random() * 20) + 1,
+        initiative: 0,
         effects: [],
         visibility: { hp: true, stats: true, effects: true, name: true },
         hotbar: []
@@ -345,8 +345,12 @@ export default function App() {
               });
             }}
             isManualMode={effectiveState.is_manual_mode ?? false}
+            engineType={effectiveState.engine_type ?? 'standard'}
             onManualActorClick={async (actorId) => {
-              if (!effectiveState.is_manual_mode || !effectiveState.is_active) return;
+              if (!effectiveState.is_active) return;
+              const et = (effectiveState.engine_type ?? 'standard').toLowerCase();
+              const manual = effectiveState.is_manual_mode ?? false;
+              if (!manual && et !== 'popcorn' && et !== 'phase') return;
               await fetch('/api/combat/next-turn', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -360,6 +364,7 @@ export default function App() {
       <CombatToolbar
         isActive={effectiveState.is_active}
         isManualMode={effectiveState.is_manual_mode ?? false}
+        engineType={effectiveState.engine_type ?? 'standard'}
         canUndo={effectiveState?.can_undo ?? false}
         canRedo={effectiveState?.can_redo ?? false}
         onStartCombat={startCombat}

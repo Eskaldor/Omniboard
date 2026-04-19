@@ -29,8 +29,14 @@ export interface ActorRowProps {
   onToggleGroupSelect: (selected: boolean) => void;
   /** When false, portrait column is hidden (cell not rendered). When true, portrait cell is shown only if actor.show_portrait. */
   showPortraitColumn: boolean;
-  /** ADR-14 manual mode: row click assigns turn */
-  isManualMode?: boolean;
+  /** Hide initiative column (e.g. Popcorn engine) */
+  showInitColumn?: boolean;
+  /** Manual / Popcorn / Phase: table uses has_acted for past-turn styling */
+  clickToActEngine?: boolean;
+  /** Whether this row accepts a click to assign turn (manual: always true; phase: current phase only) */
+  rowClickEnabled?: boolean;
+  /** Phase engine: wrong phase, not yet acted — light dim, no pointer/hover */
+  phaseRowInactive?: boolean;
   isActiveCombat?: boolean;
   onManualRowActivate?: () => void | Promise<void>;
 }
@@ -57,7 +63,10 @@ export const ActorRow = React.memo(function ActorRow({
   onAddEffectClick,
   onToggleGroupSelect,
   showPortraitColumn,
-  isManualMode = false,
+  showInitColumn = true,
+  clickToActEngine = false,
+  rowClickEnabled = false,
+  phaseRowInactive = false,
   isActiveCombat = false,
   onManualRowActivate,
 }: ActorRowProps) {
@@ -75,8 +84,8 @@ export const ActorRow = React.memo(function ActorRow({
   );
   const groupNames = [...new Set(grouped.map((c) => String(c.group).trim()))];
 
-  const manualRowActive = isManualMode && isActiveCombat && !!onManualRowActivate;
-  const hasActedDim = isManualMode && !!actor.has_acted;
+  const manualRowActive = rowClickEnabled && isActiveCombat && !!onManualRowActivate;
+  const hasActedDim = clickToActEngine && !!actor.has_acted;
 
   const handleRowClick = (e: React.MouseEvent<HTMLTableRowElement>) => {
     if (!manualRowActive) return;
@@ -93,7 +102,11 @@ export const ActorRow = React.memo(function ActorRow({
       className={`group transition-colors [&>td:not(:first-child):not(:last-child)]:border-b [&>td:not(:first-child):not(:last-child)]:border-zinc-800/50 ${
         isCurrent
           ? 'rounded-lg ring-1 ring-inset ring-zinc-500 bg-zinc-800/40'
-          : 'bg-zinc-900/50 hover:bg-zinc-800/50'
+          : `bg-zinc-900/50 ${
+              phaseRowInactive && !hasActedDim
+                ? 'opacity-[0.88] cursor-default hover:bg-zinc-900/50'
+                : 'hover:bg-zinc-800/50'
+            }`
       } ${isPastTurn ? 'opacity-40 grayscale-[50%]' : ''} ${hasActedDim ? 'opacity-55 grayscale' : ''} ${
         manualRowActive ? 'cursor-pointer' : ''
       }`}
@@ -128,9 +141,45 @@ export const ActorRow = React.memo(function ActorRow({
         </td>
       )}
 
-      {/* Initiative */}
-      <td className="relative px-2 py-1 text-center align-middle">
-        {showGroupColorsInTable && !!actor.group_id && (
+      {showInitColumn && (
+        <td className="relative px-2 py-1 text-center align-middle">
+          {showGroupColorsInTable && !!actor.group_id && (
+            <div
+              className="absolute left-0 top-1 bottom-1 w-1 z-10 opacity-70"
+              style={{
+                backgroundColor: actor.group_color || '#10b981',
+                borderRadius: '9999px',
+              }}
+            />
+          )}
+          <div className="flex items-center justify-center gap-2">
+            {groupSelectMode && (
+              <input
+                type="checkbox"
+                checked={isSelectedForGroup}
+                onChange={(e) => onToggleGroupSelect(e.target.checked)}
+                onClick={(e) => e.stopPropagation()}
+                className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-emerald-500"
+              />
+            )}
+            <div
+              className="w-[54px] mx-auto font-mono font-bold text-lg"
+              style={{ color: showFactionColorsInTable ? legendColor : '#a1a1aa' }}
+            >
+              <InlineInput
+                type="number"
+                value={actor.initiative}
+                onChange={(val) => onUpdate({ initiative: parseInt(val) || 0 })}
+                className="w-10 bg-transparent border border-transparent hover:border-zinc-700 focus:border-emerald-500 rounded px-1 py-0.5 font-mono text-sm focus:outline-none transition-colors"
+              />
+            </div>
+          </div>
+        </td>
+      )}
+
+      {/* Name */}
+      <td className="relative px-2 py-1 align-middle">
+        {!showInitColumn && showGroupColorsInTable && !!actor.group_id && (
           <div
             className="absolute left-0 top-1 bottom-1 w-1 z-10 opacity-70"
             style={{
@@ -139,39 +188,24 @@ export const ActorRow = React.memo(function ActorRow({
             }}
           />
         )}
-        <div className="flex items-center justify-center gap-2">
-          {groupSelectMode && (
+        <div className="flex items-center gap-2">
+          {!showInitColumn && groupSelectMode && (
             <input
               type="checkbox"
               checked={isSelectedForGroup}
               onChange={(e) => onToggleGroupSelect(e.target.checked)}
               onClick={(e) => e.stopPropagation()}
-              className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-emerald-500"
+              className="w-4 h-4 shrink-0 rounded border-zinc-600 bg-zinc-800 text-emerald-500"
             />
           )}
-          <div
-            className="w-[54px] mx-auto font-mono font-bold text-lg"
-            style={{ color: showFactionColorsInTable ? legendColor : '#a1a1aa' }}
-          >
+          <div className="w-32">
             <InlineInput
-              type="number"
-              value={actor.initiative}
-              onChange={(val) => onUpdate({ initiative: parseInt(val) || 0 })}
-              className="w-10 bg-transparent border border-transparent hover:border-zinc-700 focus:border-emerald-500 rounded px-1 py-0.5 font-mono text-sm focus:outline-none transition-colors"
+              type="text"
+              value={actor.name}
+              onChange={(val) => onUpdate({ name: val })}
+              className="w-full bg-transparent border border-transparent hover:border-zinc-700 focus:border-emerald-500 rounded px-1 py-0.5 text-zinc-200 font-medium focus:outline-none transition-colors truncate"
             />
           </div>
-        </div>
-      </td>
-
-      {/* Name */}
-      <td className="px-2 py-1 align-middle">
-        <div className="w-32">
-          <InlineInput
-            type="text"
-            value={actor.name}
-            onChange={(val) => onUpdate({ name: val })}
-            className="w-full bg-transparent border border-transparent hover:border-zinc-700 focus:border-emerald-500 rounded px-1 py-0.5 text-zinc-200 font-medium focus:outline-none transition-colors truncate"
-          />
         </div>
       </td>
 

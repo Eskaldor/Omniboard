@@ -70,6 +70,7 @@
   },
   "table_header": {
     "init": "Init",
+    "phase": "Phase",
     "name": "Name",
     "effects": "Effects"
   },

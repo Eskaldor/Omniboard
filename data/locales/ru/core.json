@@ -72,6 +72,7 @@
   },
   "table_header": {
     "init": "Иниц",
+    "phase": "Фаза",
     "name": "Имя",
     "effects": "Эффекты"
   },

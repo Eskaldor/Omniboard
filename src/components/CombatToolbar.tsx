@@ -32,6 +32,8 @@ export interface CombatToolbarProps {
   isActive: boolean;
   /** When true, primary action becomes "next round" (POST next-turn with no body). */
   isManualMode?: boolean;
+  /** Popcorn: turns are clicks; toolbar forces next round like manual. */
+  engineType?: string;
   canUndo: boolean;
   canRedo: boolean;
   onStartCombat: () => void;
@@ -46,6 +48,7 @@ export interface CombatToolbarProps {
 export function CombatToolbar({
   isActive,
   isManualMode = false,
+  engineType = 'standard',
   canUndo,
   canRedo,
   onStartCombat,
@@ -57,6 +60,8 @@ export function CombatToolbar({
   onRedo,
 }: CombatToolbarProps) {
   const { t } = useTranslation('core', { useSuspense: false });
+  const et = engineType.toLowerCase();
+  const nextRoundLike = isManualMode || et === 'popcorn' || et === 'phase';
 
   return (
     <footer className="bg-zinc-900 border-t border-zinc-800 p-4 flex justify-between items-center">
@@ -101,7 +106,7 @@ export function CombatToolbar({
             onClick={() => onNextTurn()}
             className="flex items-center gap-2 px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition-colors"
           >
-            {isManualMode ? (
+            {nextRoundLike ? (
               <>
                 <RotateCw size={18} aria-hidden /> {t('toolbar.next_round')}
               </>

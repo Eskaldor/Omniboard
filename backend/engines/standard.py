@@ -76,29 +76,29 @@ class StandardInitiativeEngine(BaseInitiativeEngine):
     ) -> CombatState:
         if state.is_manual_mode:
             if target_actor_id is not None:
-                new_actors: list[Actor] = [
-                    a.model_copy(update={"has_acted": True})
-                    if a.id == target_actor_id
-                    else a
-                    for a in state.actors
-                ]
+                new_actors: list[Actor] = []
+                for a in state.actors:
+                    if a.id == target_actor_id:
+                        new_actors.append(a.model_copy(update={"has_acted": True}))
+                    else:
+                        new_actors.append(a)
                 updates: dict[str, Any] = {"actors": new_actors}
                 try:
                     updates["current_index"] = state.turn_queue.index(target_actor_id)
                 except ValueError:
                     pass
                 return state.model_copy(update=updates)
-
-            # Next round (toolbar) without target: same lifecycle as automatic wrap
-            s = self.on_round_lifecycle(state, "end")
-            s = s.model_copy(
-                update={
-                    "round": s.round + 1,
-                    "current_index": 0,
-                    "current_pass": 1,
-                }
-            )
-            return self.on_round_lifecycle(s, "start")
+            else:
+                # Manual mode without target: "Next round" button
+                s = self.on_round_lifecycle(state, "end")
+                s = s.model_copy(
+                    update={
+                        "round": s.round + 1,
+                        "current_index": 0,
+                        "current_pass": 1,
+                    }
+                )
+                return self.on_round_lifecycle(s, "start")
 
         if not state.turn_queue:
             return state
