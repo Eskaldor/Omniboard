@@ -1,8 +1,209 @@
 {
-  "actors": [],
-  "turn_queue": [],
-  "current_index": 0,
-  "round": 1,
+  "actors": [
+    {
+      "id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "name": "Гоблин маг",
+      "role": "enemy",
+      "is_revealed": true,
+      "is_pinned": true,
+      "group_id": null,
+      "group_name": null,
+      "group_mode": null,
+      "group_color": null,
+      "initiative": 0,
+      "portrait": "/assets/systems/D&D 5e/portraits/goblin_mag.png",
+      "show_portrait": true,
+      "miniature_id": "1",
+      "layout_profile_id": "default",
+      "stats": {
+        "hp": 45,
+        "ac": 10,
+        "speed": 30,
+        "mana": 52,
+        "max_mana": 60,
+        "com": 0
+      },
+      "effects": [
+        {
+          "id": "effect_pozhar",
+          "name": "Пожар",
+          "duration": null,
+          "description": "",
+          "icon": "pozhar.png",
+          "led_profile_id": "Fire",
+          "is_base": false,
+          "show_on_miniature": false,
+          "render_on_mini": true,
+          "render_on_panel": true,
+          "experimental_ai": false,
+          "ai_prompt": "",
+          "ai_variations": {}
+        }
+      ],
+      "visibility": {
+        "hp": true,
+        "stats": true,
+        "effects": true,
+        "name": true
+      },
+      "hotbar": []
+    },
+    {
+      "id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "name": "Чернокнижник",
+      "role": "enemy",
+      "is_revealed": true,
+      "is_pinned": false,
+      "group_id": null,
+      "group_name": null,
+      "group_mode": "sequential",
+      "group_color": null,
+      "initiative": 0,
+      "portrait": "/assets/systems/D&D 5e/portraits/bandit.png",
+      "show_portrait": true,
+      "miniature_id": null,
+      "layout_profile_id": null,
+      "stats": {
+        "hp": 5,
+        "ac": 17,
+        "speed": 30
+      },
+      "effects": [],
+      "visibility": {
+        "hp": true,
+        "stats": true,
+        "effects": true,
+        "name": true
+      },
+      "hotbar": []
+    },
+    {
+      "id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "name": "Новый участник",
+      "role": "enemy",
+      "is_revealed": true,
+      "is_pinned": false,
+      "group_id": null,
+      "group_name": null,
+      "group_mode": null,
+      "group_color": null,
+      "initiative": 7,
+      "portrait": "",
+      "show_portrait": false,
+      "miniature_id": null,
+      "layout_profile_id": null,
+      "stats": {
+        "hp": 10,
+        "ac": 10,
+        "speed": 30
+      },
+      "effects": [],
+      "visibility": {
+        "hp": true,
+        "stats": true,
+        "effects": true,
+        "name": true
+      },
+      "hotbar": []
+    },
+    {
+      "id": "86895227-71b9-4d4f-bfa8-25f4532a851f",
+      "name": "Новый участник",
+      "role": "enemy",
+      "is_revealed": true,
+      "is_pinned": false,
+      "group_id": null,
+      "group_name": null,
+      "group_mode": null,
+      "group_color": null,
+      "initiative": 20,
+      "portrait": "",
+      "show_portrait": false,
+      "miniature_id": null,
+      "layout_profile_id": null,
+      "stats": {
+        "hp": 10,
+        "ac": 10,
+        "speed": 30
+      },
+      "effects": [],
+      "visibility": {
+        "hp": true,
+        "stats": true,
+        "effects": true,
+        "name": true
+      },
+      "hotbar": []
+    },
+    {
+      "id": "d15e9364-ca30-43f8-a195-b1c8488da12e",
+      "name": "Новый участник",
+      "role": "enemy",
+      "is_revealed": true,
+      "is_pinned": false,
+      "group_id": null,
+      "group_name": null,
+      "group_mode": null,
+      "group_color": null,
+      "initiative": 18,
+      "portrait": "",
+      "show_portrait": false,
+      "miniature_id": null,
+      "layout_profile_id": null,
+      "stats": {
+        "hp": 10,
+        "ac": 10,
+        "speed": 30
+      },
+      "effects": [],
+      "visibility": {
+        "hp": true,
+        "stats": true,
+        "effects": true,
+        "name": true
+      },
+      "hotbar": []
+    },
+    {
+      "id": "5d482730-c737-414d-87f4-8fa6df7d9f8b",
+      "name": "Новый участник",
+      "role": "enemy",
+      "is_revealed": true,
+      "is_pinned": false,
+      "group_id": null,
+      "group_name": null,
+      "group_mode": null,
+      "group_color": null,
+      "initiative": 12,
+      "portrait": "",
+      "show_portrait": false,
+      "miniature_id": null,
+      "layout_profile_id": null,
+      "stats": {
+        "hp": 10,
+        "ac": 10,
+        "speed": 30
+      },
+      "effects": [],
+      "visibility": {
+        "hp": true,
+        "stats": true,
+        "effects": true,
+        "name": true
+      },
+      "hotbar": []
+    }
+  ],
+  "turn_queue": [
+    "86895227-71b9-4d4f-bfa8-25f4532a851f",
+    "d15e9364-ca30-43f8-a195-b1c8488da12e",
+    "5d482730-c737-414d-87f4-8fa6df7d9f8b",
+    "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+    "604a78b2-91ec-4958-984e-07ec97a0a308",
+    "3a40f303-c4d1-43af-a2b3-2db38412c33c"
+  ],
+  "current_index": 2,
+  "round": 39,
   "system": "D&D 5e",
   "layout_profiles": [
     {
@@ -56,7 +257,10 @@
       "right1": null,
       "font_id": "roboto_condensed-regular.ttf",
       "font_size": 18,
-      "bar_height": 16
+      "bar_height": 16,
+      "led_profile_id": "led_1776542795559",
+      "led_color_source": "role",
+      "led_custom_color": "#FFFFFF"
     },
     {
       "id": "1772900222099",
@@ -128,7 +332,10 @@
       "right1": null,
       "font_id": "default.ttf",
       "font_size": 18,
-      "bar_height": 16
+      "bar_height": 16,
+      "led_profile_id": "default_static",
+      "led_color_source": "role",
+      "led_custom_color": "#FFFFFF"
     },
     {
       "id": "1772902605307",
@@ -143,21 +350,1640 @@
       "right1": null,
       "font_id": "default.ttf",
       "font_size": 18,
-      "bar_height": 16
+      "bar_height": 16,
+      "led_profile_id": "default_static",
+      "led_color_source": "role",
+      "led_custom_color": "#FFFFFF"
     }
   ],
   "legend": {
     "player": "#10b981",
-    "enemy": "#ef4444",
+    "enemy": "#ff0000",
     "ally": "#3b82f6",
     "neutral": "#e6e600"
   },
   "show_group_colors": true,
   "show_faction_colors": false,
   "sync_led_to_ui": true,
-  "history": [],
+  "history": [
+    {
+      "type": "combat_start",
+      "round": 1,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 1,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 2,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 2,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 2,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 3,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 3,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 3,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 4,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 4,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 4,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 5,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 5,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "actor_joined",
+      "round": 5,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 5,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 6,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 6,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 6,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 6,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 7,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 7,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 7,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 7,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 8,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 8,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 8,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 8,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 9,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 9,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 9,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 9,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 10,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 10,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 10,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 10,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 11,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 11,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 11,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 11,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 12,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 12,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 12,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "stat_change",
+      "round": 12,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {
+        "stat_key": "mana",
+        "stat_name": "Mana",
+        "amount": -10,
+        "color": "#08b0e7"
+      }
+    },
+    {
+      "type": "stat_change",
+      "round": 12,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {
+        "stat_key": "mana",
+        "stat_name": "Mana",
+        "amount": -1,
+        "color": "#08b0e7"
+      }
+    },
+    {
+      "type": "stat_change",
+      "round": 12,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {
+        "stat_key": "mana",
+        "stat_name": "Mana",
+        "amount": -1,
+        "color": "#08b0e7"
+      }
+    },
+    {
+      "type": "stat_change",
+      "round": 12,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {
+        "stat_key": "hp",
+        "stat_name": "HP",
+        "amount": -5,
+        "color": "#e70808"
+      }
+    },
+    {
+      "type": "stat_change",
+      "round": 12,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {
+        "stat_key": "mana",
+        "stat_name": "Mana",
+        "amount": 13,
+        "color": "#08b0e7"
+      }
+    },
+    {
+      "type": "stat_change",
+      "round": 12,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {
+        "stat_key": "mana",
+        "stat_name": "Mana",
+        "amount": -1,
+        "color": "#08b0e7"
+      }
+    },
+    {
+      "type": "turn_start",
+      "round": 12,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 13,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 13,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 13,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 13,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 14,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 14,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 14,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 14,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 15,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 15,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 15,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 15,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 16,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 16,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 16,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "stat_change",
+      "round": 16,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {
+        "stat_key": "mana",
+        "stat_name": "Mana",
+        "amount": -11,
+        "color": "#08b0e7"
+      }
+    },
+    {
+      "type": "turn_start",
+      "round": 16,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 17,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 17,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 17,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 17,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 18,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 18,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 18,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 18,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 19,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 19,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 19,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 19,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 20,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 20,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 20,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 20,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 21,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 21,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 21,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 21,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 22,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 22,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 22,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 22,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "actor_joined",
+      "round": 22,
+      "actor_id": "86895227-71b9-4d4f-bfa8-25f4532a851f",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "actor_joined",
+      "round": 22,
+      "actor_id": "d15e9364-ca30-43f8-a195-b1c8488da12e",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "actor_joined",
+      "round": 22,
+      "actor_id": "5d482730-c737-414d-87f4-8fa6df7d9f8b",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 23,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 23,
+      "actor_id": "86895227-71b9-4d4f-bfa8-25f4532a851f",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 23,
+      "actor_id": "d15e9364-ca30-43f8-a195-b1c8488da12e",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 23,
+      "actor_id": "5d482730-c737-414d-87f4-8fa6df7d9f8b",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 23,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 23,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 23,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 24,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 24,
+      "actor_id": "86895227-71b9-4d4f-bfa8-25f4532a851f",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 24,
+      "actor_id": "d15e9364-ca30-43f8-a195-b1c8488da12e",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 24,
+      "actor_id": "5d482730-c737-414d-87f4-8fa6df7d9f8b",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 24,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 24,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "stat_change",
+      "round": 24,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {
+        "stat_key": "mana",
+        "stat_name": "Mana",
+        "amount": 11,
+        "color": "#08b0e7"
+      }
+    },
+    {
+      "type": "turn_start",
+      "round": 24,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 25,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 25,
+      "actor_id": "86895227-71b9-4d4f-bfa8-25f4532a851f",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 25,
+      "actor_id": "d15e9364-ca30-43f8-a195-b1c8488da12e",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 25,
+      "actor_id": "5d482730-c737-414d-87f4-8fa6df7d9f8b",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 25,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 25,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 25,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 26,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 26,
+      "actor_id": "86895227-71b9-4d4f-bfa8-25f4532a851f",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 26,
+      "actor_id": "d15e9364-ca30-43f8-a195-b1c8488da12e",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 26,
+      "actor_id": "5d482730-c737-414d-87f4-8fa6df7d9f8b",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 26,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 26,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 26,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 27,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 27,
+      "actor_id": "86895227-71b9-4d4f-bfa8-25f4532a851f",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 27,
+      "actor_id": "d15e9364-ca30-43f8-a195-b1c8488da12e",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 27,
+      "actor_id": "5d482730-c737-414d-87f4-8fa6df7d9f8b",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 27,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 27,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 27,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 28,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 28,
+      "actor_id": "86895227-71b9-4d4f-bfa8-25f4532a851f",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 28,
+      "actor_id": "d15e9364-ca30-43f8-a195-b1c8488da12e",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 28,
+      "actor_id": "5d482730-c737-414d-87f4-8fa6df7d9f8b",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 28,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 28,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 28,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 29,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 29,
+      "actor_id": "86895227-71b9-4d4f-bfa8-25f4532a851f",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 29,
+      "actor_id": "d15e9364-ca30-43f8-a195-b1c8488da12e",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 29,
+      "actor_id": "5d482730-c737-414d-87f4-8fa6df7d9f8b",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 29,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 29,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "stat_change",
+      "round": 29,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {
+        "stat_key": "mana",
+        "stat_name": "Mana",
+        "amount": -1,
+        "color": "#08b0e7"
+      }
+    },
+    {
+      "type": "stat_change",
+      "round": 29,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {
+        "stat_key": "mana",
+        "stat_name": "Mana",
+        "amount": -2,
+        "color": "#08b0e7"
+      }
+    },
+    {
+      "type": "turn_start",
+      "round": 29,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 30,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 30,
+      "actor_id": "86895227-71b9-4d4f-bfa8-25f4532a851f",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 30,
+      "actor_id": "d15e9364-ca30-43f8-a195-b1c8488da12e",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 30,
+      "actor_id": "5d482730-c737-414d-87f4-8fa6df7d9f8b",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 30,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 30,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 30,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 31,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 31,
+      "actor_id": "86895227-71b9-4d4f-bfa8-25f4532a851f",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 31,
+      "actor_id": "d15e9364-ca30-43f8-a195-b1c8488da12e",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 31,
+      "actor_id": "5d482730-c737-414d-87f4-8fa6df7d9f8b",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 31,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 31,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 31,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 32,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 32,
+      "actor_id": "86895227-71b9-4d4f-bfa8-25f4532a851f",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 32,
+      "actor_id": "d15e9364-ca30-43f8-a195-b1c8488da12e",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 32,
+      "actor_id": "5d482730-c737-414d-87f4-8fa6df7d9f8b",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 32,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 32,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 32,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "effect_added",
+      "round": 32,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {
+        "effect_name": "Пожар"
+      }
+    },
+    {
+      "type": "effect_removed",
+      "round": 32,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {
+        "effect_name": "Пожар"
+      }
+    },
+    {
+      "type": "effect_added",
+      "round": 32,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {
+        "effect_name": "Пожар"
+      }
+    },
+    {
+      "type": "round_start",
+      "round": 33,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "effect_removed",
+      "round": 33,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {
+        "effect_name": "Пожар"
+      }
+    },
+    {
+      "type": "turn_start",
+      "round": 33,
+      "actor_id": "86895227-71b9-4d4f-bfa8-25f4532a851f",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 33,
+      "actor_id": "d15e9364-ca30-43f8-a195-b1c8488da12e",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 33,
+      "actor_id": "5d482730-c737-414d-87f4-8fa6df7d9f8b",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 33,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 33,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 33,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "effect_added",
+      "round": 33,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {
+        "effect_name": "Пожар"
+      }
+    },
+    {
+      "type": "round_start",
+      "round": 34,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 34,
+      "actor_id": "86895227-71b9-4d4f-bfa8-25f4532a851f",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 34,
+      "actor_id": "d15e9364-ca30-43f8-a195-b1c8488da12e",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 34,
+      "actor_id": "5d482730-c737-414d-87f4-8fa6df7d9f8b",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 34,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 34,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 34,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 35,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 35,
+      "actor_id": "86895227-71b9-4d4f-bfa8-25f4532a851f",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 35,
+      "actor_id": "d15e9364-ca30-43f8-a195-b1c8488da12e",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 35,
+      "actor_id": "5d482730-c737-414d-87f4-8fa6df7d9f8b",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 35,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 35,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 35,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 36,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "effect_removed",
+      "round": 36,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {
+        "effect_name": "Пожар"
+      }
+    },
+    {
+      "type": "turn_start",
+      "round": 36,
+      "actor_id": "86895227-71b9-4d4f-bfa8-25f4532a851f",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 36,
+      "actor_id": "d15e9364-ca30-43f8-a195-b1c8488da12e",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 36,
+      "actor_id": "5d482730-c737-414d-87f4-8fa6df7d9f8b",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 36,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 36,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 36,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "effect_added",
+      "round": 36,
+      "actor_id": "86895227-71b9-4d4f-bfa8-25f4532a851f",
+      "actor_name": "Новый участник",
+      "details": {
+        "effect_name": "Пожар"
+      }
+    },
+    {
+      "type": "effect_removed",
+      "round": 36,
+      "actor_id": "86895227-71b9-4d4f-bfa8-25f4532a851f",
+      "actor_name": "Новый участник",
+      "details": {
+        "effect_name": "Пожар"
+      }
+    },
+    {
+      "type": "effect_added",
+      "round": 36,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {
+        "effect_name": "Пожар"
+      }
+    },
+    {
+      "type": "round_start",
+      "round": 37,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 37,
+      "actor_id": "86895227-71b9-4d4f-bfa8-25f4532a851f",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 37,
+      "actor_id": "d15e9364-ca30-43f8-a195-b1c8488da12e",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 37,
+      "actor_id": "5d482730-c737-414d-87f4-8fa6df7d9f8b",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 37,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 37,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 37,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 38,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 38,
+      "actor_id": "86895227-71b9-4d4f-bfa8-25f4532a851f",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 38,
+      "actor_id": "d15e9364-ca30-43f8-a195-b1c8488da12e",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 38,
+      "actor_id": "5d482730-c737-414d-87f4-8fa6df7d9f8b",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 38,
+      "actor_id": "b0a2d7d4-1830-49ac-8aff-7506eeaa2910",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 38,
+      "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "actor_name": "Гоблин маг",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 38,
+      "actor_id": "3a40f303-c4d1-43af-a2b3-2db38412c33c",
+      "actor_name": "Чернокнижник",
+      "details": {}
+    },
+    {
+      "type": "round_start",
+      "round": 39,
+      "actor_id": null,
+      "actor_name": null,
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 39,
+      "actor_id": "86895227-71b9-4d4f-bfa8-25f4532a851f",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 39,
+      "actor_id": "d15e9364-ca30-43f8-a195-b1c8488da12e",
+      "actor_name": "Новый участник",
+      "details": {}
+    },
+    {
+      "type": "turn_start",
+      "round": 39,
+      "actor_id": "5d482730-c737-414d-87f4-8fa6df7d9f8b",
+      "actor_name": "Новый участник",
+      "details": {}
+    }
+  ],
   "history_cursor": -1,
-  "is_active": false,
+  "is_active": true,
   "active_reaction_actor_id": null,
   "enable_logging": true,
   "autosave_enabled": true,

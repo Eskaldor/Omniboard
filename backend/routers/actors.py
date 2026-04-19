@@ -144,6 +144,11 @@ async def update_actor(actor_id: str, updates: dict):
 
             app_state.state.actors[i] = new_actor
 
+            old_fx = [e.model_dump(mode="json") for e in old_actor.effects]
+            new_fx = [e.model_dump(mode="json") for e in new_actor.effects]
+            if old_fx != new_fx:
+                asyncio.create_task(led_interceptor.sync_actor_led_to_device(actor_id))
+
             for sk in changed_stat_keys:
                 asyncio.create_task(led_interceptor.process_led_trigger(actor_id, "stat_change", sk))
 

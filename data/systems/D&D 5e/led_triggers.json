@@ -1,0 +1,18 @@
+[
+  {
+    "id": "3f4dd734-44b6-4bfc-988c-1de9b8365e0c",
+    "event_type": "turn_start",
+    "target_stat": null,
+    "led_profile_id": "led_1776539165222",
+    "duration_type": "turn",
+    "duration_ms": 1000
+  },
+  {
+    "id": "41bbcd01-7289-41f3-ba94-eb1e25f2cbe4",
+    "event_type": "stat_change",
+    "target_stat": "mana",
+    "led_profile_id": "led_rainbow",
+    "duration_type": "time",
+    "duration_ms": 1000
+  }
+]

@@ -25,6 +25,7 @@ class Effect(BaseModel):
     duration: Optional[int] = None
     description: Optional[str] = None
     icon: str = ""
+    led_profile_id: Optional[str] = None  # Omnimini LED profile from system led_profiles.json
     is_base: bool = False
     show_on_miniature: bool = False  # deprecated, use render_on_mini
     render_on_mini: bool = True
@@ -133,6 +134,7 @@ class Actor(BaseModel):
     group_mode: Optional[Literal["sequential", "simultaneous"]] = None
     group_color: Optional[str] = None
     initiative: int = 0
+    has_acted: bool = False
     portrait: str
     show_portrait: bool = False
     miniature_id: Optional[str] = None
@@ -165,7 +167,9 @@ class CombatState(BaseModel):
     actors: List[Actor] = []
     turn_queue: List[str] = []
     current_index: int = 0
+    current_pass: int = 1
     round: int = 1
+    is_manual_mode: bool = False
     system: str = "D&D 5e"
     layout_profiles: List[LayoutProfile] = Field(
         default_factory=lambda: [

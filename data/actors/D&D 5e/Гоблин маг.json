@@ -1,5 +1,5 @@
 {
-  "id": "efe6d1a1-0d6c-44f1-a6b2-a17df665f653",
+  "id": "604a78b2-91ec-4958-984e-07ec97a0a308",
   "name": "Гоблин маг",
   "role": "enemy",
   "is_revealed": true,
@@ -11,8 +11,8 @@
   "initiative": 0,
   "portrait": "/assets/systems/D&D 5e/portraits/goblin_mag.png",
   "show_portrait": true,
-  "miniature_id": "192.168.50.214",
-  "layout_profile_id": null,
+  "miniature_id": "1",
+  "layout_profile_id": "default",
   "stats": {
     "hp": 50,
     "ac": 10,

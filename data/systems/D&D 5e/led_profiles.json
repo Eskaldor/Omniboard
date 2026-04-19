@@ -1,12 +1,13 @@
 [
   {
-    "id": "default_static",
-    "name": "Basic Static",
-    "mode": "static",
-    "speed": 0,
+    "id": "Fire",
+    "name": "Пожар",
+    "mode": "breathe",
+    "speed": 722,
     "brightness": 255,
     "colors": [
-      "$ROLE_COLOR"
+      "#ff7300",
+      "#db7c0f"
     ]
   },
   {
@@ -39,6 +40,27 @@
     "brightness": 255,
     "colors": [
       "#00ff88"
+    ]
+  },
+  {
+    "id": "led_1776539165222",
+    "name": "Ход",
+    "mode": "blink",
+    "speed": 1127,
+    "brightness": 255,
+    "colors": [
+      "#ffffff"
+    ]
+  },
+  {
+    "id": "led_1776542795559",
+    "name": "Полиция",
+    "mode": "cycle",
+    "speed": 506,
+    "brightness": 255,
+    "colors": [
+      "#ff0000",
+      "#0040ff"
     ]
   }
 ]

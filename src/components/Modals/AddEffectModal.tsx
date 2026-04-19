@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { X, Save, Check, Sparkles, ImagePlus, ImageOff } from 'lucide-react';
-import { Actor, Effect } from '../../types';
+import { Actor, Effect, LedProfile } from '../../types';
 import { useTranslation } from 'react-i18next';
 import { slugify } from 'transliteration';
 import { LibraryModal } from './LibraryModal';
@@ -32,6 +32,8 @@ export function AddEffectModal({
   const [aiPrompt, setAiPrompt] = useState('');
   const [aiVariations, setAiVariations] = useState<Record<string, string>>({});
   const [showIconLibrary, setShowIconLibrary] = useState(false);
+  const [ledProfiles, setLedProfiles] = useState<LedProfile[]>([]);
+  const [ledProfileId, setLedProfileId] = useState('');
   const [quickSearch, setQuickSearch] = useState('');
   const [previewError, setPreviewError] = useState(false);
   const [previewResolutionWarning, setPreviewResolutionWarning] = useState(false);
@@ -49,6 +51,20 @@ export function AddEffectModal({
       .then((res) => res.json())
       .then((data) => setSystemEffects(Array.isArray(data) ? data : []))
       .catch((err) => console.error('Failed to load system effects', err));
+  }, [systemName]);
+
+  useEffect(() => {
+    if (!systemName.trim()) {
+      setLedProfiles([]);
+      return;
+    }
+    fetch(`/api/systems/${encodeURIComponent(systemName)}/led_profiles`)
+      .then((res) => res.json())
+      .then((data: LedProfile[]) => setLedProfiles(Array.isArray(data) ? data : []))
+      .catch((err) => {
+        console.error('Failed to load LED profiles', err);
+        setLedProfiles([]);
+      });
   }, [systemName]);
 
   const effectIconUrl = useMemo(() => {
@@ -70,6 +86,7 @@ export function AddEffectModal({
   const handleSelectEffect = (eff: Effect | null) => {
     if (!eff) {
       setName(quickSearch);
+      setLedProfileId('');
       if (!isCustomId) {
         const base = slugify(quickSearch, { separator: '_' });
         setTechnicalId(base ? `effect_${base}` : '');
@@ -94,6 +111,7 @@ export function AddEffectModal({
     setExperimentalAi(eff.experimental_ai ?? false);
     setAiPrompt(eff.ai_prompt ?? '');
     setAiVariations(eff.ai_variations ?? {});
+    setLedProfileId((eff.led_profile_id && String(eff.led_profile_id).trim()) || '');
   };
 
   const handleNameChange = (val: string) => {
@@ -109,18 +127,22 @@ export function AddEffectModal({
     setIsCustomId(true);
   };
 
-  const buildEffectPayload = (): Record<string, unknown> => ({
-    id: technicalId,
-    name,
-    description,
-    duration: isInfinite ? null : (duration === '' ? 1 : duration),
-    icon: icon || undefined,
-    render_on_mini: renderOnMini,
-    render_on_panel: renderOnPanel,
-    experimental_ai: experimentalAi,
-    ai_prompt: aiPrompt,
-    ai_variations: aiVariations,
-  });
+  const buildEffectPayload = (): Record<string, unknown> => {
+    const trimmedLed = ledProfileId.trim();
+    return {
+      id: technicalId,
+      name,
+      description,
+      duration: isInfinite ? null : (duration === '' ? 1 : duration),
+      icon: icon || undefined,
+      ...(trimmedLed ? { led_profile_id: trimmedLed } : {}),
+      render_on_mini: renderOnMini,
+      render_on_panel: renderOnPanel,
+      experimental_ai: experimentalAi,
+      ai_prompt: aiPrompt,
+      ai_variations: aiVariations,
+    };
+  };
 
   const handleSaveToSystem = async () => {
     if (!name || !technicalId) return;
@@ -149,12 +171,14 @@ export function AddEffectModal({
 
   const handleAdd = () => {
     if (!name || !technicalId) return;
+    const trimmedLed = ledProfileId.trim();
     onAdd({
       id: technicalId,
       name,
       description,
       duration: isInfinite ? null : (duration === '' ? 1 : duration),
       icon: icon || undefined,
+      ...(trimmedLed ? { led_profile_id: trimmedLed } : {}),
       render_on_mini: renderOnMini,
       render_on_panel: renderOnPanel,
       experimental_ai: experimentalAi,
@@ -387,6 +411,31 @@ export function AddEffectModal({
                   <span className="text-sm text-zinc-300">В интерфейсе</span>
                 </label>
               </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">
+                {t('modals.effect_led_profile', { defaultValue: 'Lighting profile' })}
+              </label>
+              <select
+                value={ledProfileId}
+                onChange={(e) => setLedProfileId(e.target.value)}
+                className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
+              >
+                <option value="">{t('modals.none', { defaultValue: '—' })}</option>
+                {ledProfileId &&
+                  !ledProfiles.some((p) => p.id === ledProfileId) && (
+                    <option value={ledProfileId}>
+                      {ledProfileId}{' '}
+                      {t('miniature_layout.led_profile_custom_hint', { defaultValue: '(custom id)' })}
+                    </option>
+                  )}
+                {ledProfiles.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name || p.id}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* AI Mode */}

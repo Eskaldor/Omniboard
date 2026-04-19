@@ -4,6 +4,8 @@ export interface Effect {
   duration: number | null;
   description?: string;
   icon?: string;
+  /** Optional Omnimini LED profile id (system led_profiles.json) */
+  led_profile_id?: string | null;
   is_base?: boolean;
   show_on_miniature?: boolean;
   render_on_mini?: boolean;

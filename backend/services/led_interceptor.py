@@ -60,6 +60,20 @@ def _find_matching_rule(
     return None
 
 
+async def sync_actor_led_to_device(actor_id: str) -> None:
+    """Push current ``resolve_led_payload`` (effects, overrides, layout) to bound Omnimini if online."""
+    actor = next((a for a in app_state.state.actors if a.id == actor_id), None)
+    if not actor or not actor.miniature_id:
+        return
+    mid = str(actor.miniature_id).strip()
+    if not mid or mid not in _esp.get_active_minis():
+        return
+    led = resolve_led_payload(actor_id)
+    if not led:
+        return
+    await _esp.send_update(mid, {"led": led})
+
+
 async def reset_actor_led_to_default(actor_id: str) -> None:
     """Restore layout default LED for an actor's bound miniature if it is online."""
     if actor_id in ACTIVE_OVERRIDES:

@@ -176,8 +176,14 @@ def resolve_led_payload(actor_id: str) -> dict[str, Any] | None:
 
     layout = _layout_for_actor(actor, st.layout_profiles)
     overrides = ACTIVE_OVERRIDES.get(actor_id, {})
-    # Short flash (time) wins over sustained (turn); then layout default
+    # Short flash (time) wins over sustained (turn); then effect LED; then layout default
     led_profile_id = overrides.get("time") or overrides.get("turn")
+    if not led_profile_id:
+        for eff in actor.effects or []:
+            pid = getattr(eff, "led_profile_id", None)
+            if pid and str(pid).strip():
+                led_profile_id = str(pid).strip()
+                break
     if not led_profile_id:
         led_profile_id = (layout.led_profile_id or "default_static").strip() or "default_static"
     led_prof = _find_led_profile(st.system, led_profile_id)
