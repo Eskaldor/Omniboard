@@ -90,9 +90,11 @@ export const ActorRow = React.memo(function ActorRow({
     <tr
       onClick={handleRowClick}
       onDoubleClick={onRowDoubleClick}
-      className={`group bg-zinc-900/50 hover:bg-zinc-800/50 transition-colors [&>td:not(:first-child):not(:last-child)]:border-b [&>td:not(:first-child):not(:last-child)]:border-zinc-800/50 ${
-        isPastTurn ? 'opacity-40 grayscale-[50%]' : ''
-      } ${hasActedDim ? 'opacity-55 grayscale' : ''} ${isCurrent ? 'bg-zinc-800/40' : ''} ${
+      className={`group transition-colors [&>td:not(:first-child):not(:last-child)]:border-b [&>td:not(:first-child):not(:last-child)]:border-zinc-800/50 ${
+        isCurrent
+          ? 'rounded-lg ring-1 ring-inset ring-zinc-500 bg-zinc-800/40'
+          : 'bg-zinc-900/50 hover:bg-zinc-800/50'
+      } ${isPastTurn ? 'opacity-40 grayscale-[50%]' : ''} ${hasActedDim ? 'opacity-55 grayscale' : ''} ${
         manualRowActive ? 'cursor-pointer' : ''
       }`}
     >

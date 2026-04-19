@@ -1,4 +1,4 @@
-import { Play, Square, RotateCcw, Trash, Undo, Redo, SkipForward, Hand } from 'lucide-react';
+import { Play, Square, RotateCcw, RotateCw, Trash, Undo, Redo, SkipForward, Hand } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export interface ManualModeToggleProps {
@@ -30,6 +30,8 @@ export function ManualModeToggle({ isManualMode, onToggle }: ManualModeTogglePro
 
 export interface CombatToolbarProps {
   isActive: boolean;
+  /** When true, primary action becomes "next round" (POST next-turn with no body). */
+  isManualMode?: boolean;
   canUndo: boolean;
   canRedo: boolean;
   onStartCombat: () => void;
@@ -43,6 +45,7 @@ export interface CombatToolbarProps {
 
 export function CombatToolbar({
   isActive,
+  isManualMode = false,
   canUndo,
   canRedo,
   onStartCombat,
@@ -93,8 +96,20 @@ export function CombatToolbar({
             <Play size={18} /> {t('start_combat')}
           </button>
         ) : (
-          <button onClick={onNextTurn} className="flex items-center gap-2 px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition-colors">
-            <SkipForward size={18} /> {t('header.next_turn')}
+          <button
+            type="button"
+            onClick={() => onNextTurn()}
+            className="flex items-center gap-2 px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition-colors"
+          >
+            {isManualMode ? (
+              <>
+                <RotateCw size={18} aria-hidden /> {t('toolbar.next_round')}
+              </>
+            ) : (
+              <>
+                <SkipForward size={18} aria-hidden /> {t('header.next_turn')}
+              </>
+            )}
           </button>
         )}
       </div>

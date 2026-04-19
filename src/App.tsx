@@ -359,6 +359,7 @@ export default function App() {
 
       <CombatToolbar
         isActive={effectiveState.is_active}
+        isManualMode={effectiveState.is_manual_mode ?? false}
         canUndo={effectiveState?.can_undo ?? false}
         canRedo={effectiveState?.can_redo ?? false}
         onStartCombat={startCombat}

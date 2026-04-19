@@ -109,7 +109,8 @@ async def next_turn(payload: dict = Body(default_factory=dict)):
         target_actor_id = None
 
     st = app_state.state
-    if not st.turn_queue and not (st.is_manual_mode and target_actor_id):
+    # Classic next-turn needs a queue; manual mode uses the same endpoint for row clicks and "next round"
+    if not st.turn_queue and not st.is_manual_mode:
         return {"error": "Queue empty"}
 
     await save_snapshot()
