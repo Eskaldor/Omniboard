@@ -287,16 +287,32 @@ class CombatSession(BaseModel):
         if not isinstance(data, dict):
             return data
 
+        def _domain_as_dict(val: Any) -> Dict[str, Any]:
+            """JSON dict или уже собранный под-модельный объект из kwargs конструктора."""
+            if val is None:
+                return {}
+            if isinstance(val, dict):
+                return dict(val)
+            if isinstance(val, BaseModel):
+                return val.model_dump()
+            return {}
+
+        # Важно: при CombatSession(core=CombatCore(...), ...) значения доменов — BaseModel, не dict.
+        # Если считать это «не вложено», срабатывает ветка legacy и core собирается пустым → обнуление боя.
         has_nested = any(
-            k in data and isinstance(data.get(k), dict)
+            k in data
+            and (
+                isinstance(data.get(k), dict)
+                or isinstance(data.get(k), BaseModel)
+            )
             for k in ("core", "display", "hardware", "session")
         )
         if has_nested:
             out = dict(data)
-            core = dict(out.get("core") or {})
-            display = dict(out.get("display") or {})
-            hardware = dict(out.get("hardware") or {})
-            session = dict(out.get("session") or {})
+            core = _domain_as_dict(out.get("core"))
+            display = _domain_as_dict(out.get("display"))
+            hardware = _domain_as_dict(out.get("hardware"))
+            session = _domain_as_dict(out.get("session"))
 
             # If payload is partially nested (some domains still flat at root), fold leftovers in.
             for k in list(data.keys()):
