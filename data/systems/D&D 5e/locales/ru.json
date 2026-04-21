@@ -1,15 +1,15 @@
 {
   "hp": {
     "name": "ХП",
-    "short": "хп"
+    "short": "ХП"
   },
   "ac": {
     "name": "КД",
-    "short": "кд"
+    "short": "КД"
   },
   "speed": {
     "name": "Скорость",
-    "short": "ск"
+    "short": "Скорость"
   },
   "initiative": {
     "name": "Инициатива",
@@ -17,7 +17,7 @@
   },
   "mana": {
     "name": "Мана",
-    "short": "мана"
+    "short": "Мана"
   },
   "Ammo": {
     "name": "Ammo",
@@ -47,5 +47,17 @@
   "bar_test_tekstury": "Тест текстуры",
   "goblin": "Гоблин",
   "goblin_mag": "Гоблин маг",
-  "ognennyy_elemental": "Огненный элементаль"
+  "ognennyy_elemental": "Огненный элементаль",
+  "com1": {
+    "name": "Действия",
+    "short": "Действия"
+  },
+  "bladpul": {
+    "name": "bladpul",
+    "short": "bladpul"
+  },
+  "Note": {
+    "name": "Note",
+    "short": "Note"
+  }
 }

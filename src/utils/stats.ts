@@ -15,10 +15,11 @@ export function buildStatUpdate(
   baseKey: string,
   newVal: number
 ): Record<string, unknown> {
-  const stats = { ...actor.stats, [baseKey]: newVal };
+  const prev = actor.stats ?? {};
+  const stats = { ...prev, [baseKey]: newVal };
   const maxKey = getMaxKey(col);
   if (maxKey) {
-    const currentMax = actor.stats[maxKey];
+    const currentMax = prev[maxKey];
     if (currentMax === undefined || currentMax === null || currentMax === 0) {
       stats[maxKey] = newVal;
     }

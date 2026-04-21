@@ -72,8 +72,9 @@ class PopcornInitiativeEngine(BaseInitiativeEngine):
                         "current_pass": 1,
                     }
                 )
-                return self.on_round_lifecycle(s, "start")
-            return s
+                s = self.on_round_lifecycle(s, "start")
+                return self._apply_turn_start_checkbox_resets(s)
+            return self._apply_turn_start_checkbox_resets(s)
 
         s = self.on_round_lifecycle(state, "end")
         s = s.model_copy(
@@ -83,4 +84,5 @@ class PopcornInitiativeEngine(BaseInitiativeEngine):
                 "current_pass": 1,
             }
         )
-        return self.on_round_lifecycle(s, "start")
+        s = self.on_round_lifecycle(s, "start")
+        return self._apply_turn_start_checkbox_resets(s)

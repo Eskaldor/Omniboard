@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type SetStateAction } from 'react';
 import type { CombatState } from '../types';
+import { applyPendingPatchesToCombatState } from '../utils/actorPatchMerge';
 
 const FALLBACK_THROTTLE_MS = 5000;
 
 export function useCombatState() {
-  const [combatState, setCombatState] = useState<CombatState | null>(null);
+  const [combatState, setCombatStateRaw] = useState<CombatState | null>(null);
   const [wsConnected, setWsConnected] = useState(false);
   const [wsError, setWsError] = useState<string | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -12,6 +13,14 @@ export function useCombatState() {
   const isMountedRef = useRef(true);
   const lastFallbackAtRef = useRef(0);
   const connectRef = useRef<(() => void) | null>(null);
+
+  /** Merge debounced actor PATCH payloads into server snapshots so WS/refetch does not flash stale stats. */
+  const setCombatState = useCallback((action: SetStateAction<CombatState | null>) => {
+    setCombatStateRaw((prev) => {
+      const next = typeof action === 'function' ? action(prev) : action;
+      return applyPendingPatchesToCombatState(next);
+    });
+  }, []);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -23,7 +32,7 @@ export function useCombatState() {
       if (lastFallbackAtRef.current > 0 && now - lastFallbackAtRef.current < FALLBACK_THROTTLE_MS) return;
       lastFallbackAtRef.current = now;
       fetch('/api/combat/state')
-        .then(res => (res.ok ? res.json() : Promise.reject()))
+        .then((res) => (res.ok ? res.json() : Promise.reject()))
         .then((data: CombatState) => {
           if (isMountedRef.current) {
             setCombatState(data);
@@ -75,14 +84,14 @@ export function useCombatState() {
         wsRef.current = null;
       }
     };
-  }, []);
+  }, [setCombatState]);
 
-  const refetchState = () => {
+  const refetchState = useCallback(() => {
     return fetch('/api/combat/state')
-      .then(res => (res.ok ? res.json() : Promise.reject()))
+      .then((res) => (res.ok ? res.json() : Promise.reject()))
       .then((data: CombatState) => setCombatState(data))
       .catch(() => {});
-  };
+  }, [setCombatState]);
 
   const reconnect = () => {
     if (reconnectTimeoutRef.current) {

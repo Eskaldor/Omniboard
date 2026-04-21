@@ -87,7 +87,8 @@ class StandardInitiativeEngine(BaseInitiativeEngine):
                     updates["current_index"] = state.turn_queue.index(target_actor_id)
                 except ValueError:
                     pass
-                return state.model_copy(update=updates)
+                s = state.model_copy(update=updates)
+                return self._apply_turn_start_checkbox_resets(s)
             else:
                 # Manual mode without target: "Next round" button
                 s = self.on_round_lifecycle(state, "end")
@@ -98,7 +99,8 @@ class StandardInitiativeEngine(BaseInitiativeEngine):
                         "current_pass": 1,
                     }
                 )
-                return self.on_round_lifecycle(s, "start")
+                s = self.on_round_lifecycle(s, "start")
+                return self._apply_turn_start_checkbox_resets(s)
 
         if not state.turn_queue:
             return state
@@ -123,9 +125,11 @@ class StandardInitiativeEngine(BaseInitiativeEngine):
                     "current_pass": 1,
                 }
             )
-            return self.on_round_lifecycle(s, "start")
+            s = self.on_round_lifecycle(s, "start")
+            return self._apply_turn_start_checkbox_resets(s)
 
-        return state.model_copy(update={"current_index": new_index})
+        s = state.model_copy(update={"current_index": new_index})
+        return self._apply_turn_start_checkbox_resets(s)
 
     def on_round_lifecycle(
         self, state: CombatState, event: Literal["start", "end"]

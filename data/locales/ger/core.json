@@ -78,7 +78,15 @@
     "remove_field": "Удалить поле",
     "add_column": "Добавить колонку",
     "export": "Экспорт",
-    "import": "Импорт"
+    "import": "Импорт",
+    "import_invalid_json": "Datei konnte nicht gelesen werden: ungültiges JSON.",
+    "columns_saved": "Spalten wurden gespeichert.",
+    "columns_save_error": "Speichern fehlgeschlagen: {{detail}}",
+    "columns_save_error_status": "Speichern fehlgeschlagen (HTTP {{status}}).",
+    "columns_save_network_error": "Spalten konnten nicht gespeichert werden. Verbindung und Konsole prüfen.",
+    "display_style": "Darstellung",
+    "display_style_badge": "Badge (mit Text)",
+    "display_style_dot": "Nur Punkte"
   },
   "main": {
     "add_actor": "Добавить персонажа",

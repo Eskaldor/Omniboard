@@ -51,6 +51,9 @@ def add_log(
             delta = det.get("delta", 0)
             return f"{name} HP changed ({delta})."
         if t == "stat_change":
+            msg = det.get("message")
+            if isinstance(msg, str) and msg.strip():
+                return f"{name} {msg.strip()}"
             stat_name = det.get("stat_name", det.get("stat_key", "?"))
             amount = det.get("amount", 0)
             return f"{name} {stat_name}: {'+' if amount >= 0 else ''}{amount}."

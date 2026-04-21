@@ -104,7 +104,15 @@
     "remove_field": "Удалить поле",
     "add_column": "Добавить колонку",
     "export": "Экспорт",
-    "import": "Импорт"
+    "import": "Импорт",
+    "import_invalid_json": "Не удалось прочитать файл: неверный JSON.",
+    "columns_saved": "Колонки сохранены в систему.",
+    "columns_save_error": "Ошибка сохранения: {{detail}}",
+    "columns_save_error_status": "Ошибка сохранения (HTTP {{status}}).",
+    "columns_save_network_error": "Не удалось сохранить колонки. Проверьте соединение и консоль.",
+    "display_style": "Вид отображения",
+    "display_style_badge": "Бейджи (с текстом)",
+    "display_style_dot": "Только точки"
   },
   "main": {
     "add_actor": "Добавить персонажа",

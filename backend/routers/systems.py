@@ -243,8 +243,17 @@ async def save_system_columns(system_name: str, body: SaveColumnsRequest):
         for col in body.columns:
             key = col.get("key") if isinstance(col, dict) else None
             label = col.get("label", key) if isinstance(col, dict) else key
-            if key and key not in existing:
+            if not key:
+                continue
+            if key not in existing:
                 existing[key] = {"name": label, "short": label}
+            else:
+                entry = existing[key]
+                if isinstance(entry, dict):
+                    entry["name"] = label
+                    entry["short"] = label
+                else:
+                    existing[key] = {"name": label, "short": label}
         locale_path.write_text(json.dumps(existing, indent=2, ensure_ascii=False), encoding="utf-8")
 
     return {"status": "ok"}

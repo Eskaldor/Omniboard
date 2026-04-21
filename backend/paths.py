@@ -5,6 +5,21 @@ from pathlib import Path
 
 DATA_DIR = Path("data/systems")
 
+
+def get_system_columns_path(system_name: str) -> Path | None:
+    """Path to ``data/systems/<system>/columns.json`` if the name is safe and the file may exist."""
+    if not (system_name and str(system_name).strip()):
+        return None
+    name = str(system_name).strip()
+    if ".." in name or "/" in name or "\\" in name:
+        return None
+    path = (DATA_DIR / name / "columns.json").resolve()
+    try:
+        path.relative_to(DATA_DIR.resolve())
+    except ValueError:
+        return None
+    return path
+
 ASSETS_DIR = Path("data/assets")
 DEFAULT_ASSETS_DIR = ASSETS_DIR / "default"
 SYSTEMS_ASSETS_DIR = ASSETS_DIR / "systems"

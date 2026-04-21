@@ -102,7 +102,15 @@
     "remove_field": "Remove field",
     "add_column": "Add column",
     "export": "Export",
-    "import": "Import"
+    "import": "Import",
+    "import_invalid_json": "Could not read the file: invalid JSON.",
+    "columns_saved": "Columns saved to the system.",
+    "columns_save_error": "Save failed: {{detail}}",
+    "columns_save_error_status": "Save failed (HTTP {{status}}).",
+    "columns_save_network_error": "Could not save columns. Check your connection and the console.",
+    "display_style": "Display style",
+    "display_style_badge": "Badge (with text)",
+    "display_style_dot": "Dots only"
   },
   "main": {
     "add_actor": "Add Actor",

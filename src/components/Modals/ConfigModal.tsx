@@ -4,6 +4,12 @@ import { ColumnConfig } from '../../types';
 import { useCombatState } from '../../contexts/CombatStateContext';
 import { useTranslation } from 'react-i18next';
 
+const DEFAULT_CHECKBOX_GROUP_ITEMS: NonNullable<ColumnConfig['items']> = [
+  { id: 'res1', label: '1', color: '#52525b' },
+  { id: 'res2', label: '2', color: '#737373' },
+  { id: 'res3', label: '3', color: '#a3a3a3' },
+];
+
 export function ConfigModal({
   columns,
   setColumns,
@@ -29,6 +35,7 @@ export function ConfigModal({
   const [presets, setPresets] = useState<string[]>([]);
   const [expertMode, setExpertMode] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [notice, setNotice] = useState<{ variant: 'success' | 'error'; text: string } | null>(null);
 
   const [labelDrafts, setLabelDrafts] = useState<Record<string, string>>({});
 
@@ -181,8 +188,9 @@ export function ConfigModal({
       try {
         const imported = JSON.parse(e.target?.result as string);
         setColumns(imported);
-      } catch (err) {
-        alert('Invalid JSON file');
+        setNotice(null);
+      } catch {
+        setNotice({ variant: 'error', text: t('config_modal.import_invalid_json') });
       }
     };
     reader.readAsText(file);
@@ -193,21 +201,32 @@ export function ConfigModal({
     const name = localSystemName.trim() || systemName;
     if (!name) return;
     const lang = (i18n.language || 'ru').split('-')[0];
-    const columnsToSave = columns.map((c) => ({
-      ...c,
-      label: labelDrafts[c.key] ?? c.label,
-      type: c.type ?? 'number',
-      width: c.width ?? '80px',
-      min_value: c.min_value ?? undefined,
-      max_value: c.max_value ?? undefined,
-      min_key: c.min_key ?? undefined,
-      max_key: c.max_key ?? c.maxKey ?? undefined,
-      display_as_fraction: c.display_as_fraction ?? false,
-      log_changes: c.log_changes ?? false,
-      log_color: c.log_changes ? (c.log_color ?? undefined) : undefined,
-      show_in_mini_sheet: c.show_in_mini_sheet ?? false,
-      is_advanced: c.is_advanced ?? false,
-    }));
+    const columnsToSave = columns.map((c) => {
+      const base = {
+        ...c,
+        label: labelDrafts[c.key] ?? c.label,
+        type: c.type ?? 'number',
+        width: c.width ?? '80px',
+        min_value: c.min_value ?? undefined,
+        max_value: c.max_value ?? undefined,
+        min_key: c.min_key ?? undefined,
+        max_key: c.max_key ?? c.maxKey ?? undefined,
+        display_as_fraction: c.display_as_fraction ?? false,
+        log_changes: c.log_changes ?? false,
+        log_color: c.log_changes ? (c.log_color ?? undefined) : undefined,
+        show_in_mini_sheet: c.show_in_mini_sheet ?? false,
+        is_advanced: c.is_advanced ?? false,
+      };
+      if (c.type === 'checkbox_group') {
+        return {
+          ...base,
+          items: c.items ?? [],
+          reset_policy: c.reset_policy ?? 'turn_start',
+          display_style: c.display_style ?? 'badge',
+        };
+      }
+      return base;
+    });
     try {
       const res = await fetch(`/api/systems/${encodeURIComponent(name)}/columns`, {
         method: 'POST',
@@ -217,25 +236,29 @@ export function ConfigModal({
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         const detail = err.detail;
-        const msg =
+        const detailStr =
           typeof detail === 'string'
             ? detail
             : Array.isArray(detail)
               ? detail.map((d: { msg?: string }) => d.msg || JSON.stringify(d)).join('; ')
               : typeof detail === 'object' && detail !== null
                 ? JSON.stringify(detail)
-                : `Ошибка сохранения: ${res.status}`;
-        alert(msg);
+                : '';
+        const text = detailStr
+          ? t('config_modal.columns_save_error', { detail: detailStr })
+          : t('config_modal.columns_save_error_status', { status: res.status });
+        setNotice({ variant: 'error', text });
         return;
       }
-      alert('Columns saved to system!');
+      setNotice({ variant: 'success', text: t('config_modal.columns_saved') });
       setColumns(columnsToSave);
       const listRes = await fetch('/api/systems/list');
       const listData = await listRes.json().catch(() => []);
       setPresets(Array.isArray(listData) ? listData : []);
     } catch (err) {
-      console.error('Failed to save columns', err);
-      alert('Не удалось сохранить. Проверьте консоль.');
+      const text = t('config_modal.columns_save_network_error');
+      setNotice({ variant: 'error', text });
+      console.error(text, err);
     }
   };
 
@@ -296,6 +319,26 @@ export function ConfigModal({
         </div>
 
         <div className="p-4 overflow-y-auto flex-1 min-h-0 space-y-1">
+          {notice && (
+            <div
+              className={`mb-3 flex items-start justify-between gap-2 rounded-lg border px-3 py-2 text-sm ${
+                notice.variant === 'success'
+                  ? 'border-emerald-700/50 bg-emerald-950/50 text-emerald-100'
+                  : 'border-red-700/50 bg-red-950/40 text-red-100'
+              }`}
+              role="status"
+            >
+              <span className="min-w-0 break-words">{notice.text}</span>
+              <button
+                type="button"
+                onClick={() => setNotice(null)}
+                className="shrink-0 rounded p-0.5 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
+                aria-label={t('common.close')}
+              >
+                <X size={16} />
+              </button>
+            </div>
+          )}
           <div className="relative mb-4">
             <button
               type="button"
@@ -452,12 +495,28 @@ export function ConfigModal({
                 />
                 <select
                   value={col.type ?? 'number'}
-                  onChange={(e) => updateColumn(col.key, { type: e.target.value as 'number' | 'text' | 'string' })}
-                  className={`${inputClass} w-20 min-w-0 max-w-[100px]`}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (v === 'checkbox_group') {
+                      updateColumn(col.key, {
+                        type: 'checkbox_group',
+                        reset_policy: col.reset_policy ?? 'turn_start',
+                        display_style: col.display_style ?? 'badge',
+                        items:
+                          col.items && col.items.length > 0 ? col.items : [...DEFAULT_CHECKBOX_GROUP_ITEMS],
+                      });
+                    } else {
+                      updateColumn(col.key, { type: v as 'number' | 'text' | 'string' });
+                    }
+                  }}
+                  className={`${inputClass} w-28 min-w-0 max-w-[140px]`}
                 >
                   <option value="number">{t('config_modal.type_number', { defaultValue: 'Number' })}</option>
                   <option value="text">{t('config_modal.type_text', { defaultValue: 'Text' })}</option>
                   <option value="string">{t('config_modal.type_string', { defaultValue: 'String' })}</option>
+                  <option value="checkbox_group">
+                    {t('config_modal.type_checkbox_group', { defaultValue: 'Checkbox group' })}
+                  </option>
                 </select>
                 <input
                   type="text"
@@ -499,6 +558,128 @@ export function ConfigModal({
                   </button>
                 </div>
               </div>
+              {col.type === 'checkbox_group' && (
+                <div className="pl-8 flex flex-col gap-2 text-sm border-l border-zinc-800/50 ml-2 py-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-zinc-500 text-xs shrink-0">
+                      {t('config_modal.reset_policy', { defaultValue: 'Reset policy' })}
+                    </span>
+                    <select
+                      value={col.reset_policy ?? 'turn_start'}
+                      onChange={(e) =>
+                        updateColumn(col.key, {
+                          reset_policy: e.target.value as ColumnConfig['reset_policy'],
+                        })
+                      }
+                      className={`${inputClass} min-w-[10rem]`}
+                    >
+                      <option value="turn_start">
+                        {t('config_modal.reset_turn_start', { defaultValue: 'Turn start' })}
+                      </option>
+                      <option value="round_start">
+                        {t('config_modal.reset_round_start', { defaultValue: 'Round start' })}
+                      </option>
+                      <option value="manual">
+                        {t('config_modal.reset_manual', { defaultValue: 'Manual only' })}
+                      </option>
+                    </select>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-zinc-500 text-xs shrink-0">
+                      {t('config_modal.display_style', { defaultValue: 'Display style' })}
+                    </span>
+                    <select
+                      value={col.display_style ?? 'badge'}
+                      onChange={(e) =>
+                        updateColumn(col.key, {
+                          display_style: e.target.value as ColumnConfig['display_style'],
+                        })
+                      }
+                      className={`${inputClass} min-w-[10rem]`}
+                    >
+                      <option value="badge">
+                        {t('config_modal.display_style_badge', { defaultValue: 'Badge (with text)' })}
+                      </option>
+                      <option value="dot">
+                        {t('config_modal.display_style_dot', { defaultValue: 'Dots only' })}
+                      </option>
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <span className="text-zinc-500 text-xs">
+                      {t('config_modal.checkbox_items', { defaultValue: 'Indicators' })}
+                    </span>
+                    {(col.items ?? []).map((item, itemIdx) => (
+                      <div key={`${col.key}-item-${itemIdx}`} className="flex flex-wrap items-center gap-2">
+                        <input
+                          type="text"
+                          value={item.id}
+                          onChange={(e) => {
+                            const next = [...(col.items ?? [])];
+                            next[itemIdx] = { ...item, id: e.target.value };
+                            updateColumn(col.key, { items: next });
+                          }}
+                          className={`${inputClass} w-24 font-mono`}
+                          placeholder="id"
+                        />
+                        <input
+                          type="text"
+                          value={item.label}
+                          onChange={(e) => {
+                            const next = [...(col.items ?? [])];
+                            next[itemIdx] = { ...item, label: e.target.value };
+                            updateColumn(col.key, { items: next });
+                          }}
+                          className={`${inputClass} w-14`}
+                          placeholder={t('config_modal.item_label', { defaultValue: 'Label' })}
+                        />
+                        <input
+                          type="color"
+                          value={item.color}
+                          onChange={(e) => {
+                            const next = [...(col.items ?? [])];
+                            next[itemIdx] = { ...item, color: e.target.value };
+                            updateColumn(col.key, { items: next });
+                          }}
+                          className="w-9 h-8 rounded bg-zinc-800 border border-zinc-700 cursor-pointer shrink-0"
+                          title={t('config_modal.item_color', { defaultValue: 'Color' })}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const next = (col.items ?? []).filter((_, i) => i !== itemIdx);
+                            updateColumn(col.key, { items: next });
+                          }}
+                          className="p-1 text-zinc-600 hover:text-red-400 transition-colors"
+                          title={t('config_modal.remove_field')}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const cur = col.items ?? [];
+                        const nextIdx = cur.length + 1;
+                        updateColumn(col.key, {
+                          items: [
+                            ...cur,
+                            {
+                              id: `res${nextIdx}`,
+                              label: String(nextIdx),
+                              color: '#a3a3a3',
+                            },
+                          ],
+                        });
+                      }}
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-zinc-800/80 text-zinc-400 hover:text-emerald-400 text-xs"
+                    >
+                      <Plus size={14} /> {t('config_modal.add_checkbox_item', { defaultValue: 'Add indicator' })}
+                    </button>
+                  </div>
+                </div>
+              )}
               {expertMode && (
                 <div className="pl-8 flex flex-wrap items-center gap-4 text-sm">
                   <div className="flex flex-col gap-1">

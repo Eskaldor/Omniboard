@@ -198,6 +198,9 @@ export interface CombatState {
   autosave_enabled?: boolean;
 }
 
+/** Checkbox / action-economy group: nested booleans under `actor.stats[column.key][item.id]`. */
+export type CheckboxGroupItem = { id: string; label: string; color: string };
+
 export interface ColumnConfig {
   key: string;
   label: string;
@@ -206,7 +209,13 @@ export interface ColumnConfig {
   /** @deprecated Use max_key. Kept for backwards compatibility. */
   maxKey?: string;
   /** Column data type; default "number" */
-  type?: 'number' | 'text' | 'string';
+  type?: 'number' | 'text' | 'string' | 'checkbox_group';
+  /** For `checkbox_group`: toggle buttons / indicators */
+  items?: CheckboxGroupItem[];
+  /** For `checkbox_group`: when the backend restores all items to `true` */
+  reset_policy?: 'turn_start' | 'round_start' | 'manual';
+  /** For `checkbox_group`: compact badges vs dot indicators */
+  display_style?: 'badge' | 'dot';
   /** Column width e.g. "80px" or "1fr" */
   width?: string;
   min_value?: number;
@@ -222,3 +231,6 @@ export interface ColumnConfig {
   show_in_mini_sheet?: boolean;
   is_advanced?: boolean;
 }
+
+/** Same as ColumnConfig — alias for schema / docs naming. */
+export type ColumnDefinition = ColumnConfig;

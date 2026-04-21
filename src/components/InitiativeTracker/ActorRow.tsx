@@ -1,10 +1,212 @@
-import React from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Plus, Trash } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
 import type { Actor, ColumnConfig, Effect } from '../../types';
 import { getMaxKey, buildStatUpdate as buildStatUpdateUtil } from '../../utils/stats';
 import { InlineInput } from './InlineInput';
+
+function readCheckboxGroupMap(
+  stats: Actor['stats'] | undefined,
+  columnKey: string,
+): Record<string, unknown> {
+  const raw = stats?.[columnKey];
+  if (raw !== null && typeof raw === 'object' && !Array.isArray(raw)) {
+    return raw as Record<string, unknown>;
+  }
+  return {};
+}
+
+function effectiveCheckboxBool(group: Record<string, unknown>, itemId: string): boolean {
+  const v = group[itemId];
+  return v === undefined ? true : Boolean(v);
+}
+
+/** Left-to-right: how many leading items are effectively true (pool fill depth). */
+function sequentialLeadingTrueCount(
+  items: { id: string }[],
+  group: Record<string, unknown>,
+): number {
+  let k = 0;
+  for (const item of items) {
+    if (effectiveCheckboxBool(group, item.id)) k += 1;
+    else break;
+  }
+  return k;
+}
+
+function mergeGroupWithOverrides(
+  group: Record<string, unknown>,
+  overrides: Record<string, boolean>,
+): Record<string, unknown> {
+  return { ...group, ...overrides };
+}
+
+export interface CheckboxGroupCellProps {
+  column: ColumnConfig;
+  stats: Actor['stats'] | undefined;
+  onUpdate: (updates: Partial<Actor>) => void;
+}
+
+const OVERRIDE_STUCK_MS = 3000;
+
+export const CheckboxGroupCell = React.memo(function CheckboxGroupCell({
+  column,
+  stats,
+  onUpdate,
+}: CheckboxGroupCellProps) {
+  const items = column.items ?? [];
+  const [overrides, setOverrides] = useState<Record<string, boolean>>({});
+  const overrideClearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearOverrideTimer = useCallback(() => {
+    if (overrideClearTimerRef.current != null) {
+      clearTimeout(overrideClearTimerRef.current);
+      overrideClearTimerRef.current = null;
+    }
+  }, []);
+
+  const scheduleOverrideReset = useCallback(() => {
+    clearOverrideTimer();
+    overrideClearTimerRef.current = setTimeout(() => {
+      overrideClearTimerRef.current = null;
+      setOverrides({});
+    }, OVERRIDE_STUCK_MS);
+  }, [clearOverrideTimer]);
+
+  useEffect(() => () => clearOverrideTimer(), [clearOverrideTimer]);
+
+  const group = readCheckboxGroupMap(stats, column.key);
+  const displayStyle = column.display_style ?? 'badge';
+
+  useEffect(() => {
+    const g = readCheckboxGroupMap(stats, column.key);
+    setOverrides((prev) => {
+      if (Object.keys(prev).length === 0) return prev;
+      const next = { ...prev };
+      let changed = false;
+      for (const id of Object.keys(next)) {
+        if (effectiveCheckboxBool(g, id) === next[id]) {
+          delete next[id];
+          changed = true;
+        }
+      }
+      if (changed && Object.keys(next).length === 0) {
+        clearOverrideTimer();
+      }
+      return changed ? next : prev;
+    });
+  }, [stats, column.key, clearOverrideTimer]);
+
+  const makeBadgeToggle = useCallback(
+    (itemId: string, isActive: boolean) => (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const nextBool = !isActive;
+      setOverrides((o) => ({ ...o, [itemId]: nextBool }));
+      scheduleOverrideReset();
+      onUpdate({
+        stats: {
+          [column.key]: {
+            ...readCheckboxGroupMap(stats, column.key),
+            [itemId]: nextBool,
+          },
+        },
+      });
+    },
+    [column.key, onUpdate, scheduleOverrideReset, stats],
+  );
+
+  const handleDotPoolClick = useCallback(
+    (clickedIsActive: boolean) => (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const base = readCheckboxGroupMap(stats, column.key);
+      const merged = mergeGroupWithOverrides(base, overrides);
+      const activeCount = sequentialLeadingTrueCount(items, merged);
+      const newCount = clickedIsActive
+        ? Math.max(0, activeCount - 1)
+        : Math.min(items.length, activeCount + 1);
+      const nextPartial: Record<string, boolean> = {};
+      items.forEach((it, i) => {
+        nextPartial[it.id] = i < newCount;
+      });
+      setOverrides(nextPartial);
+      scheduleOverrideReset();
+      onUpdate({
+        stats: {
+          [column.key]: {
+            ...base,
+            ...nextPartial,
+          },
+        },
+      });
+    },
+    [column.key, items, onUpdate, overrides, scheduleOverrideReset, stats],
+  );
+
+  if (items.length === 0) {
+    return <span className="text-xs text-zinc-600">—</span>;
+  }
+
+  const inactiveTone = 'opacity-30 grayscale';
+  const transitionShort = 'transition-colors duration-75';
+
+  const mergedForDots = mergeGroupWithOverrides(group, overrides);
+  const dotPoolCount = sequentialLeadingTrueCount(items, mergedForDots);
+
+  return (
+    <div
+      className="flex flex-wrap items-center gap-0.5 justify-center"
+      onDoubleClick={(e) => e.stopPropagation()}
+    >
+      {items.map((item, index) => {
+        if (displayStyle === 'dot') {
+          const isActive = index < dotPoolCount;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              className={`w-3.5 h-3.5 shrink-0 cursor-pointer rounded-full border border-zinc-700 ${transitionShort} ${
+                !isActive ? inactiveTone : ''
+              }`}
+              style={{ backgroundColor: isActive ? item.color : 'transparent' }}
+              title={item.label}
+              onClick={handleDotPoolClick(isActive)}
+            />
+          );
+        }
+
+        const fromStats = effectiveCheckboxBool(group, item.id);
+        const isActive = Object.prototype.hasOwnProperty.call(overrides, item.id)
+          ? overrides[item.id]
+          : fromStats;
+
+        return (
+          <button
+            key={item.id}
+            type="button"
+            title={item.label}
+            onClick={makeBadgeToggle(item.id, isActive)}
+            className={`cursor-pointer px-1 py-[1px] text-[10px] rounded min-w-[1.2rem] text-center border font-medium ${transitionShort} ${
+              !isActive ? `${inactiveTone} border-zinc-600` : 'text-zinc-950 shadow-sm'
+            }`}
+            style={
+              isActive
+                ? {
+                    backgroundColor: item.color,
+                    borderColor: item.color,
+                  }
+                : undefined
+            }
+          >
+            {item.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+});
 
 export interface ActorRowProps {
   actor: Actor;
@@ -90,8 +292,8 @@ export const ActorRow = React.memo(function ActorRow({
   const handleRowClick = (e: React.MouseEvent<HTMLTableRowElement>) => {
     if (!manualRowActive) return;
     if (e.detail !== 1) return;
-    const t = e.target as HTMLElement;
-    if (t.closest('button, input, textarea, select, a')) return;
+    const el = e.target as HTMLElement;
+    if (el.closest('button, input, textarea, select, a')) return;
     void onManualRowActivate?.();
   };
 
@@ -211,18 +413,48 @@ export const ActorRow = React.memo(function ActorRow({
 
       {/* Standalone stats */}
       {standalone.map((col) => {
+        if (col.type === 'checkbox_group') {
+          return (
+            <td key={col.key} className="px-2 py-1 text-center align-middle">
+              <CheckboxGroupCell column={col} stats={actor.stats} onUpdate={onUpdate} />
+            </td>
+          );
+        }
+
+        if (col.type === 'text' || col.type === 'string') {
+          const rawVal = actor.stats?.[col.key];
+          const strVal =
+            typeof rawVal === 'object' && rawVal !== null ? '' : String(rawVal ?? '');
+          return (
+            <td key={col.key} className="px-2 py-1 text-center align-middle">
+              <div className="mx-auto w-full min-w-[120px] max-w-full" title={strVal}>
+                <InlineInput
+                  type="text"
+                  value={strVal}
+                  onChange={(val) =>
+                    onUpdate({
+                      stats: { ...(actor.stats ?? {}), [col.key]: val },
+                    })
+                  }
+                  className="w-full min-w-[120px] truncate bg-zinc-950 border border-zinc-700 rounded px-2 py-1 text-left text-xs text-zinc-200 focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+            </td>
+          );
+        }
+
         const maxKey = getMaxKey(col);
         const hasMaxKey = !!maxKey;
         const showAsFraction = (col.display_as_fraction ?? false) && hasMaxKey;
 
         if (showAsFraction) {
-          const maxVal = actor.stats[maxKey!];
+          const maxVal = actor.stats?.[maxKey!];
           return (
             <td key={col.key} className="px-2 py-1 text-center align-middle">
               <div className="min-w-[5rem] w-20 mx-auto flex items-center justify-center gap-1 whitespace-nowrap">
                 <InlineInput
                   type="number"
-                  value={actor.stats[col.key] ?? 0}
+                  value={actor.stats?.[col.key] ?? 0}
                   onChange={(val) =>
                     onUpdate({
                       stats: buildStatUpdate(col, col.key, parseInt(val)),
@@ -247,15 +479,15 @@ export const ActorRow = React.memo(function ActorRow({
             <div className="min-w-[5rem] w-20 mx-auto flex items-center justify-center gap-1">
               <InlineInput
                 type="number"
-                value={actor.stats[col.key] ?? 0}
+                value={actor.stats?.[col.key] ?? 0}
                 onChange={(val) =>
                   onUpdate({
                     stats: buildStatUpdate(col, col.key, parseInt(val)),
                   })
                 }
                 maxValue={
-                  maxKey && typeof actor.stats[maxKey] === 'number'
-                    ? (actor.stats[maxKey] as number)
+                  maxKey && typeof actor.stats?.[maxKey] === 'number'
+                    ? (actor.stats?.[maxKey] as number)
                     : col.max_value
                 }
                 className="w-16 bg-zinc-950 border border-zinc-700 rounded px-2 py-1 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
@@ -272,12 +504,49 @@ export const ActorRow = React.memo(function ActorRow({
             {grouped
               .filter((c) => String(c.group).trim() === grp)
               .map((col) => {
+                if (col.type === 'checkbox_group') {
+                  return (
+                    <div
+                      key={col.key}
+                      className="flex flex-col items-center gap-0.5 text-xs text-zinc-200"
+                    >
+                      <span className="text-[10px] text-zinc-500">{colLabel(col)}</span>
+                      <CheckboxGroupCell column={col} stats={actor.stats} onUpdate={onUpdate} />
+                    </div>
+                  );
+                }
+
+                if (col.type === 'text' || col.type === 'string') {
+                  const rawVal = actor.stats?.[col.key];
+                  const strVal =
+                    typeof rawVal === 'object' && rawVal !== null ? '' : String(rawVal ?? '');
+                  return (
+                    <div
+                      key={col.key}
+                      className="flex w-full min-w-[120px] max-w-full flex-col gap-0.5 text-xs text-zinc-200"
+                      title={strVal}
+                    >
+                      <span className="text-[10px] text-zinc-500">{colLabel(col)}:</span>
+                      <InlineInput
+                        type="text"
+                        value={strVal}
+                        onChange={(val) =>
+                          onUpdate({
+                            stats: { ...(actor.stats ?? {}), [col.key]: val },
+                          })
+                        }
+                        className="w-full min-w-[120px] truncate bg-zinc-950 border border-zinc-700 rounded px-1.5 py-0.5 text-left text-xs text-zinc-200 focus:outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                  );
+                }
+
                 const maxKey = getMaxKey(col);
                 const hasMaxKey = !!maxKey;
                 const showAsFraction = (col.display_as_fraction ?? false) && hasMaxKey;
 
                 if (showAsFraction) {
-                  const maxVal = actor.stats[maxKey!];
+                  const maxVal = actor.stats?.[maxKey!];
                   return (
                     <div
                       key={col.key}
@@ -287,7 +556,7 @@ export const ActorRow = React.memo(function ActorRow({
                       <div className="flex items-center justify-center gap-1 whitespace-nowrap">
                         <InlineInput
                           type="number"
-                          value={actor.stats[col.key] ?? 0}
+                          value={actor.stats?.[col.key] ?? 0}
                           onChange={(val) =>
                             onUpdate({
                               stats: buildStatUpdate(col, col.key, parseInt(val)),
@@ -315,15 +584,15 @@ export const ActorRow = React.memo(function ActorRow({
                     <span className="text-[10px] text-zinc-500">{colLabel(col)}:</span>
                     <InlineInput
                       type="number"
-                      value={actor.stats[col.key] ?? 0}
+                      value={actor.stats?.[col.key] ?? 0}
                       onChange={(val) =>
                         onUpdate({
                           stats: buildStatUpdate(col, col.key, parseInt(val)),
                         })
                       }
                       maxValue={
-                        maxKey != null && typeof actor.stats[maxKey] === 'number'
-                          ? (actor.stats[maxKey] as number)
+                        maxKey != null && typeof actor.stats?.[maxKey] === 'number'
+                          ? (actor.stats?.[maxKey] as number)
                           : col.max_value
                       }
                       className="w-10 bg-zinc-950 border border-zinc-700 rounded px-1.5 py-0.5 text-xs text-zinc-200 focus:outline-none focus:border-emerald-500"
