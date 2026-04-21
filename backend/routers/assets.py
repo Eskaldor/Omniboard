@@ -10,6 +10,7 @@ from fastapi.responses import FileResponse
 
 from backend.models import BarProfileConfig
 from backend.paths import ASSETS_DIR
+from backend.utils.config_loader import load_config_with_override
 
 
 router = APIRouter(prefix="/api/assets", tags=["assets"])
@@ -57,12 +58,28 @@ def _load_bar_config(config_path) -> BarProfileConfig | None:
 @router.get("/bars")
 async def list_bar_profiles(system: str | None = None):
     """
-    Сканирует data/assets/default/bars/ и при наличии system — data/assets/systems/{system}/bars/.
-    В каждой подпапке читает config.json, парсит в BarProfileConfig. Возвращает объединённый список.
-    Если конфигов нет — возвращает один дефолтный (id=default).
+    ADR-4: список из merge ``default/config/bars_config.json`` + ``data/systems/{system}/bars_config.json``,
+    дополненный профилями из папок ``default/bars`` и ``systems/{system}/bars`` (id, которых нет в JSON).
+    Если ничего не найдено — один профиль id=default.
     """
+    sys_key = (system or "").strip()
+    merged_raw = load_config_with_override(sys_key, "bars_config.json")
+    from_json: list[BarProfileConfig] = []
+    if isinstance(merged_raw, list) and merged_raw:
+        for item in merged_raw:
+            if isinstance(item, dict):
+                try:
+                    from_json.append(BarProfileConfig.model_validate(item))
+                except Exception:
+                    continue
+
     result: list[BarProfileConfig] = []
     seen_ids: set[str] = set()
+
+    for c in from_json:
+        if c.id not in seen_ids:
+            seen_ids.add(c.id)
+            result.append(c)
 
     for base_dir in [
         ASSETS_DIR / "default" / "bars",

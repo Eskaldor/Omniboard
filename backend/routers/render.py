@@ -10,6 +10,7 @@ from fastapi.responses import FileResponse
 
 from backend import state as app_state
 from backend.compositor import render_miniature
+from backend.layout_profiles_store import read_layout_profiles
 from backend.led_resolver import resolve_led_payload
 from backend.models import Effect, LayoutProfile
 from backend.paths import DATA_DIR, RENDER_DIR
@@ -47,15 +48,16 @@ async def get_rendered_miniature(
         return {"error": "Actor not found"}
 
     state = app_state.state
+    layout_profiles = read_layout_profiles(state.core.system)
     # 1. Для превью можно переопределить профиль (profile_id); иначе берём из актора
     target_profile_id = profile_id or actor.layout_profile_id or "default"
 
-    # 2. Ищем его в state.display.layout_profiles
-    profile = next((p for p in state.display.layout_profiles if p.id == target_profile_id), None)
+    # 2. Ищем профиль в системном списке layout_profiles.json
+    profile = next((p for p in layout_profiles if p.id == target_profile_id), None)
 
     # 3. Если даже такого нет (например, удалили), фоллбэк на жесткий default
     if not profile:
-        profile = next((p for p in state.display.layout_profiles if p.id == "default"), None)
+        profile = next((p for p in layout_profiles if p.id == "default"), None)
 
     # Если state.layout_profiles пуст, создаем базовый в памяти (пустой — только портрет)
     if not profile:

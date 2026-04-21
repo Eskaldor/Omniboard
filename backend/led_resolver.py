@@ -3,13 +3,13 @@ Resolve Omnimini LED payload from combat state, layout profile, and system LED p
 """
 from __future__ import annotations
 
-import json
 from collections import defaultdict
 from typing import Any
 
 from backend import state as app_state
+from backend.layout_profiles_store import read_layout_profiles
+from backend.led_profiles_store import read_led_profiles
 from backend.models import Actor, LayoutProfile, LedProfile, LegendConfig
-from backend.paths import DATA_DIR
 
 # actor_id -> { "time" | "turn" -> led_profile_id } stacked overrides (see led_interceptor)
 ACTIVE_OVERRIDES: dict[str, dict[str, str]] = defaultdict(dict)
@@ -24,34 +24,8 @@ _DEFAULT_LED_FALLBACK = LedProfile(
 )
 
 
-def _safe_system_dir_name(system_name: str) -> bool:
-    s = (system_name or "").strip()
-    if not s or ".." in s or "/" in s or "\\" in s:
-        return False
-    try:
-        (DATA_DIR / s).resolve().relative_to(DATA_DIR.resolve())
-    except ValueError:
-        return False
-    return True
-
-
-def _load_system_led_profiles(system_name: str) -> list[LedProfile]:
-    if not _safe_system_dir_name(system_name):
-        return []
-    path = DATA_DIR / system_name.strip() / "led_profiles.json"
-    if not path.is_file():
-        return []
-    try:
-        raw = json.loads(path.read_text(encoding="utf-8"))
-        if not isinstance(raw, list):
-            return []
-        return [LedProfile.model_validate(item) for item in raw]
-    except (OSError, ValueError):
-        return []
-
-
 def _find_led_profile(system_name: str, led_profile_id: str) -> LedProfile:
-    profiles = _load_system_led_profiles(system_name)
+    profiles = read_led_profiles(system_name)
     for p in profiles:
         if p.id == led_profile_id:
             return p
@@ -143,7 +117,7 @@ def resolve_led_payload_for_profile(actor_id: str, led_profile_id: str) -> dict[
     if actor is None:
         return None
 
-    layout = _layout_for_actor(actor, st.display.layout_profiles)
+    layout = _layout_for_actor(actor, read_layout_profiles(st.core.system))
     pid = (led_profile_id or "").strip() or "default_static"
     led_prof = _find_led_profile(st.core.system, pid)
 
@@ -174,7 +148,7 @@ def resolve_led_payload(actor_id: str) -> dict[str, Any] | None:
     if actor is None:
         return None
 
-    layout = _layout_for_actor(actor, st.display.layout_profiles)
+    layout = _layout_for_actor(actor, read_layout_profiles(st.core.system))
     overrides = ACTIVE_OVERRIDES.get(actor_id, {})
     # Short flash (time) wins over sustained (turn); then effect LED; then layout default
     led_profile_id = overrides.get("time") or overrides.get("turn")

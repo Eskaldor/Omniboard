@@ -1,7 +1,22 @@
 # Omniboard — План рефакторинга
 
 > Создан: 01.03.2026 · Обновлено: 21.04.2026  
-> Статус: Активный план работ
+> Статус: Активный план работ (P0 по стейту/роутерам закрыт — см. **«Выполнено»**)
+
+---
+
+## Выполнено
+
+### P0-1: Автосохранение сессии боя
+- Реализовано в **`backend/state.py`**: глобальный **`CombatSession`**, **`load_state()`** / **`save_state_async()`**, путь **`data/state_autosave.json`**, уважение к **`session.autosave_enabled`**.
+
+### P0-2: Разбивка `backend/main.py`
+- Точка входа **`backend/main.py`** — инициализация приложения и подключение роутеров; логика разнесена по **`backend/routers/`** (`combat`, `systems`, `hardware`, `assets`, `encounters`, `render`, `logs`, …), сервисы в **`backend/services/`**.
+
+### Декомпозиция стейта (ADR-18)
+- В **`backend/models.py`**: **`CombatSession`** (**`core: CombatCore`**, **`display: DisplayState`**, **`hardware: HardwareState`**, **`session: SessionMeta`**), legacy-валидация, адаптеры к плоскому **`CombatState`** для движков.
+- **`history_stack`** / **`history_index`** перенесены в **`SessionMeta`** (единая модель сессии вместо разнесения по «двум историям» без структуры).
+- Профили раскладок мини-экрана **не** хранятся в **`DisplayState`**; загрузка через **`load_config_with_override`** и API **`/api/systems/{name}/layouts`**; глобальные миньки — **`/api/hardware/miniatures`** и **`data/miniatures.json`**.
 
 ---
 
@@ -9,63 +24,9 @@
 
 ### 🔥 P0 — Критические (делаем первыми)
 
-#### 1. Автосохранение CombatState
-**Проблема:** Глобальный `state` в RAM умирает при перезапуске uvicorn (reload, краш, закрытие терминала). Мастер теряет весь бой если не успел вручную сохранить Encounter.  
-**Решение:** Автосохранение `state.model_dump()` в `data/state_autosave.json` при каждом `broadcast_state()`. Загрузка при старте если файл существует.  
-**Сложность:** ~30 строк кода  
-**Файлы:** `backend/main.py`
+#### ~~1. Автосохранение CombatState~~ → **выполнено** (см. «Выполнено», P0-1; тип — **`CombatSession`**)
 
-```python
-# backend/state.py (новый файл)
-from pathlib import Path
-import json
-from backend.models import CombatState
-
-AUTOSAVE_PATH = Path("data/state_autosave.json")
-
-def load_state() -> CombatState:
-    if AUTOSAVE_PATH.exists():
-        try:
-            data = json.loads(AUTOSAVE_PATH.read_text())
-            return CombatState(**data)
-        except Exception:
-            pass
-    return CombatState()
-
-def save_state_sync(state: CombatState):
-    """Синхронное сохранение для быстрого вызова"""
-    AUTOSAVE_PATH.write_text(state.model_dump_json(indent=2))
-```
-
-**Вызывать:** После каждого `await broadcast_state()` добавить `save_state_sync(state)` (синхронно, т.к. async I/O для одного файла излишен).
-
----
-
-#### 2. Разбивка `backend/main.py` (31 KB)
-**Проблема:** Всё в одном файле: роуты, бизнес-логика, WebSocket, файловая работа, логгер. Cursor путается в контексте 800+ строк, ломает соседний код при добавлении новых фич.  
-**Решение:** Разбить по модулям FastAPI Router.
-
-**Целевая структура:**
-```
-backend/
-├── main.py               # ~50 строк: app init + middleware + include routers
-├── models.py             # Pydantic (без изменений)
-├── compositor.py         # рендер (без изменений)
-├── state.py              # глобальный state + autosave + broadcast_state
-├── routers/
-│   ├── __init__.py
-│   ├── combat.py         # /api/combat/* (start, end, next-turn, undo/redo, load, reset)
-│   ├── actors.py         # /api/actors/* (POST, PATCH, DELETE)
-│   ├── systems.py        # /api/systems/* (list, effects, columns, actors/roster)
-│   ├── encounters.py     # /api/encounters/* (save, list, get, delete)
-│   ├── assets.py         # /api/assets/* (upload, list, delete)
-│   └── logs.py           # /api/combat/log/*, /api/logs/open_folder
-└── services/
-    └── logger.py         # add_log() + background file writer
-```
-
-**Сложность:** Средняя, ~2-3 часа ручной работы (AI тут сложно помочь из-за большого контекста).  
-**Зависимости:** Автосохранение (п.1) лучше сделать до разбивки, чтобы `state.py` сразу был готов.
+#### ~~2. Разбивка `backend/main.py`~~ → **выполнено** (см. «Выполнено», P0-2)
 
 ---
 
@@ -158,23 +119,23 @@ export async function apiCall<T>(url: string, options?: RequestInit): Promise<T>
 
 ## Декомпозиция `CombatState` (God Object → доменные суб-модели, Pydantic v2)
 
-### Проблема
+**Статус:** первый этап **выполнен** — корневая модель **`CombatSession`**, см. **«Выполнено»** и ADR-18 в `Architecture_Decisions_and_Icebox.md`. Ниже — зафиксированный дизайн и **оставшаяся** оптимизация (WS-патчи по доменам).
 
-Сейчас **`CombatState`** (`backend/models.py`) — монолит: в одном JSON живут и чистая боевая механика, и настройки отображения стола, и флаги вокруг железа/LED, и нарративный лог боя плюс сервисные переключатели. Параллельно технический стек **undo/redo** хранится **вне** модели — в модуле `backend/state.py` (`history_stack`, `history_index`, см. ADR-3), хотя семантически это тоже «сессия боя».
+### Проблема (было)
 
-**Последствия:**
+Ранее плоский **`CombatState`** смешивал механику боя, отображение, железо и сессионные метаданные; стек undo жил отдельно от Pydantic-модели.
 
-1. **WebSocket:** при любом изменении (например, только `legend` или `table_centered`) клиент получает полный снимок боя → лишний трафик и широкий триггер ре-рендеров.
-2. **React:** даже при мемоизации строк таблицы общий объект `state` меняется по ссылке целиком, что усложняет локальную оптимизацию и отладку «что именно изменилось».
-3. **Сериализация / автосохранение:** encounter и autosave тащат всё сразу; нет явного разделения «что обязано версионироваться вместе с боем» vs «что можно кэшировать отдельно».
+**Что остаётся улучшать:**
 
-**Цель рефакторинга:** разнести ответственность на **узкие доменные суб-модели** (композиция через Pydantic v2: вложенные `BaseModel`, при необходимости — корневой агрегат с `model_validator` для обратной совместимости), затем **типизировать полезную нагрузку WebSocket** (полный снимок на connect + инкрементальные патчи по доменам или каналам).
+1. **WebSocket:** при любом изменении клиент по-прежнему может получать полный снимок → следующий шаг — инкрементальные патчи по доменам (`core` / `display` / …).
+2. **React:** селекторы/мемоизация по веткам **`CombatSession`** — довести до конца там, где ещё держится плоский merge.
+3. **Кэширование:** списки **`LayoutProfile`** и глобальные миньки уже вынесены из стейта боя; дальнейшее версионирование схемы — по полю **`schema_version`** при необходимости.
 
 ---
 
 ### Целевая структура данных (черновик имён полей)
 
-Все четыре блока — отдельные **`BaseModel`**. Корневой контейнер (рабочее имя **`CombatSession`** или сохранение имени **`CombatState`** как алиаса) собирает их в одно дерево для единого `model_dump()` при миграции файлов, но **сериализация для WS/API** может отдавать только изменённые поддеревья.
+Все четыре блока — отдельные **`BaseModel`**. Корневой контейнер **`CombatSession`** собирает их в одно дерево для **`model_dump()`** (autosave / encounter); **сериализация для WS/API** в перспективе — только изменённые поддеревья.
 
 #### `CombatCore` — «чистая боёвка»
 
@@ -194,9 +155,9 @@ export async function apiCall<T>(url: string, options?: RequestInit): Promise<T>
 
 | Назначение | Примеры полей |
 |------------|---------------|
-| Профили раскладки мини-экрана | `layout_profiles` |
-| Цвета ролей | `legend` |
-| Флаги таблицы | `show_group_colors`, `show_faction_colors`, `table_centered` |
+| Выбранный профиль раскладки мини-экрана | **`selected_layout_id`** (список **`LayoutProfile`** — в файлах + API системы, не в стейте) |
+| Цвета ролей | **`legend`** |
+| Флаги таблицы | **`show_group_colors`**, **`show_faction_colors`**, **`table_centered`** |
 
 **Инвариант:** правки здесь **не** меняют HP, очередь и статистику боя; фронт может подписаться на отдельный срез и обновлять только шапку/легенду/обёртку таблицы.
 
@@ -216,7 +177,7 @@ export async function apiCall<T>(url: string, options?: RequestInit): Promise<T>
 | Назначение | Примеры полей / источников |
 |------------|----------------------------|
 | Нарративный лог | `history: List[LogEntry]`, `history_cursor` |
-| Технический стек снимков | перенос **`history_stack`**, **`history_index`** из `backend/state.py` в эту модель (или в отдельный `UndoState`, вложенный в `SessionMeta`) — единая точка правды для ADR-3 |
+| Технический стек снимков | **`history_stack`**, **`history_index`** — единая точка правды для ADR-3 внутри сессии (глобальный объект по-прежнему в `backend/state.py`, но поля — в **`SessionMeta`**) |
 | Логирование и автосохранение | `enable_logging`, `autosave_enabled` |
 
 **Инвариант:** массовые правки `CombatCore` не должны по умолчанию перезаписывать мета-настройки; undo по-прежнему делает полный снимок агрегата, но внутри снимка структура уже секционирована.
@@ -228,10 +189,10 @@ export async function apiCall<T>(url: string, options?: RequestInit): Promise<T>
 | Текущее поле | Домен |
 |--------------|--------|
 | `actors`, `turn_queue`, `current_index`, `current_pass`, `round`, `is_manual_mode`, `engine_type`, `system`, `is_active`, `active_reaction_actor_id` | `CombatCore` |
-| `layout_profiles`, `legend`, `show_group_colors`, `show_faction_colors`, `table_centered` | `DisplayState` |
+| `selected_layout_id`, `legend`, `show_group_colors`, `show_faction_colors`, `table_centered` | `DisplayState` (legacy-ключи `layout_profiles` / `layout` отбрасываются валидатором) |
 | `sync_led_to_ui` (+ будущие поля ESP) | `HardwareState` |
 | `history`, `history_cursor`, `enable_logging`, `autosave_enabled` | `SessionMeta` |
-| `history_stack`, `history_index` | сегодня в `state.py` → **`SessionMeta`** (или вложенная модель) |
+| `history_stack`, `history_index` | **`SessionMeta`** (в `state.py` остаётся только глобальный экземпляр **`CombatSession`**) |
 
 Корневой тип может выглядеть так (псевдокод):
 
@@ -265,11 +226,11 @@ class CombatSession(BaseModel):
 
 ### Этапы внедрения (рекомендуемый порядок)
 
-1. **Модели без поведения:** ввести `CombatCore`, `DisplayState`, `HardwareState`, `SessionMeta` в `models.py`; добавить фабрику `combat_session_from_legacy_dict` + `to_legacy_flat_dict` для round-trip тестов.
-2. **Внутренний рефактор:** постепенно перевести `routers/combat.py`, движки, `broadcast_state` на чтение/запись через свойства или явные геттеры доменов (минимизировать «размазанные» обращения к плоским ключам).
-3. **Объединить undo-стек** с сессионной мета-моделью или жёстко задокументировать границу «снимок = весь `CombatSession`».
-4. **Autosave / encounters:** сохранять тот же корневой JSON (один файл — одна схема версии, поле `schema_version` при необходимости).
-5. **WS оптимизация:** только после стабильной композиции на бэке.
+1. ~~**Модели без поведения:**~~ введены **`CombatCore`**, **`DisplayState`**, **`HardwareState`**, **`SessionMeta`**, **`CombatSession`**; legacy через **`model_validate`**.
+2. **Внутренний рефактор:** по мере правок — меньше плоских обращений, больше явных путей **`state.core.*`** / **`state.display.*`** на бэке и фронте.
+3. ~~**Объединить undo-стек**~~ — стек в **`SessionMeta`**; граница снимка = весь **`CombatSession`** при undo/redo.
+4. ~~**Autosave / encounters:**~~ корневой JSON **`CombatSession`**; при необходимости — поле **`schema_version`**.
+5. **WS оптимизация:** только после стабильной композиции на бэке (текущий клиент — полный снимок).
 
 ### Риски
 
@@ -377,12 +338,12 @@ git commit -m "chore: add package-lock.json to .gitignore"
 
 1. ✅ **Обновить документацию** (сделано)
 2. 🔧 **BUG-3, BUG-4, BUG-5** — быстрая чистка вручную (5 минут)
-3. 🔥 **P0-1: Автосохранение state** → промпт для Cursor
+3. ✅ **P0-1: Автосохранение** — **`CombatSession`** в **`state.py`**
 4. 🔥 **P0-3: Разбивка App.tsx** → пошаговый рефакторинг с коммитами
 5. 🐛 **BUG-1, BUG-2** → после разбивки App.tsx, когда код станет читаемым
-6. 🔥 **P0-2: Разбивка main.py** → ручная работа или промпт для AI (но осторожно)
+6. ✅ **P0-2: Разбивка main.py** — роутеры в **`backend/routers/`**
 7. 🟡 **P1: API errors, reconnect, typegen** → по мере необходимости
-8. 🏛️ **Декомпозиция `CombatSession` / `CombatState`** → после стабилизации сетевого слоя (см. раздел «Декомпозиция CombatState» выше); не смешивать с первым же патчем WS без фазы совместимости
+8. ✅ **Декомпозиция `CombatSession`** (фаза 1) — модели + адаптеры + вынесение layouts/miniatures; **дальше:** WS-патчи по доменам (см. раздел «Декомпозиция CombatState»)
 9. 🟢 **P2: i18n миграция** → постепенно при создании новых компонентов
 
 ---
@@ -390,5 +351,6 @@ git commit -m "chore: add package-lock.json to .gitignore"
 ## Текущий статус
 
 - [x] Документация актуализирована
-- [ ] План согласован с Nevrar
-- [ ] Начало рефакторинга
+- [x] P0-1, P0-2 и декомпозиция стейта (ADR-18, фаза 1) выполнены
+- [ ] План согласован с Nevrar (при необходимости — уточнение следующих приоритетов)
+- [x] Начало рефакторинга (архитектура бэкенда и стейта)

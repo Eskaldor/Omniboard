@@ -1,0 +1,277 @@
+{
+  "name": "\u0420\u0435\u0444\u0430\u043a\u0442\u043e\u0440",
+  "actors": [
+    {
+      "id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+      "name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+      "role": "enemy",
+      "is_revealed": true,
+      "is_pinned": true,
+      "group_id": null,
+      "group_name": null,
+      "group_mode": null,
+      "group_color": null,
+      "initiative": 0,
+      "has_acted": false,
+      "portrait": "/assets/systems/D&D 5e/portraits/goblin_mag.png",
+      "show_portrait": true,
+      "miniature_id": "1",
+      "layout_profile_id": "default",
+      "stats": {
+        "hp": 50,
+        "ac": 10,
+        "speed": 30,
+        "mana": 52,
+        "max_mana": 60,
+        "com": 0,
+        "com1": {
+          "\u0420\u0435\u0430\u043a\u0446\u0438\u044f": false,
+          "\u0411\u043e\u043d\u0443\u0441\u043d\u043e\u0435 ": false,
+          "\u041e\u0441\u043d\u043e\u0432\u043d\u043e\u0435": false
+        }
+      },
+      "effects": [],
+      "visibility": {
+        "hp": true,
+        "stats": true,
+        "effects": true,
+        "name": true
+      },
+      "hotbar": []
+    },
+    {
+      "id": "9a776ca3-1074-4a0c-a644-154583dd65f4",
+      "name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+      "role": "enemy",
+      "is_revealed": true,
+      "is_pinned": false,
+      "group_id": "3455d278-6095-4e6b-b804-08167051a2e9",
+      "group_name": "\u0413\u043e\u0431\u043b\u0438\u043d\u044b",
+      "group_mode": "simultaneous",
+      "group_color": "#10b981",
+      "initiative": 2,
+      "has_acted": false,
+      "portrait": "",
+      "show_portrait": false,
+      "miniature_id": null,
+      "layout_profile_id": null,
+      "stats": {
+        "hp": 10,
+        "ac": 10,
+        "speed": 30,
+        "com": {
+          "\u0420\u0435\u0430\u043a\u0446\u0438\u044f": true,
+          "\u0411\u043e\u043d\u0443\u0441\u043d\u043e\u0435 ": true,
+          "\u041e\u0441\u043d\u043e\u0432\u043d\u043e\u0435": true
+        },
+        "com1": {
+          "\u041e\u0441\u043d\u043e\u0432\u043d\u043e\u0435": true,
+          "\u0411\u043e\u043d\u0443\u0441\u043d\u043e\u0435 ": true,
+          "\u0420\u0435\u0430\u043a\u0446\u0438\u044f": true
+        },
+        "Note": ""
+      },
+      "effects": [],
+      "visibility": {
+        "hp": true,
+        "stats": true,
+        "effects": true,
+        "name": true
+      },
+      "hotbar": []
+    },
+    {
+      "id": "59f1a5f4-9caa-43ad-9a5f-dbf6feae26d5",
+      "name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+      "role": "enemy",
+      "is_revealed": true,
+      "is_pinned": false,
+      "group_id": "3455d278-6095-4e6b-b804-08167051a2e9",
+      "group_name": "\u0413\u043e\u0431\u043b\u0438\u043d\u044b",
+      "group_mode": "simultaneous",
+      "group_color": "#10b981",
+      "initiative": 18,
+      "has_acted": false,
+      "portrait": "",
+      "show_portrait": false,
+      "miniature_id": null,
+      "layout_profile_id": null,
+      "stats": {
+        "hp": 10,
+        "ac": 10,
+        "speed": 30,
+        "com": {
+          "\u0420\u0435\u0430\u043a\u0446\u0438\u044f": true,
+          "\u0411\u043e\u043d\u0443\u0441\u043d\u043e\u0435 ": true,
+          "\u041e\u0441\u043d\u043e\u0432\u043d\u043e\u0435": true
+        },
+        "com1": {
+          "\u0420\u0435\u0430\u043a\u0446\u0438\u044f": true,
+          "\u0411\u043e\u043d\u0443\u0441\u043d\u043e\u0435 ": true,
+          "\u041e\u0441\u043d\u043e\u0432\u043d\u043e\u0435": true
+        },
+        "bladpul": {
+          "res1": true,
+          "res2": true,
+          "res3": true,
+          "slot_3": true,
+          "slot_4": true,
+          "slot_5": true,
+          "slot_6": true,
+          "slot_7": false
+        },
+        "Note": ""
+      },
+      "effects": [],
+      "visibility": {
+        "hp": true,
+        "stats": true,
+        "effects": true,
+        "name": true
+      },
+      "hotbar": []
+    },
+    {
+      "id": "08d040bc-a871-46fa-865c-7be14d47d3b6",
+      "name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+      "role": "enemy",
+      "is_revealed": true,
+      "is_pinned": false,
+      "group_id": "3455d278-6095-4e6b-b804-08167051a2e9",
+      "group_name": "\u0413\u043e\u0431\u043b\u0438\u043d\u044b",
+      "group_mode": "simultaneous",
+      "group_color": "#10b981",
+      "initiative": 19,
+      "has_acted": false,
+      "portrait": "",
+      "show_portrait": false,
+      "miniature_id": null,
+      "layout_profile_id": null,
+      "stats": {
+        "hp": 10,
+        "ac": 10,
+        "speed": 30,
+        "com": {
+          "\u0420\u0435\u0430\u043a\u0446\u0438\u044f": true,
+          "\u0411\u043e\u043d\u0443\u0441\u043d\u043e\u0435 ": true,
+          "\u041e\u0441\u043d\u043e\u0432\u043d\u043e\u0435": true
+        },
+        "com1": {
+          "\u0420\u0435\u0430\u043a\u0446\u0438\u044f": false,
+          "\u0411\u043e\u043d\u0443\u0441\u043d\u043e\u0435 ": false,
+          "\u041e\u0441\u043d\u043e\u0432\u043d\u043e\u0435": false,
+          "slot_5": true,
+          "slot_7": true,
+          "slot_6": true,
+          "slot_4": true,
+          "slot_3": true
+        },
+        "bladpul": {
+          "res1": true,
+          "res2": true,
+          "res3": true,
+          "slot_3": true,
+          "slot_4": true,
+          "slot_5": true,
+          "slot_6": true,
+          "slot_7": false
+        },
+        "Ammo": 0,
+        "Note": "\u0441\u0442\u0430\u043d\u0435\u0442 \u043b\u043e\u0440\u0434\u043c"
+      },
+      "effects": [],
+      "visibility": {
+        "hp": true,
+        "stats": true,
+        "effects": true,
+        "name": true
+      },
+      "hotbar": []
+    },
+    {
+      "id": "3b1f38e2-ef37-4375-bd0e-1953e76d1a3a",
+      "name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+      "role": "enemy",
+      "is_revealed": true,
+      "is_pinned": false,
+      "group_id": null,
+      "group_name": null,
+      "group_mode": null,
+      "group_color": null,
+      "initiative": 0,
+      "has_acted": false,
+      "portrait": "",
+      "show_portrait": false,
+      "miniature_id": null,
+      "layout_profile_id": null,
+      "stats": {
+        "hp": 10,
+        "ac": 10,
+        "speed": 30,
+        "com": {
+          "\u041e\u0441\u043d\u043e\u0432\u043d\u043e\u0435": false
+        },
+        "com1": {
+          "\u0420\u0435\u0430\u043a\u0446\u0438\u044f": true,
+          "\u0411\u043e\u043d\u0443\u0441\u043d\u043e\u0435 ": true,
+          "\u041e\u0441\u043d\u043e\u0432\u043d\u043e\u0435": false,
+          "slot_3": true,
+          "slot_7": false
+        }
+      },
+      "effects": [],
+      "visibility": {
+        "hp": true,
+        "stats": true,
+        "effects": true,
+        "name": true
+      },
+      "hotbar": []
+    },
+    {
+      "id": "25afcd09-fc4b-4013-853b-cc0f80cf439a",
+      "name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+      "role": "enemy",
+      "is_revealed": true,
+      "is_pinned": false,
+      "group_id": null,
+      "group_name": null,
+      "group_mode": null,
+      "group_color": null,
+      "initiative": 0,
+      "has_acted": false,
+      "portrait": "",
+      "show_portrait": false,
+      "miniature_id": null,
+      "layout_profile_id": null,
+      "stats": {
+        "hp": 10,
+        "ac": 10,
+        "speed": 30,
+        "com": {
+          "\u0420\u0435\u0430\u043a\u0446\u0438\u044f": true,
+          "\u0411\u043e\u043d\u0443\u0441\u043d\u043e\u0435 ": true,
+          "\u041e\u0441\u043d\u043e\u0432\u043d\u043e\u0435": true
+        },
+        "com1": {
+          "\u0420\u0435\u0430\u043a\u0446\u0438\u044f": true,
+          "\u0411\u043e\u043d\u0443\u0441\u043d\u043e\u0435 ": true,
+          "\u041e\u0441\u043d\u043e\u0432\u043d\u043e\u0435": true
+        }
+      },
+      "effects": [],
+      "visibility": {
+        "hp": true,
+        "stats": true,
+        "effects": true,
+        "name": true
+      },
+      "hotbar": []
+    }
+  ],
+  "history": [],
+  "round": 1,
+  "turn_queue": [],
+  "current_index": 0,
+  "is_active": false
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "id": "default_static",
+    "name": "Basic Static",
+    "mode": "static",
+    "speed": 0,
+    "brightness": 255,
+    "colors": ["$ROLE_COLOR"]
+  },
+  {
+    "id": "default_blink",
+    "name": "Fast Blink",
+    "mode": "blink",
+    "speed": 200,
+    "brightness": 255,
+    "colors": ["$ROLE_COLOR", "#000000"]
+  },
+  {
+    "id": "default_pulse",
+    "name": "Smooth Pulse",
+    "mode": "pulse",
+    "speed": 1000,
+    "brightness": 255,
+    "colors": ["$ROLE_COLOR", "#000000"]
+  }
+]

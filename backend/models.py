@@ -152,6 +152,21 @@ class LegendConfig(BaseModel):
     neutral: str = "#a1a1aa"  # zinc
 
 
+class MiniatureEntry(BaseModel):
+    """Глобальная запись об устройстве Omnimini (data/miniatures.json)."""
+
+    id: str
+    mac: Optional[str] = None
+    name: str = ""
+    notes: Optional[str] = None
+
+    @model_validator(mode="after")
+    def fill_mac_from_id(self) -> MiniatureEntry:
+        if not (self.mac or "").strip():
+            self.mac = self.id
+        return self
+
+
 class LogEntry(BaseModel):
     type: Literal[
         "combat_start", "combat_end", "round_start", "turn_start",
@@ -180,23 +195,12 @@ class CombatCore(BaseModel):
 
 
 class DisplayState(BaseModel):
-    """Настройки отображения стола и карточек."""
+    """Настройки отображения стола и карточек.
 
-    layout_profiles: List[LayoutProfile] = Field(
-        default_factory=lambda: [
-            LayoutProfile(
-                id="default",
-                name="Default",
-                frame_asset="",
-                top1=None,
-                top2=None,
-                bottom1=None,
-                bottom2=None,
-                left1=None,
-                right1=None,
-            )
-        ]
-    )
+    Профили раскладки мини-экрана хранятся в data/systems/<system>/layout_profiles.json (см. systems API).
+    """
+
+    selected_layout_id: str = "default"
     legend: LegendConfig = Field(default_factory=LegendConfig)
     show_group_colors: bool = True
     show_faction_colors: bool = True
@@ -204,16 +208,12 @@ class DisplayState(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def migrate_layout_to_profiles(cls, data: Any) -> Any:
-        """Миграция: старый layout -> layout_profiles с профилем default."""
+    def strip_legacy_layout_payload(cls, data: Any) -> Any:
+        """Не поднимать layout_profiles из автосейва/экспорта в доменную модель."""
         if not isinstance(data, dict):
             return data
-        if "layout" in data and "layout_profiles" not in data:
-            old = data.pop("layout")
-            if isinstance(old, dict):
-                old.setdefault("id", "default")
-                old.setdefault("name", "Default")
-                data["layout_profiles"] = [old]
+        data.pop("layout_profiles", None)
+        data.pop("layout", None)
         return data
 
 
@@ -260,12 +260,13 @@ class CombatSession(BaseModel):
     )
     LEGACY_DISPLAY_KEYS: ClassVar[frozenset[str]] = frozenset(
         {
-            "layout_profiles",
+            "selected_layout_id",
             "legend",
             "show_group_colors",
             "show_faction_colors",
             "table_centered",
             "layout",
+            "layout_profiles",
         }
     )
     LEGACY_HARDWARE_KEYS: ClassVar[frozenset[str]] = frozenset({"sync_led_to_ui"})
@@ -349,21 +350,7 @@ class CombatState(BaseModel):
     is_manual_mode: bool = False
     engine_type: str = "standard"
     system: str = "D&D 5e"
-    layout_profiles: List[LayoutProfile] = Field(
-        default_factory=lambda: [
-            LayoutProfile(
-                id="default",
-                name="Default",
-                frame_asset="",
-                top1=None,
-                top2=None,
-                bottom1=None,
-                bottom2=None,
-                left1=None,
-                right1=None,
-            )
-        ]
-    )
+    layout_profiles: List[LayoutProfile] = Field(default_factory=list)
     legend: LegendConfig = Field(default_factory=LegendConfig)
     show_group_colors: bool = True
     show_faction_colors: bool = True
@@ -419,7 +406,7 @@ def combat_session_to_combat_state(session: CombatSession) -> CombatState:
         is_manual_mode=c.is_manual_mode,
         engine_type=c.engine_type,
         system=c.system,
-        layout_profiles=list(disp.layout_profiles),
+        layout_profiles=[],
         legend=disp.legend,
         show_group_colors=disp.show_group_colors,
         show_faction_colors=disp.show_faction_colors,
@@ -453,13 +440,7 @@ def combat_session_merged_with_combat_state(
             is_active=cs.is_active,
             active_reaction_actor_id=cs.active_reaction_actor_id,
         ),
-        display=DisplayState(
-            layout_profiles=list(cs.layout_profiles),
-            legend=cs.legend,
-            show_group_colors=cs.show_group_colors,
-            show_faction_colors=cs.show_faction_colors,
-            table_centered=cs.table_centered,
-        ),
+        display=session.display,
         hardware=HardwareState(sync_led_to_ui=cs.sync_led_to_ui),
         session=SessionMeta(
             history=list(cs.history),

@@ -184,11 +184,20 @@ export interface CombatCore {
 
 /** Настройки отображения стола (ADR-18 / backend DisplayState). */
 export interface DisplayState {
-  layout_profiles: LayoutProfile[];
+  /** Профиль по умолчанию для UI; акторы резолвят `layout_profile_id` через GET /api/systems/.../layouts */
+  selected_layout_id?: string;
   legend: LegendConfig;
   show_group_colors: boolean;
   show_faction_colors: boolean;
   table_centered: boolean;
+}
+
+/** Запись в глобальном списке Omnimini (data/miniatures.json). */
+export interface MiniatureEntry {
+  id: string;
+  mac?: string | null;
+  name: string;
+  notes?: string | null;
 }
 
 /** Глобальные флаги железа (ADR-18 / backend HardwareState). */

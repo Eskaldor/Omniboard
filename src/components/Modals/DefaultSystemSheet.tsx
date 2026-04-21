@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Save, Download, Upload, Plus, RefreshCcw } from 'lucide-react';
 import { Actor, ColumnConfig } from '../../types';
+import { useCombat } from '../../contexts/CombatContext';
 import { useCombatState } from '../../contexts/CombatStateContext';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
@@ -25,6 +26,7 @@ export function DefaultSystemSheet({
 }) {
   const { t } = useTranslation('core', { useSuspense: false });
   const { state } = useCombatState();
+  const { systemLayoutProfiles } = useCombat();
   const colName = (col: ColumnConfig) =>
     i18n.t(`${col.key}.name`, { ns: `systems/${systemName}`, defaultValue: col.key });
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -52,7 +54,13 @@ export function DefaultSystemSheet({
   useEffect(() => {
     fetch('/api/hardware/')
       .then((r) => (r.ok ? r.json() : {}))
-      .then((data) => setDevices(typeof data === 'object' && data !== null ? data : {}))
+      .then((data: unknown) => {
+        const d =
+          typeof data === 'object' && data !== null && !Array.isArray(data)
+            ? (data as Record<string, DeviceInfo>)
+            : {};
+        setDevices(d);
+      })
       .catch(() => setDevices({}));
   }, []);
 
@@ -220,7 +228,7 @@ export function DefaultSystemSheet({
                   className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
                 >
                   <option value="">{t('actor.layout_profile_default', { defaultValue: 'Default' })}</option>
-                  {state?.display.layout_profiles?.map((p) => (
+                  {systemLayoutProfiles.map((p) => (
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
                 </select>
@@ -271,7 +279,7 @@ export function DefaultSystemSheet({
                     {Object.entries(devices).length === 0 ? (
                       <option value="" disabled>{t('modals.no_miniatures_found')}</option>
                     ) : (
-                      Object.entries(devices).map(([mac, info]) => (
+                      (Object.entries(devices) as [string, DeviceInfo][]).map(([mac, info]) => (
                         <option key={mac} value={mac}>
                           {info.name || mac} — {info.status === 'online' ? t('hardware.status_online', { defaultValue: 'Online' }) : t('hardware.status_offline', { defaultValue: 'Offline' })}
                         </option>

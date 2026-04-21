@@ -1,0 +1,20 @@
+[
+  {
+    "id": "default",
+    "name": "Default",
+    "frame_asset": "",
+    "show_portrait": true,
+    "top1": null,
+    "top2": null,
+    "bottom1": null,
+    "bottom2": null,
+    "left1": null,
+    "right1": null,
+    "font_id": "default.ttf",
+    "font_size": 18,
+    "bar_height": 16,
+    "led_profile_id": "default_static",
+    "led_color_source": "role",
+    "led_custom_color": "#FFFFFF"
+  }
+]

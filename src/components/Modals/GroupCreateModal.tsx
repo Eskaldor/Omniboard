@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
-import { useCombatState } from '../../contexts/CombatStateContext';
+import { useCombat } from '../../contexts/CombatContext';
 
 const PRESET_COLORS = [
   { name: 'Red', hex: '#ef4444' },
@@ -20,7 +20,7 @@ export interface GroupCreateModalProps {
 
 export function GroupCreateModal({ isOpen, onClose, onSubmit }: GroupCreateModalProps) {
   const { t } = useTranslation('core', { useSuspense: false });
-  const { state } = useCombatState();
+  const { systemLayoutProfiles } = useCombat();
   const [name, setName] = useState('');
   const [color, setColor] = useState('#10b981');
   const [groupProfileId, setGroupProfileId] = useState<string>('');
@@ -124,7 +124,7 @@ export function GroupCreateModal({ isOpen, onClose, onSubmit }: GroupCreateModal
               className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
             >
               <option value="">{t('actor.layout_profile_default', { defaultValue: 'Default' })}</option>
-              {state?.display.layout_profiles?.map((p) => (
+              {systemLayoutProfiles.map((p) => (
                 <option key={p.id} value={p.id}>{p.name}</option>
               ))}
             </select>

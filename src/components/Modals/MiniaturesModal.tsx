@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { X, Save, Plus, RefreshCw, Settings } from 'lucide-react';
-import type { ColumnConfig, LayoutProfile, DisplayField, BarProfileConfig, LedProfile, DisplayState } from '../../types';
+import type { ColumnConfig, LayoutProfile, DisplayField, BarProfileConfig, LedProfile } from '../../types';
+import { useCombat } from '../../contexts/CombatContext';
 import { useCombatState } from '../../contexts/CombatStateContext';
 import { useTranslation } from 'react-i18next';
 import { BarCustomizerModal, getBarDisplayName } from './BarCustomizerModal';
@@ -27,12 +28,12 @@ function defaultProfile(id: string, name: string): LayoutProfile {
   };
 }
 
-/** Приводит display.layout_profiles к списку LayoutProfile с id/name. */
-function normalizeProfiles(display: DisplayState | null | undefined): LayoutProfile[] {
-  if (!display?.layout_profiles?.length) {
+/** Нормализует список профилей с бэка к полному LayoutProfile. */
+function normalizeProfiles(profiles: LayoutProfile[] | null | undefined): LayoutProfile[] {
+  if (!profiles?.length) {
     return [defaultProfile('default', 'Default')];
   }
-  return display.layout_profiles.map((p) => ({
+  return profiles.map((p) => ({
     ...defaultProfile(p.id ?? 'default', p.name ?? 'Default'),
     ...p,
     id: p.id ?? 'default',
@@ -51,8 +52,9 @@ export function MiniaturesModal({
 }) {
   const { t, i18n } = useTranslation('core', { useSuspense: false });
   const { state, refetchState } = useCombatState();
+  const { systemLayoutProfiles, refetchLayoutProfiles } = useCombat();
   const actors = state?.core.actors ?? [];
-  const initialProfiles = normalizeProfiles(state?.display);
+  const initialProfiles = normalizeProfiles(systemLayoutProfiles);
 
   const [localProfiles, setLocalProfiles] = useState<LayoutProfile[]>(initialProfiles);
   const [selectedProfileId, setSelectedProfileId] = useState<string>(() => initialProfiles[0]?.id ?? 'default');
@@ -134,12 +136,14 @@ export function MiniaturesModal({
   }, [state?.core.system]);
 
   useEffect(() => {
-    const list = normalizeProfiles(state?.display);
+    const list = normalizeProfiles(systemLayoutProfiles);
     setLocalProfiles(list);
-    if (list.length > 0 && !list.some((p) => p.id === selectedProfileId)) {
-      setSelectedProfileId(list[0].id);
-    }
-  }, [state?.display]);
+    setSelectedProfileId((prev) => {
+      if (list.length === 0) return 'default';
+      if (list.some((p) => p.id === prev)) return prev;
+      return list[0].id;
+    });
+  }, [systemLayoutProfiles]);
 
   useEffect(() => {
     if (actors.length === 0) {
@@ -201,17 +205,28 @@ export function MiniaturesModal({
     setSelectedProfileId(id);
   };
 
+  const persistLayouts = async () => {
+    const system = (state?.core.system || '').trim();
+    if (!system) return false;
+    const res = await fetch(`/api/systems/${encodeURIComponent(system)}/layouts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(localProfiles),
+    });
+    if (!res.ok) return false;
+    await refetchLayoutProfiles();
+    return true;
+  };
+
   const handleSave = async () => {
     if (!selectedProfile) return;
     setIsSaving(true);
     try {
-      await fetch('/api/combat/layout', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(selectedProfile),
-      });
-      await refetchState();
-      onClose();
+      const ok = await persistLayouts();
+      if (ok) {
+        await refetchState();
+        onClose();
+      }
     } catch (err) {
       console.error('Failed to save layout', err);
     } finally {
@@ -223,14 +238,8 @@ export function MiniaturesModal({
     if (!selectedProfile) return;
     setIsSaving(true);
     try {
-      const res = await fetch('/api/combat/layout', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(selectedProfile),
-      });
-      if (res.ok) {
-        setPreviewKey(Date.now());
-      }
+      const ok = await persistLayouts();
+      if (ok) setPreviewKey(Date.now());
     } catch (err) {
       console.error('Failed to save layout', err);
     } finally {

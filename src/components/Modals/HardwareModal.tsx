@@ -24,8 +24,12 @@ export function HardwareModal({ onClose }: { onClose: () => void }) {
     setLoading(true);
     try {
       const res = await fetch('/api/hardware/');
-      const data = await res.json();
-      setDevices(typeof data === 'object' && data !== null ? data : {});
+      const data: unknown = await res.json();
+      setDevices(
+        typeof data === 'object' && data !== null && !Array.isArray(data)
+          ? (data as DevicesMap)
+          : {},
+      );
     } catch (err) {
       console.error('Failed to fetch devices', err);
       setDevices({});
@@ -81,7 +85,7 @@ export function HardwareModal({ onClose }: { onClose: () => void }) {
     }
   };
 
-  const entries = Object.entries(devices);
+  const entries = Object.entries(devices) as [string, DeviceInfo][];
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">

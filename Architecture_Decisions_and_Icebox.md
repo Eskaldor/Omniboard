@@ -1,6 +1,6 @@
 # Omniboard — Архитектурные решения и Ледник
 
-> Обновлено: 21.04.2026
+> Обновлено: 21.04.2026 (ADR-18 принят; ADR-4 — JSON-merge)
 
 ---
 
@@ -14,17 +14,26 @@
 
 ### ADR-3: Dual History Pattern (два разных «history»)
 **Решение:** В проекте существуют две независимые системы истории:  
-1. `CombatState.history: List[LogEntry]` — нарративный лог.
-2. `history_stack: list` + `history_index: int` в `main.py` — технические снэпшоты.
+1. **`CombatSession.session.history: List[LogEntry]`** — нарративный лог.
+2. **`CombatSession.session.history_stack`** + **`history_index`** — технические снэпшоты для Undo/Redo (см. ADR-18); живут в домене `session`, не уходят в публичный WS-payload целиком (на корне ответа — `can_undo` / `can_redo`).
 
-### ADR-4: Asset Override Pattern
-**Решение:** Ассеты хранятся в двух уровнях (`default` и `systems/<name>`).
+### ADR-4: Asset Override Pattern (+ JSON-config merge)
+**Решение:** Ассеты хранятся в двух уровнях (`data/assets/default/…` и `data/assets/systems/<name>/…`) для файлов (портреты, рамки, текстуры баров и т.д.).
+
+**JSON-конфиги (расширение):** для ряда сущностей добавлен **базовый** слой `data/assets/default/config/<file>.json` и **оверрайд** `data/systems/<system_name>/<file>` с одинаковым именем файла. Функция **`load_config_with_override(system_name, file_name)`** (`backend/utils/config_loader.py`):
+- для **массивов объектов с полем `id`**: элементы оверрайда **полностью заменяют** элементы базы с тем же `id`, новые `id` **добавляются** в конец;
+- для **объектов-словарей**: глубокое слияние, листья оверрайда перекрывают базу;
+- при отсутствии файлов — без исключений, предсказуемый fallback.
+
+**Применение:** `layout_profiles.json`, `bars_config.json`, `led_profiles.json`. Запись оверрайда — только в `data/systems/…` (база в `default/config` остаётся неприкосновенной).
+
+**Рендер текстурных баров:** если у системы нет своего `bars/<theme_id>/config.json`, используется полный пакет **default** и для разрешения PNG-текстур не подмешиваются системные папки (избежание «гибридных» баров).
 
 ### ADR-5: i18n Namespace Pattern
 **Решение:** UI-локализация (ядро) живет в `data/locales/{lang}/core.json`. Системная локализация живет внутри самих систем (см. ADR-10).
 
 ### ADR-6: Encounter Save Format (полный стейт)
-**Решение:** `POST /api/encounters/save` сохраняет полный стейт (`actors`, `history`, `round`, `turn_queue`, `current_index`, `is_active`).
+**Решение:** `POST /api/encounters/save` сохраняет полный снимок **`CombatSession`** (вложенные **`core`**, **`display`**, **`hardware`**, **`session`**) — эквивалент автосейва боя для воспроизводимости сцены.
 
 ### ADR-7: Background Thread для записи логов
 **Решение:** `add_log()` пишет файлы логов в `threading.Thread(daemon=True)`.
@@ -47,7 +56,7 @@
 ### ADR-12: Модульные Движки Боя (Modular Combat Engines)
 **Статус:** Реализовано.
 
-**Решение:** Логика боя вынесена из роутеров в изолированные классы в `backend/engines/`. Тип движка задаётся полем `CombatState.engine_type` и выбирается через диспетчер `backend/engines/manager.py` (`get_engine_for_state`).
+**Решение:** Логика боя вынесена из роутеров в изолированные классы в `backend/engines/`. Тип движка задаётся полем **`CombatSession.core.engine_type`** и выбирается через диспетчер `backend/engines/manager.py` (`get_engine_for_state`; внутри — совместимость через плоский `CombatState`).
 
 **Описание:** Абстрактный `BaseInitiativeEngine` задаёт контракт (`build_queue`, `next_turn`, `on_round_lifecycle`, `has_next_pass` и др.). Конкретные движки подключаются без дублирования логики в HTTP-слое.
 
@@ -64,7 +73,7 @@
 ### ADR-14: Нарративный режим (Manual Mode / Override)
 **Статус:** Реализовано.
 
-**Решение:** Флаг `CombatState.is_manual_mode` отключает жёсткую валидацию очередей и индексов относительно «строгого» пошагового движка. Мастер передаёт ход кликом по любому актору в таблице; бэкенд выставляет `has_acted = True` у выбранного актора и обновляет `current_index` / очередь согласно выбранному `engine_type`.
+**Решение:** Флаг **`CombatSession.core.is_manual_mode`** отключает жёсткую валидацию очередей и индексов относительно «строгого» пошагового движка. Мастер передаёт ход кликом по любому актору в таблице; бэкенд выставляет `has_acted = True` у выбранного актора и обновляет `current_index` / очередь согласно выбранному `engine_type`.
 
 **Описание:** Режим подходит для нарративных систем (PbtA, OSR и др.), где фиксированный порядок инициативы не обязателен. В сочетании с движками **Popcorn** и **Phase** клик по строке также передаёт ход; в **Manual** приоритет у полного переопределения — кликабельны все строки. Визуально используется затемнение по `has_acted` и сброс флагов на новом раунде (через жизненный цикл раунда в движке).
 
@@ -83,14 +92,20 @@
 
 **Обоснование:** Смешивание Красного и Зеленого на одном кристалле дает грязный желтый цвет. Последовательное отображение (например, в режимах `Breathe` или `Pulse`) сохраняет чистоту магии. Дополнительно на уровне С++ применяется гамма-коррекция (`gamma32`) для выравнивания логарифмической яркости зеленого кристалла.
 
-### ADR-18 (проект): Декомпозиция `CombatState` на доменные суб-модели
-**Статус:** Черновик; детальный план вынесен в репозиторий, чтобы не раздувать список ADR телом миграции.
+### ADR-18: Декомпозиция состояния боя (`CombatSession`)
+**Статус:** Принято и реализовано в `backend/models.py` + API/WebSocket.
 
-**Направление:** Вместо монолитного `CombatState` — композиция из **`CombatCore`** (акторы, очередь, раунд/ход, `engine_type`, активный бой), **`DisplayState`** (`layout_profiles`, `legend`, `table_centered`, флаги group/faction colors), **`HardwareState`** (глобальные флаги железа вроде `sync_led_to_ui`, будущие статусы ESP; привязки `miniature_id` на актёре остаются в `CombatCore`, но контракт обновлений для WS может группироваться отдельно), **`SessionMeta`** (нарративный `history`, курсор лога, перенос технического стека undo/redo из `backend/state.py`, `enable_logging` / `autosave_enabled`).
+**Решение:** Корневой тип **`CombatSession`** вместо плоского монолита:
+- **`core: CombatCore`** — `actors`, `turn_queue`, `current_index`, `current_pass`, `round`, `engine_type`, `is_manual_mode`, `system`, `is_active`, `active_reaction_actor_id`;
+- **`display: DisplayState`** — `selected_layout_id`, `legend`, `show_group_colors`, `show_faction_colors`, `table_centered` (списки **`LayoutProfile`** в стейте боя **не** хранятся; профили — файлы + merge, см. ADR-4);
+- **`hardware: HardwareState`** — `sync_led_to_ui`;
+- **`session: SessionMeta`** — `history`, `history_cursor`, `enable_logging`, `autosave_enabled`, **`history_stack`**, **`history_index`** (undo/redo изолированы в домене сессии; плоский снимок для стека не смешивается с публичным JSON без лишних полей).
 
-**Цель:** сузить payload WebSocket (после фазы совместимости — патчи по доменам) и дать фронтенду возможность не перерисовывать несвязанные ветви стейта при локальных изменениях.
+**Совместимость:** `CombatSession.model_validate` принимает вложенный JSON и **плоский legacy**-словарь (раскладка по `LEGACY_*_KEYS`). Движки инициативы по-прежнему оперируют плоским **`CombatState`** через адаптеры `combat_session_to_combat_state` / `combat_session_merged_with_combat_state` (`backend/models.py`).
 
-**Подробности:** `Refactoring_Plan.md` — раздел **«Декомпозиция `CombatState`»**.
+**Цель:** явные границы доменов, автосейв/encounter в одной схеме, подготовка к узким WS-патчам без перелома текущего клиента.
+
+**Подробности и история плана:** `Refactoring_Plan.md` — разделы **«Декомпозиция `CombatState`»**, **«Выполнено»**.
 
 ---
 
@@ -101,6 +116,9 @@
 ---
 
 ## Ледник (Icebox) — фичи на будущее
+
+### 🧊 Нормализация акторов при экспорте в ростер (Template vs Instance)
+При сохранении актора из **живого боя** в **`data/actors/<system>/`** различать **шаблон** (переиспользуемый NPC: обнулять/не тащить encounter-специфичные поля) и **снимок экземпляра** (сохранить текущие HP/эффекты для «как на столе»). Единый контракт полей, опция в UI экспорта, миграция старых JSON ростера.
 
 ### 🧊 AI-Ассистент "Красный Рыцарь" (Text-to-Action)
 Голосовой и текстовый помощник для Мастера (NLP + LLM + STT/TTS). 

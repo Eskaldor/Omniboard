@@ -16,7 +16,6 @@ from backend.models import (
     CombatSession,
     LegendConfig,
     LogEntry,
-    LayoutProfile,
     combat_session_public_payload,
 )
 from backend.paths import LOGS_DIR
@@ -219,6 +218,10 @@ async def update_combat_settings(payload: dict):
         app_state.state.session.autosave_enabled = bool(payload["autosave_enabled"])
     if "table_centered" in payload:
         app_state.state.display.table_centered = bool(payload["table_centered"])
+    if "selected_layout_id" in payload:
+        sid = str(payload.get("selected_layout_id") or "").strip()
+        if sid:
+            app_state.state.display.selected_layout_id = sid
     if "is_manual_mode" in payload:
         app_state.state.core.is_manual_mode = bool(payload["is_manual_mode"])
     if "engine_type" in payload and not system_has_custom_logic_file(app_state.state.core.system):
@@ -234,6 +237,7 @@ async def update_combat_settings(payload: dict):
         "enable_logging": app_state.state.session.enable_logging,
         "autosave_enabled": app_state.state.session.autosave_enabled,
         "table_centered": app_state.state.display.table_centered,
+        "selected_layout_id": app_state.state.display.selected_layout_id,
         "is_manual_mode": app_state.state.core.is_manual_mode,
         "engine_type": app_state.state.core.engine_type,
     }
@@ -275,25 +279,6 @@ async def clear_combat_log():
     (LOGS_DIR / "latest_combat.md").write_text("", encoding="utf-8")
     await broadcast_state()
     return {"status": "ok"}
-
-
-@router.patch("/layout")
-async def update_layout(layout: dict):
-    await save_snapshot()
-    profile_id = layout.get("id", "default")
-    profile_name = layout.get("name", "Default")
-    profile_data = {**layout, "id": profile_id, "name": profile_name}
-    new_profile = LayoutProfile(**profile_data)
-    profiles = list(app_state.state.display.layout_profiles)
-    idx = next((i for i, p in enumerate(profiles) if p.id == profile_id), None)
-    if idx is not None:
-        profiles[idx] = new_profile
-    else:
-        profiles.append(new_profile)
-    app_state.state.display.layout_profiles = profiles
-    await save_snapshot()
-    await broadcast_state()
-    return new_profile
 
 
 @router.post("/load")

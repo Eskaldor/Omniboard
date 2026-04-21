@@ -7,8 +7,11 @@ from typing import Any, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from backend.models import LedProfile, LedTriggerRule
-from backend.paths import ACTORS_DIR, ASSETS_DIR, DATA_DIR, LOCALES_DIR
+from backend.layout_profiles_store import read_layout_profiles, write_layout_profiles
+from backend.led_profiles_store import read_led_profiles
+from backend.models import LayoutProfile, LedProfile, LedTriggerRule
+from backend.paths import ASSETS_DIR, DATA_DIR, LOCALES_DIR, get_actors_system_dir
+from backend.utils.config_loader import is_safe_system_subdirectory
 
 
 router = APIRouter(prefix="/api/systems", tags=["systems"])
@@ -26,46 +29,11 @@ class SaveColumnsRequest(BaseModel):
     lang: Optional[str] = None
 
 
-def _default_led_profiles() -> list[LedProfile]:
-    return [
-        LedProfile(
-            id="default_static",
-            name="Basic Static",
-            mode="static",
-            speed=0,
-            brightness=255,
-            colors=["$ROLE_COLOR"],
-        ),
-        LedProfile(
-            id="default_blink",
-            name="Fast Blink",
-            mode="blink",
-            speed=200,
-            brightness=255,
-            colors=["$ROLE_COLOR", "#000000"],
-        ),
-        LedProfile(
-            id="default_pulse",
-            name="Smooth Pulse",
-            mode="pulse",
-            speed=1000,
-            brightness=255,
-            colors=["$ROLE_COLOR", "#000000"],
-        ),
-    ]
-
-
 def _system_dir(system_name: str):
-    """Return path to system folder; ensure it stays under DATA_DIR (no path traversal)."""
-    name = (system_name or "").strip()
-    if not name or ".." in name or "/" in name or "\\" in name:
+    """Return path to system folder under ``data/systems`` (validated segment)."""
+    if not is_safe_system_subdirectory(system_name):
         return None
-    path = (DATA_DIR / name).resolve()
-    try:
-        path.relative_to(DATA_DIR.resolve())
-    except ValueError:
-        return None
-    return path
+    return (DATA_DIR / system_name.strip()).resolve()
 
 
 @router.get("/list")
@@ -78,21 +46,26 @@ async def list_systems():
     return sorted(names)
 
 
+@router.get("/{system_name}/layouts")
+async def get_system_layout_profiles(system_name: str):
+    if _system_dir(system_name) is None:
+        raise HTTPException(status_code=400, detail="invalid system name")
+    return read_layout_profiles(system_name)
+
+
+@router.post("/{system_name}/layouts")
+async def save_system_layout_profiles(system_name: str, profiles: list[LayoutProfile]):
+    if _system_dir(system_name) is None:
+        raise HTTPException(status_code=400, detail="invalid system name")
+    write_layout_profiles(system_name, profiles)
+    return profiles
+
+
 @router.get("/{system_name}/led_profiles")
 async def get_system_led_profiles(system_name: str):
-    sys_dir = _system_dir(system_name)
-    if not sys_dir:
+    if _system_dir(system_name) is None:
         raise HTTPException(status_code=400, detail="invalid system name")
-    file_path = sys_dir / "led_profiles.json"
-    if not file_path.exists():
-        return _default_led_profiles()
-    try:
-        raw = json.loads(file_path.read_text(encoding="utf-8"))
-        if not isinstance(raw, list):
-            return _default_led_profiles()
-        return [LedProfile.model_validate(item) for item in raw]
-    except Exception:
-        return _default_led_profiles()
+    return read_led_profiles(system_name)
 
 
 @router.post("/{system_name}/led_profiles")
@@ -261,7 +234,9 @@ async def save_system_columns(system_name: str, body: SaveColumnsRequest):
 
 @router.get("/{system_name}/actors")
 async def get_saved_actors(system_name: str):
-    sys_dir = ACTORS_DIR / system_name
+    sys_dir = get_actors_system_dir(system_name)
+    if sys_dir is None:
+        raise HTTPException(status_code=400, detail="invalid system name")
     if not sys_dir.exists():
         return []
     actors = []
@@ -275,7 +250,9 @@ async def get_saved_actors(system_name: str):
 
 @router.post("/{system_name}/actors")
 async def save_actor(system_name: str, actor: dict):
-    sys_dir = ACTORS_DIR / system_name
+    sys_dir = get_actors_system_dir(system_name)
+    if sys_dir is None:
+        raise HTTPException(status_code=400, detail="invalid system name")
     sys_dir.mkdir(parents=True, exist_ok=True)
     safe_name = "".join([c for c in actor.get("name", "Unnamed") if c.isalnum() or c in " -_"]).strip()
     if not safe_name:

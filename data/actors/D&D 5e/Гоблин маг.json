@@ -9,18 +9,51 @@
   "group_mode": null,
   "group_color": null,
   "initiative": 0,
+  "has_acted": false,
   "portrait": "/assets/systems/D&D 5e/portraits/goblin_mag.png",
   "show_portrait": true,
   "miniature_id": "1",
-  "layout_profile_id": "default",
+  "layout_profile_id": "1776798216413",
   "stats": {
     "hp": 50,
     "ac": 10,
     "speed": 30,
-    "mana": 55,
-    "max_mana": 60
+    "mana": 52,
+    "max_mana": 60,
+    "com": 0,
+    "com1": {
+      "Реакция": true,
+      "Бонусное ": true,
+      "Основное": true
+    },
+    "bladpul": {
+      "res1": true,
+      "res2": true,
+      "res3": true,
+      "slot_3": true,
+      "slot_4": true,
+      "slot_5": false,
+      "slot_6": false,
+      "slot_7": false
+    }
   },
-  "effects": [],
+  "effects": [
+    {
+      "id": "effect_pozhar",
+      "name": "Пожар",
+      "duration": 1,
+      "description": "",
+      "icon": "pozhar.png",
+      "led_profile_id": null,
+      "is_base": false,
+      "show_on_miniature": false,
+      "render_on_mini": true,
+      "render_on_panel": true,
+      "experimental_ai": false,
+      "ai_prompt": "",
+      "ai_variations": {}
+    }
+  ],
   "visibility": {
     "hp": true,
     "stats": true,

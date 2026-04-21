@@ -98,8 +98,9 @@ def draw_display_field(
         percent = max(0.0, min(1.0, percent))
 
         theme_id = field.theme_id or "default"
-        # Папка стиля: systems/<system>/bars/<theme_id> или default/bars/<theme_id>.
-        # В ней должны лежать bg.png, fg.png, опционально mask.png и overlay.png.
+        # Пакет бара: если у системы нет своего config.json — берём и конфиг, и текстуры только из default,
+        # иначе получается «гибрид» (настройки default + текстуры system).
+        texture_system: str | None = None
         theme_dir = None
         config_path = None
         if system_name and system_name.strip() and ".." not in system_name and "/" not in system_name and "\\" not in system_name:
@@ -107,10 +108,12 @@ def draw_display_field(
             if (sys_bars / "config.json").is_file():
                 config_path = sys_bars / "config.json"
                 theme_dir = sys_bars
+                texture_system = system_name.strip()
         if theme_dir is None:
             default_bars = ASSETS_DIR / "default" / "bars" / theme_id
             theme_dir = default_bars
             config_path = default_bars / "config.json"
+            texture_system = None
         try:
             if config_path and config_path.is_file():
                 config = BarProfileConfig.model_validate(json.loads(config_path.read_text(encoding="utf-8")))
@@ -120,7 +123,7 @@ def draw_display_field(
             config = BarProfileConfig(id=theme_id, name=theme_id)
 
         bar_img = create_textured_bar(
-            draw_w, draw_h, percent, theme_id, system_name, config,
+            draw_w, draw_h, percent, theme_id, texture_system, config,
         )
 
         # Текст поверх бара (если включён) — рисуем на bar_img до поворота/вставки
