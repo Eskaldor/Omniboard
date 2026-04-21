@@ -1,5 +1,5 @@
-from pydantic import BaseModel, Field, model_validator
-from typing import Literal, Optional, List, Dict, Any
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+from typing import Any, ClassVar, Dict, List, Literal, Optional
 
 class LedProfile(BaseModel):
     id: str
@@ -163,6 +163,167 @@ class LogEntry(BaseModel):
     actor_name: Optional[str] = None
     details: Dict[str, Any] = {}
 
+
+class CombatCore(BaseModel):
+    """Механика боя: акторы, очередь, раунд, движок, активность."""
+
+    actors: List[Actor] = []
+    turn_queue: List[str] = []
+    current_index: int = 0
+    current_pass: int = 1
+    round: int = 1
+    engine_type: str = "standard"
+    is_manual_mode: bool = False
+    system: str = "D&D 5e"
+    is_active: bool = False
+    active_reaction_actor_id: Optional[str] = None
+
+
+class DisplayState(BaseModel):
+    """Настройки отображения стола и карточек."""
+
+    layout_profiles: List[LayoutProfile] = Field(
+        default_factory=lambda: [
+            LayoutProfile(
+                id="default",
+                name="Default",
+                frame_asset="",
+                top1=None,
+                top2=None,
+                bottom1=None,
+                bottom2=None,
+                left1=None,
+                right1=None,
+            )
+        ]
+    )
+    legend: LegendConfig = Field(default_factory=LegendConfig)
+    show_group_colors: bool = True
+    show_faction_colors: bool = True
+    table_centered: bool = True
+
+    @model_validator(mode="before")
+    @classmethod
+    def migrate_layout_to_profiles(cls, data: Any) -> Any:
+        """Миграция: старый layout -> layout_profiles с профилем default."""
+        if not isinstance(data, dict):
+            return data
+        if "layout" in data and "layout_profiles" not in data:
+            old = data.pop("layout")
+            if isinstance(old, dict):
+                old.setdefault("id", "default")
+                old.setdefault("name", "Default")
+                data["layout_profiles"] = [old]
+        return data
+
+
+class HardwareState(BaseModel):
+    """Глобальные флаги железа (LED и т.п.)."""
+
+    sync_led_to_ui: bool = True
+
+
+class SessionMeta(BaseModel):
+    """Нарративный лог, автосохранение, технический стек undo/redo."""
+
+    history: List[LogEntry] = []
+    history_cursor: int = -1
+    enable_logging: bool = True
+    autosave_enabled: bool = True
+    history_stack: List[Dict[str, Any]] = Field(default_factory=list)
+    history_index: int = -1
+
+
+class CombatSession(BaseModel):
+    """Корневой агрегат сессии боя (доменная декомпозиция ADR-18)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    core: CombatCore = Field(default_factory=CombatCore)
+    display: DisplayState = Field(default_factory=DisplayState)
+    hardware: HardwareState = Field(default_factory=HardwareState)
+    session: SessionMeta = Field(default_factory=SessionMeta)
+
+    LEGACY_CORE_KEYS: ClassVar[frozenset[str]] = frozenset(
+        {
+            "actors",
+            "turn_queue",
+            "current_index",
+            "current_pass",
+            "round",
+            "engine_type",
+            "is_manual_mode",
+            "system",
+            "is_active",
+            "active_reaction_actor_id",
+        }
+    )
+    LEGACY_DISPLAY_KEYS: ClassVar[frozenset[str]] = frozenset(
+        {
+            "layout_profiles",
+            "legend",
+            "show_group_colors",
+            "show_faction_colors",
+            "table_centered",
+            "layout",
+        }
+    )
+    LEGACY_HARDWARE_KEYS: ClassVar[frozenset[str]] = frozenset({"sync_led_to_ui"})
+    LEGACY_SESSION_KEYS: ClassVar[frozenset[str]] = frozenset(
+        {
+            "history",
+            "history_cursor",
+            "enable_logging",
+            "autosave_enabled",
+            "history_stack",
+            "history_index",
+        }
+    )
+
+    @model_validator(mode="before")
+    @classmethod
+    def nest_legacy_flat_payload(cls, data: Any) -> Any:
+        """Плоский legacy CombatState -> вложенные core / display / hardware / session."""
+        if not isinstance(data, dict):
+            return data
+
+        has_nested = any(
+            k in data and isinstance(data.get(k), dict)
+            for k in ("core", "display", "hardware", "session")
+        )
+        if has_nested:
+            out = dict(data)
+            core = dict(out.get("core") or {})
+            display = dict(out.get("display") or {})
+            hardware = dict(out.get("hardware") or {})
+            session = dict(out.get("session") or {})
+
+            # If payload is partially nested (some domains still flat at root), fold leftovers in.
+            for k in list(data.keys()):
+                if k in ("core", "display", "hardware", "session"):
+                    continue
+                if k in cls.LEGACY_CORE_KEYS:
+                    core.setdefault(k, data[k])
+                elif k in cls.LEGACY_DISPLAY_KEYS:
+                    display.setdefault(k, data[k])
+                elif k in cls.LEGACY_HARDWARE_KEYS:
+                    hardware.setdefault(k, data[k])
+                elif k in cls.LEGACY_SESSION_KEYS:
+                    session.setdefault(k, data[k])
+
+            out["core"] = core
+            out["display"] = display
+            out["hardware"] = hardware
+            out["session"] = session
+            return out
+
+        core = {k: data[k] for k in cls.LEGACY_CORE_KEYS if k in data}
+        display = {k: data[k] for k in cls.LEGACY_DISPLAY_KEYS if k in data}
+        hardware = {k: data[k] for k in cls.LEGACY_HARDWARE_KEYS if k in data}
+        session = {k: data[k] for k in cls.LEGACY_SESSION_KEYS if k in data}
+        return {"core": core, "display": display, "hardware": hardware, "session": session}
+
+
 class CombatState(BaseModel):
     actors: List[Actor] = []
     turn_queue: List[str] = []
@@ -212,3 +373,100 @@ class CombatState(BaseModel):
                 old.setdefault("name", "Default")
                 data["layout_profiles"] = [old]
         return data
+
+
+def combat_session_flat_undo_snapshot(session: CombatSession) -> Dict[str, Any]:
+    """
+    Плоский словарь полей боя для RAM-стека undo/redo (как legacy CombatState.model_dump),
+    без history_stack / history_index.
+    """
+    d: Dict[str, Any] = {}
+    d.update(session.core.model_dump())
+    d.update(session.display.model_dump())
+    d.update(session.hardware.model_dump())
+    d.update(session.session.model_dump(exclude={"history_stack", "history_index"}))
+    return d
+
+
+def combat_session_to_combat_state(session: CombatSession) -> CombatState:
+    """Собрать монолитный CombatState для движков и ответов API в прежнем формате."""
+    c = session.core
+    disp = session.display
+    hw = session.hardware
+    sess = session.session
+    return CombatState(
+        actors=list(c.actors),
+        turn_queue=list(c.turn_queue),
+        current_index=c.current_index,
+        current_pass=c.current_pass,
+        round=c.round,
+        is_manual_mode=c.is_manual_mode,
+        engine_type=c.engine_type,
+        system=c.system,
+        layout_profiles=list(disp.layout_profiles),
+        legend=disp.legend,
+        show_group_colors=disp.show_group_colors,
+        show_faction_colors=disp.show_faction_colors,
+        table_centered=disp.table_centered,
+        sync_led_to_ui=hw.sync_led_to_ui,
+        history=list(sess.history),
+        history_cursor=sess.history_cursor,
+        is_active=c.is_active,
+        active_reaction_actor_id=c.active_reaction_actor_id,
+        enable_logging=sess.enable_logging,
+        autosave_enabled=sess.autosave_enabled,
+    )
+
+
+def combat_session_merged_with_combat_state(
+    session: CombatSession, cs: CombatState
+) -> CombatSession:
+    """Обновить поля сессии из результата движка, сохранив стек undo/redo."""
+    stack = session.session.history_stack
+    idx = session.session.history_index
+    return CombatSession(
+        core=CombatCore(
+            actors=list(cs.actors),
+            turn_queue=list(cs.turn_queue),
+            current_index=cs.current_index,
+            current_pass=cs.current_pass,
+            round=cs.round,
+            engine_type=cs.engine_type,
+            is_manual_mode=cs.is_manual_mode,
+            system=cs.system,
+            is_active=cs.is_active,
+            active_reaction_actor_id=cs.active_reaction_actor_id,
+        ),
+        display=DisplayState(
+            layout_profiles=list(cs.layout_profiles),
+            legend=cs.legend,
+            show_group_colors=cs.show_group_colors,
+            show_faction_colors=cs.show_faction_colors,
+            table_centered=cs.table_centered,
+        ),
+        hardware=HardwareState(sync_led_to_ui=cs.sync_led_to_ui),
+        session=SessionMeta(
+            history=list(cs.history),
+            history_cursor=cs.history_cursor,
+            enable_logging=cs.enable_logging,
+            autosave_enabled=cs.autosave_enabled,
+            history_stack=stack,
+            history_index=idx,
+        ),
+    )
+
+
+def combat_session_public_payload(
+    session: CombatSession, *, initiative_engine_locked: bool
+) -> Dict[str, Any]:
+    """JSON для API/WebSocket: вложенный CombatSession + служебные поля UI."""
+    # Технический стек undo/redo не уходит на клиент — только can_undo / can_redo.
+    data = session.model_dump(
+        mode="json",
+        exclude={"session": {"history_stack": True, "history_index": True}},
+    )
+    sess = session.session
+    data["can_undo"] = sess.history_index > 0
+    data["can_redo"] = sess.history_index < len(sess.history_stack) - 1
+    data["initiative_engine_locked"] = initiative_engine_locked
+    return data

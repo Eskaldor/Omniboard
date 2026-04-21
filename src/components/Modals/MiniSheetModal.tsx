@@ -22,7 +22,7 @@ export function MiniSheetModal({
 }) {
   const { t } = useTranslation('core', { useSuspense: false });
   const { state } = useCombatState();
-  const liveActor = state?.actors.find((a) => a.id === actor.id) ?? actor;
+  const liveActor = state?.core.actors.find((a) => a.id === actor.id) ?? actor;
   const [localName, setLocalName] = useState(liveActor.name);
   const miniSheetCols = columns.filter((c) => c.show_in_mini_sheet);
 

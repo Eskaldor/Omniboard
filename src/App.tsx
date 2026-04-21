@@ -33,7 +33,10 @@ function getRehydratedState(): CombatState | null {
   if (typeof sessionStorage === 'undefined') return null;
   try {
     const s = sessionStorage.getItem(STORAGE_KEY);
-    return s ? (JSON.parse(s) as CombatState) : null;
+    if (!s) return null;
+    const raw = JSON.parse(s) as unknown;
+    if (!raw || typeof raw !== 'object' || !('core' in (raw as object))) return null;
+    return raw as CombatState;
   } catch {
     return null;
   }
@@ -85,13 +88,13 @@ export default function App() {
     if (systemName) loadSystemLocale(systemName);
   }, [systemName]);
 
-  const legendConfig = effectiveState?.legend ?? { player: '#10b981', enemy: '#ef4444', ally: '#3b82f6', neutral: '#a1a1aa' };
-  const showGroupColors = showGroupColorsLocal ?? effectiveState?.show_group_colors ?? true;
-  const showFactionColors = showFactionColorsLocal ?? effectiveState?.show_faction_colors ?? true;
+  const legendConfig = effectiveState?.display.legend ?? { player: '#10b981', enemy: '#ef4444', ally: '#3b82f6', neutral: '#a1a1aa' };
+  const showGroupColors = showGroupColorsLocal ?? effectiveState?.display.show_group_colors ?? true;
+  const showFactionColors = showFactionColorsLocal ?? effectiveState?.display.show_faction_colors ?? true;
   const roleToLegendKey: Record<Actor['role'], keyof LegendConfig> = { character: 'player', enemy: 'enemy', ally: 'ally', neutral: 'neutral' };
   const getLegendColor = (role: Actor['role']) => legendConfig[roleToLegendKey[role]] ?? '#a1a1aa';
-  const showGroupColorsInTable = effectiveState?.show_group_colors !== false;
-  const showFactionColorsInTable = effectiveState?.show_faction_colors !== false;
+  const showGroupColorsInTable = effectiveState?.display.show_group_colors !== false;
+  const showFactionColorsInTable = effectiveState?.display.show_faction_colors !== false;
 
   const nextTurn = async () => {
     await fetch('/api/combat/next-turn', { method: 'POST' });
@@ -192,11 +195,11 @@ export default function App() {
     <CombatProvider>
     <div className="min-h-screen bg-zinc-950 text-zinc-200 flex flex-col font-sans">
       <AppHeader
-        round={effectiveState.round}
-        history={effectiveState.history ?? []}
+        round={effectiveState.core.round}
+        history={effectiveState.session.history ?? []}
         showLog={showLog}
         onToggleLog={() => setShowLog((v) => !v)}
-        enableLogging={effectiveState.enable_logging !== false}
+        enableLogging={effectiveState.session.enable_logging !== false}
         onRefetch={refetchState}
         onShowMiniatures={() => setShowMiniatures(true)}
         onShowLibrary={() => setShowLibrary(true)}
@@ -220,8 +223,8 @@ export default function App() {
         }}
         onSaveLegend={async () => {
           const payload: Record<string, unknown> = { ...(legendLocal ?? legendConfig) };
-          payload.show_group_colors = showGroupColorsLocal ?? effectiveState?.show_group_colors ?? true;
-          payload.show_faction_colors = showFactionColorsLocal ?? effectiveState?.show_faction_colors ?? true;
+          payload.show_group_colors = showGroupColorsLocal ?? effectiveState?.display.show_group_colors ?? true;
+          payload.show_faction_colors = showFactionColorsLocal ?? effectiveState?.display.show_faction_colors ?? true;
           await fetch('/api/combat/legend', {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
@@ -250,7 +253,7 @@ export default function App() {
                 <Users size={16} /> {t('main.roster')}
               </button>
               <ManualModeToggle
-                isManualMode={effectiveState.is_manual_mode ?? false}
+                isManualMode={effectiveState.core.is_manual_mode ?? false}
                 onToggle={async (next) => {
                   try {
                     await fetch('/api/combat/settings', {
@@ -318,10 +321,10 @@ export default function App() {
           )}
 
           <InitiativeTable
-            actors={effectiveState.actors ?? []}
-            turnQueue={effectiveState.turn_queue}
-            currentIndex={effectiveState.current_index}
-            isActive={effectiveState.is_active}
+            actors={effectiveState.core.actors ?? []}
+            turnQueue={effectiveState.core.turn_queue}
+            currentIndex={effectiveState.core.current_index}
+            isActive={effectiveState.core.is_active}
             columns={columns}
             systemName={systemName}
             showGroupColorsInTable={showGroupColorsInTable}
@@ -329,7 +332,7 @@ export default function App() {
             getLegendColor={getLegendColor}
             groupSelectMode={groupSelectMode}
             selectedActorIds={selectedActorIds}
-            tableCentered={effectiveState?.table_centered !== false}
+            tableCentered={effectiveState?.display.table_centered !== false}
             onUpdateActor={updateActor}
             onDeleteActor={deleteActor}
             onPortraitClick={(id) => setPortraitSelectActorId(id)}
@@ -344,12 +347,12 @@ export default function App() {
                 return next;
               });
             }}
-            isManualMode={effectiveState.is_manual_mode ?? false}
-            engineType={effectiveState.engine_type ?? 'standard'}
+            isManualMode={effectiveState.core.is_manual_mode ?? false}
+            engineType={effectiveState.core.engine_type ?? 'standard'}
             onManualActorClick={async (actorId) => {
-              if (!effectiveState.is_active) return;
-              const et = (effectiveState.engine_type ?? 'standard').toLowerCase();
-              const manual = effectiveState.is_manual_mode ?? false;
+              if (!effectiveState.core.is_active) return;
+              const et = (effectiveState.core.engine_type ?? 'standard').toLowerCase();
+              const manual = effectiveState.core.is_manual_mode ?? false;
               if (!manual && et !== 'popcorn' && et !== 'phase') return;
               await fetch('/api/combat/next-turn', {
                 method: 'POST',
@@ -362,9 +365,9 @@ export default function App() {
       </main>
 
       <CombatToolbar
-        isActive={effectiveState.is_active}
-        isManualMode={effectiveState.is_manual_mode ?? false}
-        engineType={effectiveState.engine_type ?? 'standard'}
+        isActive={effectiveState.core.is_active}
+        isManualMode={effectiveState.core.is_manual_mode ?? false}
+        engineType={effectiveState.core.engine_type ?? 'standard'}
         canUndo={effectiveState?.can_undo ?? false}
         canRedo={effectiveState?.can_redo ?? false}
         onStartCombat={startCombat}
@@ -379,7 +382,7 @@ export default function App() {
       {/* Modals */}
       {selectedActor && (
         <MiniSheetModal 
-          actor={effectiveState?.actors.find((a) => a.id === selectedActor.id) ?? selectedActor} 
+          actor={effectiveState?.core.actors.find((a) => a.id === selectedActor.id) ?? selectedActor} 
           columns={columns} 
           systemName={systemName}
           onClose={() => setSelectedActor(null)} 
@@ -420,7 +423,7 @@ export default function App() {
             <button
               type="button"
               onClick={async () => {
-                const actor = effectiveState?.actors.find(a => a.id === selectedEffect.actorId);
+                const actor = effectiveState?.core.actors.find(a => a.id === selectedEffect.actorId);
                 if (!actor) return;
                 const newEffects = actor.effects.filter(e => e.id !== selectedEffect.effect.id);
                 await fetch(`/api/actors/${selectedEffect.actorId}`, {
@@ -478,7 +481,7 @@ export default function App() {
       {showEncounters && (
         <EncountersModal
           systemName={systemName}
-          currentActors={effectiveState.actors}
+          currentActors={effectiveState.core.actors}
           onClose={() => setShowEncounters(false)}
           onLoad={refetchState}
         />

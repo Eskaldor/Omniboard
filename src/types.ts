@@ -168,35 +168,62 @@ export interface CombatLogEntry {
   details: Record<string, unknown>;
 }
 
-export interface CombatState {
+/** Боевая механика (ADR-18 / backend CombatCore). */
+export interface CombatCore {
   actors: Actor[];
   turn_queue: string[];
   current_index: number;
-  /** Multi-pass rounds (e.g. Shadowrun); standard D&D uses 1 */
-  current_pass?: number;
+  current_pass: number;
   round: number;
+  engine_type: string;
+  is_manual_mode: boolean;
   system: string;
-  /** GM manually picks current turn (ADR-14) */
-  is_manual_mode?: boolean;
-  /** Initiative engine id: standard | phase | popcorn (ADR-12/14) */
-  engine_type?: string;
-  /** True when ``data/systems/<system>/logic.py`` exists — engine is system-defined */
-  initiative_engine_locked?: boolean;
   is_active: boolean;
-  /** Список профилей отображения миниатюр */
+  active_reaction_actor_id: string | null;
+}
+
+/** Настройки отображения стола (ADR-18 / backend DisplayState). */
+export interface DisplayState {
   layout_profiles: LayoutProfile[];
-  /** Единый профиль (обратная совместимость, может приходить с бэка как default) */
-  layout?: LayoutProfile;
-  legend?: LegendConfig;
-  show_group_colors?: boolean;
-  show_faction_colors?: boolean;
-  history?: CombatLogEntry[];
-  enable_logging?: boolean;
+  legend: LegendConfig;
+  show_group_colors: boolean;
+  show_faction_colors: boolean;
+  table_centered: boolean;
+}
+
+/** Глобальные флаги железа (ADR-18 / backend HardwareState). */
+export interface HardwareState {
+  sync_led_to_ui: boolean;
+}
+
+/** Лог, автосохранение, стек undo/redo (ADR-18 / backend SessionMeta). */
+export interface SessionMeta {
+  history: CombatLogEntry[];
+  history_cursor: number;
+  enable_logging: boolean;
+  autosave_enabled: boolean;
+  /** Не приходит в публичном API/WebSocket payload (см. combat_session_public_payload). */
+  history_stack?: Record<string, unknown>[];
+  history_index?: number;
+}
+
+/**
+ * Корневая сессия боя (ADR-18).
+ * С бэка приходят `core` / `display` / `hardware` / `session`; плюс служебные поля на корне.
+ */
+export interface CombatSession {
+  core: CombatCore;
+  display: DisplayState;
+  hardware: HardwareState;
+  session: SessionMeta;
+  /** См. GET /api/combat/state и WebSocket payload */
   can_undo?: boolean;
   can_redo?: boolean;
-  table_centered?: boolean;
-  autosave_enabled?: boolean;
+  initiative_engine_locked?: boolean;
 }
+
+/** @deprecated Имя оставлено для постепенной миграции импортов — это `CombatSession`. */
+export type CombatState = CombatSession;
 
 /** Checkbox / action-economy group: nested booleans under `actor.stats[column.key][item.id]`. */
 export type CheckboxGroupItem = { id: string; label: string; color: string };

@@ -50,11 +50,11 @@ async def save_encounter_body(payload: dict):
         data = {
             "name": name,
             "actors": actors,
-            "history": [h.model_dump() for h in app_state.state.history],
-            "round": app_state.state.round,
-            "turn_queue": app_state.state.turn_queue,
-            "current_index": app_state.state.current_index,
-            "is_active": app_state.state.is_active,
+            "history": [h.model_dump() for h in app_state.state.session.history],
+            "round": app_state.state.core.round,
+            "turn_queue": app_state.state.core.turn_queue,
+            "current_index": app_state.state.core.current_index,
+            "is_active": app_state.state.core.is_active,
         }
         file_path.write_text(json.dumps(data, indent=2))
         return {"status": "ok", "filename": file_path.name}

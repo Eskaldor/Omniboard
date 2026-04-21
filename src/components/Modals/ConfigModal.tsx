@@ -23,7 +23,7 @@ export function ConfigModal({
 }) {
   const { t, i18n } = useTranslation('core', { useSuspense: false });
   const { state, refetchState } = useCombatState();
-  const tableCentered = state?.table_centered !== false;
+  const tableCentered = state?.display.table_centered !== false;
   const engineLocked = state?.initiative_engine_locked ?? false;
 
   const [languages, setLanguages] = useState<{ code: string; name: string; flag: string }[]>([]);
@@ -401,7 +401,7 @@ export function ConfigModal({
             </div>
             <select
               disabled={engineLocked}
-              value={engineLocked ? 'custom' : (state?.engine_type ?? 'standard')}
+              value={engineLocked ? 'custom' : (state?.core.engine_type ?? 'standard')}
               onChange={(e) => applyEngineType(e.target.value)}
               className={`${inputClass} min-w-[12rem] max-w-full disabled:opacity-60 disabled:cursor-not-allowed`}
               title={t('config_modal.initiative_engine')}

@@ -96,9 +96,12 @@ export function useDebouncedActorSync(options: {
         if (!prev) return prev;
         return {
           ...prev,
-          actors: prev.actors.map((a) =>
-            a.id === actorId ? applyActorPatchOptimistic(a, patch) : a,
-          ),
+          core: {
+            ...prev.core,
+            actors: prev.core.actors.map((a) =>
+              a.id === actorId ? applyActorPatchOptimistic(a, patch) : a,
+            ),
+          },
         };
       });
 

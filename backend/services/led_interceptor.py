@@ -62,7 +62,7 @@ def _find_matching_rule(
 
 async def sync_actor_led_to_device(actor_id: str) -> None:
     """Push current ``resolve_led_payload`` (effects, overrides, layout) to bound Omnimini if online."""
-    actor = next((a for a in app_state.state.actors if a.id == actor_id), None)
+    actor = next((a for a in app_state.state.core.actors if a.id == actor_id), None)
     if not actor or not actor.miniature_id:
         return
     mid = str(actor.miniature_id).strip()
@@ -80,7 +80,7 @@ async def reset_actor_led_to_default(actor_id: str) -> None:
         ACTIVE_OVERRIDES[actor_id].pop("turn", None)
         if not ACTIVE_OVERRIDES[actor_id]:
             del ACTIVE_OVERRIDES[actor_id]
-    actor = next((a for a in app_state.state.actors if a.id == actor_id), None)
+    actor = next((a for a in app_state.state.core.actors if a.id == actor_id), None)
     if not actor or not actor.miniature_id:
         return
     mid = str(actor.miniature_id).strip()
@@ -109,14 +109,14 @@ async def _revert_led_after_delay(actor_id: str, miniature_id: str, delay_s: flo
 
 
 async def process_led_trigger(actor_id: str, event_type: str, target_stat: str | None = None) -> None:
-    actor = next((a for a in app_state.state.actors if a.id == actor_id), None)
+    actor = next((a for a in app_state.state.core.actors if a.id == actor_id), None)
     if not actor or not actor.miniature_id:
         return
     mid = str(actor.miniature_id).strip()
     if not mid or mid not in _esp.get_active_minis():
         return
 
-    system = (getattr(app_state.state, "system", None) or "").strip() or "D&D 5e"
+    system = (getattr(app_state.state.core, "system", None) or "").strip() or "D&D 5e"
     rules = _load_triggers(system)
     rule = _find_matching_rule(rules, event_type, target_stat)
     if rule is None:

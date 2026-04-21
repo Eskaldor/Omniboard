@@ -139,15 +139,15 @@ def resolve_led_payload_for_profile(actor_id: str, led_profile_id: str) -> dict[
     with faction / layout color resolution like ``resolve_led_payload``.
     """
     st = app_state.state
-    actor = next((a for a in st.actors if a.id == actor_id), None)
+    actor = next((a for a in st.core.actors if a.id == actor_id), None)
     if actor is None:
         return None
 
-    layout = _layout_for_actor(actor, st.layout_profiles)
+    layout = _layout_for_actor(actor, st.display.layout_profiles)
     pid = (led_profile_id or "").strip() or "default_static"
-    led_prof = _find_led_profile(st.system, pid)
+    led_prof = _find_led_profile(st.core.system, pid)
 
-    base = _base_color_for_layout(layout, actor, st.legend)
+    base = _base_color_for_layout(layout, actor, st.display.legend)
     resolved_colors = _resolve_color_tokens(list(led_prof.colors), base)
 
     speed = int(led_prof.speed) if led_prof.speed is not None else 0
@@ -170,11 +170,11 @@ def resolve_led_payload(actor_id: str) -> dict[str, Any] | None:
     Returns None if the actor is missing (caller uses hardcoded off state).
     """
     st = app_state.state
-    actor = next((a for a in st.actors if a.id == actor_id), None)
+    actor = next((a for a in st.core.actors if a.id == actor_id), None)
     if actor is None:
         return None
 
-    layout = _layout_for_actor(actor, st.layout_profiles)
+    layout = _layout_for_actor(actor, st.display.layout_profiles)
     overrides = ACTIVE_OVERRIDES.get(actor_id, {})
     # Short flash (time) wins over sustained (turn); then effect LED; then layout default
     led_profile_id = overrides.get("time") or overrides.get("turn")
@@ -186,9 +186,9 @@ def resolve_led_payload(actor_id: str) -> dict[str, Any] | None:
                 break
     if not led_profile_id:
         led_profile_id = (layout.led_profile_id or "default_static").strip() or "default_static"
-    led_prof = _find_led_profile(st.system, led_profile_id)
+    led_prof = _find_led_profile(st.core.system, led_profile_id)
 
-    base = _base_color_for_layout(layout, actor, st.legend)
+    base = _base_color_for_layout(layout, actor, st.display.legend)
     resolved_colors = _resolve_color_tokens(list(led_prof.colors), base)
 
     speed = int(led_prof.speed) if led_prof.speed is not None else 0

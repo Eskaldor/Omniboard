@@ -23,12 +23,12 @@ def add_log(
     actor_name: str | None = None,
     details: dict | None = None,
 ) -> None:
-    if not app_state.state.enable_logging:
+    if not app_state.state.session.enable_logging:
         return
-    app_state.state.history.append(
+    app_state.state.session.history.append(
         LogEntry(
             type=entry_type,
-            round=app_state.state.round,
+            round=app_state.state.core.round,
             actor_id=actor_id,
             actor_name=actor_name,
             details=details or {},
@@ -36,7 +36,7 @@ def add_log(
     )
 
     # Write log file in background so request is not blocked
-    history_snapshot = [h.model_dump() for h in app_state.state.history]
+    history_snapshot = [h.model_dump() for h in app_state.state.session.history]
 
     def _entry_to_md_line(entry: dict) -> str:
         t = entry.get("type", "")

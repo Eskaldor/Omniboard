@@ -23,7 +23,7 @@ export function EncountersModal({
   const [saveError, setSaveError] = useState<string | null>(null);
   const importInputRef = React.useRef<HTMLInputElement>(null);
   const { state } = useCombatState();
-  const autosaveEnabled = state?.autosave_enabled ?? true;
+  const autosaveEnabled = state?.session.autosave_enabled ?? true;
 
   const fetchEncounters = () => {
     fetch(`/api/encounters/list?system_name=${encodeURIComponent(systemName)}`)
@@ -84,24 +84,32 @@ export function EncountersModal({
     reader.onload = async () => {
       try {
         const text = reader.result as string;
-        const data = JSON.parse(text);
-        const actors = Array.isArray(data.actors) ? data.actors : data && Array.isArray(data) ? data : [];
-        if (actors.length === 0) {
+        const data = JSON.parse(text) as unknown;
+        if (!data || typeof data !== 'object') {
           alert(t('modals.no_actors_in_file'));
           e.target.value = '';
           return;
         }
+        const rec = data as Record<string, unknown>;
+        const legacyActors = Array.isArray(rec.actors)
+          ? rec.actors
+          : Array.isArray(data)
+            ? data
+            : [];
+        const nestedActors =
+          rec.core && typeof rec.core === 'object' && Array.isArray((rec.core as { actors?: unknown }).actors)
+            ? (rec.core as { actors: unknown[] }).actors
+            : [];
+        if (legacyActors.length === 0 && nestedActors.length === 0) {
+          alert(t('modals.no_actors_in_file'));
+          e.target.value = '';
+          return;
+        }
+        // Сырой JSON: бэкенд сам различает вложенный CombatSession и плоский legacy (model_validator + load_combat).
         const res = await fetch('/api/combat/load', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            actors,
-            history: Array.isArray(data.history) ? data.history : [],
-            round: typeof data.round === 'number' ? data.round : undefined,
-            turn_queue: Array.isArray(data.turn_queue) ? data.turn_queue : undefined,
-            current_index: typeof data.current_index === 'number' ? data.current_index : undefined,
-            is_active: typeof data.is_active === 'boolean' ? data.is_active : undefined,
-          }),
+          body: JSON.stringify(data),
         });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
@@ -131,16 +139,10 @@ export function EncountersModal({
         return;
       }
       const data = await res.json();
-      const actors = data?.actors ?? [];
-      const history = Array.isArray(data?.history) ? data.history : [];
-      const round = typeof data?.round === 'number' ? data.round : undefined;
-      const turn_queue = Array.isArray(data?.turn_queue) ? data.turn_queue : undefined;
-      const current_index = typeof data?.current_index === 'number' ? data.current_index : undefined;
-      const is_active = typeof data?.is_active === 'boolean' ? data.is_active : undefined;
       const loadRes = await fetch('/api/combat/load', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ actors, history, round, turn_queue, current_index, is_active }),
+        body: JSON.stringify(data),
       });
       if (!loadRes.ok) {
         const err = await loadRes.json().catch(() => ({}));

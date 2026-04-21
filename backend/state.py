@@ -3,29 +3,29 @@ from __future__ import annotations
 from pathlib import Path
 import asyncio
 import json
+import os
+import tempfile
+import threading
 
-from backend.models import CombatState
+from backend.models import CombatSession
 
 
 AUTOSAVE_PATH = Path("data/state_autosave.json")
+_AUTOSAVE_LOCK = threading.Lock()
 
 
-def load_state() -> CombatState:
+def load_state() -> CombatSession:
     if AUTOSAVE_PATH.exists():
         try:
             data = json.loads(AUTOSAVE_PATH.read_text(encoding="utf-8"))
-            return CombatState(**data)
+            return CombatSession.model_validate(data)
         except Exception:
             # If autosave is corrupted or incompatible, start with a fresh state
             pass
-    return CombatState()
+    return CombatSession()
 
 
-state: CombatState = load_state()
-
-# Undo/redo snapshot stack lives only in memory (see ADR-3)
-history_stack: list = []
-history_index: int = -1
+state: CombatSession = load_state()
 
 # Connected WebSocket clients
 connected_clients: list = []
@@ -33,12 +33,26 @@ connected_clients: list = []
 
 def save_state_sync() -> None:
     """Synchronously persist current state to AUTOSAVE_PATH if enabled."""
-    # Allow per-encounter opt-out from autosave
-    if not getattr(state, "autosave_enabled", True):
+    if not state.session.autosave_enabled:
         return
     try:
-        AUTOSAVE_PATH.parent.mkdir(parents=True, exist_ok=True)
-        AUTOSAVE_PATH.write_text(state.model_dump_json(indent=2), encoding="utf-8")
+        with _AUTOSAVE_LOCK:
+            # Snapshot JSON on the calling thread to avoid races with concurrent mutations.
+            payload = state.model_dump_json(indent=2)
+            AUTOSAVE_PATH.parent.mkdir(parents=True, exist_ok=True)
+            fd, tmp_name = tempfile.mkstemp(
+                prefix="state_autosave_", suffix=".json", dir=str(AUTOSAVE_PATH.parent)
+            )
+            try:
+                with os.fdopen(fd, "w", encoding="utf-8") as f:
+                    f.write(payload)
+                os.replace(tmp_name, AUTOSAVE_PATH)
+            except Exception:
+                try:
+                    os.unlink(tmp_name)
+                except OSError:
+                    pass
+                raise
     except Exception:
         # Autosave should never break main flow
         pass
@@ -47,4 +61,3 @@ def save_state_sync() -> None:
 async def save_state_async() -> None:
     """Persist state to disk in a worker thread to avoid blocking the event loop."""
     await asyncio.to_thread(save_state_sync)
-

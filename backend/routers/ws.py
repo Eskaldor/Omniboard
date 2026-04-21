@@ -5,15 +5,18 @@ import json
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from backend import state as app_state
+from backend.engines.manager import system_has_custom_logic_file
+from backend.models import combat_session_public_payload
 
 
 router = APIRouter(tags=["ws"])
 
 
 async def broadcast_state() -> None:
-    payload = json.loads(app_state.state.model_dump_json())
-    payload["can_undo"] = app_state.history_index > 0
-    payload["can_redo"] = app_state.history_index < len(app_state.history_stack) - 1
+    payload = combat_session_public_payload(
+        app_state.state,
+        initiative_engine_locked=system_has_custom_logic_file(app_state.state.core.system),
+    )
     message = json.dumps({"type": "state_update", "payload": payload})
 
     dead: list[WebSocket] = []
@@ -28,7 +31,6 @@ async def broadcast_state() -> None:
         except ValueError:
             pass
 
-    # Persist latest visible state for crash/restart recovery (offloaded to thread)
     await app_state.save_state_async()
 
 
@@ -37,9 +39,10 @@ async def websocket_master(websocket: WebSocket):
     await websocket.accept()
     app_state.connected_clients.append(websocket)
 
-    payload = json.loads(app_state.state.model_dump_json())
-    payload["can_undo"] = app_state.history_index > 0
-    payload["can_redo"] = app_state.history_index < len(app_state.history_stack) - 1
+    payload = combat_session_public_payload(
+        app_state.state,
+        initiative_engine_locked=system_has_custom_logic_file(app_state.state.core.system),
+    )
     await websocket.send_text(json.dumps({"type": "state_update", "payload": payload}))
 
     try:
@@ -50,4 +53,3 @@ async def websocket_master(websocket: WebSocket):
             app_state.connected_clients.remove(websocket)
         except ValueError:
             pass
-

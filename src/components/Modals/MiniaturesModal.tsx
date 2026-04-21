@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { X, Save, Plus, RefreshCw, Settings } from 'lucide-react';
-import { ColumnConfig, LayoutProfile, DisplayField, BarProfileConfig, LedProfile } from '../../types';
+import type { ColumnConfig, LayoutProfile, DisplayField, BarProfileConfig, LedProfile, DisplayState } from '../../types';
 import { useCombatState } from '../../contexts/CombatStateContext';
 import { useTranslation } from 'react-i18next';
 import { BarCustomizerModal, getBarDisplayName } from './BarCustomizerModal';
@@ -27,27 +27,17 @@ function defaultProfile(id: string, name: string): LayoutProfile {
   };
 }
 
-/** Приводит данные с бэка (layout_profiles или старый layout) к списку LayoutProfile с id/name. */
-function normalizeProfiles(state: { layout_profiles?: LayoutProfile[]; layout?: LayoutProfile } | null): LayoutProfile[] {
-  if (!state) return [defaultProfile('default', 'Default')];
-  if (state.layout_profiles && Array.isArray(state.layout_profiles) && state.layout_profiles.length > 0) {
-    return state.layout_profiles.map((p) => ({
-      ...defaultProfile(p.id ?? 'default', p.name ?? 'Default'),
-      ...p,
-      id: p.id ?? 'default',
-      name: p.name ?? 'Default',
-    }));
+/** Приводит display.layout_profiles к списку LayoutProfile с id/name. */
+function normalizeProfiles(display: DisplayState | null | undefined): LayoutProfile[] {
+  if (!display?.layout_profiles?.length) {
+    return [defaultProfile('default', 'Default')];
   }
-  if (state.layout && typeof state.layout === 'object') {
-    const old = state.layout as Record<string, unknown>;
-    return [{
-      ...defaultProfile('default', 'Default'),
-      ...old,
-      id: (old.id as string) ?? 'default',
-      name: (old.name as string) ?? 'Default',
-    } as LayoutProfile];
-  }
-  return [defaultProfile('default', 'Default')];
+  return display.layout_profiles.map((p) => ({
+    ...defaultProfile(p.id ?? 'default', p.name ?? 'Default'),
+    ...p,
+    id: p.id ?? 'default',
+    name: p.name ?? 'Default',
+  }));
 }
 
 export function MiniaturesModal({
@@ -61,8 +51,8 @@ export function MiniaturesModal({
 }) {
   const { t, i18n } = useTranslation('core', { useSuspense: false });
   const { state, refetchState } = useCombatState();
-  const actors = state?.actors ?? [];
-  const initialProfiles = normalizeProfiles(state ?? null);
+  const actors = state?.core.actors ?? [];
+  const initialProfiles = normalizeProfiles(state?.display);
 
   const [localProfiles, setLocalProfiles] = useState<LayoutProfile[]>(initialProfiles);
   const [selectedProfileId, setSelectedProfileId] = useState<string>(() => initialProfiles[0]?.id ?? 'default');
@@ -79,7 +69,7 @@ export function MiniaturesModal({
   const [availableLedProfiles, setAvailableLedProfiles] = useState<LedProfile[]>([]);
 
   const refetchLedProfiles = useCallback(() => {
-    const system = state?.system || '';
+    const system = state?.core.system || '';
     if (!system) {
       setAvailableLedProfiles([]);
       return;
@@ -91,14 +81,14 @@ export function MiniaturesModal({
         console.error('Failed to fetch LED profiles', err);
         setAvailableLedProfiles([]);
       });
-  }, [state?.system]);
+  }, [state?.core.system]);
 
   useEffect(() => {
     refetchLedProfiles();
   }, [refetchLedProfiles]);
 
   useEffect(() => {
-    const system = state?.system || '';
+    const system = state?.core.system || '';
     fetch(`/api/assets/frames?system=${encodeURIComponent(system)}`)
       .then((res) => res.json())
       .then((data: string[]) => {
@@ -120,16 +110,16 @@ export function MiniaturesModal({
         console.error('Failed to fetch bar profiles', err);
         setAvailableBarProfiles([]);
       });
-  }, [state?.system]);
+  }, [state?.core.system]);
 
   useEffect(() => {
-    const sys = state?.system || '';
+    const sys = state?.core.system || '';
     if (!sys) return;
     i18n.loadNamespaces(`systems/${sys}`).catch(() => {});
-  }, [state?.system, i18n]);
+  }, [state?.core.system, i18n]);
 
   useEffect(() => {
-    const system = state?.system || '';
+    const system = state?.core.system || '';
     if (!system) {
       setAvailableEffects([]);
       return;
@@ -141,15 +131,15 @@ export function MiniaturesModal({
         console.error('Failed to fetch effects', err);
         setAvailableEffects([]);
       });
-  }, [state?.system]);
+  }, [state?.core.system]);
 
   useEffect(() => {
-    const list = normalizeProfiles(state ?? null);
+    const list = normalizeProfiles(state?.display);
     setLocalProfiles(list);
     if (list.length > 0 && !list.some((p) => p.id === selectedProfileId)) {
       setSelectedProfileId(list[0].id);
     }
-  }, [state?.layout_profiles, state?.layout]);
+  }, [state?.display]);
 
   useEffect(() => {
     if (actors.length === 0) {
@@ -465,7 +455,7 @@ export function MiniaturesModal({
                       >
                         {availableBarProfiles.map((p) => (
                           <option key={p.id} value={p.id}>
-                            {getBarDisplayName(i18n, state?.system ?? '', p.id, p.name || p.id)}
+                            {getBarDisplayName(i18n, state?.core.system ?? '', p.id, p.name || p.id)}
                           </option>
                         ))}
                         {availableBarProfiles.length === 0 && <option value="default">default</option>}
@@ -833,13 +823,13 @@ export function MiniaturesModal({
       isOpen={isBarForgeOpen}
       onClose={() => {
         setIsBarForgeOpen(false);
-        const system = state?.system || '';
+        const system = state?.core.system || '';
         fetch(`/api/assets/bars?system=${encodeURIComponent(system)}`)
           .then((res) => res.json())
           .then((data: BarProfileConfig[]) => setAvailableBarProfiles(Array.isArray(data) ? data : []))
           .catch(() => setAvailableBarProfiles([]));
       }}
-      system={state?.system ?? ''}
+      system={state?.core.system ?? ''}
       onOpenLedProfiles={onOpenLedProfiles}
     />
     </>

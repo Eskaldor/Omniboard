@@ -86,12 +86,15 @@ export function applyPendingPatchesToCombatState(state: CombatState | null): Com
   }
   return {
     ...state,
-    actors: state.actors.map((a) => {
-      const pending = pendingByActorId.get(a.id);
-      if (!pending || Object.keys(pending).length === 0) {
-        return a;
-      }
-      return applyActorPatchOptimistic(a, pending);
-    }),
+    core: {
+      ...state.core,
+      actors: state.core.actors.map((a) => {
+        const pending = pendingByActorId.get(a.id);
+        if (!pending || Object.keys(pending).length === 0) {
+          return a;
+        }
+        return applyActorPatchOptimistic(a, pending);
+      }),
+    },
   };
 }

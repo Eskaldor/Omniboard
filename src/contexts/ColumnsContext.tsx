@@ -25,7 +25,7 @@ export function useColumns(): ColumnsContextValue {
 
 export function ColumnsProvider({ children }: { children: React.ReactNode }) {
   const { state } = useCombatState();
-  const systemName = state?.system || 'D&D 5e';
+  const systemName = state?.core.system || 'D&D 5e';
   const cacheKey = normalizeSystemKey(systemName);
   const [columns, setColumnsState] = useState<ColumnConfig[]>(() => columnsCache[cacheKey] ?? []);
   const prevKeyRef = useRef<string | null>(null);

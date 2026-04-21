@@ -6,7 +6,12 @@ from backend.engines.base import BaseInitiativeEngine
 from backend.engines.phase import PhaseInitiativeEngine
 from backend.engines.popcorn import PopcornInitiativeEngine
 from backend.engines.standard import StandardInitiativeEngine
-from backend.models import CombatState
+from backend.models import (
+    CombatSession,
+    CombatState,
+    combat_session_merged_with_combat_state,
+    combat_session_to_combat_state,
+)
 from backend.paths import DATA_DIR
 
 # Stateless default engine; one instance shared until Phase engines exist.
@@ -53,3 +58,25 @@ def get_engine_for_state(state: CombatState) -> BaseInitiativeEngine:
     if et == "standard":
         return _standard_singleton
     return _standard_singleton
+
+
+def build_queue_for_session(session: CombatSession) -> list[str]:
+    """
+    Compatibility layer: initiative engines still operate on legacy flat ``CombatState``,
+    while routers/services work with nested ``CombatSession`` (ADR-18).
+    """
+    cs = combat_session_to_combat_state(session).model_copy(deep=True)
+    engine = get_engine_for_state(cs)
+    return engine.build_queue(cs)
+
+
+def next_turn_for_session(
+    session: CombatSession, target_actor_id: str | None = None
+) -> CombatSession:
+    """
+    Compatibility layer: run legacy engine and merge back into nested session.
+    """
+    cs = combat_session_to_combat_state(session).model_copy(deep=True)
+    engine = get_engine_for_state(cs)
+    new_cs = engine.next_turn(cs, target_actor_id)
+    return combat_session_merged_with_combat_state(session, new_cs)

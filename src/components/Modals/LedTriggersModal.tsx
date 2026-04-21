@@ -67,7 +67,7 @@ export function LedTriggersModal({ isOpen, onClose }: { isOpen: boolean; onClose
   const columnsCtx = useContext(ColumnsContext);
   const { state } = useCombatState();
   const columns = columnsCtx?.columns ?? [];
-  const system = (state?.system ?? '').trim();
+  const system = (state?.core.system ?? '').trim();
   const systemNameForI18n = system || 'D&D 5e';
 
   const [profiles, setProfiles] = useState<LedProfile[]>([]);

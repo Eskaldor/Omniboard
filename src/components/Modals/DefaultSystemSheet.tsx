@@ -31,7 +31,7 @@ export function DefaultSystemSheet({
   const [expertMode, setExpertMode] = useState(false);
   const [devices, setDevices] = useState<Record<string, DeviceInfo>>({});
 
-  const actors = state?.actors ?? [];
+  const actors = state?.core.actors ?? [];
   const activeGroups = React.useMemo(() => {
     const seen = new Set<string>();
     const list: { id: string; name: string | null; color: string | null; mode: string | null }[] = [];
@@ -220,7 +220,7 @@ export function DefaultSystemSheet({
                   className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
                 >
                   <option value="">{t('actor.layout_profile_default', { defaultValue: 'Default' })}</option>
-                  {state?.layout_profiles?.map((p) => (
+                  {state?.display.layout_profiles?.map((p) => (
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
                 </select>

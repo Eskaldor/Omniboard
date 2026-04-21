@@ -184,9 +184,9 @@ async def create_actor(actor: Actor):
     await save_snapshot()
     if not actor.id:
         actor.id = str(uuid.uuid4())
-    app_state.state.actors.append(actor)
-    if app_state.state.is_active:
-        app_state.state.turn_queue.append(actor.id)
+    app_state.state.core.actors.append(actor)
+    if app_state.state.core.is_active:
+        app_state.state.core.turn_queue.append(actor.id)
         combat_engine.reorder_turn_queue()
         add_log("actor_joined", actor_id=actor.id, actor_name=actor.name)
     await save_snapshot()
@@ -197,7 +197,7 @@ async def create_actor(actor: Actor):
 @router.patch("/{actor_id}")
 async def update_actor(actor_id: str, updates: dict):
     await save_snapshot()
-    for i, a in enumerate(app_state.state.actors):
+    for i, a in enumerate(app_state.state.core.actors):
         if a.id == actor_id:
             old_actor = a
             actor_dict = a.model_dump()
@@ -224,7 +224,7 @@ async def update_actor(actor_id: str, updates: dict):
             new_stats = dict(new_actor.stats or {})
 
             # Dynamic stat change logging from column config (numbers + checkbox_group nests)
-            columns = _load_system_columns(getattr(app_state.state, "system", "") or "D&D 5e")
+            columns = _load_system_columns(getattr(app_state.state.core, "system", "") or "D&D 5e")
             _log_stat_changes_for_actor(
                 old_stats=old_stats,
                 new_stats=new_stats,
@@ -256,7 +256,7 @@ async def update_actor(actor_id: str, updates: dict):
                         details={"effect_name": e.name},
                     )
 
-            app_state.state.actors[i] = new_actor
+            app_state.state.core.actors[i] = new_actor
 
             old_fx = [e.model_dump(mode="json") for e in old_actor.effects]
             new_fx = [e.model_dump(mode="json") for e in new_actor.effects]
@@ -273,31 +273,30 @@ async def update_actor(actor_id: str, updates: dict):
                 and getattr(new_actor, "group_mode", None) == "simultaneous"
             ):
                 val = new_actor.initiative
-                for j, other in enumerate(app_state.state.actors):
+                for j, other in enumerate(app_state.state.core.actors):
                     if j != i and getattr(other, "group_id", None) == new_actor.group_id:
                         od = other.model_dump()
                         od["initiative"] = val
-                        app_state.state.actors[j] = Actor(**od)
+                        app_state.state.core.actors[j] = Actor(**od)
 
             combat_engine.reorder_turn_queue()
             await save_snapshot()
             await broadcast_state()
-            return app_state.state.actors[i]
+            return app_state.state.core.actors[i]
     return {"error": "not found"}
 
 
 @router.delete("/{actor_id}")
 async def delete_actor(actor_id: str):
     await save_snapshot()
-    deleted = next((a for a in app_state.state.actors if a.id == actor_id), None)
-    if deleted and app_state.state.is_active:
+    deleted = next((a for a in app_state.state.core.actors if a.id == actor_id), None)
+    if deleted and app_state.state.core.is_active:
         add_log("actor_left", actor_id=deleted.id, actor_name=deleted.name)
-    app_state.state.actors = [a for a in app_state.state.actors if a.id != actor_id]
-    if actor_id in app_state.state.turn_queue:
-        app_state.state.turn_queue.remove(actor_id)
-        if app_state.state.current_index >= len(app_state.state.turn_queue):
-            app_state.state.current_index = max(0, len(app_state.state.turn_queue) - 1)
+    app_state.state.core.actors = [a for a in app_state.state.core.actors if a.id != actor_id]
+    if actor_id in app_state.state.core.turn_queue:
+        app_state.state.core.turn_queue.remove(actor_id)
+        if app_state.state.core.current_index >= len(app_state.state.core.turn_queue):
+            app_state.state.core.current_index = max(0, len(app_state.state.core.turn_queue) - 1)
     await save_snapshot()
     await broadcast_state()
     return {"status": "success"}
-
