@@ -179,53 +179,56 @@ export function AppHeader(props: AppHeaderProps) {
           <span className="text-base italic text-zinc-400 font-normal">{appAuthor}'s</span>{' '}
           {appName}
         </h1>
-        <div className="relative mt-1.5 inline-block">
-          <div className="flex items-center">
+        <div className="relative mt-1 inline-block">
+          <div className="flex h-8 items-center">
             <button
               type="button"
               onClick={handleRoundClick}
               title={t('combat.open_log_hint')}
               aria-label={roundButtonAria}
-              className="relative z-10 flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-full border-4 border-zinc-950 bg-zinc-900 text-xl font-bold tabular-nums text-zinc-100 shadow-lg ring-4 ring-zinc-950 transition-colors hover:text-emerald-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900"
+              className="relative z-10 flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 border-zinc-900 bg-zinc-800 text-base font-semibold tabular-nums leading-none text-zinc-100 shadow-none ring-[3px] ring-zinc-900 transition-transform duration-200 ease-out hover:scale-[1.04] hover:text-emerald-200/95 active:scale-[0.97] focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500/80"
             >
               <motion.span
                 key={roundNumber}
-                initial={{ opacity: 0, y: 4 }}
+                initial={{ opacity: 0, y: 3 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
               >
                 {roundNumber}
               </motion.span>
             </button>
-            <div className="relative z-0 ml-[-1.5rem] flex min-h-12 min-w-[7.5rem] items-center overflow-hidden rounded-r-md border border-zinc-700/50 border-l-0 bg-zinc-900/80 py-1 pl-8 pr-4 shadow-inner">
+            <div className="relative z-0 -ml-4 flex h-8 min-w-[6.75rem] max-w-[13rem] items-center overflow-hidden rounded-md bg-zinc-800 pl-7 pr-2">
               {isCombatActive ? (
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
-                  <span className="font-medium text-zinc-500">{t('combat.turn')}</span>
+                <div className="flex min-w-0 flex-1 items-center gap-x-1.5 text-xs leading-none">
+                  <span className="shrink-0 text-[9px] font-medium uppercase tracking-wide text-zinc-500">
+                    {t('combat.turn')}
+                  </span>
                   <motion.span
                     key={turnDisplayNum}
-                    initial={{ opacity: 0, y: 4 }}
+                    initial={{ opacity: 0, y: 3 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.2 }}
-                    className="font-semibold tabular-nums text-zinc-200"
+                    className="shrink-0 font-semibold tabular-nums text-zinc-100"
                   >
                     {turnDisplayNum}
                   </motion.span>
                   {phaseLabel != null ? (
                     <motion.span
                       key={phaseLabel}
-                      initial={{ opacity: 0, y: 4 }}
+                      initial={{ opacity: 0, y: 3 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.2 }}
-                      className="font-medium text-emerald-400"
+                      className="min-w-0 truncate font-medium text-emerald-400/90"
+                      title={phaseLabel}
                     >
                       {phaseLabel}
                     </motion.span>
                   ) : null}
                 </div>
               ) : null}
-              <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-[2px] bg-zinc-950/90">
+              <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-px bg-zinc-700/60">
                 <div
-                  className="h-full bg-emerald-500 transition-all duration-500 ease-out"
+                  className="h-full bg-emerald-500 transition-[width] duration-500 ease-out"
                   style={{ width: `${progressPct}%` }}
                 />
               </div>
