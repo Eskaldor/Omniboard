@@ -191,7 +191,7 @@ export function LedEffectsModal({
       }
       setSelectedId((cur) => (cur && list.some((p) => p.id === cur) ? cur : list[0].id));
     } catch {
-      setLoadError(t('led_profiles.load_failed', { defaultValue: 'Failed to load LED profiles' }));
+      setLoadError(t('led_profiles.load_failed'));
       setProfiles([]);
       setSelectedId(null);
       setDraft(null);
@@ -267,7 +267,7 @@ export function LedEffectsModal({
     const created: LedProfile = {
       ...DEFAULT_NEW,
       id,
-      name: t('led_profiles.new_profile_name', { defaultValue: 'New LED profile' }),
+      name: t('led_profiles.new_profile_name'),
       colors: ['#00ff88'],
     };
     setProfiles((prev) => [...prev, created]);
@@ -294,7 +294,7 @@ export function LedEffectsModal({
       }
       onSaved?.();
     } catch {
-      setLoadError(t('led_profiles.save_failed', { defaultValue: 'Failed to save LED profiles' }));
+      setLoadError(t('led_profiles.save_failed'));
     } finally {
       setSaving(false);
     }
@@ -325,9 +325,9 @@ export function LedEffectsModal({
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-5xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
           <div className="p-4 border-b border-zinc-800 flex flex-wrap gap-2 justify-between items-center bg-zinc-900/50">
             <h3 className="text-lg font-medium text-zinc-100">
-              {t('led_profiles.title', { defaultValue: 'LED profiles (Omnimini)' })}
+              {t('led_profiles.title')}
             </h3>
-            <button type="button" onClick={onClose} className="text-zinc-400 hover:text-zinc-100 p-1" aria-label={t('common.close', { defaultValue: 'Close' })}>
+            <button type="button" onClick={onClose} className="text-zinc-400 hover:text-zinc-100 p-1" aria-label={t('common.close')}>
               <X size={20} />
             </button>
           </div>
@@ -336,12 +336,12 @@ export function LedEffectsModal({
             {/* List */}
             <div className="w-full lg:w-52 shrink-0 flex flex-col gap-2">
               <div className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                {t('led_profiles.list_heading', { defaultValue: 'Profiles' })}
+                {t('led_profiles.list_heading')}
               </div>
               {loading ? (
                 <div className="flex items-center gap-2 text-sm text-zinc-400 py-4">
                   <Loader2 className="animate-spin" size={18} />
-                  {t('hardware.loading', { defaultValue: 'Loading…' })}
+                  {t('hardware.loading')}
                 </div>
               ) : (
                 <ul className="space-y-1 max-h-48 lg:max-h-none overflow-y-auto">
@@ -368,7 +368,7 @@ export function LedEffectsModal({
                 className="flex items-center justify-center gap-2 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-sm transition-colors"
               >
                 <Plus size={16} />
-                {t('led_profiles.add_profile', { defaultValue: 'Add profile' })}
+                {t('led_profiles.add_profile')}
               </button>
             </div>
 
@@ -382,7 +382,7 @@ export function LedEffectsModal({
                   <>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs text-zinc-500 mb-1">{t('led_profiles.field_id', { defaultValue: 'Id' })}</label>
+                        <label className="block text-xs text-zinc-500 mb-1">{t('led_profiles.field_id')}</label>
                         <input
                           type="text"
                           value={selected.id}
@@ -391,7 +391,7 @@ export function LedEffectsModal({
                         />
                       </div>
                       <div>
-                        <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.profile_name', { defaultValue: 'Profile name' })}</label>
+                        <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.profile_name')}</label>
                         <input
                           type="text"
                           value={selected.name}
@@ -402,24 +402,24 @@ export function LedEffectsModal({
                     </div>
 
                     <div>
-                      <label className="block text-xs text-zinc-500 mb-1">{t('led_profiles.mode', { defaultValue: 'Mode' })}</label>
+                      <label className="block text-xs text-zinc-500 mb-1">{t('led_profiles.mode')}</label>
                       <select
                         value={isLedMode(selected.mode) ? selected.mode : 'static'}
                         onChange={(e) => updateDraft({ mode: e.target.value as LedProfileMode })}
                         className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-amber-500"
                       >
-                        <option value="static">{t('led_profiles.mode_static', { defaultValue: 'Static' })}</option>
-                        <option value="cycle">{t('led_profiles.mode_cycle', { defaultValue: 'Cycle' })}</option>
-                        <option value="blink">{t('led_profiles.mode_blink', { defaultValue: 'Blink' })}</option>
-                        <option value="breathe">{t('led_profiles.mode_breathe', { defaultValue: 'Breathe' })}</option>
-                        <option value="pulse">{t('led_profiles.mode_pulse', { defaultValue: 'Pulse' })}</option>
-                        <option value="rainbow">{t('led_profiles.mode_rainbow', { defaultValue: 'Rainbow' })}</option>
+                        <option value="static">{t('led_profiles.mode_static')}</option>
+                        <option value="cycle">{t('led_profiles.mode_cycle')}</option>
+                        <option value="blink">{t('led_profiles.mode_blink')}</option>
+                        <option value="breathe">{t('led_profiles.mode_breathe')}</option>
+                        <option value="pulse">{t('led_profiles.mode_pulse')}</option>
+                        <option value="rainbow">{t('led_profiles.mode_rainbow')}</option>
                       </select>
                     </div>
 
                     <div>
                       <label className="block text-xs text-zinc-500 mb-1">
-                        {t('led_profiles.speed_ms', { defaultValue: 'Speed (ms)' })}: {selected.speed}
+                        {t('led_profiles.speed_ms')}: {selected.speed}
                       </label>
                       <input
                         type="range"
@@ -433,7 +433,7 @@ export function LedEffectsModal({
 
                     <div>
                       <label className="block text-xs text-zinc-500 mb-1">
-                        {t('led_profiles.brightness', { defaultValue: 'Brightness' })}: {selected.brightness}
+                        {t('led_profiles.brightness')}: {selected.brightness}
                       </label>
                       <input
                         type="range"
@@ -448,10 +448,10 @@ export function LedEffectsModal({
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <label className="text-xs text-zinc-500 font-medium uppercase tracking-wider">
-                          {t('led_profiles.colors', { defaultValue: 'Colors' })}
+                          {t('led_profiles.colors')}
                         </label>
                         <button type="button" onClick={addColorRow} className="text-xs text-amber-400 hover:text-amber-300">
-                          + {t('led_profiles.add_color', { defaultValue: 'Add color' })}
+                          + {t('led_profiles.add_color')}
                         </button>
                       </div>
                       <ul className="space-y-2">
@@ -461,7 +461,7 @@ export function LedEffectsModal({
                               type="text"
                               value={color}
                               onChange={(e) => updateColor(idx, e.target.value)}
-                              placeholder="#RRGGBB or $ROLE_COLOR"
+                              placeholder={t('led_profiles.color_token_placeholder')}
                               className="flex-1 min-w-[140px] bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1.5 text-sm text-zinc-200 font-mono focus:outline-none focus:border-amber-500"
                             />
                             {/^#[0-9A-Fa-f]{3,8}$/.test(color) ? (
@@ -470,7 +470,7 @@ export function LedEffectsModal({
                                 value={color.length === 4 ? `#${color[1]}${color[1]}${color[2]}${color[2]}${color[3]}${color[3]}` : color.slice(0, 7)}
                                 onChange={(e) => updateColor(idx, e.target.value)}
                                 className="w-10 h-9 rounded border border-zinc-600 cursor-pointer bg-zinc-900 p-0 shrink-0"
-                                title={t('miniature_layout.color', { defaultValue: 'Color' })}
+                                title={t('miniature_layout.color')}
                               />
                             ) : (
                               <span className="w-10 h-9 rounded border border-zinc-600 bg-zinc-800 shrink-0 inline-block" style={{ backgroundColor: resolvePreviewColor(color) }} title={color} />
@@ -497,30 +497,28 @@ export function LedEffectsModal({
                                 onClick={() => removeColorRow(idx)}
                                 className="text-xs text-zinc-500 hover:text-red-400 ml-auto"
                               >
-                                {t('common.delete', { defaultValue: 'Delete' })}
+                                {t('common.delete')}
                               </button>
                             )}
                           </li>
                         ))}
                       </ul>
                       <p className="mt-2 text-xs text-zinc-500">
-                        {t('led_profiles.colors_hint', {
-                          defaultValue: 'Use $ROLE_COLOR / $GROUP_COLOR for dynamic colors on the device.',
-                        })}
+                        {t('led_profiles.colors_hint')}
                       </p>
                     </div>
                   </>
                 ) : (
-                  <p className="text-sm text-zinc-500">{t('led_profiles.select_or_add', { defaultValue: 'Select a profile or add a new one.' })}</p>
+                  <p className="text-sm text-zinc-500">{t('led_profiles.select_or_add')}</p>
                 )}
               </div>
 
               <div className="w-full xl:w-44 shrink-0 flex flex-col items-center gap-2 border-t xl:border-t-0 xl:border-l border-zinc-800 pt-4 xl:pt-0 xl:pl-6">
                 <div className="text-xs font-medium text-zinc-500 uppercase tracking-wider self-stretch text-center xl:text-left">
-                  {t('miniature_layout.preview', { defaultValue: 'Preview' })}
+                  {t('miniature_layout.preview')}
                 </div>
                 <p className="text-[10px] text-zinc-500 text-center xl:text-left leading-tight">
-                  {t('led_profiles.preview_role_note', { defaultValue: '$ROLE_COLOR shows as red in preview.' })}
+                  {t('led_profiles.preview_role_note')}
                 </p>
                 {draft && (
                   <LedPreviewBubble draft={draft} styleKey={`${previewUid}-${previewStyleKey}`} />
@@ -535,7 +533,7 @@ export function LedEffectsModal({
               onClick={onClose}
               className="px-4 py-2 rounded-lg text-sm text-zinc-300 bg-zinc-800 hover:bg-zinc-700 transition-colors"
             >
-              {t('common.close', { defaultValue: 'Close' })}
+              {t('common.close')}
             </button>
             <button
               type="button"
@@ -544,7 +542,7 @@ export function LedEffectsModal({
               className="flex items-center gap-2 px-5 py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
             >
               {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
-              {t('led_profiles.save_all', { defaultValue: 'Save all' })}
+              {t('led_profiles.save_all')}
             </button>
           </div>
         </div>

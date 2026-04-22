@@ -1,14 +1,44 @@
 import { Settings, BookImage, MonitorSmartphone, Layers, Link2, ChevronDown, Lightbulb, Zap } from 'lucide-react';
+import { motion } from 'motion/react';
+import { useCallback, useMemo, useRef, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useRef, useState, useEffect } from 'react';
 import i18n from '../i18n';
 import type { CombatLogEntry, LegendConfig } from '../types';
+import { useCombatState } from '../contexts/CombatStateContext';
 import { CombatLog } from './CombatLog';
 
 export type LogEntry = CombatLogEntry;
 
+function toRomanNumeral(n: number): string {
+  if (!Number.isFinite(n) || n < 1) return '';
+  if (n > 3999) return String(Math.floor(n));
+  const pairs: [number, string][] = [
+    [1000, 'M'],
+    [900, 'CM'],
+    [500, 'D'],
+    [400, 'CD'],
+    [100, 'C'],
+    [90, 'XC'],
+    [50, 'L'],
+    [40, 'XL'],
+    [10, 'X'],
+    [9, 'IX'],
+    [5, 'V'],
+    [4, 'IV'],
+    [1, 'I'],
+  ];
+  let rest = Math.floor(n);
+  let out = '';
+  for (const [v, sym] of pairs) {
+    while (rest >= v) {
+      out += sym;
+      rest -= v;
+    }
+  }
+  return out;
+}
+
 export interface AppHeaderProps {
-  round: number;
   history: LogEntry[];
   showLog: boolean;
   onToggleLog: () => void;
@@ -35,8 +65,8 @@ export interface AppHeaderProps {
 
 export function AppHeader(props: AppHeaderProps) {
   const { t } = useTranslation('core', { useSuspense: false });
+  const { state } = useCombatState();
   const {
-    round,
     history,
     showLog,
     onToggleLog,
@@ -60,8 +90,68 @@ export function AppHeader(props: AppHeaderProps) {
     onSaveLegend,
   } = props;
 
-  const appAuthor = i18n.t('_meta.app_author', { ns: 'core', defaultValue: 'Nevrar' });
-  const appName = i18n.t('_meta.app_name_short', { ns: 'core', defaultValue: 'Omniboard' });
+  const core = state?.core;
+  const engineType = (core?.engine_type ?? 'standard').toLowerCase();
+  const isManualMode = core?.is_manual_mode ?? false;
+  const isCombatActive = core?.is_active ?? false;
+  const order = core?.turn_queue ?? [];
+  const orderLen = Math.max(order.length, 1);
+  const roundNumber = core?.round ?? 1;
+  const currentIndex = core?.current_index ?? 0;
+  const currentPass = core?.current_pass ?? 1;
+  const systemNorm = (core?.system ?? '').toLowerCase();
+
+  const actorsById = useMemo(() => {
+    const m = new Map<string, { has_acted?: boolean }>();
+    for (const a of core?.actors ?? []) {
+      m.set(a.id, { has_acted: a.has_acted });
+    }
+    return m;
+  }, [core?.actors]);
+
+  const useActedProgress = engineType === 'phase' || engineType === 'popcorn' || isManualMode;
+
+  const turnProgress = useMemo(() => {
+    if (!useActedProgress) {
+      return Math.min(Math.max(currentIndex, 0), orderLen);
+    }
+    let n = 0;
+    for (const id of order) {
+      if (actorsById.get(id)?.has_acted) n += 1;
+    }
+    return Math.min(n, orderLen);
+  }, [useActedProgress, currentIndex, order, orderLen, actorsById]);
+
+  const progressPct = Math.min(100, Math.max(0, (turnProgress / orderLen) * 100));
+  const turnDisplayNum = order.length ? Math.min(order.length, turnProgress + 1) : 1;
+  const phaseDigit = currentPass >= 1 ? currentPass : currentIndex + 1;
+
+  const phaseLabel = useMemo(() => {
+    if (engineType !== 'phase') return null;
+    const sotdl =
+      systemNorm.includes('shadow of the demon lord') ||
+      systemNorm.includes('sotdl') ||
+      systemNorm.includes('demon lord');
+    if (sotdl) {
+      if (currentPass === 1) return t('combat.phase.fast');
+      if (currentPass === 2) return t('combat.phase.slow');
+      return t('combat.phase_index', { n: currentPass });
+    }
+    if (systemNorm.includes('shadowrun')) {
+      const roman = toRomanNumeral(phaseDigit);
+      return roman || String(phaseDigit);
+    }
+    return t('combat.phase_index', { n: phaseDigit });
+  }, [engineType, systemNorm, currentPass, phaseDigit, t]);
+
+  const handleRoundClick = useCallback(() => {
+    onToggleLog();
+  }, [onToggleLog]);
+
+  const roundButtonAria = t('combat.round_open_log_aria', { round: roundNumber });
+
+  const appAuthor = i18n.t('_meta.app_author', { ns: 'core' });
+  const appName = i18n.t('_meta.app_name_short', { ns: 'core' });
 
   const [miniaturesDropdownOpen, setMiniaturesDropdownOpen] = useState(false);
   const miniaturesDropdownRef = useRef<HTMLDivElement>(null);
@@ -89,20 +179,57 @@ export function AppHeader(props: AppHeaderProps) {
           <span className="text-base italic text-zinc-400 font-normal">{appAuthor}'s</span>{' '}
           {appName}
         </h1>
-        <div className="relative inline-block">
-          <div
-            role="button"
-            tabIndex={0}
-            onClick={onToggleLog}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                onToggleLog();
-              }
-            }}
-            className="text-xs text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors"
-          >
-            {t('header.round')}: {round}
+        <div className="relative mt-1.5 inline-block">
+          <div className="flex items-center">
+            <button
+              type="button"
+              onClick={handleRoundClick}
+              title={t('combat.open_log_hint')}
+              aria-label={roundButtonAria}
+              className="relative z-10 flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-full border-4 border-zinc-950 bg-zinc-900 text-xl font-bold tabular-nums text-zinc-100 shadow-lg ring-4 ring-zinc-950 transition-colors hover:text-emerald-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900"
+            >
+              <motion.span
+                key={roundNumber}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                {roundNumber}
+              </motion.span>
+            </button>
+            <div className="relative z-0 ml-[-1.5rem] flex min-h-12 min-w-[7.5rem] items-center overflow-hidden rounded-r-md border border-zinc-700/50 border-l-0 bg-zinc-900/80 py-1 pl-8 pr-4 shadow-inner">
+              {isCombatActive ? (
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
+                  <span className="font-medium text-zinc-500">{t('combat.turn')}</span>
+                  <motion.span
+                    key={turnDisplayNum}
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="font-semibold tabular-nums text-zinc-200"
+                  >
+                    {turnDisplayNum}
+                  </motion.span>
+                  {phaseLabel != null ? (
+                    <motion.span
+                      key={phaseLabel}
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="font-medium text-emerald-400"
+                    >
+                      {phaseLabel}
+                    </motion.span>
+                  ) : null}
+                </div>
+              ) : null}
+              <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-[2px] bg-zinc-950/90">
+                <div
+                  className="h-full bg-emerald-500 transition-all duration-500 ease-out"
+                  style={{ width: `${progressPct}%` }}
+                />
+              </div>
+            </div>
           </div>
           <CombatLog
             history={history}
@@ -145,7 +272,7 @@ export function AppHeader(props: AppHeaderProps) {
               className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-zinc-200 hover:bg-zinc-700 hover:text-zinc-100 transition-colors"
             >
               <Lightbulb size={16} className="text-zinc-400 shrink-0" />
-              {t('miniature_layout.edit_led_profiles', { defaultValue: 'Edit LED profiles' })}
+              {t('header.edit_led_profiles')}
             </button>
             <button
               type="button"
@@ -153,7 +280,7 @@ export function AppHeader(props: AppHeaderProps) {
               className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-zinc-200 hover:bg-zinc-700 hover:text-zinc-100 transition-colors"
             >
               <Zap size={16} className="text-zinc-400 shrink-0" />
-              {t('led_triggers.configure_triggers', { defaultValue: 'Configure event triggers' })}
+              {t('header.configure_led_triggers')}
             </button>
             <button
               type="button"
@@ -169,7 +296,7 @@ export function AppHeader(props: AppHeaderProps) {
           <BookImage size={16} /> {t('header.library')}
         </button>
         <button onClick={onShowConfig} className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-md text-sm transition-colors">
-          <Settings size={16} /> {t('config')}
+          <Settings size={16} /> {t('header.config')}
         </button>
         <button
           onClick={onToggleLegendPanel}

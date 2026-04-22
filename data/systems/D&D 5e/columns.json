@@ -3,7 +3,7 @@
   "columns": [
     {
       "key": "hp",
-      "label": "ХП",
+      "label": "HP",
       "showInTable": true,
       "type": "number",
       "width": "80px",
@@ -11,33 +11,36 @@
       "show_in_mini_sheet": true,
       "is_advanced": false,
       "display_as_fraction": false,
-      "log_color": "#e70808"
+      "log_color": "#e70808",
+      "show_tooltip": false
     },
     {
       "key": "ac",
-      "label": "КД",
+      "label": "AC",
       "showInTable": true,
       "type": "number",
       "width": "80px",
       "log_changes": false,
       "show_in_mini_sheet": true,
       "is_advanced": false,
-      "display_as_fraction": false
+      "display_as_fraction": false,
+      "show_tooltip": false
     },
     {
       "key": "speed",
-      "label": "Скорость",
+      "label": "Speed",
       "showInTable": true,
       "type": "number",
       "width": "80px",
       "log_changes": false,
       "show_in_mini_sheet": false,
       "is_advanced": false,
-      "display_as_fraction": false
+      "display_as_fraction": false,
+      "show_tooltip": false
     },
     {
       "key": "mana",
-      "label": "Мана",
+      "label": "Mana",
       "showInTable": true,
       "log_changes": true,
       "log_color": "#08b0e7",
@@ -46,7 +49,8 @@
       "show_in_mini_sheet": false,
       "is_advanced": false,
       "max_key": "max_mana",
-      "display_as_fraction": false
+      "display_as_fraction": false,
+      "show_tooltip": false
     },
     {
       "key": "Ammo",
@@ -58,22 +62,24 @@
       "show_in_mini_sheet": false,
       "is_advanced": false,
       "display_as_fraction": false,
-      "log_color": "#ffbf00"
+      "log_color": "#ffbf00",
+      "show_tooltip": false
     },
     {
       "key": "max_mana",
-      "label": "Макс мана",
+      "label": "max_mana",
       "showInTable": false,
       "type": "number",
       "width": "80px",
       "log_changes": false,
       "show_in_mini_sheet": false,
       "is_advanced": false,
-      "display_as_fraction": false
+      "display_as_fraction": false,
+      "show_tooltip": false
     },
     {
       "key": "com1",
-      "label": "Действия",
+      "label": "com1",
       "showInTable": true,
       "type": "checkbox_group",
       "width": "80px",
@@ -99,7 +105,8 @@
           "color": "#a3a3a3"
         }
       ],
-      "display_style": "badge"
+      "display_style": "badge",
+      "show_tooltip": false
     },
     {
       "key": "bladpul",
@@ -154,18 +161,20 @@
           "color": "#ff0000"
         }
       ],
-      "display_as_fraction": false
+      "display_as_fraction": false,
+      "show_tooltip": false
     },
     {
       "key": "Note",
       "label": "Note",
       "showInTable": true,
       "type": "text",
-      "width": "80px",
+      "width": "15px",
       "log_changes": true,
       "show_in_mini_sheet": false,
       "is_advanced": false,
-      "display_as_fraction": false
+      "display_as_fraction": false,
+      "show_tooltip": true
     }
   ]
 }

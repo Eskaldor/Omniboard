@@ -7,7 +7,6 @@
     "app_author": "Nevrar"
   },
   "language": "Language",
-  "config": "Config",
   "errors": {
     "connection_failed": "Connection Error",
     "backend_offline_instructions": "Make sure the backend is running. Start the server with:\n1. pip install -r requirements.txt\n2. uvicorn backend.main:app --reload --host 0.0.0.0 --port 80\n3. npm install && npm run dev"
@@ -26,7 +25,9 @@
     "delete": "Delete",
     "edit": "Edit",
     "add": "Add",
-    "close": "Close"
+    "close": "Close",
+    "selected": "Selected",
+    "empty_dash": "—"
   },
   "header": {
     "miniatures": "Miniatures",
@@ -36,7 +37,10 @@
     "next_turn": "Next Turn",
     "combat_log": "Combat Log",
     "table_binding": "View settings",
-    "device_manager": "Device manager"
+    "device_manager": "Device manager",
+    "config": "Settings",
+    "edit_led_profiles": "Lighting profiles",
+    "configure_led_triggers": "Lighting triggers"
   },
   "toolbar": {
     "undo": "Undo",
@@ -60,7 +64,17 @@
     "round": "Round",
     "initiative": "Initiative",
     "next": "Next",
-    "previous": "Previous"
+    "previous": "Previous",
+    "open_log_hint": "Click to open combat log",
+    "turn": "Turn",
+    "turn_with_number": "Turn {{n}}",
+    "phase": {
+      "fast": "Fast round",
+      "slow": "Slow round"
+    },
+    "phase_index": "Phase {{n}}",
+    "round_open_log_aria": "Round {{round}}, open combat log",
+    "round_only_aria": "Round {{round}}"
   },
   "actors": {
     "name": "Name",
@@ -110,7 +124,73 @@
     "columns_save_network_error": "Could not save columns. Check your connection and the console.",
     "display_style": "Display style",
     "display_style_badge": "Badge (with text)",
-    "display_style_dot": "Dots only"
+    "display_style_dot": "Dots only",
+    "tab_system": "System",
+    "tab_columns": "Columns",
+    "tab_table": "Table",
+    "tab_language": "Language",
+    "column_mode": "Column mode",
+    "simple_mode": "Simple",
+    "expert_mode": "Expert",
+    "type": "Type",
+    "group": "Group",
+    "width": "Width",
+    "actions": "Actions",
+    "width_placeholder": "80px",
+    "type_number": "Number",
+    "type_text": "Text",
+    "type_string": "String",
+    "type_checkbox_group": "Checkbox group",
+    "show_as_tooltip": "Show as tooltip",
+    "show_as_tooltip_hint": "Hover shows full text; the cell is truncated.",
+    "reset_policy": "Reset policy",
+    "reset_turn_start": "Turn start",
+    "reset_round_start": "Round start",
+    "reset_manual": "Manual only",
+    "checkbox_items": "Indicators",
+    "item_id": "id",
+    "item_label": "Label",
+    "item_color": "Color",
+    "add_checkbox_item": "Add indicator",
+    "min_value": "Min",
+    "max_value": "Max",
+    "min_key_placeholder": "Key (e.g. min_hp)",
+    "static_limit": "Number",
+    "display_as_fraction": "Fraction (current / max)",
+    "show_in_mini_sheet": "Mini sheet",
+    "is_advanced": "Hidden from players",
+    "log_changes": "Log changes",
+    "log_color": "Log color",
+    "languages_unavailable": "Language list is unavailable.",
+    "sticky_first_column": "Sticky first column",
+    "sticky_last_column": "Sticky last column",
+    "show_group_colors": "Show group colors",
+    "show_faction_colors": "Show faction colors"
+  },
+  "text_editor": {
+    "title": "Edit text"
+  },
+  "config": {
+    "columns": {
+      "help": {
+        "path": "Data path on the actor object, e.g. stats.hp",
+        "type": "How to display the value: number, text, string, or checkbox group.",
+        "tooltip": "Keeps the cell compact; full text appears in a hover tooltip.",
+        "group": "Visual grouping: combines stats into blocks (e.g. \"Attributes\") in the table or mini sheet.",
+        "minMax": "Value bounds. Max is important for bars and fraction display.",
+        "fraction": "Show the stat as \"Current / Max\" (smart fraction).",
+        "advanced": "Hides the column from players; visible to the GM only.",
+        "log": "Automatically writes any changes to this stat into the combat log.",
+        "miniSheet": "Show this stat in the compact character sheet (DefaultSystemSheet)."
+      }
+    },
+    "table": {
+      "help": {
+        "stickyFirst": "Pins the first column (portrait / name) on the left when scrolling a wide table.",
+        "stickyLast": "Pins the last column on the right when scrolling horizontally.",
+        "factionColors": "Tints actor rows using faction colors (players, enemies, neutrals)."
+      }
+    }
   },
   "main": {
     "add_actor": "Add Actor",
@@ -128,6 +208,7 @@
     "no_actors_in_combat": "No actors in combat."
   },
   "modals": {
+    "config": "Settings",
     "miniature_layout_config": "Miniature Layout Config",
     "asset_library": "Asset Library",
     "actor_roster_title": "Compendium",
@@ -182,7 +263,34 @@
     "crop_cancel": "Cancel",
     "miniature_selection": "Physical Miniature",
     "no_miniatures_found": "No miniatures found",
-    "select_miniature": "Select miniature"
+    "select_miniature": "Select miniature",
+    "create_new_group": "Create New Group",
+    "create_group_color": "Color",
+    "group_name": "Group Name",
+    "group_name_placeholder": "e.g. Goblins",
+    "custom_color": "Custom color",
+    "create_group_action": "Create",
+    "default_new_group_name": "Group",
+    "role_character": "Character",
+    "role_enemy": "Enemy",
+    "role_ally": "Ally",
+    "role_neutral": "Neutral",
+    "no_group": "No Group",
+    "show_portrait_on_tracker": "Show Portrait on Tracker",
+    "pin_remember_actor": "Pin / Remember Actor",
+    "bind_miniature": "Bind Miniature (MAC/ID)",
+    "refresh_miniature_screen": "Update screen on miniature",
+    "group_options": "Group options",
+    "stats": "Stats",
+    "current": "Current",
+    "max": "Max",
+    "import_actor_invalid_json": "Invalid JSON file",
+    "preset_color_red": "Red",
+    "preset_color_blue": "Blue",
+    "preset_color_green": "Green",
+    "preset_color_yellow": "Yellow",
+    "preset_color_purple": "Purple",
+    "preset_color_gray": "Gray"
   },
   "combat_log": {
     "record_log": "Record Log",
@@ -242,6 +350,7 @@
     "save_layout": "Save Layout",
     "preview_172_320": "Preview (172×320)",
     "preview_no_actors": "Add actors to combat to preview.",
+    "preview_image_alt": "Miniature layout preview",
     "save_and_refresh_preview": "Save and Refresh Preview",
     "bar_forge": "Scale Configurator",
     "bar_forge_empty": "Create a style or select from the list",
@@ -264,6 +373,20 @@
     "border_radius": "Corner radius",
     "width": "Width (px)",
     "height": "Height (px)",
+    "fine_tuning": "Fine tuning",
+    "offset_x": "Offset X",
+    "offset_y": "Offset Y",
+    "font_family": "Font (file)",
+    "font_size": "Font size",
+    "font_as_profile": "Same as profile",
+    "rotation": "Rotation",
+    "rot_0": "0° (horizontal)",
+    "rot_90": "90° (bottom to top)",
+    "rot_270": "270° (top to bottom)",
+    "refresh_preview": "Refresh preview",
+    "save_profile": "Save profile",
+    "test_effects": "Effects",
+    "no_effects": "No effects",
     "new_style": "New style",
     "uploading": "Uploading...",
     "delete_texture": "Delete",
@@ -303,7 +426,8 @@
     "preview_role_note": "$ROLE_COLOR shows as red in preview.",
     "save_all": "Save all",
     "load_failed": "Failed to load LED profiles",
-    "save_failed": "Failed to save LED profiles"
+    "save_failed": "Failed to save LED profiles",
+    "color_token_placeholder": "#RRGGBB or $ROLE_COLOR"
   },
   "led_triggers": {
     "title": "LED triggers",

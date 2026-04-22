@@ -25,10 +25,11 @@ export function DefaultSystemSheet({
   onOpenPortraitPicker?: () => void;
 }) {
   const { t } = useTranslation('core', { useSuspense: false });
+  const emptyDash = t('common.empty_dash');
   const { state } = useCombatState();
   const { systemLayoutProfiles } = useCombat();
   const colName = (col: ColumnConfig) =>
-    i18n.t(`${col.key}.name`, { ns: `systems/${systemName}`, defaultValue: col.key });
+    i18n.t(`${col.key}.name`, { ns: `systems/${systemName}` }) || col.label || col.key;
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [expertMode, setExpertMode] = useState(false);
   const [devices, setDevices] = useState<Record<string, DeviceInfo>>({});
@@ -107,7 +108,7 @@ export function DefaultSystemSheet({
           });
         }
       } catch {
-        alert('Invalid JSON file');
+        alert(t('modals.import_actor_invalid_json'));
       }
     };
     reader.readAsText(file);
@@ -138,7 +139,7 @@ export function DefaultSystemSheet({
               !expertMode ? 'bg-emerald-600 text-white' : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
-            {t('modals.simple_mode', { defaultValue: 'Simple' })}
+            {t('config_modal.simple_mode')}
           </button>
           <button
             type="button"
@@ -147,7 +148,7 @@ export function DefaultSystemSheet({
               expertMode ? 'bg-emerald-600 text-white' : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
-            {t('modals.expert_mode', { defaultValue: 'Expert' })}
+            {t('config_modal.expert_mode')}
           </button>
         </div>
       </div>
@@ -177,7 +178,7 @@ export function DefaultSystemSheet({
                     />
                     <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity">
                       <span className="text-xs font-medium text-white px-2 py-1 rounded bg-zinc-800/90">
-                        {t('modals.edit', { defaultValue: 'Edit' })}
+                        {t('common.edit')}
                       </span>
                     </div>
                   </>
@@ -197,10 +198,10 @@ export function DefaultSystemSheet({
                   onChange={(e) => onUpdate?.(actor.id, 'role', e.target.value as Actor['role'])}
                   className="flex-1 min-w-0 bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
                 >
-                  <option value="character">{t('modals.role_character', { defaultValue: 'Character' })}</option>
-                  <option value="enemy">{t('modals.role_enemy', { defaultValue: 'Enemy' })}</option>
-                  <option value="ally">{t('modals.role_ally', { defaultValue: 'Ally' })}</option>
-                  <option value="neutral">{t('modals.role_neutral', { defaultValue: 'Neutral' })}</option>
+                  <option value="character">{t('modals.role_character')}</option>
+                  <option value="enemy">{t('modals.role_enemy')}</option>
+                  <option value="ally">{t('modals.role_ally')}</option>
+                  <option value="neutral">{t('modals.role_neutral')}</option>
                 </select>
               </div>
 
@@ -211,7 +212,7 @@ export function DefaultSystemSheet({
                   onChange={(e) => handleGroupChange(e.target.value)}
                   className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
                 >
-                  <option value="">{t('modals.no_group', { defaultValue: 'No Group' })}</option>
+                  <option value="">{t('modals.no_group')}</option>
                   {activeGroups.map((g) => (
                     <option key={g.id} value={g.id}>
                       {g.name || g.id}
@@ -221,13 +222,13 @@ export function DefaultSystemSheet({
               </div>
 
               <div>
-                <label className="block text-xs text-zinc-500 mb-1">{t('actor.layout_profile', { defaultValue: 'Display profile (ESP32)' })}</label>
+                <label className="block text-xs text-zinc-500 mb-1">{t('actor.layout_profile')}</label>
                 <select
                   value={actor.layout_profile_id ?? ''}
                   onChange={(e) => onUpdate?.(actor.id, 'layout_profile_id', e.target.value || null)}
                   className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
                 >
-                  <option value="">{t('actor.layout_profile_default', { defaultValue: 'Default' })}</option>
+                  <option value="">{t('actor.layout_profile_default')}</option>
                   {systemLayoutProfiles.map((p) => (
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
@@ -246,7 +247,7 @@ export function DefaultSystemSheet({
                   className="w-4 h-4 rounded border-zinc-600 bg-zinc-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0 focus:ring-2"
                 />
                 <span className="text-sm text-zinc-400">
-                  {t('modals.show_portrait_on_tracker', { defaultValue: 'Show Portrait on Tracker' })}
+                  {t('modals.show_portrait_on_tracker')}
                 </span>
               </label>
 
@@ -258,13 +259,13 @@ export function DefaultSystemSheet({
                   className="w-4 h-4 rounded border-zinc-600 bg-zinc-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0 focus:ring-2"
                 />
                 <span className="text-sm text-zinc-400">
-                  {t('modals.pin_remember_actor', { defaultValue: 'Pin / Remember Actor' })}
+                  {t('modals.pin_remember_actor')}
                 </span>
               </label>
 
               <div>
                 <label className="block text-xs text-zinc-500 mb-1">
-                  {t('modals.bind_miniature', { defaultValue: 'Bind Miniature (MAC/ID)' })}
+                  {t('modals.bind_miniature')}
                 </label>
                 <div className="flex gap-2">
                   <select
@@ -281,7 +282,7 @@ export function DefaultSystemSheet({
                     ) : (
                       (Object.entries(devices) as [string, DeviceInfo][]).map(([mac, info]) => (
                         <option key={mac} value={mac}>
-                          {info.name || mac} — {info.status === 'online' ? t('hardware.status_online', { defaultValue: 'Online' }) : t('hardware.status_offline', { defaultValue: 'Offline' })}
+                          {info.name || mac} — {info.status === 'online' ? t('hardware.status_online') : t('hardware.status_offline')}
                         </option>
                       ))
                     )}
@@ -294,7 +295,7 @@ export function DefaultSystemSheet({
                       fetch(`/api/render/${actor.id}?mac=${encodeURIComponent(mac)}`).catch(console.error);
                     }}
                     disabled={!actor.miniature_id}
-                    title={t('modals.refresh_miniature_screen', { defaultValue: 'Update screen on miniature' })}
+                    title={t('modals.refresh_miniature_screen')}
                     className="shrink-0 p-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     <RefreshCcw size={18} />
@@ -307,7 +308,7 @@ export function DefaultSystemSheet({
           {actor.group_id && (
             <div className="space-y-3">
               <h4 className="text-sm font-medium text-zinc-500 uppercase tracking-wider">
-                {t('modals.group_options', { defaultValue: 'Group options' })}
+                {t('modals.group_options')}
               </h4>
               <div className="flex flex-wrap gap-4">
                 <div className="min-w-[8rem]">
@@ -342,7 +343,7 @@ export function DefaultSystemSheet({
       {columns.length > 0 && (
         <div>
           <h4 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-3">
-            {t('modals.stats', { defaultValue: 'Stats' })}
+            {t('modals.stats')}
           </h4>
           <div className="grid grid-cols-2 gap-3">
             {columns.map((col) => {
@@ -368,7 +369,7 @@ export function DefaultSystemSheet({
                       />
                       <span className="text-zinc-500">/</span>
                       <span className="min-w-[2rem] text-sm text-zinc-400 tabular-nums">
-                        {maxVal != null ? String(maxVal) : '—'}
+                        {maxVal != null ? String(maxVal) : emptyDash}
                       </span>
                     </div>
                   </div>
@@ -382,7 +383,7 @@ export function DefaultSystemSheet({
                     <div className="flex items-center gap-2">
                       <div className="flex-1">
                         <span className="text-[10px] text-zinc-500 block mb-0.5">
-                          {t('modals.current', { defaultValue: 'Current' })}
+                          {t('modals.current')}
                         </span>
                         <InlineInput
                           type="number"
@@ -396,7 +397,7 @@ export function DefaultSystemSheet({
                       </div>
                       <div className="flex-1">
                         <span className="text-[10px] text-zinc-500 block mb-0.5">
-                          {t('modals.max', { defaultValue: 'Max' })}
+                          {t('modals.max')}
                         </span>
                         <InlineInput
                           type="number"

@@ -200,7 +200,7 @@ export function MiniaturesModal({
 
   const handleAddProfile = () => {
     const id = Date.now().toString();
-    const newProfile = defaultProfile(id, t('miniature_layout.new_profile', { defaultValue: 'New profile' }));
+    const newProfile = defaultProfile(id, t('miniature_layout.new_profile'));
     setLocalProfiles((prev) => [...prev, newProfile]);
     setSelectedProfileId(id);
   };
@@ -275,7 +275,7 @@ export function MiniaturesModal({
           </label>
         </div>
         {!isEnabled && (
-          <p className="text-xs text-zinc-500 italic">{t('miniature_layout.enable_hint', { defaultValue: 'Включите слот, чтобы настроить поле' })}</p>
+          <p className="text-xs text-zinc-500 italic">{t('miniature_layout.enable_hint')}</p>
         )}
 
         {isEnabled && slot && (
@@ -288,8 +288,8 @@ export function MiniaturesModal({
                   onChange={(e) => updateSlot(slotName, { value_path: e.target.value })}
                   className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
                 >
-                  <option value="name">{t('actors.name', { defaultValue: 'Имя' })}</option>
-                  <option value="initiative">{t('combat.initiative', { defaultValue: 'Инициатива' })}</option>
+                  <option value="name">{t('actors.name')}</option>
+                  <option value="initiative">{t('combat.initiative')}</option>
                   {columns.map((c) => (
                     <option key={c.key} value={c.key}>
                       {c.label}
@@ -320,7 +320,7 @@ export function MiniaturesModal({
                       onChange={(e) => updateSlot(slotName, { show_text: e.target.checked })}
                       className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500"
                     />
-                    <span className="text-xs text-zinc-400">{t('miniature_layout.show_text', { defaultValue: 'Показывать текст' })}</span>
+                    <span className="text-xs text-zinc-400">{t('miniature_layout.show_text')}</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -329,7 +329,7 @@ export function MiniaturesModal({
                       onChange={(e) => updateSlot(slotName, { show_label: e.target.checked })}
                       className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500"
                     />
-                    <span className="text-xs text-zinc-400">{t('miniature_layout.show_label', { defaultValue: 'Показывать ярлык (label)' })}</span>
+                    <span className="text-xs text-zinc-400">{t('miniature_layout.show_label')}</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -338,7 +338,7 @@ export function MiniaturesModal({
                       onChange={(e) => updateSlot(slotName, { show_max: e.target.checked })}
                       className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500"
                     />
-                    <span className="text-xs text-zinc-400">{t('miniature_layout.show_max', { defaultValue: 'Показывать максимум' })}</span>
+                    <span className="text-xs text-zinc-400">{t('miniature_layout.show_max')}</span>
                   </label>
                 </div>
                 <div className="flex gap-2">
@@ -365,11 +365,11 @@ export function MiniaturesModal({
             {isEnabled && slot && isExpertMode && (
               <div className="pt-3 mt-3 border-t border-zinc-800/50 space-y-3">
                 <div className="text-xs font-medium text-zinc-400 uppercase tracking-wider">
-                  {t('miniature_layout.fine_tuning', { defaultValue: 'Тонкая настройка' })}
+                  {t('miniature_layout.fine_tuning')}
                 </div>
                 <div className="grid grid-cols-4 gap-2">
                   <div>
-                    <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.offset_x', { defaultValue: 'Сдвиг X' })}</label>
+                    <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.offset_x')}</label>
                     <input
                       type="number"
                       value={slot.offset_x ?? 0}
@@ -378,7 +378,7 @@ export function MiniaturesModal({
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.offset_y', { defaultValue: 'Сдвиг Y' })}</label>
+                    <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.offset_y')}</label>
                     <input
                       type="number"
                       value={slot.offset_y ?? 0}
@@ -387,7 +387,7 @@ export function MiniaturesModal({
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.width', { defaultValue: 'Шир. (px)' })}</label>
+                    <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.width')}</label>
                     <input
                       type="number"
                       min={1}
@@ -398,7 +398,7 @@ export function MiniaturesModal({
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.height', { defaultValue: 'Высота (px)' })}</label>
+                    <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.height')}</label>
                     <input
                       type="number"
                       min={1}
@@ -411,13 +411,13 @@ export function MiniaturesModal({
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   <div>
-                    <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.font_family', { defaultValue: 'Шрифт (файл)' })}</label>
+                    <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.font_family')}</label>
                     <select
                       value={slot.font_id ?? ''}
                       onChange={(e) => updateSlot(slotName, { font_id: e.target.value || undefined })}
                       className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
                     >
-                      <option value="">{t('miniature_layout.font_as_profile', { defaultValue: 'Как в профиле' })}</option>
+                      <option value="">{t('miniature_layout.font_as_profile')}</option>
                       {availableFonts.map((font) => (
                         <option key={font} value={font}>
                           {font}
@@ -426,7 +426,7 @@ export function MiniaturesModal({
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.font_size', { defaultValue: 'Размер' })}</label>
+                    <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.font_size')}</label>
                     <input
                       type="number"
                       min={8}
@@ -441,22 +441,22 @@ export function MiniaturesModal({
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.rotation', { defaultValue: 'Поворот (Угол)' })}</label>
+                    <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.rotation')}</label>
                     <select
                       value={slot.rotation ?? 0}
                       onChange={(e) => updateSlot(slotName, { rotation: Number(e.target.value) })}
                       className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
                     >
-                      <option value={0}>{t('miniature_layout.rot_0', { defaultValue: '0° (Горизонтально)' })}</option>
-                      <option value={90}>{t('miniature_layout.rot_90', { defaultValue: '90° (Снизу вверх)' })}</option>
-                      <option value={270}>{t('miniature_layout.rot_270', { defaultValue: '270° (Сверху вниз)' })}</option>
+                      <option value={0}>{t('miniature_layout.rot_0')}</option>
+                      <option value={90}>{t('miniature_layout.rot_90')}</option>
+                      <option value={270}>{t('miniature_layout.rot_270')}</option>
                     </select>
                   </div>
                 </div>
                 {slot.type === 'bar' && (
                   <div className="flex flex-wrap items-center gap-2">
                     <div className="flex-1 min-w-[120px]">
-                      <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.bar_style_profile', { defaultValue: 'Стиль бара (профиль)' })}</label>
+                      <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.bar_style_profile')}</label>
                       <select
                         value={slot.theme_id ?? 'default'}
                         onChange={(e) => updateSlot(slotName, { theme_id: e.target.value || undefined })}
@@ -476,7 +476,7 @@ export function MiniaturesModal({
                         onClick={() => setIsBarForgeOpen(true)}
                         className="flex items-center gap-2 px-3 py-1.5 bg-zinc-700 hover:bg-zinc-600 text-zinc-300 rounded-lg text-sm transition-colors"
                       >
-                        <Settings size={14} /> {t('miniature_layout.bar_forge', { defaultValue: 'Конфигуратор шкал' })}
+                        <Settings size={14} /> {t('miniature_layout.bar_forge')}
                       </button>
                     </div>
                   </div>
@@ -494,8 +494,8 @@ export function MiniaturesModal({
     top2: t('miniature_layout.slot_top_right_2'),
     bottom1: t('miniature_layout.slot_bottom_left_1'),
     bottom2: t('miniature_layout.slot_bottom_right_2'),
-    left1: t('miniature_layout.slot_left_1', { defaultValue: 'Слева (верт.)' }),
-    right1: t('miniature_layout.slot_right_1', { defaultValue: 'Справа (верт.)' }),
+    left1: t('miniature_layout.slot_left_1'),
+    right1: t('miniature_layout.slot_right_1'),
   };
 
   return (
@@ -514,7 +514,7 @@ export function MiniaturesModal({
             {/* Левая колонка: список профилей */}
             <div className="flex flex-col gap-2">
               <div className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                {t('miniature_layout.profiles', { defaultValue: 'Профили' })}
+                {t('miniature_layout.profiles')}
               </div>
               <ul className="space-y-1">
                 {localProfiles.map((p) => (
@@ -538,7 +538,7 @@ export function MiniaturesModal({
                 onClick={handleAddProfile}
                 className="flex items-center justify-center gap-2 py-2 mt-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-sm transition-colors"
               >
-                <Plus size={16} /> {t('miniature_layout.add_profile', { defaultValue: 'Добавить профиль' })}
+                <Plus size={16} /> {t('miniature_layout.add_profile')}
               </button>
             </div>
 
@@ -548,7 +548,7 @@ export function MiniaturesModal({
                 <>
                   <div className="flex items-center justify-between bg-zinc-950 p-4 rounded-xl border border-zinc-800">
                     <span className="text-sm font-medium text-zinc-200">
-                      {t('miniature_layout.expert_mode', { defaultValue: 'Экспертный режим' })}
+                      {t('miniature_layout.expert_mode')}
                     </span>
                     <label className="relative inline-flex items-center cursor-pointer shrink-0">
                       <input
@@ -563,7 +563,7 @@ export function MiniaturesModal({
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.profile_name', { defaultValue: 'Название профиля' })}</label>
+                      <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.profile_name')}</label>
                       <input
                         type="text"
                         value={selectedProfile.name}
@@ -572,7 +572,7 @@ export function MiniaturesModal({
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.frame_asset', { defaultValue: 'Рамка (файл)' })}</label>
+                      <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.frame_asset')}</label>
                       <select
                         value={selectedProfile.frame_asset || 'default_frame.png'}
                         onChange={(e) => setSelectedProfile({ frame_asset: e.target.value })}
@@ -588,7 +588,7 @@ export function MiniaturesModal({
                     {isExpertMode && (
                       <>
                         <div>
-                          <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.font_family', { defaultValue: 'Шрифт (файл)' })}</label>
+                          <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.font_family')}</label>
                           <select
                             value={selectedProfile.font_id || 'default.ttf'}
                             onChange={(e) => setSelectedProfile({ font_id: e.target.value })}
@@ -602,7 +602,7 @@ export function MiniaturesModal({
                           </select>
                         </div>
                         <div>
-                          <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.font_size', { defaultValue: 'Размер шрифта' })}</label>
+                          <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.font_size')}</label>
                           <input
                             type="number"
                             min={8}
@@ -635,18 +635,16 @@ export function MiniaturesModal({
                   <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4 space-y-4">
                     <div>
                       <h4 className="font-medium text-zinc-200">
-                        {t('miniature_layout.default_led_section', { defaultValue: 'Default LED (Omnimini)' })}
+                        {t('miniature_layout.default_led_section')}
                       </h4>
                       <p className="text-xs text-zinc-500 mt-0.5">
-                        {t('miniature_layout.default_led_section_desc', {
-                          defaultValue: 'Applied when syncing LEDs for actors using this layout profile.',
-                        })}
+                        {t('miniature_layout.default_led_section_desc')}
                       </p>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs text-zinc-500 mb-1">
-                          {t('miniature_layout.led_effect_profile', { defaultValue: 'LED effect profile' })}
+                          {t('miniature_layout.led_effect_profile')}
                         </label>
                         <select
                           value={selectedProfile.led_profile_id ?? 'default_static'}
@@ -657,7 +655,7 @@ export function MiniaturesModal({
                             !availableLedProfiles.some((p) => p.id === selectedProfile.led_profile_id) && (
                               <option value={selectedProfile.led_profile_id}>
                                 {selectedProfile.led_profile_id}{' '}
-                                {t('miniature_layout.led_profile_custom_hint', { defaultValue: '(custom id)' })}
+                                {t('miniature_layout.led_profile_custom_hint')}
                               </option>
                             )) ||
                             null}
@@ -675,14 +673,14 @@ export function MiniaturesModal({
                       </div>
                       <div>
                         <span className="block text-xs text-zinc-500 mb-2">
-                          {t('miniature_layout.led_color_source', { defaultValue: 'LED color source' })}
+                          {t('miniature_layout.led_color_source')}
                         </span>
                         <div className="flex flex-col gap-2">
                           {(
                             [
-                              ['role', t('miniature_layout.led_source_role', { defaultValue: 'Role color' })],
-                              ['group', t('miniature_layout.led_source_group', { defaultValue: 'Group color' })],
-                              ['custom', t('miniature_layout.led_source_custom', { defaultValue: 'Custom color' })],
+                              ['role', t('miniature_layout.led_source_role')],
+                              ['group', t('miniature_layout.led_source_group')],
+                              ['custom', t('miniature_layout.led_source_custom')],
                             ] as const
                           ).map(([value, label]) => (
                             <label key={value} className="flex items-center gap-2 cursor-pointer text-sm text-zinc-300">
@@ -702,7 +700,7 @@ export function MiniaturesModal({
                     {(selectedProfile.led_color_source ?? 'role') === 'custom' && (
                       <div>
                         <label className="block text-xs text-zinc-500 mb-1">
-                          {t('miniature_layout.led_custom_color', { defaultValue: 'Custom color' })}
+                          {t('miniature_layout.led_custom_color')}
                         </label>
                         <div className="flex items-center gap-2">
                           <input
@@ -746,11 +744,11 @@ export function MiniaturesModal({
             {/* Правая колонка: предпросмотр */}
             <div className="lg:border-l border-zinc-800 lg:pl-6 space-y-2">
               <div className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                {t('miniature_layout.preview_172_320', { defaultValue: 'Предпросмотр (172×320)' })}
+                {t('miniature_layout.preview_172_320')}
               </div>
               {actors.length === 0 ? (
                 <p className="text-sm text-zinc-500 py-4">
-                  {t('miniature_layout.preview_no_actors', { defaultValue: 'Добавьте акторов в бой для предпросмотра' })}
+                  {t('miniature_layout.preview_no_actors')}
                 </p>
               ) : (
                 <>
@@ -768,7 +766,7 @@ export function MiniaturesModal({
                   <div className="w-[172px] h-[320px] bg-black border-2 border-gray-700 rounded-md overflow-hidden flex items-center justify-center relative mt-4">
                     <img
                       src={`/api/render/${previewActorId}?t=${previewKey}&profile_id=${encodeURIComponent(selectedProfileId)}${testEffects.length ? '&test_effects=' + encodeURIComponent(testEffects.join(',')) : ''}`}
-                      alt="Preview"
+                      alt={t('miniature_layout.preview_image_alt')}
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
@@ -777,7 +775,7 @@ export function MiniaturesModal({
                   </div>
                   <div className="mt-3">
                     <label className="block text-xs text-zinc-400 mb-1.5">
-                      {t('miniature_layout.test_effects', { defaultValue: 'Effects' })}
+                      {t('miniature_layout.test_effects')}
                     </label>
                     <div className="flex flex-wrap gap-2">
                       {availableEffects.map((eff) => (
@@ -799,7 +797,7 @@ export function MiniaturesModal({
                         </label>
                       ))}
                       {availableEffects.length === 0 && (
-                        <span className="text-xs text-zinc-500">{t('miniature_layout.no_effects', { defaultValue: 'Нет эффектов' })}</span>
+                        <span className="text-xs text-zinc-500">{t('miniature_layout.no_effects')}</span>
                       )}
                     </div>
                   </div>
@@ -810,7 +808,7 @@ export function MiniaturesModal({
                       disabled={isSaving}
                       className="w-full flex items-center justify-center gap-2 py-2 bg-zinc-700/50 text-zinc-300 hover:bg-zinc-600/50 disabled:opacity-50 rounded-lg text-sm transition-colors"
                     >
-                      <RefreshCw size={16} /> {t('miniature_layout.refresh_preview', { defaultValue: 'Обновить превью' })}
+                      <RefreshCw size={16} /> {t('miniature_layout.refresh_preview')}
                     </button>
                     <button
                       type="button"
@@ -818,7 +816,7 @@ export function MiniaturesModal({
                       disabled={isSaving}
                       className="w-full flex items-center justify-center gap-2 py-2 bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 disabled:opacity-50 rounded-lg text-sm transition-colors"
                     >
-                      <Save size={16} /> {t('miniature_layout.save_profile', { defaultValue: 'Сохранить профиль' })}
+                      <Save size={16} /> {t('miniature_layout.save_profile')}
                     </button>
                   </div>
                 </>

@@ -14,12 +14,12 @@ function columnStatId(col: ColumnConfig): string {
 
 function localizedStatName(systemName: string, col: ColumnConfig): string {
   const ns = `systems/${systemName}`;
-  return i18n.t(`${col.key}.name`, { ns, defaultValue: col.label || col.key });
+  return i18n.t(`${col.key}.name`, { ns }) || col.label || col.key;
 }
 
 function localizedStatNameById(systemName: string, statId: string): string {
   const ns = `systems/${systemName}`;
-  return i18n.t(`${statId}.name`, { ns, defaultValue: statId });
+  return i18n.t(`${statId}.name`, { ns }) || statId;
 }
 
 function newRuleId(): string {
@@ -99,11 +99,11 @@ export function LedTriggersModal({ isOpen, onClose }: { isOpen: boolean; onClose
         const trigData: unknown = await resTriggers.json();
         rawRules = Array.isArray(trigData) ? trigData : [];
       } else {
-        setError(t('led_triggers.load_failed', { defaultValue: 'Failed to load triggers' }));
+        setError(t('led_triggers.load_failed'));
       }
       setRules(rawRules.map((r) => normalizeLoadedRule(r, list)));
     } catch {
-      setError(t('led_triggers.load_failed', { defaultValue: 'Failed to load triggers' }));
+      setError(t('led_triggers.load_failed'));
       setProfiles([]);
       setRules([]);
     } finally {
@@ -161,7 +161,7 @@ export function LedTriggersModal({ isOpen, onClose }: { isOpen: boolean; onClose
       if (!res.ok) throw new Error(String(res.status));
       onClose();
     } catch {
-      setError(t('led_triggers.save_failed', { defaultValue: 'Failed to save triggers' }));
+      setError(t('led_triggers.save_failed'));
     } finally {
       setSaving(false);
     }
@@ -174,13 +174,13 @@ export function LedTriggersModal({ isOpen, onClose }: { isOpen: boolean; onClose
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-5xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
         <div className="p-4 border-b border-zinc-800 flex flex-wrap gap-2 justify-between items-center bg-zinc-900/50">
           <h3 className="text-lg font-medium text-zinc-100">
-            {t('led_triggers.title', { defaultValue: 'LED triggers' })}
+            {t('led_triggers.title')}
           </h3>
           <button
             type="button"
             onClick={onClose}
             className="text-zinc-400 hover:text-zinc-100 p-1"
-            aria-label={t('common.close', { defaultValue: 'Close' })}
+            aria-label={t('common.close')}
           >
             <X size={20} />
           </button>
@@ -188,7 +188,7 @@ export function LedTriggersModal({ isOpen, onClose }: { isOpen: boolean; onClose
 
         <div className="p-4 sm:p-6 overflow-y-auto flex-1 min-h-0 flex flex-col gap-4">
           {!system && (
-            <p className="text-sm text-zinc-500">{t('config_modal.no_systems_yet', { defaultValue: 'No system selected' })}</p>
+            <p className="text-sm text-zinc-500">{t('config_modal.no_systems_yet')}</p>
           )}
 
           {error && (
@@ -198,13 +198,13 @@ export function LedTriggersModal({ isOpen, onClose }: { isOpen: boolean; onClose
           {loading ? (
             <div className="flex items-center gap-2 text-sm text-zinc-400 py-6">
               <Loader2 className="animate-spin" size={18} />
-              {t('hardware.loading', { defaultValue: 'Loading…' })}
+              {t('hardware.loading')}
             </div>
           ) : (
             <>
               <div className="space-y-3">
                 {rules.length === 0 && (
-                  <p className="text-sm text-zinc-500">{t('led_triggers.no_rules', { defaultValue: 'No rules yet.' })}</p>
+                  <p className="text-sm text-zinc-500">{t('led_triggers.no_rules')}</p>
                 )}
                 {rules.map((rule) => (
                   <div
@@ -213,7 +213,7 @@ export function LedTriggersModal({ isOpen, onClose }: { isOpen: boolean; onClose
                   >
                     <div>
                       <label className="block text-xs text-zinc-500 mb-1">
-                        {t('led_triggers.event_type', { defaultValue: 'Event' })}
+                        {t('led_triggers.event_type')}
                       </label>
                       <select
                         value={rule.event_type}
@@ -224,13 +224,13 @@ export function LedTriggersModal({ isOpen, onClose }: { isOpen: boolean; onClose
                         }
                         className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
                       >
-                        <option value="turn_start">{t('led_triggers.event_turn_start', { defaultValue: 'Turn start' })}</option>
-                        <option value="stat_change">{t('led_triggers.event_stat_change', { defaultValue: 'Stat change' })}</option>
+                        <option value="turn_start">{t('led_triggers.event_turn_start')}</option>
+                        <option value="stat_change">{t('led_triggers.event_stat_change')}</option>
                       </select>
                     </div>
                     <div>
                       <label className="block text-xs text-zinc-500 mb-1">
-                        {t('led_triggers.stat_characteristic', { defaultValue: 'Characteristic' })}
+                        {t('led_triggers.stat_characteristic')}
                       </label>
                       {rule.event_type === 'stat_change' ? (
                         <select
@@ -242,7 +242,7 @@ export function LedTriggersModal({ isOpen, onClose }: { isOpen: boolean; onClose
                           }
                           className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
                         >
-                          <option value="">{t('modals.none', { defaultValue: '—' })}</option>
+                          <option value="">{t('common.empty_dash')}</option>
                           {rule.target_stat &&
                             !columns.some(
                               (col) => columnStatId(col) === (rule.target_stat || '').trim()
@@ -266,7 +266,7 @@ export function LedTriggersModal({ isOpen, onClose }: { isOpen: boolean; onClose
                     </div>
                     <div>
                       <label className="block text-xs text-zinc-500 mb-1">
-                        {t('led_triggers.led_profile', { defaultValue: 'LED profile' })}
+                        {t('led_triggers.led_profile')}
                       </label>
                       <select
                         value={rule.led_profile_id}
@@ -277,7 +277,7 @@ export function LedTriggersModal({ isOpen, onClose }: { isOpen: boolean; onClose
                           !profiles.some((p) => p.id === rule.led_profile_id) && (
                             <option value={rule.led_profile_id}>
                               {rule.led_profile_id}{' '}
-                              {t('miniature_layout.led_profile_custom_hint', { defaultValue: '(custom id)' })}
+                              {t('miniature_layout.led_profile_custom_hint')}
                             </option>
                           )}
                         {profiles.map((p) => (
@@ -290,7 +290,7 @@ export function LedTriggersModal({ isOpen, onClose }: { isOpen: boolean; onClose
                     </div>
                     <div>
                       <label className="block text-xs text-zinc-500 mb-1">
-                        {t('led_triggers.duration', { defaultValue: 'Duration' })}
+                        {t('led_triggers.duration')}
                       </label>
                       <select
                         value={rule.duration_type}
@@ -301,13 +301,13 @@ export function LedTriggersModal({ isOpen, onClose }: { isOpen: boolean; onClose
                         }
                         className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
                       >
-                        <option value="time">{t('led_triggers.duration_time', { defaultValue: 'Timed' })}</option>
-                        <option value="turn">{t('led_triggers.duration_turn', { defaultValue: 'Until end of turn' })}</option>
+                        <option value="time">{t('led_triggers.duration_time')}</option>
+                        <option value="turn">{t('led_triggers.duration_turn')}</option>
                       </select>
                     </div>
                     <div>
                       <label className="block text-xs text-zinc-500 mb-1">
-                        {t('led_triggers.duration_ms', { defaultValue: 'Duration (ms)' })}
+                        {t('led_triggers.duration_ms')}
                       </label>
                       <input
                         type="number"
@@ -325,7 +325,7 @@ export function LedTriggersModal({ isOpen, onClose }: { isOpen: boolean; onClose
                         type="button"
                         onClick={() => removeRule(rule.id)}
                         className="p-2 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-red-950/30 border border-transparent hover:border-red-900/40 transition-colors"
-                        aria-label={t('common.delete', { defaultValue: 'Delete' })}
+                        aria-label={t('common.delete')}
                       >
                         <Trash2 size={18} />
                       </button>
@@ -341,7 +341,7 @@ export function LedTriggersModal({ isOpen, onClose }: { isOpen: boolean; onClose
                 className="flex items-center justify-center gap-2 py-2 px-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-sm transition-colors disabled:opacity-40 w-full sm:w-auto"
               >
                 <Plus size={16} />
-                {t('led_triggers.add_trigger', { defaultValue: 'Add trigger' })}
+                {t('led_triggers.add_trigger')}
               </button>
             </>
           )}
@@ -353,7 +353,7 @@ export function LedTriggersModal({ isOpen, onClose }: { isOpen: boolean; onClose
             onClick={onClose}
             className="px-4 py-2 rounded-lg text-sm text-zinc-300 bg-zinc-800 hover:bg-zinc-700 transition-colors"
           >
-            {t('common.cancel', { defaultValue: 'Cancel' })}
+            {t('common.cancel')}
           </button>
           <button
             type="button"
@@ -362,7 +362,7 @@ export function LedTriggersModal({ isOpen, onClose }: { isOpen: boolean; onClose
             className="px-4 py-2 rounded-lg text-sm text-white bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 transition-colors flex items-center gap-2"
           >
             {saving && <Loader2 className="animate-spin" size={16} />}
-            {t('common.save', { defaultValue: 'Save' })}
+            {t('common.save')}
           </button>
         </div>
       </div>
