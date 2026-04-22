@@ -205,6 +205,8 @@ class DisplayState(BaseModel):
     show_group_colors: bool = True
     show_faction_colors: bool = True
     table_centered: bool = True
+    sticky_first_column: bool = True
+    sticky_last_column: bool = True
 
     @model_validator(mode="before")
     @classmethod
@@ -362,6 +364,8 @@ class CombatState(BaseModel):
     enable_logging: bool = True
     autosave_enabled: bool = True
     table_centered: bool = True
+    sticky_first_column: bool = True
+    sticky_last_column: bool = True
 
     @model_validator(mode="before")
     @classmethod

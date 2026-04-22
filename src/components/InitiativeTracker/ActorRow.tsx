@@ -1,10 +1,11 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Plus, Trash } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
 import type { Actor, ColumnConfig, Effect } from '../../types';
 import { getMaxKey, buildStatUpdate as buildStatUpdateUtil } from '../../utils/stats';
 import { InlineInput } from './InlineInput';
+import { TextEditorModal } from '../Modals/TextEditorModal';
 
 function readCheckboxGroupMap(
   stats: Actor['stats'] | undefined,
@@ -55,6 +56,7 @@ export const CheckboxGroupCell = React.memo(function CheckboxGroupCell({
   stats,
   onUpdate,
 }: CheckboxGroupCellProps) {
+  const { t } = useTranslation('core', { useSuspense: false });
   const items = column.items ?? [];
   const [overrides, setOverrides] = useState<Record<string, boolean>>({});
   const overrideClearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -146,7 +148,7 @@ export const CheckboxGroupCell = React.memo(function CheckboxGroupCell({
   );
 
   if (items.length === 0) {
-    return <span className="text-xs text-zinc-600">—</span>;
+    return <span className="text-xs text-zinc-600">{t('common.empty_dash')}</span>;
   }
 
   const inactiveTone = 'opacity-30 grayscale';
@@ -231,6 +233,8 @@ export interface ActorRowProps {
   onToggleGroupSelect: (selected: boolean) => void;
   /** When false, portrait column is hidden (cell not rendered). When true, portrait cell is shown only if actor.show_portrait. */
   showPortraitColumn: boolean;
+  stickyFirstColumn?: boolean;
+  stickyLastColumn?: boolean;
   /** Hide initiative column (e.g. Popcorn engine) */
   showInitColumn?: boolean;
   /** Manual / Popcorn / Phase: table uses has_acted for past-turn styling */
@@ -265,6 +269,8 @@ export const ActorRow = React.memo(function ActorRow({
   onAddEffectClick,
   onToggleGroupSelect,
   showPortraitColumn,
+  stickyFirstColumn = true,
+  stickyLastColumn = true,
   showInitColumn = true,
   clickToActEngine = false,
   rowClickEnabled = false,
@@ -273,8 +279,14 @@ export const ActorRow = React.memo(function ActorRow({
   onManualRowActivate,
 }: ActorRowProps) {
   const { t } = useTranslation('core', { useSuspense: false });
-  const colLabel = (col: ColumnConfig) =>
-    i18n.t(`${col.key}.name`, { ns: `systems/${systemName}`, defaultValue: col.label });
+  const emptyDash = t('common.empty_dash');
+
+  const colLabel = useCallback(
+    (col: ColumnConfig) =>
+      i18n.t(`${col.key}.name`, { ns: `systems/${systemName}` }) || col.label || col.key,
+    [systemName, i18n.language],
+  );
+
   const visible = columns.filter((c) => c.showInTable);
   const buildStatUpdate = (col: ColumnConfig, baseKey: string, newVal: number) =>
     buildStatUpdateUtil(actor, col, baseKey, newVal);
@@ -289,6 +301,50 @@ export const ActorRow = React.memo(function ActorRow({
   const manualRowActive = rowClickEnabled && isActiveCombat && !!onManualRowActivate;
   const hasActedDim = clickToActEngine && !!actor.has_acted;
 
+  const [textEditor, setTextEditor] = useState<{
+    isOpen: boolean;
+    columnKey: string;
+    title: string;
+    value: string;
+  } | null>(null);
+
+  const textEditorTitle = useMemo(
+    () =>
+      textEditor?.title ??
+      t('text_editor.title'),
+    [textEditor?.title, t],
+  );
+
+  const openTextEditor = useCallback(
+    (col: ColumnConfig, currentValue: string) => {
+      const title = `${colLabel(col)}`;
+      setTextEditor({
+        isOpen: true,
+        columnKey: col.key,
+        title,
+        value: currentValue,
+      });
+    },
+    [colLabel],
+  );
+
+  const closeTextEditor = useCallback(() => setTextEditor(null), []);
+
+  const renderHash = useMemo(() => {
+    const relevantData = {
+      stats: actor.stats ?? {},
+      effects: (actor.effects ?? []).map((e) => e.id),
+      layout: actor.layout_profile_id ?? null,
+      name: actor.name ?? '',
+    };
+    try {
+      return btoa(unescape(encodeURIComponent(JSON.stringify(relevantData)))).slice(0, 12);
+    } catch {
+      // Fallback when btoa fails (should be rare); still changes when name changes
+      return String(actor.name ?? '').slice(0, 12);
+    }
+  }, [actor.effects, actor.layout_profile_id, actor.name, actor.stats]);
+
   const handleRowClick = (e: React.MouseEvent<HTMLTableRowElement>) => {
     if (!manualRowActive) return;
     if (e.detail !== 1) return;
@@ -298,6 +354,7 @@ export const ActorRow = React.memo(function ActorRow({
   };
 
   return (
+    <>
     <tr
       onClick={handleRowClick}
       onDoubleClick={onRowDoubleClick}
@@ -315,7 +372,11 @@ export const ActorRow = React.memo(function ActorRow({
     >
       {/* Portrait: only render when column is shown and actor has show_portrait */}
       {showPortraitColumn && (
-        <td className="px-2 py-1 align-middle sticky left-0 z-10 bg-zinc-950 shadow-[8px_0_15px_-3px_rgba(0,0,0,0.5)] border-r border-zinc-800/50">
+        <td
+          className={`px-2 py-1 align-middle bg-zinc-950 border-r border-zinc-800/50 ${
+            stickyFirstColumn ? 'sticky left-0 z-10 shadow-[8px_0_15px_-3px_rgba(0,0,0,0.5)]' : ''
+          }`}
+        >
           {actor.show_portrait ? (
             <div className="relative w-[54px] h-[96px]">
               {actor.portrait || actor.miniature_id ? (
@@ -325,7 +386,7 @@ export const ActorRow = React.memo(function ActorRow({
                   }`}
                 >
                   <img
-                    src={actor.miniature_id ? `/api/render/${actor.id}?t=${Date.now()}` : actor.portrait!}
+                    src={actor.miniature_id ? `/api/render/${actor.id}?rev=${renderHash}` : actor.portrait!}
                     alt={actor.name}
                     className="w-full h-full object-cover"
                     referrerPolicy="no-referrer"
@@ -425,19 +486,22 @@ export const ActorRow = React.memo(function ActorRow({
           const rawVal = actor.stats?.[col.key];
           const strVal =
             typeof rawVal === 'object' && rawVal !== null ? '' : String(rawVal ?? '');
+          const showTooltip = col.show_tooltip === true;
           return (
-            <td key={col.key} className="px-2 py-1 text-center align-middle">
-              <div className="mx-auto w-full min-w-[120px] max-w-full" title={strVal}>
-                <InlineInput
-                  type="text"
-                  value={strVal}
-                  onChange={(val) =>
-                    onUpdate({
-                      stats: { ...(actor.stats ?? {}), [col.key]: val },
-                    })
-                  }
-                  className="w-full min-w-[120px] truncate bg-zinc-950 border border-zinc-700 rounded px-2 py-1 text-left text-xs text-zinc-200 focus:outline-none focus:border-emerald-500"
-                />
+            <td key={col.key} className="px-2 py-1 text-center align-middle w-[140px] max-w-[140px]">
+              <div
+                className="mx-auto w-full max-w-[140px] min-w-0"
+                title={showTooltip ? strVal : undefined}
+                onDoubleClick={(e) => {
+                  e.stopPropagation();
+                  openTextEditor(col, strVal);
+                }}
+              >
+                <div className="w-full bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-left text-xs text-zinc-200 cursor-text min-w-0">
+                  <div className="overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
+                    {strVal || emptyDash}
+                  </div>
+                </div>
               </div>
             </td>
           );
@@ -467,7 +531,7 @@ export const ActorRow = React.memo(function ActorRow({
                 />
                 <span className="text-xs text-zinc-500">/</span>
                 <span className="min-w-[1.5rem] text-xs text-zinc-400 tabular-nums">
-                  {maxVal != null ? String(maxVal) : '—'}
+                  {maxVal != null ? String(maxVal) : emptyDash}
                 </span>
               </div>
             </td>
@@ -520,23 +584,23 @@ export const ActorRow = React.memo(function ActorRow({
                   const rawVal = actor.stats?.[col.key];
                   const strVal =
                     typeof rawVal === 'object' && rawVal !== null ? '' : String(rawVal ?? '');
+                  const showTooltip = col.show_tooltip === true;
                   return (
                     <div
                       key={col.key}
-                      className="flex w-full min-w-[120px] max-w-full flex-col gap-0.5 text-xs text-zinc-200"
-                      title={strVal}
+                      className="flex w-full max-w-[140px] min-w-0 flex-col gap-0.5 text-xs text-zinc-200"
+                      title={showTooltip ? strVal : undefined}
+                      onDoubleClick={(e) => {
+                        e.stopPropagation();
+                        openTextEditor(col, strVal);
+                      }}
                     >
                       <span className="text-[10px] text-zinc-500">{colLabel(col)}:</span>
-                      <InlineInput
-                        type="text"
-                        value={strVal}
-                        onChange={(val) =>
-                          onUpdate({
-                            stats: { ...(actor.stats ?? {}), [col.key]: val },
-                          })
-                        }
-                        className="w-full min-w-[120px] truncate bg-zinc-950 border border-zinc-700 rounded px-1.5 py-0.5 text-left text-xs text-zinc-200 focus:outline-none focus:border-emerald-500"
-                      />
+                      <div className="w-full bg-zinc-950 border border-zinc-800 rounded px-1.5 py-0.5 text-left text-xs text-zinc-200 cursor-text min-w-0">
+                        <div className="overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
+                          {strVal || emptyDash}
+                        </div>
+                      </div>
                     </div>
                   );
                 }
@@ -569,7 +633,7 @@ export const ActorRow = React.memo(function ActorRow({
                         />
                         <span className="text-[10px] text-zinc-500">/</span>
                         <span className="min-w-[1.25rem] text-[10px] text-zinc-400 tabular-nums">
-                          {maxVal != null ? String(maxVal) : '—'}
+                          {maxVal != null ? String(maxVal) : emptyDash}
                         </span>
                       </div>
                     </div>
@@ -635,7 +699,11 @@ export const ActorRow = React.memo(function ActorRow({
       </td>
 
       {/* Delete */}
-      <td className="sticky right-0 z-10 bg-zinc-950 shadow-[-8px_0_15px_-3px_rgba(0,0,0,0.5)] border-l border-zinc-800/50 px-2 py-1 text-center align-middle">
+      <td
+        className={`bg-zinc-950 border-l border-zinc-800/50 px-2 py-1 text-center align-middle ${
+          stickyLastColumn ? 'sticky right-0 z-10 shadow-[-8px_0_15px_-3px_rgba(0,0,0,0.5)]' : ''
+        }`}
+      >
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -648,5 +716,21 @@ export const ActorRow = React.memo(function ActorRow({
         </button>
       </td>
     </tr>
+    <TextEditorModal
+      isOpen={textEditor?.isOpen === true}
+      title={textEditorTitle}
+      value={textEditor?.value ?? ''}
+      onCancel={closeTextEditor}
+      onSave={(nextValue) => {
+        const columnKey = textEditor?.columnKey;
+        if (!columnKey) return;
+        onUpdate({
+          stats: { ...(actor.stats ?? {}), [columnKey]: nextValue },
+        });
+        closeTextEditor();
+      }}
+    />
+    </>
   );
 });
+

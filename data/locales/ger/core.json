@@ -4,7 +4,6 @@
     "flag": "🇷🇺"
   },
   "language": "Язык",
-  "config": "Настройки",
   "start_combat": "Начать бой",
   "app": {
     "title": "Omniboard"
@@ -15,7 +14,9 @@
     "delete": "Удалить",
     "edit": "Изменить",
     "add": "Добавить",
-    "close": "Закрыть"
+    "close": "Закрыть",
+    "selected": "Ausgewählt",
+    "empty_dash": "—"
   },
   "header": {
     "miniatures": "Миниатюры",
@@ -25,7 +26,8 @@
     "next_turn": "След. ход",
     "combat_log": "Журнал боя",
     "table_binding": "Настройка вида",
-    "device_manager": "Диспетчер устройств"
+    "device_manager": "Диспетчер устройств",
+    "config": "Einstellungen"
   },
   "toolbar": {
     "undo": "Отмена",
@@ -46,7 +48,17 @@
     "round": "Раунд",
     "initiative": "Инициатива",
     "next": "Далее",
-    "previous": "Назад"
+    "previous": "Назад",
+    "open_log_hint": "Klicken, um das Kampftagebuch zu öffnen",
+    "turn": "Zug",
+    "turn_with_number": "Zug {{n}}",
+    "phase": {
+      "fast": "Schnelle Runde",
+      "slow": "Langsame Runde"
+    },
+    "phase_index": "Phase {{n}}",
+    "round_open_log_aria": "Runde {{round}}, Kampftagebuch öffnen",
+    "round_only_aria": "Runde {{round}}"
   },
   "actors": {
     "name": "Имя",
@@ -86,7 +98,73 @@
     "columns_save_network_error": "Spalten konnten nicht gespeichert werden. Verbindung und Konsole prüfen.",
     "display_style": "Darstellung",
     "display_style_badge": "Badge (mit Text)",
-    "display_style_dot": "Nur Punkte"
+    "display_style_dot": "Nur Punkte",
+    "tab_system": "System",
+    "tab_columns": "Spalten",
+    "tab_table": "Tabelle",
+    "tab_language": "Sprache",
+    "column_mode": "Spaltenmodus",
+    "simple_mode": "Einfach",
+    "expert_mode": "Experte",
+    "type": "Typ",
+    "group": "Gruppe",
+    "width": "Breite",
+    "actions": "Aktionen",
+    "width_placeholder": "80px",
+    "type_number": "Zahl",
+    "type_text": "Text",
+    "type_string": "Zeichenkette",
+    "type_checkbox_group": "Checkbox-Gruppe",
+    "show_as_tooltip": "Als Tooltip",
+    "show_as_tooltip_hint": "Beim Hover vollständiger Text; in der Zelle gekürzt.",
+    "reset_policy": "Zurücksetzen",
+    "reset_turn_start": "Zugbeginn",
+    "reset_round_start": "Rundenbeginn",
+    "reset_manual": "Nur manuell",
+    "checkbox_items": "Indikatoren",
+    "item_id": "id",
+    "item_label": "Beschriftung",
+    "item_color": "Farbe",
+    "add_checkbox_item": "Indikator hinzufügen",
+    "min_value": "Min",
+    "max_value": "Max",
+    "min_key_placeholder": "Schlüssel (z. B. min_hp)",
+    "static_limit": "Zahl",
+    "display_as_fraction": "Bruch (aktuell / max)",
+    "show_in_mini_sheet": "Mini-Bogen",
+    "is_advanced": "Vor Spielern verborgen",
+    "log_changes": "Änderungen loggen",
+    "log_color": "Logfarbe",
+    "languages_unavailable": "Sprachenliste nicht verfügbar.",
+    "sticky_first_column": "Erste Spalte fixieren",
+    "sticky_last_column": "Letzte Spalte fixieren",
+    "show_group_colors": "Gruppenfarben",
+    "show_faction_colors": "Fraktionsfarben"
+  },
+  "text_editor": {
+    "title": "Text bearbeiten"
+  },
+  "config": {
+    "columns": {
+      "help": {
+        "path": "Datenpfad am Akteur, z. B. stats.hp",
+        "type": "Darstellung: Zahl, Text, Zeichenkette oder Checkbox-Gruppe.",
+        "tooltip": "Zelle bleibt kompakt; voller Text im Hover-Tooltip.",
+        "group": "Visuelle Gruppierung: fasst Werte in Blöcken zusammen (z. B. „Attribute“).",
+        "minMax": "Grenzwerte. Max ist wichtig für Balken und Bruchdarstellung.",
+        "fraction": "Anzeige als „Aktuell / Max“ (Smart Fraction).",
+        "advanced": "Spalte vor Spielern verbergen; nur für die Spielleitung sichtbar.",
+        "log": "Schreibt Änderungen an diesem Wert automatisch ins Kampfprotokoll.",
+        "miniSheet": "Wert im kompakten Charakterbogen (DefaultSystemSheet) anzeigen."
+      }
+    },
+    "table": {
+      "help": {
+        "stickyFirst": "Fixiert die erste Spalte (Portrait / Name) links beim horizontalen Scrollen.",
+        "stickyLast": "Fixiert die letzte Spalte rechts beim horizontalen Scrollen.",
+        "factionColors": "Färbt Zeilen nach Fraktion (Spieler, Gegner, Neutral)."
+      }
+    }
   },
   "main": {
     "add_actor": "Добавить персонажа",
@@ -103,6 +181,7 @@
     "assign_to_group": "Назначить в группу"
   },
   "modals": {
+    "config": "Einstellungen",
     "miniature_layout_config": "Настройка раскладки миниатюр",
     "asset_library": "Библиотека ресурсов",
     "actor_roster_title": "Компендиум",
@@ -207,7 +286,26 @@
     "save_layout": "Сохранить раскладку",
     "preview_172_320": "Предпросмотр (172×320)",
     "preview_no_actors": "Добавьте акторов в бой для предпросмотра",
-    "save_and_refresh_preview": "Сохранить и Обновить Превью"
+    "save_and_refresh_preview": "Сохранить и Обновить Превью",
+    "led_profile_custom_hint": "(свой id)"
+  },
+  "led_triggers": {
+    "title": "Триггеры подсветки",
+    "add_trigger": "Добавить триггер",
+    "configure_triggers": "Триггеры подсветки",
+    "event_turn_start": "Начало хода",
+    "event_stat_change": "Изменение характеристики",
+    "event_type": "Событие",
+    "target_stat": "ID характеристики",
+    "stat_characteristic": "Характеристика",
+    "led_profile": "Профиль подсветки",
+    "duration": "Длительность",
+    "duration_time": "По таймеру",
+    "duration_turn": "До конца хода",
+    "duration_ms": "Время (мс)",
+    "load_failed": "Не удалось загрузить триггеры",
+    "save_failed": "Не удалось сохранить триггеры",
+    "no_rules": "Пока нет правил. Добавьте триггер ниже."
   },
   "library": {
     "tab_portraits": "Портреты",

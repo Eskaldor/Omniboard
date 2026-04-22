@@ -17,6 +17,8 @@ export interface InitiativeTableProps {
   groupSelectMode: boolean;
   selectedActorIds: Set<string>;
   tableCentered: boolean;
+  stickyFirstColumn: boolean;
+  stickyLastColumn: boolean;
   onUpdateActor: (id: string, updates: Partial<Actor>) => void;
   onDeleteActor: (id: string) => void;
   onPortraitClick: (actorId: string) => void;
@@ -43,6 +45,8 @@ export function InitiativeTable({
   groupSelectMode,
   selectedActorIds,
   tableCentered,
+  stickyFirstColumn,
+  stickyLastColumn,
   onUpdateActor,
   onDeleteActor,
   onPortraitClick,
@@ -137,7 +141,11 @@ export function InitiativeTable({
         <thead>
           <tr>
             {showPortraitColumn && (
-              <th className="px-2 py-1 align-middle w-[54px] sticky left-0 z-20 bg-zinc-950 shadow-[8px_0_15px_-3px_rgba(0,0,0,0.5)] border-r border-zinc-800/50" />
+              <th
+                className={`px-2 py-1 align-middle w-[54px] bg-zinc-950 border-r border-zinc-800/50 ${
+                  stickyFirstColumn ? 'sticky left-0 z-20 shadow-[8px_0_15px_-3px_rgba(0,0,0,0.5)]' : ''
+                }`}
+              />
             )}
             {showInitColumn && (
               <th className="px-2 py-1 text-center align-middle font-medium text-zinc-400 bg-zinc-900 w-[54px]">
@@ -174,7 +182,11 @@ export function InitiativeTable({
             {/* Effects */}
             <th className="px-2 py-1 text-left align-middle font-medium text-zinc-400 bg-zinc-900 max-w-[14rem] w-[14rem]">{t('table_header.effects')}</th>
             {/* Actions (delete) */}
-            <th className="sticky right-0 z-20 bg-zinc-950 shadow-[-8px_0_15px_-3px_rgba(0,0,0,0.5)] border-l border-zinc-800/50 p-2 align-middle" />
+            <th
+              className={`bg-zinc-950 border-l border-zinc-800/50 p-2 align-middle ${
+                stickyLastColumn ? 'sticky right-0 z-20 shadow-[-8px_0_15px_-3px_rgba(0,0,0,0.5)]' : ''
+              }`}
+            />
           </tr>
         </thead>
         <tbody>
@@ -222,6 +234,7 @@ export function InitiativeTable({
                 onAddEffectClick={() => onAddEffectClick(actor)}
                 onToggleGroupSelect={(selected) => onToggleGroupSelect(actor.id, selected)}
                 showPortraitColumn={showPortraitColumn}
+                stickyFirstColumn={stickyFirstColumn}
                 showInitColumn={showInitColumn}
                 clickToActEngine={clickToActEngine}
                 rowClickEnabled={rowClickEnabled}
@@ -240,6 +253,7 @@ export function InitiativeTable({
                       }
                     : undefined
                 }
+                stickyLastColumn={stickyLastColumn}
               />
             );
           })}

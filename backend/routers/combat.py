@@ -218,6 +218,10 @@ async def update_combat_settings(payload: dict):
         app_state.state.session.autosave_enabled = bool(payload["autosave_enabled"])
     if "table_centered" in payload:
         app_state.state.display.table_centered = bool(payload["table_centered"])
+    if "sticky_first_column" in payload:
+        app_state.state.display.sticky_first_column = bool(payload["sticky_first_column"])
+    if "sticky_last_column" in payload:
+        app_state.state.display.sticky_last_column = bool(payload["sticky_last_column"])
     if "selected_layout_id" in payload:
         sid = str(payload.get("selected_layout_id") or "").strip()
         if sid:
@@ -237,6 +241,8 @@ async def update_combat_settings(payload: dict):
         "enable_logging": app_state.state.session.enable_logging,
         "autosave_enabled": app_state.state.session.autosave_enabled,
         "table_centered": app_state.state.display.table_centered,
+        "sticky_first_column": app_state.state.display.sticky_first_column,
+        "sticky_last_column": app_state.state.display.sticky_last_column,
         "selected_layout_id": app_state.state.display.selected_layout_id,
         "is_manual_mode": app_state.state.core.is_manual_mode,
         "engine_type": app_state.state.core.engine_type,

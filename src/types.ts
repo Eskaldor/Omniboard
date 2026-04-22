@@ -190,6 +190,10 @@ export interface DisplayState {
   show_group_colors: boolean;
   show_faction_colors: boolean;
   table_centered: boolean;
+  /** Sticky first column in initiative table (UI). */
+  sticky_first_column?: boolean;
+  /** Sticky last column in initiative table (UI). */
+  sticky_last_column?: boolean;
 }
 
 /** Запись в глобальном списке Omnimini (data/miniatures.json). */
@@ -246,6 +250,8 @@ export interface ColumnConfig {
   maxKey?: string;
   /** Column data type; default "number" */
   type?: 'number' | 'text' | 'string' | 'checkbox_group';
+  /** For text/string columns: show full value on hover tooltip (default false). */
+  show_tooltip?: boolean;
   /** For `checkbox_group`: toggle buttons / indicators */
   items?: CheckboxGroupItem[];
   /** For `checkbox_group`: when the backend restores all items to `true` */
