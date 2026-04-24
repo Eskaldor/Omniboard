@@ -8,7 +8,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 from backend.models import Actor, LayoutProfile, DisplayField, BarProfileConfig, stat_cell_effective_scalar
-from backend.paths import ASSETS_DIR
+from backend.paths import ASSETS_DIR, RENDER_DIR
 from backend.render_utils import (
     get_font,
     draw_text_centered,
@@ -16,7 +16,6 @@ from backend.render_utils import (
     apply_rotated_element,
 )
 
-RENDER_DIR = "data/render"
 os.makedirs(RENDER_DIR, exist_ok=True)
 
 CANVAS_WIDTH = 172

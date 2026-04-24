@@ -93,6 +93,24 @@
     "matrix": "Матрица",
     "effects": "Эффекты"
   },
+  "stat_editor": {
+    "value_server": "Значение (сервер)",
+    "preview_base_overrides": "Предпросмотр (база + модификаторы)",
+    "base": "База",
+    "formula_id": "formula_id",
+    "formula_id_placeholder": "mechanics.json",
+    "overrides": "Модификаторы",
+    "overrides_none": "Нет",
+    "source_placeholder": "Источник",
+    "value_modifier_placeholder": "±",
+    "roll": "Бросок",
+    "rolling": "Бросок…",
+    "roll_failed": "Бросок не удался",
+    "roll_network_error": "Ошибка сети",
+    "roll_critical_glitch": "Критический глитч",
+    "roll_glitch": "Глитч",
+    "unknown_total": "?"
+  },
   "config_modal": {
     "table": "Таблица",
     "combat_system": "Боевая система",

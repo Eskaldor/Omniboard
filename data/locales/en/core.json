@@ -91,6 +91,24 @@
     "matrix": "Matrix",
     "effects": "Effects"
   },
+  "stat_editor": {
+    "value_server": "Value (server)",
+    "preview_base_overrides": "Preview (base + overrides)",
+    "base": "Base",
+    "formula_id": "formula_id",
+    "formula_id_placeholder": "mechanics.json",
+    "overrides": "Overrides",
+    "overrides_none": "None",
+    "source_placeholder": "Source",
+    "value_modifier_placeholder": "±",
+    "roll": "Roll",
+    "rolling": "Rolling…",
+    "roll_failed": "Roll failed",
+    "roll_network_error": "Network error",
+    "roll_critical_glitch": "Critical Glitch",
+    "roll_glitch": "Glitch",
+    "unknown_total": "?"
+  },
   "config_modal": {
     "table": "Table",
     "combat_system": "Combat system",

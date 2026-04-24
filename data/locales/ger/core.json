@@ -74,6 +74,24 @@
     "matrix": "Matrix",
     "effects": "Эффекты"
   },
+  "stat_editor": {
+    "value_server": "Wert (Server)",
+    "preview_base_overrides": "Vorschau (Basis + Modifikatoren)",
+    "base": "Basis",
+    "formula_id": "formula_id",
+    "formula_id_placeholder": "mechanics.json",
+    "overrides": "Modifikatoren",
+    "overrides_none": "Keine",
+    "source_placeholder": "Quelle",
+    "value_modifier_placeholder": "±",
+    "roll": "Wurf",
+    "rolling": "Würfeln…",
+    "roll_failed": "Wurf fehlgeschlagen",
+    "roll_network_error": "Netzwerkfehler",
+    "roll_critical_glitch": "Kritischer Glitch",
+    "roll_glitch": "Glitch",
+    "unknown_total": "?"
+  },
   "config_modal": {
     "table": "Таблица",
     "center_table": "Центрировать таблицу",

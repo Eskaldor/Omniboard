@@ -54,7 +54,7 @@ export interface CombatToolbarProps {
   onClearCombat: () => void;
   onUndo: () => void;
   onRedo: () => void;
-  /** Активный бой: сгенерировать предброски матрицы (POST /api/combat/matrix/generate). */
+  /** Active combat: generate matrix prerolls (POST /api/combat/matrix/generate). */
   onGenerateMatrix?: () => void | Promise<void>;
 }
 

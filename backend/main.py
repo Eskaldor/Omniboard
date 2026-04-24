@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from backend.paths import ensure_dirs
+from backend.paths import ASSETS_DIR, LOCALES_DIR, RENDER_DIR, ensure_dirs
 from backend.routers import actors, assets, combat, encounters, hardware, locales, logs, render, systems, ws
 
 
@@ -34,10 +34,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.mount("/assets", StaticFiles(directory="data/assets"), name="assets")
-app.mount("/render", StaticFiles(directory="data/render"), name="render")
-app.mount("/api/render/output", StaticFiles(directory="data/render"), name="render_output")
-app.mount("/locales", StaticFiles(directory="data/locales"), name="locales")
+app.mount("/assets", StaticFiles(directory=str(ASSETS_DIR)), name="assets")
+app.mount("/render", StaticFiles(directory=str(RENDER_DIR)), name="render")
+app.mount("/api/render/output", StaticFiles(directory=str(RENDER_DIR)), name="render_output")
+app.mount("/locales", StaticFiles(directory=str(LOCALES_DIR)), name="locales")
 
 app.include_router(ws.router)
 app.include_router(combat.router)

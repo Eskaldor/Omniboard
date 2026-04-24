@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import random
 import re
 from abc import ABC, abstractmethod
@@ -10,6 +11,10 @@ from pydantic import BaseModel
 from simpleeval import simple_eval
 
 from backend.models import Actor, stat_cell_effective_scalar
+
+_log = logging.getLogger("omniboard.dice")
+
+_MAX_SHADOWRUN_POOL = 200
 
 
 class RollResult(BaseModel):
@@ -55,9 +60,13 @@ class D20Engine(BaseDiceEngine):
         expr = expression.strip()
         if actor is not None:
             expr = self.interpolate_stats(expr, actor)
-        rolled = d20.roll(expr)
-        total = int(rolled.total)
-        details = str(rolled.result).strip()
+        try:
+            rolled = d20.roll(expr)
+            total = int(rolled.total)
+            details = str(rolled.result).strip()
+        except Exception as e:
+            _log.warning("d20.roll failed for expr %r: %s", expr, e)
+            return RollResult(total=0, formula=expr, details="(d20 error)")
         return RollResult(total=total, formula=expr, details=details)
 
 
@@ -72,6 +81,15 @@ class ShadowrunEngine(BaseDiceEngine):
             pool_size = int(simple_eval(expr, names={}))
         except Exception:
             pool_size = 0
+
+        if pool_size > _MAX_SHADOWRUN_POOL:
+            _log.warning(
+                "Shadowrun pool capped from %s to %s (expr=%r)",
+                pool_size,
+                _MAX_SHADOWRUN_POOL,
+                expr,
+            )
+            pool_size = _MAX_SHADOWRUN_POOL
 
         if pool_size < 1:
             return RollResult(
@@ -116,4 +134,21 @@ class DiceManager:
 
     def execute_roll(self, expression: str, system_name: str, actor: Actor) -> RollResult:
         engine = self.get_engine(system_name)
-        return engine.roll(expression, actor)
+        try:
+            return engine.roll(expression, actor)
+        except Exception as e:
+            _log.warning(
+                "execute_roll failed expr=%r system=%r actor=%s: %s",
+                expression,
+                system_name,
+                getattr(actor, "id", "?"),
+                e,
+            )
+            safe_expr = (expression or "").strip()
+            return RollResult(
+                total=0,
+                formula=safe_expr,
+                details="(roll error)",
+                is_glitch=False,
+                is_crit_glitch=False,
+            )

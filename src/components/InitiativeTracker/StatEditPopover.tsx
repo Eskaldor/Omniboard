@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Dices } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { Actor, ColumnConfig } from '../../types';
 import {
   buildQuickRollExpression,
@@ -44,6 +45,7 @@ function StatEditPanel({
   onSave,
   onRollComplete,
 }: StatEditPanelProps) {
+  const { t } = useTranslation('core', { useSuspense: false });
   const [base, setBase] = useState<number>(initialDraft.base);
   const [formulaId, setFormulaId] = useState(initialDraft.formula_id ?? '');
   const [overrides, setOverrides] = useState<StatOverrideDraft[]>(initialDraft.overrides);
@@ -113,22 +115,22 @@ function StatEditPanel({
             ? d
             : Array.isArray(d)
               ? d.map((x) => (typeof x === 'object' && x && 'msg' in x ? String((x as { msg: unknown }).msg) : String(x))).join('; ')
-              : 'Roll failed';
+              : t('stat_editor.roll_failed');
         setRollFlash(msg);
         return;
       }
-      const bits = [`${data.total ?? '?'}`];
+      const bits = [`${data.total ?? t('stat_editor.unknown_total')}`];
       if (data.details) bits.push(String(data.details));
-      if (data.is_crit_glitch === true) bits.push('Critical Glitch');
-      else if (data.is_glitch === true) bits.push('Glitch');
+      if (data.is_crit_glitch === true) bits.push(t('stat_editor.roll_critical_glitch'));
+      else if (data.is_glitch === true) bits.push(t('stat_editor.roll_glitch'));
       setRollFlash(bits.join(' — '));
       await onRollComplete?.();
     } catch {
-      setRollFlash('Network error');
+      setRollFlash(t('stat_editor.roll_network_error'));
     } finally {
       setRolling(false);
     }
-  }, [actorId, columnKey, onRollComplete, systemName]);
+  }, [actorId, columnKey, onRollComplete, systemName, t]);
 
   const pos = useMemo(() => {
     const w = 280;
@@ -138,7 +140,7 @@ function StatEditPanel({
 
   const panel = (
     <div
-      className="fixed inset-0 z-[100]"
+      className="fixed inset-0 z-[1000]"
       style={{ pointerEvents: 'auto' }}
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
@@ -146,7 +148,7 @@ function StatEditPanel({
     >
       <div
         ref={panelRef}
-        className="absolute z-[101] w-[280px] rounded-lg border border-zinc-600 bg-zinc-900 p-3 shadow-xl text-xs text-zinc-200"
+        className="absolute z-[1001] w-[280px] rounded-lg border border-zinc-600 bg-zinc-900 p-3 shadow-xl text-xs text-zinc-200"
         style={{ top: pos.top, left: pos.left }}
         onMouseDown={(e) => e.stopPropagation()}
       >
@@ -156,17 +158,17 @@ function StatEditPanel({
 
         <div className="space-y-2 mb-3">
           <div className="flex justify-between gap-2">
-            <span className="text-zinc-500 shrink-0">Value (server)</span>
+            <span className="text-zinc-500 shrink-0">{t('stat_editor.value_server')}</span>
             <span className="font-mono text-emerald-400 tabular-nums">{initialDraft.value}</span>
           </div>
           {previewApprox != null && (
             <div className="flex justify-between gap-2 text-[10px] text-zinc-500">
-              <span>Preview (base + overrides)</span>
+              <span>{t('stat_editor.preview_base_overrides')}</span>
               <span className="font-mono text-zinc-400">{previewApprox}</span>
             </div>
           )}
           <label className="block">
-            <span className="text-zinc-500">Base</span>
+            <span className="text-zinc-500">{t('stat_editor.base')}</span>
             <input
               type="number"
               className="mt-0.5 w-full rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-zinc-100"
@@ -175,21 +177,23 @@ function StatEditPanel({
             />
           </label>
           <label className="block">
-            <span className="text-zinc-500">formula_id</span>
+            <span className="text-zinc-500">{t('stat_editor.formula_id')}</span>
             <input
               type="text"
               className="mt-0.5 w-full rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-zinc-100"
               value={formulaId}
               onChange={(e) => setFormulaId(e.target.value)}
-              placeholder="mechanics.json"
+              placeholder={t('stat_editor.formula_id_placeholder')}
             />
           </label>
         </div>
 
         <div className="border-t border-zinc-800 pt-2 mb-2">
-          <div className="text-zinc-500 mb-1">Overrides</div>
+          <div className="text-zinc-500 mb-1">{t('stat_editor.overrides')}</div>
           <ul className="max-h-24 overflow-y-auto space-y-1 mb-2">
-            {overrides.length === 0 && <li className="text-zinc-600 italic">None</li>}
+            {overrides.length === 0 && (
+              <li className="text-zinc-600 italic">{t('stat_editor.overrides_none')}</li>
+            )}
             {overrides.map((o, i) => (
               <li key={`${o.source}-${i}`} className="flex items-center justify-between gap-1">
                 <span className="truncate text-zinc-300">{o.source}</span>
@@ -207,14 +211,14 @@ function StatEditPanel({
           <div className="flex gap-1">
             <input
               type="text"
-              placeholder="Source"
+              placeholder={t('stat_editor.source_placeholder')}
               className="flex-1 min-w-0 rounded border border-zinc-700 bg-zinc-950 px-1.5 py-1"
               value={newSource}
               onChange={(e) => setNewSource(e.target.value)}
             />
             <input
               type="number"
-              placeholder="±"
+              placeholder={t('stat_editor.value_modifier_placeholder')}
               className="w-14 rounded border border-zinc-700 bg-zinc-950 px-1.5 py-1"
               value={newValue}
               onChange={(e) => setNewValue(e.target.value)}
@@ -224,7 +228,7 @@ function StatEditPanel({
               className="rounded bg-zinc-700 px-2 py-1 hover:bg-zinc-600"
               onClick={addOverride}
             >
-              Add
+              {t('common.add')}
             </button>
           </div>
         </div>
@@ -243,17 +247,17 @@ function StatEditPanel({
             onClick={() => void handleRoll()}
           >
             <Dices size={14} />
-            {rolling ? '…' : 'Roll'}
+            {rolling ? t('stat_editor.rolling') : t('stat_editor.roll')}
           </button>
           <button
             type="button"
             className="ml-auto rounded bg-emerald-700 px-3 py-1.5 text-[11px] hover:bg-emerald-600"
             onClick={handleSave}
           >
-            Save
+            {t('common.save')}
           </button>
           <button type="button" className="rounded bg-zinc-700 px-2 py-1.5 text-[11px] hover:bg-zinc-600" onClick={onClose}>
-            Cancel
+            {t('common.cancel')}
           </button>
         </div>
       </div>

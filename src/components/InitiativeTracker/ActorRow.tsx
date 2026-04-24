@@ -11,12 +11,13 @@ import { TextEditorModal } from '../Modals/TextEditorModal';
 function matrixSlotSummary(
   rule: MatrixRuleGroup,
   slot: MatrixRuleGroup['slots'][number],
+  unknownTotal: string,
 ): string {
   const parts = (slot.results ?? []).map((r) =>
-    typeof r.total === 'number' && Number.isFinite(r.total) ? String(r.total) : '?',
+    typeof r.total === 'number' && Number.isFinite(r.total) ? String(r.total) : unknownTotal,
   );
   if (rule.display === 'pair') return parts.join(' | ');
-  return parts[0] ?? '?';
+  return parts[0] ?? unknownTotal;
 }
 
 function MatrixPrerollButtons({
@@ -28,9 +29,11 @@ function MatrixPrerollButtons({
   rules: MatrixRuleGroup[] | undefined;
   onUsed?: () => void | Promise<void>;
 }) {
+  const { t } = useTranslation('core', { useSuspense: false });
+  const unknownTotal = t('stat_editor.unknown_total');
   const list = rules ?? [];
   if (list.length === 0) {
-    return <span className="text-zinc-600 text-[11px]">—</span>;
+    return <span className="text-zinc-600 text-[11px]">{t('common.empty_dash')}</span>;
   }
   return (
     <div className="flex flex-col gap-1.5 min-w-0 max-w-[11rem]">
@@ -41,7 +44,7 @@ function MatrixPrerollButtons({
           </span>
           <div className="flex flex-wrap gap-0.5">
             {(rule.slots ?? []).map((slot) => {
-              const label = matrixSlotSummary(rule, slot);
+              const label = matrixSlotSummary(rule, slot, unknownTotal);
               const tip = (slot.results ?? [])
                 .map((r) => `${r.formula} → ${r.total}: ${r.details}`)
                 .join('; ');
@@ -324,7 +327,7 @@ export interface ActorRowProps {
   phaseRowInactive?: boolean;
   isActiveCombat?: boolean;
   onManualRowActivate?: () => void | Promise<void>;
-  /** После броска кубов из редактора стата — обновить состояние с сервера (лог + акторы). */
+  /** After a roll from the stat editor, refetch server state (log + actors). */
   onCombatRefetch?: () => void | Promise<void>;
   showMatrixColumn?: boolean;
   matrixRules?: MatrixRuleGroup[];

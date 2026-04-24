@@ -43,7 +43,7 @@ export function ConfigModal({
   onClose,
 }: {
   columns: ColumnConfig[];
-  setColumns: (c: ColumnConfig[]) => void;
+  setColumns: React.Dispatch<React.SetStateAction<ColumnConfig[]>>;
   systemName: string;
   onClose: () => void;
 }) {

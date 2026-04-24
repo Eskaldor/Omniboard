@@ -158,6 +158,8 @@ def stat_cell_effective_scalar(val: Any) -> Any:
 # Числовые статы — StatValue; текст колонок — str; checkbox_group — вложенный dict.
 ActorStatCell = Union[StatValue, str, Dict[str, Any]]
 
+_STAT_VALUE_ALLOWED = frozenset({"base", "value", "formula_id", "overrides"})
+
 
 def _actor_stats_migrate_before(raw: Any) -> Dict[str, Any]:
     """Превращает legacy-плоские числа в dict для StatValue; остальное не трогаем."""
@@ -169,6 +171,24 @@ def _actor_stats_migrate_before(raw: Any) -> Dict[str, Any]:
             out[key] = {"base": int(val), "value": int(val)}
         elif isinstance(val, (int, float)):
             out[key] = {"base": val, "value": val}
+        elif val is None:
+            out[key] = {"base": 0, "value": 0}
+        elif isinstance(val, list):
+            # Невалидный для StatValue тип — не роняем парсинг сессии
+            out[key] = {"base": 0, "value": 0}
+        elif isinstance(val, dict):
+            vkeys = set(val.keys())
+            if vkeys <= _STAT_VALUE_ALLOWED:
+                out[key] = val
+            elif vkeys & _STAT_VALUE_ALLOWED:
+                cleaned = {k: val[k] for k in _STAT_VALUE_ALLOWED if k in val}
+                if "base" in cleaned and "value" not in cleaned:
+                    cleaned["value"] = cleaned["base"]
+                elif "value" in cleaned and "base" not in cleaned:
+                    cleaned["base"] = cleaned["value"]
+                out[key] = cleaned
+            else:
+                out[key] = val
         else:
             out[key] = val
     return out
