@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict, Field, model_validator
-from typing import Any, ClassVar, Dict, List, Literal, Optional
+from typing import Any, ClassVar, Dict, List, Literal, Optional, Union
 
 class LedProfile(BaseModel):
     id: str
@@ -123,6 +123,57 @@ class ColumnDef(BaseModel):
     display_as_fraction: bool = False  # If true, render as "Value / Max" in table
 
 
+class StatOverride(BaseModel):
+    """Временный бафф/дебафф к характеристике (источник + величина)."""
+
+    source: str
+    value: Union[int, float]
+
+
+class StatValue(BaseModel):
+    """Значение характеристики: база, формула, модификаторы, итог."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    base: Union[int, float] = 0
+    formula_id: Optional[str] = None
+    overrides: List[StatOverride] = Field(default_factory=list)
+    value: Union[int, float] = 0
+
+
+def stat_cell_effective_scalar(val: Any) -> Any:
+    """Итоговое скалярное значение для StatValue; иначе исходный объект (dict/str и т.д.)."""
+    if isinstance(val, StatValue):
+        return val.value
+    if isinstance(val, dict):
+        keys = set(val.keys())
+        if keys <= {"base", "value", "formula_id", "overrides"}:
+            if "value" in val:
+                return val.get("value")
+            if "base" in val:
+                return val.get("base")
+    return val
+
+
+# Числовые статы — StatValue; текст колонок — str; checkbox_group — вложенный dict.
+ActorStatCell = Union[StatValue, str, Dict[str, Any]]
+
+
+def _actor_stats_migrate_before(raw: Any) -> Dict[str, Any]:
+    """Превращает legacy-плоские числа в dict для StatValue; остальное не трогаем."""
+    if not isinstance(raw, dict):
+        return {}
+    out: Dict[str, Any] = {}
+    for key, val in raw.items():
+        if isinstance(val, bool):
+            out[key] = {"base": int(val), "value": int(val)}
+        elif isinstance(val, (int, float)):
+            out[key] = {"base": val, "value": val}
+        else:
+            out[key] = val
+    return out
+
+
 class Actor(BaseModel):
     id: str
     name: str
@@ -139,10 +190,22 @@ class Actor(BaseModel):
     show_portrait: bool = False
     miniature_id: Optional[str] = None
     layout_profile_id: Optional[str] = None  # Привязка к профилю отображения
-    stats: Dict[str, Any] = {}
+    stats: Dict[str, ActorStatCell] = Field(default_factory=dict)
     effects: List[Effect] = []
     visibility: Visibility = Visibility()
     hotbar: List[HotbarAction] = []
+
+    @model_validator(mode="before")
+    @classmethod
+    def migrate_legacy_flat_stats(cls, data: Any) -> Any:
+        """Legacy stats ``{\"hp\": 10}`` -> ``StatValue(base=10, value=10)`` per key."""
+        if not isinstance(data, dict):
+            return data
+        if "stats" not in data:
+            return data
+        merged = dict(data)
+        merged["stats"] = _actor_stats_migrate_before(merged.get("stats"))
+        return merged
 
 
 class LegendConfig(BaseModel):
@@ -234,6 +297,10 @@ class SessionMeta(BaseModel):
     autosave_enabled: bool = True
     history_stack: List[Dict[str, Any]] = Field(default_factory=list)
     history_index: int = -1
+    prerolls: Dict[str, List[Dict[str, Any]]] = Field(
+        default_factory=dict,
+        description="Пред-броски (Матрица Судеб): actor_id -> сырые результаты (движок позже).",
+    )
 
 
 class CombatSession(BaseModel):
@@ -280,6 +347,7 @@ class CombatSession(BaseModel):
             "autosave_enabled",
             "history_stack",
             "history_index",
+            "prerolls",
         }
     )
 
@@ -453,6 +521,7 @@ def combat_session_merged_with_combat_state(
             autosave_enabled=cs.autosave_enabled,
             history_stack=stack,
             history_index=idx,
+            prerolls=dict(session.session.prerolls),
         ),
     )
 

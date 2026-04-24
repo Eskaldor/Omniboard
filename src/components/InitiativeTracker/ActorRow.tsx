@@ -3,7 +3,12 @@ import { Plus, Trash } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
 import type { Actor, ColumnConfig, Effect } from '../../types';
-import { getMaxKey, buildStatUpdate as buildStatUpdateUtil } from '../../utils/stats';
+import {
+  getMaxKey,
+  buildStatUpdate as buildStatUpdateUtil,
+  getStatNumeric,
+  isStatValuePayload,
+} from '../../utils/stats';
 import { InlineInput } from './InlineInput';
 import { TextEditorModal } from '../Modals/TextEditorModal';
 
@@ -12,7 +17,12 @@ function readCheckboxGroupMap(
   columnKey: string,
 ): Record<string, unknown> {
   const raw = stats?.[columnKey];
-  if (raw !== null && typeof raw === 'object' && !Array.isArray(raw)) {
+  if (
+    raw !== null &&
+    typeof raw === 'object' &&
+    !Array.isArray(raw) &&
+    !isStatValuePayload(raw)
+  ) {
     return raw as Record<string, unknown>;
   }
   return {};
@@ -484,8 +494,11 @@ export const ActorRow = React.memo(function ActorRow({
 
         if (col.type === 'text' || col.type === 'string') {
           const rawVal = actor.stats?.[col.key];
-          const strVal =
-            typeof rawVal === 'object' && rawVal !== null ? '' : String(rawVal ?? '');
+          const strVal = isStatValuePayload(rawVal)
+            ? String(getStatNumeric(rawVal))
+            : typeof rawVal === 'object' && rawVal !== null
+              ? ''
+              : String(rawVal ?? '');
           const showTooltip = col.show_tooltip === true;
           return (
             <td key={col.key} className="px-2 py-1 text-center align-middle w-[140px] max-w-[140px]">
@@ -512,26 +525,27 @@ export const ActorRow = React.memo(function ActorRow({
         const showAsFraction = (col.display_as_fraction ?? false) && hasMaxKey;
 
         if (showAsFraction) {
-          const maxVal = actor.stats?.[maxKey!];
+          const maxRaw = actor.stats?.[maxKey!];
+          const maxVal = getStatNumeric(maxRaw, NaN);
           return (
             <td key={col.key} className="px-2 py-1 text-center align-middle">
               <div className="min-w-[5rem] w-20 mx-auto flex items-center justify-center gap-1 whitespace-nowrap">
                 <InlineInput
                   type="number"
-                  value={actor.stats?.[col.key] ?? 0}
+                  value={getStatNumeric(actor.stats?.[col.key], 0)}
                   onChange={(val) =>
                     onUpdate({
                       stats: buildStatUpdate(col, col.key, parseInt(val)),
                     })
                   }
                   maxValue={
-                    typeof maxVal === 'number' ? maxVal : (col.max_value ?? undefined)
+                    Number.isFinite(maxVal) ? maxVal : (col.max_value ?? undefined)
                   }
                   className="w-10 bg-zinc-950 border border-zinc-700 rounded px-1.5 py-0.5 text-xs text-zinc-200 focus:outline-none focus:border-emerald-500"
                 />
                 <span className="text-xs text-zinc-500">/</span>
                 <span className="min-w-[1.5rem] text-xs text-zinc-400 tabular-nums">
-                  {maxVal != null ? String(maxVal) : emptyDash}
+                  {maxRaw != null && Number.isFinite(maxVal) ? String(maxVal) : emptyDash}
                 </span>
               </div>
             </td>
@@ -543,15 +557,15 @@ export const ActorRow = React.memo(function ActorRow({
             <div className="min-w-[5rem] w-20 mx-auto flex items-center justify-center gap-1">
               <InlineInput
                 type="number"
-                value={actor.stats?.[col.key] ?? 0}
+                value={getStatNumeric(actor.stats?.[col.key], 0)}
                 onChange={(val) =>
                   onUpdate({
                     stats: buildStatUpdate(col, col.key, parseInt(val)),
                   })
                 }
                 maxValue={
-                  maxKey && typeof actor.stats?.[maxKey] === 'number'
-                    ? (actor.stats?.[maxKey] as number)
+                  maxKey != null && Number.isFinite(getStatNumeric(actor.stats?.[maxKey], NaN))
+                    ? getStatNumeric(actor.stats?.[maxKey], 0)
                     : col.max_value
                 }
                 className="w-16 bg-zinc-950 border border-zinc-700 rounded px-2 py-1 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
@@ -582,8 +596,11 @@ export const ActorRow = React.memo(function ActorRow({
 
                 if (col.type === 'text' || col.type === 'string') {
                   const rawVal = actor.stats?.[col.key];
-                  const strVal =
-                    typeof rawVal === 'object' && rawVal !== null ? '' : String(rawVal ?? '');
+                  const strVal = isStatValuePayload(rawVal)
+                    ? String(getStatNumeric(rawVal))
+                    : typeof rawVal === 'object' && rawVal !== null
+                      ? ''
+                      : String(rawVal ?? '');
                   const showTooltip = col.show_tooltip === true;
                   return (
                     <div
@@ -610,7 +627,8 @@ export const ActorRow = React.memo(function ActorRow({
                 const showAsFraction = (col.display_as_fraction ?? false) && hasMaxKey;
 
                 if (showAsFraction) {
-                  const maxVal = actor.stats?.[maxKey!];
+                  const maxRaw = actor.stats?.[maxKey!];
+                  const maxVal = getStatNumeric(maxRaw, NaN);
                   return (
                     <div
                       key={col.key}
@@ -620,20 +638,20 @@ export const ActorRow = React.memo(function ActorRow({
                       <div className="flex items-center justify-center gap-1 whitespace-nowrap">
                         <InlineInput
                           type="number"
-                          value={actor.stats?.[col.key] ?? 0}
+                          value={getStatNumeric(actor.stats?.[col.key], 0)}
                           onChange={(val) =>
                             onUpdate({
                               stats: buildStatUpdate(col, col.key, parseInt(val)),
                             })
                           }
                           maxValue={
-                            typeof maxVal === 'number' ? maxVal : (col.max_value ?? undefined)
+                            Number.isFinite(maxVal) ? maxVal : (col.max_value ?? undefined)
                           }
                           className="w-8 bg-zinc-950 border border-zinc-700 rounded px-1 py-0.5 text-xs text-zinc-200 focus:outline-none focus:border-emerald-500"
                         />
                         <span className="text-[10px] text-zinc-500">/</span>
                         <span className="min-w-[1.25rem] text-[10px] text-zinc-400 tabular-nums">
-                          {maxVal != null ? String(maxVal) : emptyDash}
+                          {maxRaw != null && Number.isFinite(maxVal) ? String(maxVal) : emptyDash}
                         </span>
                       </div>
                     </div>
@@ -648,15 +666,15 @@ export const ActorRow = React.memo(function ActorRow({
                     <span className="text-[10px] text-zinc-500">{colLabel(col)}:</span>
                     <InlineInput
                       type="number"
-                      value={actor.stats?.[col.key] ?? 0}
+                      value={getStatNumeric(actor.stats?.[col.key], 0)}
                       onChange={(val) =>
                         onUpdate({
                           stats: buildStatUpdate(col, col.key, parseInt(val)),
                         })
                       }
                       maxValue={
-                        maxKey != null && typeof actor.stats?.[maxKey] === 'number'
-                          ? (actor.stats?.[maxKey] as number)
+                        maxKey != null && Number.isFinite(getStatNumeric(actor.stats?.[maxKey], NaN))
+                          ? getStatNumeric(actor.stats?.[maxKey], 0)
                           : col.max_value
                       }
                       className="w-10 bg-zinc-950 border border-zinc-700 rounded px-1.5 py-0.5 text-xs text-zinc-200 focus:outline-none focus:border-emerald-500"

@@ -5,7 +5,7 @@ import { useCombat } from '../../contexts/CombatContext';
 import { useCombatState } from '../../contexts/CombatStateContext';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
-import { getMaxKey, buildStatUpdate } from '../../utils/stats';
+import { getMaxKey, buildStatUpdate, getStatNumeric } from '../../utils/stats';
 import { InlineInput } from '../InitiativeTracker/InlineInput';
 
 type DeviceInfo = { name?: string; ip?: string; status?: string };
@@ -350,8 +350,9 @@ export function DefaultSystemSheet({
               const maxKey = getMaxKey(col);
               const hasMaxKey = !!maxKey;
               const showAsFraction = (col.display_as_fraction ?? false) && hasMaxKey;
-              const baseVal = actor.stats[col.key] ?? 0;
-              const maxVal = maxKey != null ? actor.stats[maxKey] : undefined;
+              const baseVal = getStatNumeric(actor.stats[col.key], 0);
+              const maxRaw = maxKey != null ? actor.stats[maxKey] : undefined;
+              const maxVal = maxKey != null ? getStatNumeric(maxRaw, NaN) : NaN;
 
               if (showAsFraction) {
                 return (
@@ -364,12 +365,12 @@ export function DefaultSystemSheet({
                         onChange={(val) =>
                           onUpdate?.(actor.id, 'stats', buildStatUpdate(actor, col, col.key, parseInt(val) || 0) as Record<string, unknown>)
                         }
-                        maxValue={typeof maxVal === 'number' ? maxVal : (col.max_value ?? undefined)}
+                        maxValue={Number.isFinite(maxVal) ? maxVal : (col.max_value ?? undefined)}
                         className="w-14 bg-zinc-900 border border-zinc-700 rounded px-2 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
                       />
                       <span className="text-zinc-500">/</span>
                       <span className="min-w-[2rem] text-sm text-zinc-400 tabular-nums">
-                        {maxVal != null ? String(maxVal) : emptyDash}
+                        {maxRaw != null && Number.isFinite(maxVal) ? String(maxVal) : emptyDash}
                       </span>
                     </div>
                   </div>
@@ -391,7 +392,7 @@ export function DefaultSystemSheet({
                           onChange={(val) =>
                             onUpdate?.(actor.id, 'stats', buildStatUpdate(actor, col, col.key, parseInt(val) || 0) as Record<string, unknown>)
                           }
-                          maxValue={typeof maxVal === 'number' ? maxVal : col.max_value}
+                          maxValue={Number.isFinite(maxVal) ? maxVal : col.max_value}
                           className="w-full bg-zinc-900 border border-zinc-700 rounded px-2 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
                         />
                       </div>
@@ -401,7 +402,7 @@ export function DefaultSystemSheet({
                         </span>
                         <InlineInput
                           type="number"
-                          value={maxVal ?? ''}
+                          value={Number.isFinite(maxVal) ? maxVal : ''}
                           onChange={(val) =>
                             onUpdate?.(actor.id, 'stats', { ...actor.stats, [maxKey!]: parseInt(val) || 0 })
                           }

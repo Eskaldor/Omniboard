@@ -218,6 +218,8 @@ export interface SessionMeta {
   /** Не приходит в публичном API/WebSocket payload (см. combat_session_public_payload). */
   history_stack?: Record<string, unknown>[];
   history_index?: number;
+  /** Пред-броски (Матрица Судеб): actor_id -> сырые результаты. */
+  prerolls?: Record<string, Record<string, unknown>[]>;
 }
 
 /**

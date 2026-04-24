@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 
 from PIL import Image, ImageDraw
-from backend.models import Actor, LayoutProfile, DisplayField, BarProfileConfig
+from backend.models import Actor, LayoutProfile, DisplayField, BarProfileConfig, stat_cell_effective_scalar
 from backend.paths import ASSETS_DIR
 from backend.render_utils import (
     get_font,
@@ -81,10 +81,13 @@ def draw_display_field(
     elif field.value_path == "initiative":
         val = actor.initiative
     else:
-        val = actor.stats.get(field.value_path, 0)
+        val = stat_cell_effective_scalar(actor.stats.get(field.value_path, 0))
 
     if field.type == "bar":
-        max_val = actor.stats.get(field.max_value_path, val) if field.max_value_path else val
+        max_raw = (
+            actor.stats.get(field.max_value_path, val) if field.max_value_path else val
+        )
+        max_val = stat_cell_effective_scalar(max_raw)
         if isinstance(max_val, (int, float)):
             max_val = max(1, max_val)
         else:
