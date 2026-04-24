@@ -6,19 +6,33 @@ from pathlib import Path
 DATA_DIR = Path("data/systems")
 
 
-def get_system_columns_path(system_name: str) -> Path | None:
-    """Path to ``data/systems/<system>/columns.json`` if the name is safe and the file may exist."""
+def _safe_system_file_path(system_name: str, file_name: str) -> Path | None:
     if not (system_name and str(system_name).strip()):
         return None
     name = str(system_name).strip()
     if ".." in name or "/" in name or "\\" in name:
         return None
-    path = (DATA_DIR / name / "columns.json").resolve()
+    path = (DATA_DIR / name / file_name).resolve()
     try:
         path.relative_to(DATA_DIR.resolve())
     except ValueError:
         return None
     return path
+
+
+def get_system_mechanics_path(system_name: str) -> Path | None:
+    """Path to ``data/systems/<system>/mechanics.json`` if the name is safe."""
+    return _safe_system_file_path(system_name, "mechanics.json")
+
+
+def get_system_matrix_path(system_name: str) -> Path | None:
+    """Path to ``data/systems/<system>/matrix.json`` if the name is safe."""
+    return _safe_system_file_path(system_name, "matrix.json")
+
+
+def get_system_columns_path(system_name: str) -> Path | None:
+    """Path to ``data/systems/<system>/columns.json`` if the name is safe and the file may exist."""
+    return _safe_system_file_path(system_name, "columns.json")
 
 ASSETS_DIR = Path("data/assets")
 DEFAULT_ASSETS_DIR = ASSETS_DIR / "default"

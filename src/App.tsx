@@ -96,6 +96,16 @@ export default function App() {
   const showGroupColorsInTable = effectiveState?.display.show_group_colors !== false;
   const showFactionColorsInTable = effectiveState?.display.show_faction_colors !== false;
 
+  const matrixPrerolls = effectiveState?.session?.prerolls ?? {};
+  const showMatrixColumn =
+    (effectiveState?.core.is_active ?? false) || Object.keys(matrixPrerolls).length > 0;
+
+  const generateMatrix = async () => {
+    const res = await fetch('/api/combat/matrix/generate', { method: 'POST' });
+    if (!res.ok) return;
+    await refetchState();
+  };
+
   const nextTurn = async () => {
     await fetch('/api/combat/next-turn', { method: 'POST' });
     // State is pushed via WebSocket broadcast; no refetch to avoid UI freeze
@@ -361,6 +371,9 @@ export default function App() {
                 body: JSON.stringify({ target_actor_id: actorId }),
               });
             }}
+            onCombatRefetch={refetchState}
+            showMatrixColumn={showMatrixColumn}
+            matrixPrerolls={matrixPrerolls}
           />
         </div>
       </main>
@@ -378,6 +391,9 @@ export default function App() {
         onClearCombat={clearCombat}
         onUndo={undoCombat}
         onRedo={redoCombat}
+        onGenerateMatrix={
+          (effectiveState.core.actors?.length ?? 0) > 0 ? generateMatrix : undefined
+        }
       />
 
       {/* Modals */}

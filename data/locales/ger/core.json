@@ -42,7 +42,9 @@
     "enemy": "Противник",
     "ally": "Союзник",
     "neutral": "Нейтральный",
-    "create_group": "Создать группу"
+    "create_group": "Создать группу",
+    "generate_matrix": "Matrix",
+    "generate_matrix_hint": "Matrix-Vorwürfe für alle Akteure würfeln"
   },
   "combat": {
     "round": "Раунд",
@@ -69,6 +71,7 @@
   "table_header": {
     "init": "Иниц",
     "name": "Имя",
+    "matrix": "Matrix",
     "effects": "Эффекты"
   },
   "config_modal": {

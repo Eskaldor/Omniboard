@@ -119,6 +119,30 @@ function LogEvent({ entry, index }: { entry: LogEntryView; index: number }) {
           <span className="text-red-400/90"> left the battle.</span>
         </div>
       );
+    case 'roll': {
+      const expr = typeof entry.details?.expression === 'string' ? entry.details.expression : '';
+      const total = entry.details?.total;
+      const det = typeof entry.details?.details === 'string' ? entry.details.details : '';
+      return (
+        <div className="py-1.5 px-2 rounded border-l-2 border-indigo-600/50 bg-indigo-950/25 text-sm text-zinc-200">
+          <span className="text-zinc-400">🎲</span>{' '}
+          <span className="text-zinc-300">{entry.actor_name ?? 'Unknown'}</span>
+          {expr ? (
+            <>
+              {' '}
+              <span className="text-zinc-500 font-mono text-xs">{expr}</span>
+            </>
+          ) : null}
+          {total != null && (
+            <>
+              {' → '}
+              <span className="font-mono text-indigo-300 font-medium">{String(total)}</span>
+            </>
+          )}
+          {det ? <div className="mt-0.5 text-xs text-zinc-500 font-mono break-words">{det}</div> : null}
+        </div>
+      );
+    }
     case 'text':
     default:
       if (isGmNote) {

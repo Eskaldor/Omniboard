@@ -131,7 +131,7 @@ class StatOverride(BaseModel):
 
 
 class StatValue(BaseModel):
-    """Значение характеристики: база, формула, модификаторы, итог."""
+    """Значение характеристики: база, формула из mechanics.json, модификаторы, итог."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -198,7 +198,7 @@ class Actor(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def migrate_legacy_flat_stats(cls, data: Any) -> Any:
-        """Legacy stats ``{\"hp\": 10}`` -> ``StatValue(base=10, value=10)`` per key."""
+        """Legacy stats ``{\"hp\": 10}`` -> StatValue(base=10, value=10) по ключу."""
         if not isinstance(data, dict):
             return data
         if "stats" not in data:
@@ -234,12 +234,23 @@ class LogEntry(BaseModel):
     type: Literal[
         "combat_start", "combat_end", "round_start", "turn_start",
         "hp_change", "stat_change",
-        "effect_added", "effect_removed", "actor_joined", "actor_left", "text"
+        "effect_added", "effect_removed", "actor_joined", "actor_left", "text",
+        "roll",
     ]
     round: int
     actor_id: Optional[str] = None
     actor_name: Optional[str] = None
     details: Dict[str, Any] = {}
+
+
+class RollRequest(BaseModel):
+    expression: str
+    is_preroll: bool = False
+
+
+class MatrixUseRequest(BaseModel):
+    rule_id: str
+    index: int
 
 
 class CombatCore(BaseModel):
@@ -297,10 +308,8 @@ class SessionMeta(BaseModel):
     autosave_enabled: bool = True
     history_stack: List[Dict[str, Any]] = Field(default_factory=list)
     history_index: int = -1
-    prerolls: Dict[str, List[Dict[str, Any]]] = Field(
-        default_factory=dict,
-        description="Пред-броски (Матрица Судеб): actor_id -> сырые результаты (движок позже).",
-    )
+    # actor_id -> список групп правил матрицы (см. MatrixManager.build_prerolls)
+    prerolls: Dict[str, List[Dict[str, Any]]] = Field(default_factory=dict)
 
 
 class CombatSession(BaseModel):

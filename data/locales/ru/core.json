@@ -60,7 +60,9 @@
     "create_group": "Создать группу",
     "manual_mode": "Вручную",
     "manual_mode_hint": "Ручная инициатива: клик по строке задаёт текущий ход",
-    "next_round": "Следующий раунд"
+    "next_round": "Следующий раунд",
+    "generate_matrix": "Матрица",
+    "generate_matrix_hint": "Сгенерировать предброски матрицы для всех акторов"
   },
   "combat": {
     "round": "Раунд",
@@ -88,6 +90,7 @@
     "init": "Иниц",
     "phase": "Фаза",
     "name": "Имя",
+    "matrix": "Матрица",
     "effects": "Эффекты"
   },
   "config_modal": {

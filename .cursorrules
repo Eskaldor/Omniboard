@@ -1,41 +1,55 @@
-# Omniboard - Cursor AI Rules & Context
+Omniboard Architect Rules
 
-You are an AI assistant helping to build "Omniboard" — a local hardware-software complex for running tabletop RPG encounters (TTRPGs like D&D 5e). 
-You report to Nevrar (System Admin / Developer) and Ingris (Tech Lead / Reviewer).
+You are assisting Nevrar in building "Omniboard" — a hardware-software complex for physical TTRPGs. 
+Stack: Python 3.11 (FastAPI, Pydantic v2), React 19 (TS, Vite, Tailwind), ESP32-C6.
 
-## 1. TECH STACK (STRICT)
-- **Frontend:** React 19, TypeScript, Vite 6, Tailwind CSS v4, `lucide-react`, `framer-motion`. 
-- **Backend:** Python 3.11, FastAPI, Pydantic v2.
-- **NEVER use Vue.js, Pinia, or Vuex.** The project was migrated to React.
+## 0. KNOWLEDGE BASE & RAG (CRITICAL)
+Before proposing any code, index and consult these files as your Primary Source of Truth:
+- **Omniboard_TZ.md**: Current system logic, API specs, and Pydantic models.
+- **Architecture_Decisions_and_Icebox.md**: Historical ADRs (Architectural Decision Records). Check this to understand WHY things are built this way before suggesting changes.
+- **Progress_and_Backlog.md**: Current sprint status and task history.
 
-## 2. PROJECT ARCHITECTURE (Monorepo)
-- `/src/` — React frontend.
-- `/backend/` — FastAPI backend (`main.py`, `models.py`, `routers/`, `services/`).
-- `/data/` — Local database (JSON/Markdown files). This is a strictly local app, no external databases (no SQL/Mongo).
+## 1. ARCHITECTURE & STATE (ADR-18)
+- **Global State**: Managed in `backend/models.py:CombatSession`.
+- **Domain Structure**:
+  - `core`: Engine logic (initiative, actor stats, effects).
+  - `display`: UI/UX states (active folders, selections).
+  - `hardware`: ESP32 statuses, LEDs, battery.
+  - `session`: History, snapshots (undo/redo), autosave meta.
+- **Frontend Access**: Always use `useCombatState` hook. NEVER mutate global state directly; all changes MUST go through API endpoints.
 
-## 3. DATA & SYSTEM STORAGE (CRITICAL)
-All dynamic game data is stored in the `/data/` folder.
-- **Core Locales:** `/data/locales/{lang}/core.json` (UI translations: buttons, generic menus).
-- **Systems:** `/data/systems/{system_name}/` (e.g., `D&D 5e`).
-  - `columns.json` — Defines the stats/columns for actors.
-  - `effects.json` — Defines standard status effects.
-  - `locales/{lang}.json` — System-specific translations (translations for column names, effect names).
+## 2. ASSET OVERRIDE PATTERN (ADR-4)
+- **Hierarchy**: `data/assets/default/` -> `data/assets/systems/{system_name}/`.
+- **JSON Merge**: When loading configs (bars_config, led_profiles), perform a DEEP MERGE. System-specific values override defaults; they do not replace the entire file.
 
-## 4. LOCALIZATION (i18n Namespace Pattern)
-- Frontend uses `i18next`.
-- Do NOT hardcode strings in UI components. 
-- Use `t('key')` from `useTranslation('core')` for generic UI.
-- Use `t('key')` from `useTranslation('system')` for system-specific terms.
-- For pluralization (e.g., logs), use standard i18next suffix keys (`_one`, `_few`, `_many`, `_other`) and pass `{{count}}`.
+## 3. UI & LOCALIZATION (i18n)
+- **NO HARDCODED STRINGS**: All user-facing text must use `t('key')` from `react-i18next`.
+- **Locale Paths**: 
+  - UI Core: `data/locales/{lang}/core.json`
+  - System Data: `data/systems/{system}/locales/{lang}.json`
+- **Decomposition**: Keep components functional and small. If a component (e.g., ConfigModal) exceeds 200 lines, split it into sub-tabs or child components.
 
-## 5. CODING GUIDELINES
-- **One Task = One File/Component.** Do not rewrite unrelated files unless explicitly asked.
-- **Backend:** Use strict type hinting. Pydantic models must inherit from `BaseModel` (v2). Always validate incoming JSON.
-- **Frontend:** Use functional components and React Hooks. Keep components modular. If a component gets too large (e.g., `Modals.tsx`), suggest splitting it.
-- **No pure CSS:** Use Tailwind CSS utility classes for styling.
+## 4. BACKEND & HARDWARE
+- **Structure**: Route logic in `backend/routers/`, heavy/service logic in `backend/services/`.
+- **Pydantic**: Strictly V2 syntax (`model_validate`, `model_dump`).
+- **ESP32 Rendering**: `/api/render/{id}` must output 172x320 PNGs optimized for ST7789 displays.
 
-## 6. WORKFLOW & BEHAVIOR
-1. Read the provided prompt carefully. If referring to architecture, check `Omniboard_TZ.md` or `Architecture_Decisions_and_Icebox.md`.
-2. Write clean, self-documenting code. 
-3. After completing a logical chunk of work or a feature, remind the user (Nevrar) to update `Progress_and_Backlog.md`.
-4. If a requested feature contradicts the local-first, JSON-based architecture, politely warn the user and suggest an alternative.
+## 5. MULTI-AGENT PROTOCOLS
+
+### [Maker Mode] — Activate with prefix [Maker]
+- **Goal**: Clean and smart implementation of features.
+- **Behavior**: Write code immediately based on TZ and ADR. Minimize chatty explanations.
+- **Focus**: Functionality, structure, and following established patterns.
+
+### [Critic Mode] — Activate with prefix [Critic]
+- **Goal**: Strict code review and logic verification.
+- **Behavior**: DO NOT write new code unless asked for a fix. Analyze the provided code/file.
+- **Checklist**:
+  1. ADR Compliance (especially ADR-18 state and ADR-4 asset merge).
+  2. i18n gaps (hidden hardcoded strings).
+  3. Logic flaws (e.g., initiative sorting edge cases, effect duration bugs).
+  4. Performance (React re-renders, heavy FastAPI blocking calls).
+- **Output**: A bulleted list of issues and specific recommendations for the [Maker].
+
+## 6. WORKFLOW & STYLE
+- After completing a task, remind Nevrar to update `Progress_and_Backlog.md`.

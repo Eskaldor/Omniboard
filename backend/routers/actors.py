@@ -14,9 +14,12 @@ from backend.paths import get_system_columns_path
 from backend.routers.ws import broadcast_state
 from backend.services import led_interceptor
 from backend.services.logger import add_log
+from backend.services.mechanics import MechanicsManager
 
 
 router = APIRouter(prefix="/api/actors", tags=["actors"])
+
+_mechanics = MechanicsManager()
 
 
 def _deep_merge_dict(base: dict, patch: dict) -> dict:
@@ -223,6 +226,8 @@ async def update_actor(actor_id: str, updates: dict):
                 del updates["stats"]
             actor_dict.update(updates)
             new_actor = Actor(**actor_dict)
+            system_name = getattr(app_state.state.core, "system", "") or ""
+            new_actor = _mechanics.recalculate_actor_stats(new_actor, system_name)
             new_stats = dict(new_actor.model_dump().get("stats") or {})
 
             # Dynamic stat change logging from column config (numbers + checkbox_group nests)
@@ -279,7 +284,9 @@ async def update_actor(actor_id: str, updates: dict):
                     if j != i and getattr(other, "group_id", None) == new_actor.group_id:
                         od = other.model_dump()
                         od["initiative"] = val
-                        app_state.state.core.actors[j] = Actor(**od)
+                        app_state.state.core.actors[j] = _mechanics.recalculate_actor_stats(
+                            Actor(**od), system_name
+                        )
 
             combat_engine.reorder_turn_queue()
             await save_snapshot()

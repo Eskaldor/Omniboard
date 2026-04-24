@@ -140,6 +140,7 @@ def reset_combat_state() -> None:
     st.core.turn_queue = []
     st.core.current_index = 0
     st.session.history = []
+    st.session.prerolls = {}
     for actor in st.core.actors:
         actor.effects = []
 
@@ -152,6 +153,7 @@ def clear_combat_state() -> None:
     st.core.current_index = 0
     st.core.round = 1
     st.session.history = []
+    st.session.prerolls = {}
     st.core.is_active = False
 
 

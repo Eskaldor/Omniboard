@@ -58,7 +58,9 @@
     "create_group": "Create Group",
     "manual_mode": "Manual",
     "manual_mode_hint": "Manual initiative: click a row to set whose turn it is",
-    "next_round": "Next round"
+    "next_round": "Next round",
+    "generate_matrix": "Matrix",
+    "generate_matrix_hint": "Roll matrix prerolls for all actors"
   },
   "combat": {
     "round": "Round",
@@ -86,6 +88,7 @@
     "init": "Init",
     "phase": "Phase",
     "name": "Name",
+    "matrix": "Matrix",
     "effects": "Effects"
   },
   "config_modal": {

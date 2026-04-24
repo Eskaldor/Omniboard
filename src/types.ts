@@ -158,7 +158,8 @@ export type CombatLogEntryType =
   | 'effect_removed'
   | 'actor_joined'
   | 'actor_left'
-  | 'text';
+  | 'text'
+  | 'roll';
 
 export interface CombatLogEntry {
   type: CombatLogEntryType;
@@ -209,6 +210,29 @@ export interface HardwareState {
   sync_led_to_ui: boolean;
 }
 
+/** Результат одного броска в слоте матрицы (как RollResult с бэка). */
+export interface MatrixRollResult {
+  total: number;
+  formula: string;
+  details: string;
+  is_glitch?: boolean;
+  is_crit_glitch?: boolean;
+}
+
+export interface MatrixPrerollSlot {
+  index: number;
+  used: boolean;
+  results: MatrixRollResult[];
+}
+
+/** Одно правило из matrix.json со сгенерированными слотами для актора. */
+export interface MatrixRuleGroup {
+  rule_id: string;
+  label: string;
+  display: 'single' | 'pair';
+  slots: MatrixPrerollSlot[];
+}
+
 /** Лог, автосохранение, стек undo/redo (ADR-18 / backend SessionMeta). */
 export interface SessionMeta {
   history: CombatLogEntry[];
@@ -218,8 +242,8 @@ export interface SessionMeta {
   /** Не приходит в публичном API/WebSocket payload (см. combat_session_public_payload). */
   history_stack?: Record<string, unknown>[];
   history_index?: number;
-  /** Пред-броски (Матрица Судеб): actor_id -> сырые результаты. */
-  prerolls?: Record<string, Record<string, unknown>[]>;
+  /** Предброски матрицы: actor_id → группы правил (POST /api/combat/matrix/generate). */
+  prerolls?: Record<string, MatrixRuleGroup[]>;
 }
 
 /**

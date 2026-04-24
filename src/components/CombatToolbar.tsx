@@ -1,4 +1,15 @@
-import { Play, Square, RotateCcw, RotateCw, Trash, Undo, Redo, SkipForward, Hand } from 'lucide-react';
+import {
+  Play,
+  Square,
+  RotateCcw,
+  RotateCw,
+  Trash,
+  Undo,
+  Redo,
+  SkipForward,
+  Hand,
+  Dices,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export interface ManualModeToggleProps {
@@ -43,6 +54,8 @@ export interface CombatToolbarProps {
   onClearCombat: () => void;
   onUndo: () => void;
   onRedo: () => void;
+  /** Активный бой: сгенерировать предброски матрицы (POST /api/combat/matrix/generate). */
+  onGenerateMatrix?: () => void | Promise<void>;
 }
 
 export function CombatToolbar({
@@ -58,6 +71,7 @@ export function CombatToolbar({
   onClearCombat,
   onUndo,
   onRedo,
+  onGenerateMatrix,
 }: CombatToolbarProps) {
   const { t } = useTranslation('core', { useSuspense: false });
   const et = engineType.toLowerCase();
@@ -95,27 +109,40 @@ export function CombatToolbar({
         )}
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex gap-4 items-center flex-wrap justify-end">
         {!isActive ? (
           <button onClick={onStartCombat} className="flex items-center gap-2 px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors">
             <Play size={18} /> {t('start_combat')}
           </button>
         ) : (
-          <button
-            type="button"
-            onClick={() => onNextTurn()}
-            className="flex items-center gap-2 px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition-colors"
-          >
-            {nextRoundLike ? (
-              <>
-                <RotateCw size={18} aria-hidden /> {t('toolbar.next_round')}
-              </>
-            ) : (
-              <>
-                <SkipForward size={18} aria-hidden /> {t('header.next_turn')}
-              </>
+          <>
+            {onGenerateMatrix && (
+              <button
+                type="button"
+                onClick={() => void onGenerateMatrix()}
+                title={t('toolbar.generate_matrix_hint')}
+                className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg font-medium transition-colors text-sm border border-zinc-700"
+              >
+                <Dices size={18} aria-hidden />
+                <span className="hidden sm:inline">{t('toolbar.generate_matrix')}</span>
+              </button>
             )}
-          </button>
+            <button
+              type="button"
+              onClick={() => onNextTurn()}
+              className="flex items-center gap-2 px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition-colors"
+            >
+              {nextRoundLike ? (
+                <>
+                  <RotateCw size={18} aria-hidden /> {t('toolbar.next_round')}
+                </>
+              ) : (
+                <>
+                  <SkipForward size={18} aria-hidden /> {t('header.next_turn')}
+                </>
+              )}
+            </button>
+          </>
         )}
       </div>
     </footer>

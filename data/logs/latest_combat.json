@@ -1425,5 +1425,68 @@
     "actor_id": "25afcd09-fc4b-4013-853b-cc0f80cf439a",
     "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
     "details": {}
+  },
+  {
+    "type": "round_start",
+    "round": 31,
+    "actor_id": null,
+    "actor_name": null,
+    "details": {}
+  },
+  {
+    "type": "turn_start",
+    "round": 31,
+    "actor_id": "08d040bc-a871-46fa-865c-7be14d47d3b6",
+    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "details": {}
+  },
+  {
+    "type": "turn_start",
+    "round": 31,
+    "actor_id": "59f1a5f4-9caa-43ad-9a5f-dbf6feae26d5",
+    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "details": {}
+  },
+  {
+    "type": "turn_start",
+    "round": 31,
+    "actor_id": "9a776ca3-1074-4a0c-a644-154583dd65f4",
+    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "details": {}
+  },
+  {
+    "type": "round_start",
+    "round": 32,
+    "actor_id": null,
+    "actor_name": null,
+    "details": {}
+  },
+  {
+    "type": "turn_start",
+    "round": 32,
+    "actor_id": "08d040bc-a871-46fa-865c-7be14d47d3b6",
+    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "details": {}
+  },
+  {
+    "type": "turn_start",
+    "round": 32,
+    "actor_id": "59f1a5f4-9caa-43ad-9a5f-dbf6feae26d5",
+    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "details": {}
+  },
+  {
+    "type": "turn_start",
+    "round": 32,
+    "actor_id": "9a776ca3-1074-4a0c-a644-154583dd65f4",
+    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "details": {}
+  },
+  {
+    "type": "turn_start",
+    "round": 32,
+    "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "details": {}
   }
 ]
