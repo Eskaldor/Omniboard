@@ -2,29 +2,46 @@ from __future__ import annotations
 
 from pathlib import Path
 
+# Репозиторий Omniboard (каталог с `data/`, `backend/`, …), не зависит от cwd процесса.
+BASE_DIR = Path(__file__).resolve().parent.parent
 
-DATA_DIR = Path("data/systems")
+DATA_DIR = BASE_DIR / "data" / "systems"
 
 
-def get_system_columns_path(system_name: str) -> Path | None:
-    """Path to ``data/systems/<system>/columns.json`` if the name is safe and the file may exist."""
+def _safe_system_file_path(system_name: str, file_name: str) -> Path | None:
     if not (system_name and str(system_name).strip()):
         return None
     name = str(system_name).strip()
     if ".." in name or "/" in name or "\\" in name:
         return None
-    path = (DATA_DIR / name / "columns.json").resolve()
+    path = (DATA_DIR / name / file_name).resolve()
     try:
         path.relative_to(DATA_DIR.resolve())
     except ValueError:
         return None
     return path
 
-ASSETS_DIR = Path("data/assets")
+
+def get_system_mechanics_path(system_name: str) -> Path | None:
+    """Path to ``data/systems/<system>/mechanics.json`` if the name is safe."""
+    return _safe_system_file_path(system_name, "mechanics.json")
+
+
+def get_system_matrix_path(system_name: str) -> Path | None:
+    """Path to ``data/systems/<system>/matrix.json`` if the name is safe."""
+    return _safe_system_file_path(system_name, "matrix.json")
+
+
+def get_system_columns_path(system_name: str) -> Path | None:
+    """Path to ``data/systems/<system>/columns.json`` if the name is safe and the file may exist."""
+    return _safe_system_file_path(system_name, "columns.json")
+
+
+ASSETS_DIR = BASE_DIR / "data" / "assets"
 DEFAULT_ASSETS_DIR = ASSETS_DIR / "default"
 SYSTEMS_ASSETS_DIR = ASSETS_DIR / "systems"
 
-ACTORS_DIR = Path("data/actors")
+ACTORS_DIR = BASE_DIR / "data" / "actors"
 
 
 def get_actors_system_dir(system_name: str) -> Path | None:
@@ -38,11 +55,14 @@ def get_actors_system_dir(system_name: str) -> Path | None:
     except ValueError:
         return None
     return path
-ENCOUNTERS_DIR = Path("data/encounters")
-RENDER_DIR = Path("data/render")
-LOCALES_DIR = Path("data/locales")
-LOGS_DIR = Path("data/logs")
-MINIATURES_PATH = Path("data/miniatures.json")
+
+
+ENCOUNTERS_DIR = BASE_DIR / "data" / "encounters"
+RENDER_DIR = BASE_DIR / "data" / "render"
+LOCALES_DIR = BASE_DIR / "data" / "locales"
+LOGS_DIR = BASE_DIR / "data" / "logs"
+MINIATURES_PATH = BASE_DIR / "data" / "miniatures.json"
+AUTOSAVE_PATH = BASE_DIR / "data" / "state_autosave.json"
 
 
 def ensure_dirs() -> None:
@@ -68,4 +88,3 @@ def ensure_dirs() -> None:
 
 # Keep behavior consistent with old main.py: directories exist at import time.
 ensure_dirs()
-

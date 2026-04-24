@@ -9,14 +9,17 @@ from fastapi import APIRouter
 from backend import combat_engine
 from backend import state as app_state
 from backend.history import save_snapshot
-from backend.models import Actor
+from backend.models import Actor, stat_cell_effective_scalar
 from backend.paths import get_system_columns_path
 from backend.routers.ws import broadcast_state
 from backend.services import led_interceptor
 from backend.services.logger import add_log
+from backend.services.mechanics import MechanicsManager
 
 
 router = APIRouter(prefix="/api/actors", tags=["actors"])
+
+_mechanics = MechanicsManager()
 
 
 def _deep_merge_dict(base: dict, patch: dict) -> dict:
@@ -157,8 +160,10 @@ def _log_stat_changes_for_actor(
             continue
 
         try:
-            old_num = int(old_val) if old_val is not None else None
-            new_num = int(new_val) if new_val is not None else None
+            old_raw = stat_cell_effective_scalar(old_val)
+            new_raw = stat_cell_effective_scalar(new_val)
+            old_num = int(old_raw) if old_raw is not None else None
+            new_num = int(new_raw) if new_raw is not None else None
         except (TypeError, ValueError):
             old_num = new_num = None
         if old_num is None and new_num is None:
@@ -184,6 +189,8 @@ async def create_actor(actor: Actor):
     await save_snapshot()
     if not actor.id:
         actor.id = str(uuid.uuid4())
+    system_name = getattr(app_state.state.core, "system", "") or ""
+    actor = _mechanics.recalculate_actor_stats(actor, system_name)
     app_state.state.core.actors.append(actor)
     if app_state.state.core.is_active:
         app_state.state.core.turn_queue.append(actor.id)
@@ -221,7 +228,9 @@ async def update_actor(actor_id: str, updates: dict):
                 del updates["stats"]
             actor_dict.update(updates)
             new_actor = Actor(**actor_dict)
-            new_stats = dict(new_actor.stats or {})
+            system_name = getattr(app_state.state.core, "system", "") or ""
+            new_actor = _mechanics.recalculate_actor_stats(new_actor, system_name)
+            new_stats = dict(new_actor.model_dump().get("stats") or {})
 
             # Dynamic stat change logging from column config (numbers + checkbox_group nests)
             columns = _load_system_columns(getattr(app_state.state.core, "system", "") or "D&D 5e")
@@ -277,7 +286,9 @@ async def update_actor(actor_id: str, updates: dict):
                     if j != i and getattr(other, "group_id", None) == new_actor.group_id:
                         od = other.model_dump()
                         od["initiative"] = val
-                        app_state.state.core.actors[j] = Actor(**od)
+                        app_state.state.core.actors[j] = _mechanics.recalculate_actor_stats(
+                            Actor(**od), system_name
+                        )
 
             combat_engine.reorder_turn_queue()
             await save_snapshot()

@@ -63,6 +63,11 @@ def add_log(
         if t == "effect_removed":
             effect_name = det.get("effect_name", "?")
             return f"{name} lost effect: {effect_name}."
+        if t == "text" and det.get("is_matrix_use"):
+            msg = det.get("message", "")
+            if isinstance(msg, str) and msg.strip():
+                return f"{name} {msg.strip()}"
+            return f"{name} matrix slot used."
         if t == "text" and det.get("is_gm_note"):
             msg = det.get("message", "")
             return f"*GM Note: {msg}*"
@@ -74,6 +79,11 @@ def add_log(
             return f"{name} joined the battle."
         if t == "actor_left":
             return f"{name} left the battle."
+        if t == "roll":
+            expr = det.get("expression", "")
+            tot = det.get("total", "?")
+            det_str = det.get("details", "")
+            return f"{name} roll: {expr} → **{tot}** ({det_str})"
         return f"[{t}]"
 
     def _write() -> None:

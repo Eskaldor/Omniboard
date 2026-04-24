@@ -42,7 +42,9 @@
     "enemy": "Противник",
     "ally": "Союзник",
     "neutral": "Нейтральный",
-    "create_group": "Создать группу"
+    "create_group": "Создать группу",
+    "generate_matrix": "Matrix",
+    "generate_matrix_hint": "Roll matrix prerolls for all actors"
   },
   "combat": {
     "round": "Раунд",
@@ -69,7 +71,26 @@
   "table_header": {
     "init": "Иниц",
     "name": "Имя",
+    "matrix": "Matrix",
     "effects": "Эффекты"
+  },
+  "stat_editor": {
+    "value_server": "Value (server)",
+    "preview_base_overrides": "Preview (base + overrides)",
+    "base": "Base",
+    "formula_id": "formula_id",
+    "formula_id_placeholder": "mechanics.json",
+    "overrides": "Overrides",
+    "overrides_none": "None",
+    "source_placeholder": "Source",
+    "value_modifier_placeholder": "±",
+    "roll": "Roll",
+    "rolling": "Rolling…",
+    "roll_failed": "Roll failed",
+    "roll_network_error": "Network error",
+    "roll_critical_glitch": "Critical Glitch",
+    "roll_glitch": "Glitch",
+    "unknown_total": "?"
   },
   "config_modal": {
     "table": "Таблица",

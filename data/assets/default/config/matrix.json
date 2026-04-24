@@ -1,0 +1,11 @@
+{
+  "generation_rules": [
+    {
+      "id": "default_pool",
+      "label": "d20",
+      "expression": "1d20",
+      "count": 1,
+      "display": "single"
+    }
+  ]
+}

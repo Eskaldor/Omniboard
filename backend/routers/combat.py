@@ -16,16 +16,22 @@ from backend.models import (
     CombatSession,
     LegendConfig,
     LogEntry,
+    MatrixUseRequest,
+    RollRequest,
     combat_session_public_payload,
 )
 from backend.paths import LOGS_DIR
 from backend.routers.hardware import get_esp_manager
 from backend.routers.ws import broadcast_state
 from backend.services import led_interceptor
+from backend.services.dice import DiceManager
 from backend.services.logger import add_log
+from backend.services.matrix import MatrixManager
 
 
 router = APIRouter(prefix="/api/combat", tags=["combat"])
+
+_dice = DiceManager()
 
 
 def _log_turn_progression(
@@ -59,6 +65,103 @@ async def get_state():
         app_state.state,
         initiative_engine_locked=system_has_custom_logic_file(app_state.state.core.system),
     )
+
+
+@router.post("/actors/{actor_id}/roll")
+async def roll_for_actor(actor_id: str, body: RollRequest):
+    """Бросок кубов с подстановкой [stat] из актора; опционально без записи в лог (preroll)."""
+    st = app_state.state
+    actor = next((a for a in st.core.actors if a.id == actor_id), None)
+    if actor is None:
+        raise HTTPException(status_code=404, detail="actor not found")
+    expr = (body.expression or "").strip()
+    if not expr:
+        raise HTTPException(status_code=400, detail="expression is required")
+    system_name = (st.core.system or "").strip()
+    result = _dice.execute_roll(expr, system_name, actor)
+    if not body.is_preroll:
+        add_log(
+            "roll",
+            actor_id=actor.id,
+            actor_name=actor.name,
+            details={
+                "expression": body.expression,
+                "formula": result.formula,
+                "total": result.total,
+                "details": result.details,
+                "is_glitch": result.is_glitch,
+                "is_crit_glitch": result.is_crit_glitch,
+            },
+        )
+    await save_snapshot()
+    await broadcast_state()
+    return result.model_dump()
+
+
+@router.post("/matrix/generate")
+async def matrix_generate():
+    """Сгенерировать предброски матрицы для всех акторов по matrix.json (ADR-4 override)."""
+    st = app_state.state
+    prerolls = MatrixManager.build_prerolls(st, _dice)
+    st.session.prerolls = prerolls
+    await save_snapshot()
+    await broadcast_state()
+    return {"prerolls": prerolls}
+
+
+@router.post("/actors/{actor_id}/matrix/use")
+async def matrix_use_preroll(actor_id: str, body: MatrixUseRequest):
+    """Пометить слот матрицы использованным и записать строку в лог."""
+    st = app_state.state
+    actor = next((a for a in st.core.actors if a.id == actor_id), None)
+    if actor is None:
+        raise HTTPException(status_code=404, detail="actor not found")
+    groups = st.session.prerolls.get(actor_id)
+    if not isinstance(groups, list):
+        raise HTTPException(status_code=400, detail="no matrix prerolls for actor")
+    rule_id = (body.rule_id or "").strip()
+    target: dict | None = None
+    for g in groups:
+        if isinstance(g, dict) and g.get("rule_id") == rule_id:
+            target = g
+            break
+    if target is None:
+        raise HTTPException(status_code=404, detail="rule not found")
+    slots = target.get("slots")
+    if not isinstance(slots, list):
+        raise HTTPException(status_code=400, detail="invalid preroll structure")
+    slot = next(
+        (s for s in slots if isinstance(s, dict) and s.get("index") == body.index),
+        None,
+    )
+    if slot is None:
+        raise HTTPException(status_code=404, detail="slot not found")
+    if slot.get("used"):
+        raise HTTPException(status_code=400, detail="slot already used")
+    slot["used"] = True
+    results = slot.get("results") or []
+    totals: list[Any] = []
+    for r in results:
+        if isinstance(r, dict) and "total" in r:
+            totals.append(r.get("total"))
+    label = str(target.get("label") or rule_id)
+    msg = f"Matrix «{label}» #{body.index + 1}: {', '.join(str(x) for x in totals)}"
+    add_log(
+        "text",
+        actor_id=actor.id,
+        actor_name=actor.name,
+        details={
+            "is_matrix_use": True,
+            "rule_id": rule_id,
+            "label": label,
+            "index": body.index,
+            "totals": totals,
+            "message": msg,
+        },
+    )
+    await save_snapshot()
+    await broadcast_state()
+    return {"ok": True}
 
 
 @router.patch("/system")

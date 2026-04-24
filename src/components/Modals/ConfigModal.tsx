@@ -43,7 +43,7 @@ export function ConfigModal({
   onClose,
 }: {
   columns: ColumnConfig[];
-  setColumns: (c: ColumnConfig[]) => void;
+  setColumns: React.Dispatch<React.SetStateAction<ColumnConfig[]>>;
   systemName: string;
   onClose: () => void;
 }) {
@@ -179,6 +179,10 @@ export function ConfigModal({
           log_changes: false,
           show_in_mini_sheet: false,
           is_advanced: false,
+          is_readonly: false,
+          is_rollable: false,
+          roll_formula: undefined,
+          computed_formula_id: undefined,
         },
       ];
     });

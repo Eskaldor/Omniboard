@@ -2,17 +2,99 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Plus, Trash } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
-import type { Actor, ColumnConfig, Effect } from '../../types';
-import { getMaxKey, buildStatUpdate as buildStatUpdateUtil } from '../../utils/stats';
+import type { Actor, ColumnConfig, Effect, MatrixRuleGroup } from '../../types';
+import { getMaxKey, getStatNumeric, isStatValuePayload } from '../../utils/stats';
 import { InlineInput } from './InlineInput';
+import { StatNumericCell } from './StatEditPopover';
 import { TextEditorModal } from '../Modals/TextEditorModal';
+
+function matrixSlotSummary(
+  rule: MatrixRuleGroup,
+  slot: MatrixRuleGroup['slots'][number],
+  unknownTotal: string,
+): string {
+  const parts = (slot.results ?? []).map((r) =>
+    typeof r.total === 'number' && Number.isFinite(r.total) ? String(r.total) : unknownTotal,
+  );
+  if (rule.display === 'pair') return parts.join(' | ');
+  return parts[0] ?? unknownTotal;
+}
+
+function MatrixPrerollButtons({
+  actorId,
+  rules,
+  onUsed,
+}: {
+  actorId: string;
+  rules: MatrixRuleGroup[] | undefined;
+  onUsed?: () => void | Promise<void>;
+}) {
+  const { t } = useTranslation('core', { useSuspense: false });
+  const unknownTotal = t('stat_editor.unknown_total');
+  const list = rules ?? [];
+  if (list.length === 0) {
+    return <span className="text-zinc-600 text-[11px]">{t('common.empty_dash')}</span>;
+  }
+  return (
+    <div className="flex flex-col gap-1.5 min-w-0 max-w-[11rem]">
+      {list.map((rule) => (
+        <div key={rule.rule_id} className="flex flex-col gap-0.5">
+          <span className="text-[10px] text-zinc-500 truncate" title={rule.label}>
+            {rule.label}
+          </span>
+          <div className="flex flex-wrap gap-0.5">
+            {(rule.slots ?? []).map((slot) => {
+              const label = matrixSlotSummary(rule, slot, unknownTotal);
+              const tip = (slot.results ?? [])
+                .map((r) => `${r.formula} → ${r.total}: ${r.details}`)
+                .join('; ');
+              return (
+                <button
+                  key={`${rule.rule_id}-${slot.index}`}
+                  type="button"
+                  title={tip}
+                  disabled={slot.used}
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    if (slot.used) return;
+                    const res = await fetch(
+                      `/api/combat/actors/${encodeURIComponent(actorId)}/matrix/use`,
+                      {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ rule_id: rule.rule_id, index: slot.index }),
+                      },
+                    );
+                    if (res.ok) await onUsed?.();
+                  }}
+                  className={`text-[11px] tabular-nums px-1.5 py-0.5 rounded border transition-colors ${
+                    slot.used
+                      ? 'bg-zinc-900/80 text-zinc-600 border-zinc-800 cursor-not-allowed line-through'
+                      : 'bg-amber-500/15 text-amber-200 border-amber-500/40 hover:bg-amber-500/25'
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function readCheckboxGroupMap(
   stats: Actor['stats'] | undefined,
   columnKey: string,
 ): Record<string, unknown> {
   const raw = stats?.[columnKey];
-  if (raw !== null && typeof raw === 'object' && !Array.isArray(raw)) {
+  if (
+    raw !== null &&
+    typeof raw === 'object' &&
+    !Array.isArray(raw) &&
+    !isStatValuePayload(raw)
+  ) {
     return raw as Record<string, unknown>;
   }
   return {};
@@ -245,6 +327,10 @@ export interface ActorRowProps {
   phaseRowInactive?: boolean;
   isActiveCombat?: boolean;
   onManualRowActivate?: () => void | Promise<void>;
+  /** After a roll from the stat editor, refetch server state (log + actors). */
+  onCombatRefetch?: () => void | Promise<void>;
+  showMatrixColumn?: boolean;
+  matrixRules?: MatrixRuleGroup[];
 }
 
 export const ActorRow = React.memo(function ActorRow({
@@ -277,6 +363,9 @@ export const ActorRow = React.memo(function ActorRow({
   phaseRowInactive = false,
   isActiveCombat = false,
   onManualRowActivate,
+  onCombatRefetch,
+  showMatrixColumn = false,
+  matrixRules,
 }: ActorRowProps) {
   const { t } = useTranslation('core', { useSuspense: false });
   const emptyDash = t('common.empty_dash');
@@ -288,8 +377,6 @@ export const ActorRow = React.memo(function ActorRow({
   );
 
   const visible = columns.filter((c) => c.showInTable);
-  const buildStatUpdate = (col: ColumnConfig, baseKey: string, newVal: number) =>
-    buildStatUpdateUtil(actor, col, baseKey, newVal);
   const standalone = visible.filter(
     (c) => !c.group || String(c.group).trim() === '',
   );
@@ -484,8 +571,11 @@ export const ActorRow = React.memo(function ActorRow({
 
         if (col.type === 'text' || col.type === 'string') {
           const rawVal = actor.stats?.[col.key];
-          const strVal =
-            typeof rawVal === 'object' && rawVal !== null ? '' : String(rawVal ?? '');
+          const strVal = isStatValuePayload(rawVal)
+            ? String(getStatNumeric(rawVal))
+            : typeof rawVal === 'object' && rawVal !== null
+              ? ''
+              : String(rawVal ?? '');
           const showTooltip = col.show_tooltip === true;
           return (
             <td key={col.key} className="px-2 py-1 text-center align-middle w-[140px] max-w-[140px]">
@@ -512,27 +602,36 @@ export const ActorRow = React.memo(function ActorRow({
         const showAsFraction = (col.display_as_fraction ?? false) && hasMaxKey;
 
         if (showAsFraction) {
-          const maxVal = actor.stats?.[maxKey!];
+          const maxRaw = actor.stats?.[maxKey!];
+          const maxNum = getStatNumeric(maxRaw, NaN);
           return (
             <td key={col.key} className="px-2 py-1 text-center align-middle">
               <div className="min-w-[5rem] w-20 mx-auto flex items-center justify-center gap-1 whitespace-nowrap">
-                <InlineInput
-                  type="number"
-                  value={actor.stats?.[col.key] ?? 0}
-                  onChange={(val) =>
-                    onUpdate({
-                      stats: buildStatUpdate(col, col.key, parseInt(val)),
-                    })
-                  }
-                  maxValue={
-                    typeof maxVal === 'number' ? maxVal : (col.max_value ?? undefined)
-                  }
-                  className="w-10 bg-zinc-950 border border-zinc-700 rounded px-1.5 py-0.5 text-xs text-zinc-200 focus:outline-none focus:border-emerald-500"
+                <StatNumericCell
+                  actor={actor}
+                  column={col}
+                  columnLabel={colLabel(col)}
+                  systemName={systemName}
+                  onUpdate={onUpdate}
+                  onRollComplete={onCombatRefetch}
+                  compact
                 />
                 <span className="text-xs text-zinc-500">/</span>
-                <span className="min-w-[1.5rem] text-xs text-zinc-400 tabular-nums">
-                  {maxVal != null ? String(maxVal) : emptyDash}
-                </span>
+                {maxKey ? (
+                  <StatNumericCell
+                    actor={actor}
+                    column={{ ...col, key: maxKey }}
+                    columnLabel={colLabel({ ...col, key: maxKey })}
+                    systemName={systemName}
+                    onUpdate={onUpdate}
+                    onRollComplete={onCombatRefetch}
+                    compact
+                  />
+                ) : (
+                  <span className="min-w-[1.5rem] text-xs text-zinc-400 tabular-nums">
+                    {maxRaw != null && Number.isFinite(maxNum) ? String(maxNum) : emptyDash}
+                  </span>
+                )}
               </div>
             </td>
           );
@@ -541,20 +640,13 @@ export const ActorRow = React.memo(function ActorRow({
         return (
           <td key={col.key} className="px-2 py-1 text-center align-middle">
             <div className="min-w-[5rem] w-20 mx-auto flex items-center justify-center gap-1">
-              <InlineInput
-                type="number"
-                value={actor.stats?.[col.key] ?? 0}
-                onChange={(val) =>
-                  onUpdate({
-                    stats: buildStatUpdate(col, col.key, parseInt(val)),
-                  })
-                }
-                maxValue={
-                  maxKey && typeof actor.stats?.[maxKey] === 'number'
-                    ? (actor.stats?.[maxKey] as number)
-                    : col.max_value
-                }
-                className="w-16 bg-zinc-950 border border-zinc-700 rounded px-2 py-1 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
+              <StatNumericCell
+                actor={actor}
+                column={col}
+                columnLabel={colLabel(col)}
+                systemName={systemName}
+                onUpdate={onUpdate}
+                onRollComplete={onCombatRefetch}
               />
             </div>
           </td>
@@ -582,8 +674,11 @@ export const ActorRow = React.memo(function ActorRow({
 
                 if (col.type === 'text' || col.type === 'string') {
                   const rawVal = actor.stats?.[col.key];
-                  const strVal =
-                    typeof rawVal === 'object' && rawVal !== null ? '' : String(rawVal ?? '');
+                  const strVal = isStatValuePayload(rawVal)
+                    ? String(getStatNumeric(rawVal))
+                    : typeof rawVal === 'object' && rawVal !== null
+                      ? ''
+                      : String(rawVal ?? '');
                   const showTooltip = col.show_tooltip === true;
                   return (
                     <div
@@ -610,7 +705,8 @@ export const ActorRow = React.memo(function ActorRow({
                 const showAsFraction = (col.display_as_fraction ?? false) && hasMaxKey;
 
                 if (showAsFraction) {
-                  const maxVal = actor.stats?.[maxKey!];
+                  const maxRaw = actor.stats?.[maxKey!];
+                  const maxNum = getStatNumeric(maxRaw, NaN);
                   return (
                     <div
                       key={col.key}
@@ -618,23 +714,31 @@ export const ActorRow = React.memo(function ActorRow({
                     >
                       <span className="text-[10px] text-zinc-500">{colLabel(col)}:</span>
                       <div className="flex items-center justify-center gap-1 whitespace-nowrap">
-                        <InlineInput
-                          type="number"
-                          value={actor.stats?.[col.key] ?? 0}
-                          onChange={(val) =>
-                            onUpdate({
-                              stats: buildStatUpdate(col, col.key, parseInt(val)),
-                            })
-                          }
-                          maxValue={
-                            typeof maxVal === 'number' ? maxVal : (col.max_value ?? undefined)
-                          }
-                          className="w-8 bg-zinc-950 border border-zinc-700 rounded px-1 py-0.5 text-xs text-zinc-200 focus:outline-none focus:border-emerald-500"
+                        <StatNumericCell
+                          actor={actor}
+                          column={col}
+                          columnLabel={colLabel(col)}
+                          systemName={systemName}
+                          onUpdate={onUpdate}
+                          onRollComplete={onCombatRefetch}
+                          compact
                         />
                         <span className="text-[10px] text-zinc-500">/</span>
-                        <span className="min-w-[1.25rem] text-[10px] text-zinc-400 tabular-nums">
-                          {maxVal != null ? String(maxVal) : emptyDash}
-                        </span>
+                        {maxKey ? (
+                          <StatNumericCell
+                            actor={actor}
+                            column={{ ...col, key: maxKey }}
+                            columnLabel={colLabel({ ...col, key: maxKey })}
+                            systemName={systemName}
+                            onUpdate={onUpdate}
+                            onRollComplete={onCombatRefetch}
+                            compact
+                          />
+                        ) : (
+                          <span className="min-w-[1.25rem] text-[10px] text-zinc-400 tabular-nums">
+                            {maxRaw != null && Number.isFinite(maxNum) ? String(maxNum) : emptyDash}
+                          </span>
+                        )}
                       </div>
                     </div>
                   );
@@ -646,20 +750,14 @@ export const ActorRow = React.memo(function ActorRow({
                     className="flex items-center justify-center gap-1 whitespace-nowrap text-xs text-zinc-200"
                   >
                     <span className="text-[10px] text-zinc-500">{colLabel(col)}:</span>
-                    <InlineInput
-                      type="number"
-                      value={actor.stats?.[col.key] ?? 0}
-                      onChange={(val) =>
-                        onUpdate({
-                          stats: buildStatUpdate(col, col.key, parseInt(val)),
-                        })
-                      }
-                      maxValue={
-                        maxKey != null && typeof actor.stats?.[maxKey] === 'number'
-                          ? (actor.stats?.[maxKey] as number)
-                          : col.max_value
-                      }
-                      className="w-10 bg-zinc-950 border border-zinc-700 rounded px-1.5 py-0.5 text-xs text-zinc-200 focus:outline-none focus:border-emerald-500"
+                    <StatNumericCell
+                      actor={actor}
+                      column={col}
+                      columnLabel={colLabel(col)}
+                      systemName={systemName}
+                      onUpdate={onUpdate}
+                      onRollComplete={onCombatRefetch}
+                      compact
                     />
                   </div>
                 );
@@ -667,6 +765,12 @@ export const ActorRow = React.memo(function ActorRow({
           </div>
         </td>
       ))}
+
+      {showMatrixColumn && (
+        <td className="px-1 py-1 align-middle max-w-[12rem] whitespace-normal border-b border-zinc-800/50 bg-zinc-900/30">
+          <MatrixPrerollButtons actorId={actor.id} rules={matrixRules} onUsed={onCombatRefetch} />
+        </td>
+      )}
 
       {/* Effects */}
       <td className="px-2 py-1 align-middle max-w-[14rem] whitespace-normal">

@@ -11,7 +11,7 @@ from backend.layout_profiles_store import read_layout_profiles, write_layout_pro
 from backend.led_profiles_store import read_led_profiles
 from backend.models import LayoutProfile, LedProfile, LedTriggerRule
 from backend.paths import ASSETS_DIR, DATA_DIR, LOCALES_DIR, get_actors_system_dir
-from backend.utils.config_loader import is_safe_system_subdirectory
+from backend.utils.config_loader import is_safe_system_subdirectory, load_config_with_override
 
 
 router = APIRouter(prefix="/api/systems", tags=["systems"])
@@ -186,6 +186,14 @@ async def get_system_columns(system_name: str):
         return data.get("columns", [])
     except Exception:
         return []
+
+
+@router.get("/{system_name}/mechanics")
+async def get_system_mechanics(system_name: str):
+    if not is_safe_system_subdirectory(system_name):
+        raise HTTPException(status_code=400, detail="invalid system name")
+    data = load_config_with_override(system_name, "mechanics.json")
+    return data if isinstance(data, dict) else {"system_dice": "1d20", "formulas": {}}
 
 
 @router.post("/{system_name}/columns")

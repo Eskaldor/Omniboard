@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
-import type { Actor, ColumnConfig, Effect } from '../../types';
+import type { Actor, ColumnConfig, Effect, MatrixRuleGroup } from '../../types';
 import { ActorRow } from './ActorRow';
 
 export interface InitiativeTableProps {
@@ -30,6 +30,9 @@ export interface InitiativeTableProps {
   /** initiative engine id (e.g. popcorn) — used with isManualMode for click-to-act */
   engineType?: string;
   onManualActorClick?: (actorId: string) => void | Promise<void>;
+  onCombatRefetch?: () => void | Promise<void>;
+  showMatrixColumn?: boolean;
+  matrixPrerolls?: Record<string, MatrixRuleGroup[]>;
 }
 
 export function InitiativeTable({
@@ -57,6 +60,9 @@ export function InitiativeTable({
   isManualMode = false,
   engineType = 'standard',
   onManualActorClick,
+  onCombatRefetch,
+  showMatrixColumn = false,
+  matrixPrerolls = {},
 }: InitiativeTableProps) {
   const engineKey = engineType.toLowerCase();
   const clickToActEngine = isManualMode || engineKey === 'popcorn' || engineKey === 'phase';
@@ -80,6 +86,7 @@ export function InitiativeTable({
     1 +
     standalone.length +
     groupNames.length +
+    (showMatrixColumn ? 1 : 0) +
     1 +
     1;
 
@@ -134,6 +141,7 @@ export function InitiativeTable({
             {groupNames.map((grp) => (
               <col key={grp} style={{ width: 112, minWidth: 112 }} />
             ))}
+            {showMatrixColumn && <col style={{ width: 120, minWidth: 120 }} />}
             <col style={{ width: 224, minWidth: 224 }} />
             <col style={{ width: 48 }} />
           </colgroup>
@@ -179,6 +187,11 @@ export function InitiativeTable({
                 </div>
               </th>
             ))}
+            {showMatrixColumn && (
+              <th className="px-1 py-1 text-left align-middle font-medium text-zinc-400 bg-zinc-900 max-w-[12rem] w-[7.5rem] text-[11px]">
+                {t('table_header.matrix')}
+              </th>
+            )}
             {/* Effects */}
             <th className="px-2 py-1 text-left align-middle font-medium text-zinc-400 bg-zinc-900 max-w-[14rem] w-[14rem]">{t('table_header.effects')}</th>
             {/* Actions (delete) */}
@@ -253,7 +266,10 @@ export function InitiativeTable({
                       }
                     : undefined
                 }
+                onCombatRefetch={onCombatRefetch}
                 stickyLastColumn={stickyLastColumn}
+                showMatrixColumn={showMatrixColumn}
+                matrixRules={matrixPrerolls[actor.id]}
               />
             );
           })}

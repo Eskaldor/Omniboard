@@ -158,7 +158,8 @@ export type CombatLogEntryType =
   | 'effect_removed'
   | 'actor_joined'
   | 'actor_left'
-  | 'text';
+  | 'text'
+  | 'roll';
 
 export interface CombatLogEntry {
   type: CombatLogEntryType;
@@ -209,6 +210,29 @@ export interface HardwareState {
   sync_led_to_ui: boolean;
 }
 
+/** Результат одного броска в слоте матрицы (как RollResult с бэка). */
+export interface MatrixRollResult {
+  total: number;
+  formula: string;
+  details: string;
+  is_glitch?: boolean;
+  is_crit_glitch?: boolean;
+}
+
+export interface MatrixPrerollSlot {
+  index: number;
+  used: boolean;
+  results: MatrixRollResult[];
+}
+
+/** Одно правило из matrix.json со сгенерированными слотами для актора. */
+export interface MatrixRuleGroup {
+  rule_id: string;
+  label: string;
+  display: 'single' | 'pair';
+  slots: MatrixPrerollSlot[];
+}
+
 /** Лог, автосохранение, стек undo/redo (ADR-18 / backend SessionMeta). */
 export interface SessionMeta {
   history: CombatLogEntry[];
@@ -218,6 +242,8 @@ export interface SessionMeta {
   /** Не приходит в публичном API/WebSocket payload (см. combat_session_public_payload). */
   history_stack?: Record<string, unknown>[];
   history_index?: number;
+  /** Предброски матрицы: actor_id → группы правил (POST /api/combat/matrix/generate). */
+  prerolls?: Record<string, MatrixRuleGroup[]>;
 }
 
 /**
@@ -249,7 +275,7 @@ export interface ColumnConfig {
   /** @deprecated Use max_key. Kept for backwards compatibility. */
   maxKey?: string;
   /** Column data type; default "number" */
-  type?: 'number' | 'text' | 'string' | 'checkbox_group';
+  type?: 'number' | 'fraction' | 'text' | 'string' | 'checkbox_group';
   /** For text/string columns: show full value on hover tooltip (default false). */
   show_tooltip?: boolean;
   /** For `checkbox_group`: toggle buttons / indicators */
@@ -268,6 +294,14 @@ export interface ColumnConfig {
   max_key?: string;
   /** If true, render as "Value / Max" in table when max_key is set */
   display_as_fraction?: boolean;
+  /** Read-only in the table/mini sheet; usually derived or system-owned. */
+  is_readonly?: boolean;
+  /** Enables the hover dice button in the tracker table. */
+  is_rollable?: boolean;
+  /** Custom roll expression, e.g. "1d20 + [value]". */
+  roll_formula?: string | null;
+  /** Formula id from mechanics.json; value is derived and has no editable base. */
+  computed_formula_id?: string | null;
   log_changes?: boolean;
   log_color?: string;
   show_in_mini_sheet?: boolean;

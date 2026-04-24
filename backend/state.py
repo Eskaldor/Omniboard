@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
 import asyncio
 import json
 import os
@@ -8,9 +7,7 @@ import tempfile
 import threading
 
 from backend.models import CombatSession
-
-
-AUTOSAVE_PATH = Path("data/state_autosave.json")
+from backend.paths import AUTOSAVE_PATH
 _AUTOSAVE_LOCK = threading.Lock()
 
 
