@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from simpleeval import simple_eval
 
 from backend.models import Actor, stat_cell_effective_scalar
+from backend.utils.config_loader import load_config_with_override
 
 _log = logging.getLogger("omniboard.dice")
 
@@ -124,6 +125,15 @@ class ShadowrunEngine(BaseDiceEngine):
 
 class DiceManager:
     """Выбор движка по имени системы и единая точка входа для бросков."""
+
+    @staticmethod
+    def get_system_dice(system_name: str) -> str:
+        data = load_config_with_override(system_name or "", "mechanics.json")
+        if isinstance(data, dict):
+            dice = data.get("system_dice")
+            if isinstance(dice, str) and dice.strip():
+                return dice.strip()
+        return "1d20"
 
     @staticmethod
     def get_engine(system_name: str) -> BaseDiceEngine:

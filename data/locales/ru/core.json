@@ -161,6 +161,7 @@
     "actions": "Действия",
     "width_placeholder": "80px",
     "type_number": "Число",
+    "type_fraction": "Дробь",
     "type_text": "Текст",
     "type_string": "Строка",
     "type_checkbox_group": "Группа чекбоксов",
@@ -205,7 +206,18 @@
         "advanced": "Скрывает колонку из интерфейса игроков. Видно только мастеру.",
         "log": "Включает автоматическую запись любых изменений этого стата в лог боя.",
         "miniSheet": "Отображать этот параметр в компактном чарнике (DefaultSystemSheet)."
-      }
+      },
+      "mechanics_title": "Механика (Rules)",
+      "mechanics_readonly": "Только для чтения (Read-only)",
+      "mechanics_readonly_hint": "Значение нельзя будет редактировать кликом в таблице.",
+      "mechanics_rollable": "Можно бросать (Rollable)",
+      "mechanics_roll_formula": "Формула броска",
+      "mechanics_roll_formula_placeholder": "например, 1d20 + [value]",
+      "mechanics_roll_formula_hint": "Если поле пустое, будет использоваться системный куб из mechanics.json.",
+      "mechanics_computed": "Вычисляется автоматически",
+      "mechanics_computed_formula_id": "ID вычисляемой формулы",
+      "mechanics_computed_formula_placeholder": "например, initiative_mod",
+      "mechanics_computed_hint": "ID формулы из mechanics.json. Базовое значение будет игнорироваться."
     },
     "table": {
       "help": {

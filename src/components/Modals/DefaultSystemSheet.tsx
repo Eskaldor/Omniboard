@@ -5,10 +5,150 @@ import { useCombat } from '../../contexts/CombatContext';
 import { useCombatState } from '../../contexts/CombatStateContext';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
-import { getMaxKey, buildStatUpdate, getStatNumeric } from '../../utils/stats';
+import {
+  getMaxKey,
+  getStatNumeric,
+  parseStatValueDraft,
+  type StatOverrideDraft,
+} from '../../utils/stats';
 import { InlineInput } from '../InitiativeTracker/InlineInput';
 
 type DeviceInfo = { name?: string; ip?: string; status?: string };
+
+function StatValueEditor({
+  actor,
+  column,
+  label,
+  onUpdate,
+}: {
+  key?: React.Key;
+  actor: Actor;
+  column: ColumnConfig;
+  label: string;
+  onUpdate?: (id: string, field: string, value: unknown) => void;
+}) {
+  const { t } = useTranslation('core', { useSuspense: false });
+  const raw = actor.stats[column.key];
+  const draft = parseStatValueDraft(raw);
+  const readonly = column.is_readonly === true;
+  const computedId = (column.computed_formula_id ?? '').trim();
+  const isComputed = computedId !== '';
+  const [overrides, setOverrides] = useState<StatOverrideDraft[]>(draft.overrides);
+  const [newSource, setNewSource] = useState('');
+  const [newValue, setNewValue] = useState('');
+
+  useEffect(() => {
+    setOverrides(draft.overrides);
+  }, [raw]);
+
+  const commit = (next: { base?: number; overrides?: StatOverrideDraft[] }) => {
+    if (!onUpdate || readonly) return;
+    const nextOverrides = next.overrides ?? overrides;
+    const nextBase = isComputed ? 0 : next.base ?? draft.base;
+    const optimisticValue = isComputed
+      ? draft.value
+      : Math.round(nextBase + nextOverrides.reduce((sum, o) => sum + o.value, 0));
+    onUpdate(actor.id, 'stats', {
+      ...actor.stats,
+      [column.key]: {
+        base: nextBase,
+        formula_id: isComputed ? computedId : draft.formula_id,
+        overrides: nextOverrides,
+        value: optimisticValue,
+      },
+    });
+  };
+
+  const addOverride = () => {
+    const source = newSource.trim();
+    const value = parseFloat(newValue.replace(',', '.'));
+    if (!source || Number.isNaN(value)) return;
+    const next = [...overrides, { source, value }];
+    setOverrides(next);
+    setNewSource('');
+    setNewValue('');
+    commit({ overrides: next });
+  };
+
+  const removeOverride = (index: number) => {
+    const next = overrides.filter((_, i) => i !== index);
+    setOverrides(next);
+    commit({ overrides: next });
+  };
+
+  return (
+    <div className="bg-zinc-950 p-3 rounded-lg border border-zinc-800 space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <label className="block text-xs text-zinc-500">{label}</label>
+        <span className={`text-sm tabular-nums ${readonly || isComputed ? 'text-zinc-500 italic' : 'text-zinc-200'}`}>
+          {draft.value}
+        </span>
+      </div>
+      {isComputed ? (
+        <div className="text-[10px] text-zinc-500">
+          {t('stat_editor.formula_id')}: <span className="font-mono">{computedId}</span>
+        </div>
+      ) : readonly ? (
+        <div className="text-[10px] text-zinc-500">
+          {t('stat_editor.base')}: <span className="font-mono">{draft.base}</span>
+        </div>
+      ) : (
+        <label className="block">
+          <span className="text-[10px] text-zinc-500">{t('stat_editor.base')}</span>
+          <InlineInput
+            type="number"
+            value={draft.base}
+            onChange={(val) => commit({ base: parseFloat(val) || 0 })}
+            maxValue={column.max_value}
+            className="mt-0.5 w-full bg-zinc-900 border border-zinc-700 rounded px-2 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
+          />
+        </label>
+      )}
+      {readonly ? (
+        <div className="text-[10px] text-zinc-600 italic">
+          {t('stat_editor.readonly_hint', { defaultValue: 'Read-only stat' })}
+        </div>
+      ) : (
+        <div className="border-t border-zinc-800 pt-2">
+          <div className="text-[10px] text-zinc-500 mb-1">{t('stat_editor.overrides')}</div>
+          <div className="space-y-1 mb-2">
+            {overrides.length === 0 && (
+              <div className="text-[10px] text-zinc-600 italic">{t('stat_editor.overrides_none')}</div>
+            )}
+            {overrides.map((o, i) => (
+              <div key={`${o.source}-${i}`} className="flex items-center gap-1 text-xs">
+                <span className="flex-1 truncate text-zinc-300">{o.source}</span>
+                <span className="font-mono text-zinc-400">{o.value}</span>
+                <button type="button" className="px-1 text-red-400 hover:text-red-300" onClick={() => removeOverride(i)}>
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-1">
+            <input
+              type="text"
+              placeholder={t('stat_editor.source_placeholder')}
+              className="flex-1 min-w-0 rounded border border-zinc-700 bg-zinc-900 px-1.5 py-1 text-xs"
+              value={newSource}
+              onChange={(e) => setNewSource(e.target.value)}
+            />
+            <input
+              type="number"
+              placeholder={t('stat_editor.value_modifier_placeholder')}
+              className="w-14 rounded border border-zinc-700 bg-zinc-900 px-1.5 py-1 text-xs"
+              value={newValue}
+              onChange={(e) => setNewValue(e.target.value)}
+            />
+            <button type="button" className="rounded bg-zinc-700 px-2 py-1 text-xs hover:bg-zinc-600" onClick={addOverride}>
+              {t('common.add')}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 /** Internal form content for the mini-sheet. Used by MiniSheetModal; future systems can render DnD5eSheet, etc. */
 export function DefaultSystemSheet({
@@ -350,28 +490,22 @@ export function DefaultSystemSheet({
               const maxKey = getMaxKey(col);
               const hasMaxKey = !!maxKey;
               const showAsFraction = (col.display_as_fraction ?? false) && hasMaxKey;
-              const baseVal = getStatNumeric(actor.stats[col.key], 0);
               const maxRaw = maxKey != null ? actor.stats[maxKey] : undefined;
               const maxVal = maxKey != null ? getStatNumeric(maxRaw, NaN) : NaN;
+              const maxColumn = columns.find((c) => c.key === maxKey) ?? {
+                ...col,
+                key: maxKey ?? '',
+                label: maxKey ?? '',
+                max_value: undefined,
+                display_as_fraction: false,
+              };
 
               if (showAsFraction) {
                 return (
-                  <div key={col.key} className="bg-zinc-950 p-3 rounded-lg border border-zinc-800">
-                    <label className="block text-xs text-zinc-500 mb-1.5">{colName(col)}</label>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <InlineInput
-                        type="number"
-                        value={baseVal}
-                        onChange={(val) =>
-                          onUpdate?.(actor.id, 'stats', buildStatUpdate(actor, col, col.key, parseInt(val) || 0) as Record<string, unknown>)
-                        }
-                        maxValue={Number.isFinite(maxVal) ? maxVal : (col.max_value ?? undefined)}
-                        className="w-14 bg-zinc-900 border border-zinc-700 rounded px-2 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
-                      />
-                      <span className="text-zinc-500">/</span>
-                      <span className="min-w-[2rem] text-sm text-zinc-400 tabular-nums">
-                        {maxRaw != null && Number.isFinite(maxVal) ? String(maxVal) : emptyDash}
-                      </span>
+                  <div key={col.key} className="space-y-2">
+                    <StatValueEditor actor={actor} column={col} label={colName(col)} onUpdate={onUpdate} />
+                    <div className="text-xs text-zinc-500 px-1">
+                      {t('modals.max')}: {maxRaw != null && Number.isFinite(maxVal) ? String(maxVal) : emptyDash}
                     </div>
                   </div>
                 );
@@ -379,54 +513,22 @@ export function DefaultSystemSheet({
 
               if (hasMaxKey) {
                 return (
-                  <div key={col.key} className="bg-zinc-950 p-3 rounded-lg border border-zinc-800 space-y-2">
-                    <label className="block text-xs text-zinc-500">{colName(col)}</label>
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1">
-                        <span className="text-[10px] text-zinc-500 block mb-0.5">
-                          {t('modals.current')}
-                        </span>
-                        <InlineInput
-                          type="number"
-                          value={baseVal}
-                          onChange={(val) =>
-                            onUpdate?.(actor.id, 'stats', buildStatUpdate(actor, col, col.key, parseInt(val) || 0) as Record<string, unknown>)
-                          }
-                          maxValue={Number.isFinite(maxVal) ? maxVal : col.max_value}
-                          className="w-full bg-zinc-900 border border-zinc-700 rounded px-2 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <span className="text-[10px] text-zinc-500 block mb-0.5">
-                          {t('modals.max')}
-                        </span>
-                        <InlineInput
-                          type="number"
-                          value={Number.isFinite(maxVal) ? maxVal : ''}
-                          onChange={(val) =>
-                            onUpdate?.(actor.id, 'stats', { ...actor.stats, [maxKey!]: parseInt(val) || 0 })
-                          }
-                          className="w-full bg-zinc-900 border border-zinc-700 rounded px-2 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
-                        />
-                      </div>
-                    </div>
+                  <div key={col.key} className="space-y-2">
+                    <StatValueEditor actor={actor} column={col} label={colName(col)} onUpdate={onUpdate} />
+                    {maxKey && (
+                      <StatValueEditor
+                        actor={actor}
+                        column={maxColumn as ColumnConfig}
+                        label={colName(maxColumn as ColumnConfig)}
+                        onUpdate={onUpdate}
+                      />
+                    )}
                   </div>
                 );
               }
 
               return (
-                <div key={col.key} className="bg-zinc-950 p-3 rounded-lg border border-zinc-800">
-                  <label className="block text-xs text-zinc-500 mb-1.5">{colName(col)}</label>
-                  <InlineInput
-                    type="number"
-                    value={baseVal}
-                    onChange={(val) =>
-                      onUpdate?.(actor.id, 'stats', buildStatUpdate(actor, col, col.key, parseInt(val) || 0) as Record<string, unknown>)
-                    }
-                    maxValue={col.max_value}
-                    className="w-full bg-zinc-900 border border-zinc-700 rounded px-2 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
-                  />
-                </div>
+                <StatValueEditor key={col.key} actor={actor} column={col} label={colName(col)} onUpdate={onUpdate} />
               );
             })}
           </div>

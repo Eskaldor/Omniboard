@@ -159,6 +159,7 @@
     "actions": "Actions",
     "width_placeholder": "80px",
     "type_number": "Number",
+    "type_fraction": "Fraction",
     "type_text": "Text",
     "type_string": "String",
     "type_checkbox_group": "Checkbox group",
@@ -203,7 +204,18 @@
         "advanced": "Hides the column from players; visible to the GM only.",
         "log": "Automatically writes any changes to this stat into the combat log.",
         "miniSheet": "Show this stat in the compact character sheet (DefaultSystemSheet)."
-      }
+      },
+      "mechanics_title": "Mechanics (Rules)",
+      "mechanics_readonly": "Read-only",
+      "mechanics_readonly_hint": "The value cannot be edited by clicking in the table.",
+      "mechanics_rollable": "Rollable",
+      "mechanics_roll_formula": "Roll formula",
+      "mechanics_roll_formula_placeholder": "e.g. 1d20 + [value]",
+      "mechanics_roll_formula_hint": "Leave empty to use the system dice from mechanics.json.",
+      "mechanics_computed": "Computed Automatically",
+      "mechanics_computed_formula_id": "Computed formula ID",
+      "mechanics_computed_formula_placeholder": "e.g. initiative_mod",
+      "mechanics_computed_hint": "Formula ID from mechanics.json. Base value will be ignored."
     },
     "table": {
       "help": {

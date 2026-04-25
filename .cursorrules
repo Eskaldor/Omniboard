@@ -21,6 +21,8 @@ Before proposing any code, index and consult these files as your Primary Source 
 ## 2. ASSET OVERRIDE PATTERN (ADR-4)
 - **Hierarchy**: `data/assets/default/` -> `data/assets/systems/{system_name}/`.
 - **JSON Merge**: When loading configs (bars_config, led_profiles), perform a DEEP MERGE. System-specific values override defaults; they do not replace the entire file.
+- **System Rules Are Data**: Mechanics, base dice, roll formulas, Roll Matrix rules, layouts, bars, and LED profiles live in JSON and must be loaded via `backend/utils/config_loader.py` (`load_config_with_override`). Do not hardcode game-system rules in Python or TypeScript.
+- **No Hardcoded Dice**: Never bake `1d20` (or Shadowrun pools) into UI/backend logic as a system rule. Read `mechanics.json.system_dice` and formulas instead.
 
 ## 3. UI & LOCALIZATION (i18n)
 - **NO HARDCODED STRINGS**: All user-facing text must use `t('key')` from `react-i18next`.
@@ -28,10 +30,14 @@ Before proposing any code, index and consult these files as your Primary Source 
   - UI Core: `data/locales/{lang}/core.json`
   - System Data: `data/systems/{system}/locales/{lang}.json`
 - **Decomposition**: Keep components functional and small. If a component (e.g., ConfigModal) exceeds 200 lines, split it into sub-tabs or child components.
+- **Avoid Click-Hell**: Single click in the tracker table is for quick inline editing (when not readonly) or explicit hover/action buttons (e.g. 🎲). Complex editors, formula editing, and modals must open via double-click, mini-sheet, or dedicated icons.
+- **GM Flow First**: Do not introduce center-screen modals that block combat for frequent GM actions. Prefer inline controls, side panels, popovers, or the mini-sheet.
 
 ## 4. BACKEND & HARDWARE
 - **Structure**: Route logic in `backend/routers/`, heavy/service logic in `backend/services/`.
 - **Pydantic**: Strictly V2 syntax (`model_validate`, `model_dump`).
+- **Data Models & Migrations**: When changing Pydantic models that contain `Dict` or `List`, add/maintain `@model_validator(mode="before")` migrations so old JSON autosaves, encounters, and roster files still load safely. For stat payloads (`StatValue`), keep `extra="forbid"`.
+- **Paths**: In Python, resolve project paths from `BASE_DIR = Path(__file__).resolve().parent.parent`. Never rely on process CWD for data/assets/log/autosave paths.
 - **ESP32 Rendering**: `/api/render/{id}` must output 172x320 PNGs optimized for ST7789 displays.
 
 ## 5. MULTI-AGENT PROTOCOLS

@@ -391,9 +391,8 @@ export default function App() {
         onClearCombat={clearCombat}
         onUndo={undoCombat}
         onRedo={redoCombat}
-        onGenerateMatrix={
-          (effectiveState.core.actors?.length ?? 0) > 0 ? generateMatrix : undefined
-        }
+        // Matrix generation is hidden while base roll UX is being refactored.
+        onGenerateMatrix={undefined}
       />
 
       {/* Modals */}

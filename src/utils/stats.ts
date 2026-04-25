@@ -64,11 +64,40 @@ export function parseStatValueDraft(raw: unknown): StatValueDraft {
   return { base: 0, value: 0, formula_id: null, overrides: [] };
 }
 
+type MechanicsConfig = {
+  system_dice?: unknown;
+  formulas?: unknown;
+};
+
+const mechanicsCache = new Map<string, Promise<MechanicsConfig>>();
+
+async function loadMechanics(systemName: string): Promise<MechanicsConfig> {
+  const key = (systemName || '').trim() || 'D&D 5e';
+  const cached = mechanicsCache.get(key);
+  if (cached) return cached;
+  const p = fetch(`/api/systems/${encodeURIComponent(key)}/mechanics`)
+    .then((r) => (r.ok ? r.json() : {}))
+    .then((data: unknown) =>
+      data && typeof data === 'object' && !Array.isArray(data)
+        ? (data as MechanicsConfig)
+        : {},
+    )
+    .catch(() => ({}));
+  mechanicsCache.set(key, p);
+  return p;
+}
+
+export async function getSystemDice(systemName: string): Promise<string> {
+  const cfg = await loadMechanics(systemName);
+  return typeof cfg.system_dice === 'string' && cfg.system_dice.trim()
+    ? cfg.system_dice.trim()
+    : '1d20';
+}
+
 /** Шаблон быстрого броска по системе (колонка = ключ стата). */
-export function buildQuickRollExpression(systemName: string, statKey: string): string {
-  const s = (systemName || '').toLowerCase();
-  if (s.includes('shadowrun')) return `[${statKey}]`;
-  return `1d20 + [${statKey}]`;
+export async function buildQuickRollExpression(systemName: string, statKey: string): Promise<string> {
+  const dice = await getSystemDice(systemName);
+  return `${dice} + [${statKey}]`;
 }
 
 export function getMaxKey(col: ColumnConfig): string | undefined {

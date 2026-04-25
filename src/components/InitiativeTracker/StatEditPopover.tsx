@@ -4,12 +4,14 @@ import { Dices } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Actor, ColumnConfig } from '../../types';
 import {
+  buildStatUpdate,
   buildQuickRollExpression,
   getStatNumeric,
   parseStatValueDraft,
   type StatOverrideDraft,
   type StatValueDraft,
 } from '../../utils/stats';
+import { InlineInput } from './InlineInput';
 
 function clampPopoverPosition(rect: DOMRect, popW: number, popH: number) {
   const pad = 8;
@@ -98,7 +100,7 @@ function StatEditPanel({
   }, [base, columnKey, formulaId, initialDraft.value, onClose, onSave, overrides]);
 
   const handleRoll = useCallback(async () => {
-    const expr = buildQuickRollExpression(systemName, columnKey);
+    const expr = await buildQuickRollExpression(systemName, columnKey);
     setRolling(true);
     setRollFlash(null);
     try {
@@ -287,47 +289,83 @@ export function StatNumericCell({
   onRollComplete,
   compact = false,
 }: StatNumericCellProps) {
-  const [open, setOpen] = useState(false);
-  const [rect, setRect] = useState<DOMRect | null>(null);
-  const btnRef = useRef<HTMLButtonElement>(null);
+  const { t } = useTranslation('core', { useSuspense: false });
+  const [rolling, setRolling] = useState(false);
   const raw = actor.stats?.[column.key];
   const display = getStatNumeric(raw, 0);
+  const isLocked = column.is_readonly === true || !!(column.computed_formula_id ?? '').trim();
+  const canRoll = column.is_rollable === true;
 
-  const openEditor = useCallback(() => {
-    const el = btnRef.current;
-    if (!el) return;
-    setRect(el.getBoundingClientRect());
-    setOpen(true);
-  }, []);
+  const handleRoll = useCallback(async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    if (!canRoll || rolling) return;
+    setRolling(true);
+    try {
+      const rawExpr = column.roll_formula?.trim();
+      const expr = rawExpr
+        ? rawExpr.replace(/\[value\]/g, `[${column.key}]`)
+        : await buildQuickRollExpression(systemName, column.key);
+      const res = await fetch(`/api/combat/actors/${encodeURIComponent(actor.id)}/roll`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ expression: expr, is_preroll: false }),
+      });
+      if (res.ok) await onRollComplete?.();
+    } finally {
+      setRolling(false);
+    }
+  }, [actor.id, canRoll, column.key, column.roll_formula, onRollComplete, rolling, systemName]);
+
+  const rollButton = canRoll ? (
+    <button
+      type="button"
+      disabled={rolling}
+      onClick={handleRoll}
+      className="ml-0.5 hidden rounded text-zinc-500 hover:text-amber-300 disabled:opacity-50 group-hover/stat:inline-flex"
+      title={t('stat_editor.roll')}
+    >
+      🎲
+    </button>
+  ) : null;
+
+  if (!isLocked) {
+    return (
+      <span className="group/stat inline-flex items-center justify-center gap-1">
+        <InlineInput
+          type="number"
+          value={display}
+          onChange={(val) => {
+            const parsed = parseFloat(val);
+            onUpdate({
+              stats: buildStatUpdate(
+                actor,
+                column,
+                column.key,
+                Number.isFinite(parsed) ? parsed : 0,
+              ),
+            });
+          }}
+          maxValue={column.max_value}
+          className={`rounded border border-zinc-700/80 bg-zinc-950 tabular-nums text-zinc-200 hover:border-emerald-600/60 focus:outline-none focus:border-emerald-500 ${
+            compact ? 'px-1 py-0.5 text-[11px] min-w-[2rem] w-10' : 'px-2 py-1 text-sm min-w-[3rem] w-16'
+          }`}
+        />
+        {rollButton}
+      </span>
+    );
+  }
 
   return (
-    <>
-      <button
-        ref={btnRef}
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          openEditor();
-        }}
-        className={`rounded border border-zinc-700/80 bg-zinc-950 tabular-nums text-zinc-200 hover:border-emerald-600/60 hover:bg-zinc-900 ${
-          compact ? 'px-1 py-0.5 text-[11px] min-w-[2rem]' : 'px-2 py-1 text-sm min-w-[3rem]'
-        }`}
-      >
-        {display}
-      </button>
-      {open && rect && (
-        <StatEditPanel
-          columnKey={column.key}
-          columnLabel={columnLabel}
-          actorId={actor.id}
-          draft={parseStatValueDraft(raw)}
-          anchorRect={rect}
-          systemName={systemName}
-          onClose={() => setOpen(false)}
-          onSave={(statsSlice) => onUpdate({ stats: statsSlice })}
-          onRollComplete={onRollComplete}
-        />
+    <span
+      className={`group/stat inline-flex items-center justify-center gap-1 rounded border border-zinc-800 bg-zinc-950 tabular-nums text-zinc-500 italic ${
+        compact ? 'px-1 py-0.5 text-[11px] min-w-[2rem]' : 'px-2 py-1 text-sm min-w-[3rem]'
+      }`}
+      title={t('stat_editor.readonly_hint', { defaultValue: `${columnLabel} is read-only` })}
+    >
+      <span>{display}</span>
+      {canRoll && (
+        rollButton
       )}
-    </>
+    </span>
   );
 }

@@ -189,6 +189,8 @@ async def create_actor(actor: Actor):
     await save_snapshot()
     if not actor.id:
         actor.id = str(uuid.uuid4())
+    system_name = getattr(app_state.state.core, "system", "") or ""
+    actor = _mechanics.recalculate_actor_stats(actor, system_name)
     app_state.state.core.actors.append(actor)
     if app_state.state.core.is_active:
         app_state.state.core.turn_queue.append(actor.id)

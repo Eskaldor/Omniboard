@@ -105,7 +105,7 @@ class LayoutProfile(BaseModel):
 class ColumnDef(BaseModel):
     id: str
     name: str  # Default name (can be overridden by i18n)
-    type: Literal["number", "text", "string"] = "number"  # "text" for comments/notes
+    type: Literal["number", "fraction", "text", "string"] = "number"  # "text" for comments/notes
     group: Optional[str] = None
     min_value: Optional[int] = None
     max_value: Optional[int] = None
@@ -121,6 +121,10 @@ class ColumnDef(BaseModel):
     show_in_mini_sheet: bool = False
     is_advanced: bool = False
     display_as_fraction: bool = False  # If true, render as "Value / Max" in table
+    is_readonly: bool = False
+    is_rollable: bool = False
+    roll_formula: Optional[str] = None
+    computed_formula_id: Optional[str] = None
 
 
 class StatOverride(BaseModel):

@@ -275,7 +275,7 @@ export interface ColumnConfig {
   /** @deprecated Use max_key. Kept for backwards compatibility. */
   maxKey?: string;
   /** Column data type; default "number" */
-  type?: 'number' | 'text' | 'string' | 'checkbox_group';
+  type?: 'number' | 'fraction' | 'text' | 'string' | 'checkbox_group';
   /** For text/string columns: show full value on hover tooltip (default false). */
   show_tooltip?: boolean;
   /** For `checkbox_group`: toggle buttons / indicators */
@@ -294,6 +294,14 @@ export interface ColumnConfig {
   max_key?: string;
   /** If true, render as "Value / Max" in table when max_key is set */
   display_as_fraction?: boolean;
+  /** Read-only in the table/mini sheet; usually derived or system-owned. */
+  is_readonly?: boolean;
+  /** Enables the hover dice button in the tracker table. */
+  is_rollable?: boolean;
+  /** Custom roll expression, e.g. "1d20 + [value]". */
+  roll_formula?: string | null;
+  /** Formula id from mechanics.json; value is derived and has no editable base. */
+  computed_formula_id?: string | null;
   log_changes?: boolean;
   log_color?: string;
   show_in_mini_sheet?: boolean;

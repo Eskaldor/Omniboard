@@ -62,6 +62,7 @@ export function ColumnsTab({
 
   const headerCell = 'text-[10px] font-semibold text-zinc-500 uppercase tracking-wider';
   const cellGrid = 'grid grid-cols-[26px_1fr_140px_140px_120px_90px_96px] gap-2 items-center';
+  const mechanicsTypes = new Set<ColumnConfig['type']>(['number', 'fraction']);
 
   return (
     <div className="space-y-3">
@@ -182,7 +183,7 @@ export function ColumnsTab({
                   });
                 } else {
                   updateColumn(col.key, {
-                    type: v as 'number' | 'text' | 'string',
+                    type: v as 'number' | 'fraction' | 'text' | 'string',
                     show_tooltip: undefined,
                   });
                 }
@@ -190,6 +191,7 @@ export function ColumnsTab({
               className={`${inputClass} w-full min-w-0`}
             >
               <option value="number">{t('config_modal.type_number')}</option>
+              <option value="fraction">{t('config_modal.type_fraction')}</option>
               <option value="text">{t('config_modal.type_text')}</option>
               <option value="string">{t('config_modal.type_string')}</option>
               <option value="checkbox_group">
@@ -368,6 +370,113 @@ export function ColumnsTab({
                   <Plus size={14} /> {t('config_modal.add_checkbox_item')}
                 </button>
               </div>
+            </div>
+          )}
+
+          {expertMode && mechanicsTypes.has(col.type ?? 'number') && (
+            <div className="pl-8 flex flex-col gap-3 text-sm border-l border-amber-900/40 ml-2 py-2">
+              <div className="flex items-center gap-1.5 text-xs font-medium text-amber-500/80 uppercase tracking-wider">
+                <span>{t('config.columns.mechanics_title')}</span>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-4">
+                <label
+                  className="flex items-center gap-2 cursor-pointer"
+                  title={t('config.columns.mechanics_readonly_hint')}
+                >
+                  <input
+                    type="checkbox"
+                    checked={col.is_readonly === true}
+                    onChange={(e) => updateColumn(col.key, { is_readonly: e.target.checked })}
+                    className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-zinc-900"
+                  />
+                  <span className="text-zinc-400">
+                    {t('config.columns.mechanics_readonly')}
+                  </span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={col.is_rollable === true}
+                    onChange={(e) =>
+                      updateColumn(col.key, {
+                        is_rollable: e.target.checked,
+                        roll_formula: e.target.checked ? col.roll_formula : undefined,
+                      })
+                    }
+                    className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-zinc-900"
+                  />
+                  <span className="text-zinc-400">
+                    {t('config.columns.mechanics_rollable')}
+                  </span>
+                </label>
+
+                <label
+                  className="flex items-center gap-2 cursor-pointer"
+                  title={t('config.columns.mechanics_computed_hint')}
+                >
+                  <input
+                    type="checkbox"
+                    checked={col.computed_formula_id !== undefined}
+                    onChange={(e) =>
+                      updateColumn(col.key, {
+                        computed_formula_id: e.target.checked ? (col.computed_formula_id ?? '') : undefined,
+                        ...(e.target.checked ? { is_readonly: true } : {}),
+                      })
+                    }
+                    className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-zinc-900"
+                  />
+                  <span className="text-zinc-400">
+                    {t('config.columns.mechanics_computed')}
+                  </span>
+                </label>
+              </div>
+
+              {col.is_rollable === true && (
+                <label className="flex flex-col gap-1 max-w-md">
+                  <span className="text-xs text-zinc-500">
+                    {t('config.columns.mechanics_roll_formula')}
+                  </span>
+                  <input
+                    type="text"
+                    value={col.roll_formula ?? ''}
+                    onChange={(e) =>
+                      updateColumn(col.key, { roll_formula: e.target.value.trim() || undefined })
+                    }
+                    placeholder={t('config.columns.mechanics_roll_formula_placeholder')}
+                    className={`${inputClass} font-mono`}
+                  />
+                  <span className="text-[10px] text-zinc-600">
+                    {t('config.columns.mechanics_roll_formula_hint')}
+                  </span>
+                </label>
+              )}
+
+              {col.computed_formula_id !== undefined && (
+                <label
+                  className="flex flex-col gap-1 max-w-md"
+                  title={t('config.columns.mechanics_computed_hint')}
+                >
+                  <span className="text-xs text-zinc-500">
+                    {t('config.columns.mechanics_computed_formula_id')}
+                  </span>
+                  <input
+                    type="text"
+                    value={col.computed_formula_id ?? ''}
+                    onChange={(e) =>
+                      updateColumn(col.key, {
+                        computed_formula_id: e.target.value.trim() || '',
+                      })
+                    }
+                    placeholder={t('config.columns.mechanics_computed_formula_placeholder')}
+                    className={`${inputClass} font-mono`}
+                  />
+                  <span className="text-[10px] text-zinc-600">
+                    {t('config.columns.mechanics_computed_hint')}
+                  </span>
+                </label>
+              )}
             </div>
           )}
 
