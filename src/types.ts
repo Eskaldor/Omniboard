@@ -107,7 +107,7 @@ export interface LedProfile {
 
 export interface HardwareTrigger {
   id: string;
-  event_type: 'turn_start' | 'stat_change';
+  event_type: 'turn_start' | 'stat_change' | 'miniature_bind';
   target_stat?: string | null;
   led_profile_id: string;
   transition?: string | null;
@@ -207,11 +207,21 @@ export interface MiniatureEntry {
   mac?: string | null;
   name: string;
   notes?: string | null;
+  binding_mode: 'actor' | 'slot';
+  slot_index: number;
+  slot_led_mode: 'actor' | 'custom';
+  slot_led_profile_id?: string | null;
+  ip?: string | null;
+  status?: string;
+  last_seen?: string | null;
 }
+
+export interface Miniature extends MiniatureEntry {}
 
 /** Глобальные флаги железа (ADR-18 / backend HardwareState). */
 export interface HardwareState {
   sync_led_to_ui: boolean;
+  miniatures?: Miniature[];
 }
 
 /** Результат одного броска в слоте матрицы (как RollResult с бэка). */

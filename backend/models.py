@@ -12,7 +12,7 @@ class LedProfile(BaseModel):
 
 class HardwareTrigger(BaseModel):
     id: str
-    event_type: Literal["turn_start", "stat_change"]
+    event_type: Literal["turn_start", "stat_change", "miniature_bind"]
     target_stat: Optional[str] = None  # e.g. "hp" or "mana"
     led_profile_id: str  # references LedProfile.id
     transition: Optional[str] = None
@@ -266,6 +266,21 @@ class MiniatureEntry(BaseModel):
     mac: Optional[str] = None
     name: str = ""
     notes: Optional[str] = None
+    binding_mode: Literal["actor", "slot"] = "actor"
+    slot_index: int = 0
+    slot_led_mode: Literal["actor", "custom"] = "actor"
+    slot_led_profile_id: Optional[str] = None
+    ip: Optional[str] = None
+    status: str = "offline"
+    last_seen: Optional[str] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def migrate_slot_index(cls, data: Any) -> Any:
+        if isinstance(data, dict) and data.get("slot_index") is None:
+            data = dict(data)
+            data["slot_index"] = 0
+        return data
 
     @model_validator(mode="after")
     def fill_mac_from_id(self) -> MiniatureEntry:
@@ -592,4 +607,31 @@ def combat_session_public_payload(
     data["can_undo"] = sess.history_index > 0
     data["can_redo"] = sess.history_index < len(sess.history_stack) - 1
     data["initiative_engine_locked"] = initiative_engine_locked
+    try:
+        from backend.routers.hardware import get_esp_manager
+        from backend.storage.miniatures_store import load_all as load_miniatures
+
+        devices = get_esp_manager().get_all()
+        by_id: dict[str, MiniatureEntry] = {m.id: m for m in load_miniatures()}
+        for mid, info in devices.items():
+            if mid not in by_id:
+                by_id[mid] = MiniatureEntry(
+                    id=mid,
+                    mac=str(info.get("mac") or mid),
+                    name=str(info.get("name") or mid),
+                )
+
+        miniatures: list[dict[str, Any]] = []
+        for mid in sorted(by_id):
+            mini = by_id[mid]
+            info = devices.get(mid, {})
+            payload = mini.model_dump(mode="json")
+            payload["name"] = (mini.name or str(info.get("name") or "") or mini.id)
+            payload["ip"] = info.get("ip")
+            payload["status"] = info.get("status") or "offline"
+            payload["last_seen"] = info.get("last_seen")
+            miniatures.append(payload)
+        data.setdefault("hardware", {})["miniatures"] = miniatures
+    except Exception:
+        data.setdefault("hardware", {})["miniatures"] = []
     return data

@@ -55,7 +55,13 @@ def _actor_screen_transition(actor_id: str) -> tuple[str | None, str | None]:
     return None, None
 
 
-async def proactive_render_and_push(actor_id: str, mac: str | None = None) -> None:
+async def proactive_render_and_push(
+    actor_id: str,
+    mac: str | None = None,
+    led_payload: dict | None = None,
+    transition: str | None = None,
+    transition_color: str | None = None,
+) -> None:
     """
     Proactively (re)render miniature PNG and, if a device is bound/targeted, push an image update to ESP.
 
@@ -121,16 +127,20 @@ async def proactive_render_and_push(actor_id: str, mac: str | None = None) -> No
             except OSError:
                 return
 
-            led_payload = resolve_led_payload(actor_id)
-            transition, transition_color = _actor_screen_transition(actor_id)
+            push_led_payload = led_payload if led_payload is not None else resolve_led_payload(actor_id)
+            resolved_transition, resolved_transition_color = _actor_screen_transition(actor_id)
+            push_transition = transition if transition is not None else resolved_transition
+            push_transition_color = (
+                transition_color if transition_color is not None else resolved_transition_color
+            )
             try:
                 await hardware._esp.announce_image_update(
                     target_mac,
                     safe_name,
                     screen_bri=200,
-                    led_payload=led_payload,
-                    transition=transition,
-                    transition_color=transition_color,
+                    led_payload=push_led_payload,
+                    transition=push_transition,
+                    transition_color=push_transition_color,
                 )
             except Exception:
                 # announce_image_update must be best-effort; never fail the background task.

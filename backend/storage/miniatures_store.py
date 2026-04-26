@@ -21,7 +21,13 @@ def load_all() -> list[MiniatureEntry]:
 def save_all(items: list[MiniatureEntry]) -> None:
     MINIATURES_PATH.parent.mkdir(parents=True, exist_ok=True)
     serialized = [
-        m.model_dump(mode="json", exclude_none=False, exclude_unset=False) for m in items
+        m.model_dump(
+            mode="json",
+            exclude_none=False,
+            exclude_unset=False,
+            exclude={"ip", "status", "last_seen"},
+        )
+        for m in items
     ]
     MINIATURES_PATH.write_text(
         json.dumps(serialized, indent=2, ensure_ascii=False),

@@ -95,6 +95,8 @@ class ESPManager:
         self._browser: ServiceBrowser | None = None
         self._listener: _OmniminiListener | None = None
         self._http: httpx.AsyncClient | None = None
+        self._loop: asyncio.AbstractEventLoop | None = None
+        self._initiative_line_actor_ids: dict[str, str] = {}
 
     @property
     def devices(self) -> dict[str, dict[str, Any]]:
@@ -117,6 +119,9 @@ class ESPManager:
                     "last_seen": "just now",
                 }
             return out
+
+    def reset_initiative_line_binding(self, esp_id: str) -> None:
+        self._initiative_line_actor_ids.pop(esp_id, None)
 
     @staticmethod
     def get_local_ip() -> str:
@@ -146,8 +151,11 @@ class ESPManager:
         if not ip:
             return
         with self._lock:
+            was_online = self._online.get(eid, False)
             self.active_minis[eid] = ip
             self._online[eid] = True
+        if not was_online:
+            self._schedule_bound_actor_boot_push(eid)
 
     def _sync_on_service_removed(self, name: str) -> None:
         eid = _parse_omnimini_id(name)
@@ -158,8 +166,9 @@ class ESPManager:
             self._online.pop(eid, None)
 
     async def startup(self) -> None:
+        self._loop = asyncio.get_running_loop()
         if self._http is None:
-            self._http = httpx.AsyncClient(timeout=httpx.Timeout(1.0))
+            self._http = httpx.AsyncClient(timeout=httpx.Timeout(20.0))
         if self._zeroconf is not None:
             return
         self._zeroconf = Zeroconf()
@@ -177,6 +186,101 @@ class ESPManager:
         if self._http is not None:
             await self._http.aclose()
             self._http = None
+        self._loop = None
+
+    def _schedule_bound_actor_boot_push(self, esp_id: str) -> None:
+        loop = self._loop
+        if loop is None or loop.is_closed():
+            return
+        loop.call_soon_threadsafe(
+            lambda: asyncio.create_task(self._push_bound_actor_on_boot(esp_id))
+        )
+
+    async def _push_bound_actor_on_boot(self, esp_id: str) -> None:
+        try:
+            from backend import state as app_state
+            from backend.services.hardware_triggers import find_hardware_trigger
+            from backend.services.render_push import proactive_render_and_push
+
+            actor = next(
+                (
+                    a
+                    for a in app_state.state.core.actors
+                    if (getattr(a, "miniature_id", None) or "").strip() == esp_id
+                ),
+                None,
+            )
+            if actor is None:
+                return
+            system = (getattr(app_state.state.core, "system", "") or "").strip() or "D&D 5e"
+            rule = find_hardware_trigger(system, "miniature_bind")
+            await proactive_render_and_push(
+                actor.id,
+                mac=esp_id,
+                transition=rule.transition if rule else None,
+                transition_color=rule.transition_color if rule else None,
+            )
+        except Exception:
+            pass
+
+    async def refresh_initiative_line(self, combat_session) -> None:
+        """Refresh miniatures bound to relative positions in the initiative queue."""
+        queue = list(getattr(combat_session.core, "turn_queue", []) or [])
+        if not queue:
+            self._initiative_line_actor_ids.clear()
+            return
+
+        try:
+            from backend.led_resolver import resolve_led_payload_for_profile
+            from backend.services.render_push import proactive_render_and_push
+            from backend.storage.miniatures_store import load_all as load_miniatures
+        except Exception:
+            return
+
+        slot_minis = [
+            mini
+            for mini in load_miniatures()
+            if getattr(mini, "binding_mode", "actor") == "slot"
+        ]
+        if not slot_minis:
+            return
+
+        current_index = int(getattr(combat_session.core, "current_index", 0) or 0)
+        queue_len = len(queue)
+        tasks = []
+        for mini in slot_minis:
+            try:
+                slot_index = int(mini.slot_index)
+            except (TypeError, ValueError):
+                continue
+            target_index = (current_index + slot_index) % queue_len
+            actor_id = queue[target_index]
+            if not actor_id:
+                continue
+            if self._initiative_line_actor_ids.get(mini.id) == actor_id:
+                continue
+            self._initiative_line_actor_ids[mini.id] = actor_id
+            led_payload = None
+            if (
+                getattr(mini, "slot_led_mode", "actor") == "custom"
+                and (getattr(mini, "slot_led_profile_id", None) or "").strip()
+            ):
+                led_payload = resolve_led_payload_for_profile(
+                    actor_id,
+                    str(mini.slot_led_profile_id),
+                )
+            tasks.append(
+                proactive_render_and_push(
+                    actor_id,
+                    mac=mini.id,
+                    led_payload=led_payload,
+                    transition="wipe_right",
+                    transition_color="#FFFFFF",
+                )
+            )
+
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
 
     async def _resolve_ip(self, esp_id: str) -> str | None:
         with self._lock:
@@ -264,8 +368,7 @@ class ESPManager:
             if transition_color:
                 payload["transition_params"] = {"color": transition_color}
 
-        # Strict short timeout: if ESP32 is offline / Wi-Fi lost,
-        # we must not hang background tasks for 10-30s.
+        # ESP32 may hold the HTTP response until a screen transition finishes.
         self._known_ids.add(esp_id)
         ip = await self._resolve_ip(esp_id)
         if not ip:
@@ -276,7 +379,7 @@ class ESPManager:
 
         url = f"http://{ip}/update"
         try:
-            async with httpx.AsyncClient(timeout=httpx.Timeout(1.0)) as client:
+            async with httpx.AsyncClient(timeout=httpx.Timeout(20.0)) as client:
                 r = await client.post(url, json=payload)
                 r.raise_for_status()
         except httpx.RequestError as exc:

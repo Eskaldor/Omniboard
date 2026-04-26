@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 
-from fastapi import APIRouter, Body, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Body, HTTPException
 
 from backend import combat_engine
 from backend import state as app_state
@@ -27,11 +27,23 @@ from backend.services import led_interceptor
 from backend.services.dice import DiceManager
 from backend.services.logger import add_log
 from backend.services.matrix import MatrixManager
+from backend.services.render_push import proactive_render_and_push
 
 
 router = APIRouter(prefix="/api/combat", tags=["combat"])
 
 _dice = DiceManager()
+
+
+async def _refresh_initiative_line_safe(session: CombatSession) -> None:
+    try:
+        await get_esp_manager().refresh_initiative_line(session)
+    except Exception:
+        pass
+
+
+def _queue_initiative_line_refresh(background_tasks: BackgroundTasks) -> None:
+    background_tasks.add_task(_refresh_initiative_line_safe, app_state.state)
 
 
 def _log_turn_progression(
@@ -165,7 +177,7 @@ async def matrix_use_preroll(actor_id: str, body: MatrixUseRequest):
 
 
 @router.patch("/system")
-async def update_combat_system(payload: dict):
+async def update_combat_system(payload: dict, background_tasks: BackgroundTasks):
     system_name = (payload.get("system") or "").strip()
     if not system_name:
         raise HTTPException(status_code=400, detail="system is required")
@@ -184,6 +196,7 @@ async def update_combat_system(payload: dict):
         )
     await save_snapshot()
     await broadcast_state()
+    _queue_initiative_line_refresh(background_tasks)
     return {"system": app_state.state.core.system}
 
 
@@ -210,7 +223,7 @@ async def redo_combat():
 
 
 @router.post("/next-turn")
-async def next_turn(payload: dict = Body(default_factory=dict)):
+async def next_turn(background_tasks: BackgroundTasks, payload: dict = Body(default_factory=dict)):
     raw_target = payload.get("target_actor_id")
     if isinstance(raw_target, str):
         target_actor_id = raw_target.strip() or None
@@ -222,22 +235,63 @@ async def next_turn(payload: dict = Body(default_factory=dict)):
     if not st.core.turn_queue and not st.core.is_manual_mode:
         return {"error": "Queue empty"}
 
-    await save_snapshot()
     prev_ids = combat_engine.current_turn_slot_actor_ids()
-    await asyncio.gather(
-        *[led_interceptor.reset_actor_led_to_default(aid) for aid in prev_ids],
-        return_exceptions=True,
-    )
+    # Snapshot is RAM-only; keep it in-request for correct Undo/Redo semantics.
+    await save_snapshot()
     prev_round = st.core.round
     prev_effects_by_actor: dict[str, dict[str, str]] = {
         a.id: {e.id: e.name for e in a.effects} for a in st.core.actors
     }
     app_state.state = next_turn_for_session(st, target_actor_id)
     _log_turn_progression(prev_round, prev_effects_by_actor)
+
+    # Second snapshot captures the new state (still RAM-only and fast).
+    await save_snapshot()
+
+    # UI must see the new turn before any hardware/render side effects.
+    async def _reset_prev_leds(ids: list[str]) -> None:
+        await asyncio.gather(
+            *[led_interceptor.reset_actor_led_to_default(aid) for aid in ids],
+            return_exceptions=True,
+        )
+
+    async def _process_turn_start_leds(ids: list[str]) -> None:
+        await asyncio.gather(
+            *[led_interceptor.process_led_trigger(aid, "turn_start") for aid in ids],
+            return_exceptions=True,
+        )
+
+    async def _run_turn_side_effects(prev_actor_ids: list[str], current_actor_ids: list[str]) -> None:
+        await asyncio.gather(
+            _reset_prev_leds(prev_actor_ids),
+            _process_turn_start_leds(current_actor_ids),
+            *[proactive_render_and_push(aid) for aid in current_actor_ids],
+            return_exceptions=True,
+        )
+
+    current_ids = list(combat_engine.current_turn_slot_actor_ids())
+    await broadcast_state()
+    background_tasks.add_task(_run_turn_side_effects, list(prev_ids), current_ids)
+    _queue_initiative_line_refresh(background_tasks)
+
+    return combat_session_public_payload(
+        app_state.state,
+        initiative_engine_locked=system_has_custom_logic_file(app_state.state.core.system),
+    )
+
+
+@router.post("/prev-turn")
+async def prev_turn(background_tasks: BackgroundTasks):
+    st = app_state.state
+    if not st.core.turn_queue:
+        return {"error": "Queue empty"}
+
+    await save_snapshot()
+    st.core.current_index = (st.core.current_index - 1) % len(st.core.turn_queue)
     await save_snapshot()
     await broadcast_state()
-    for aid in combat_engine.current_turn_slot_actor_ids():
-        asyncio.create_task(led_interceptor.process_led_trigger(aid, "turn_start"))
+    _queue_initiative_line_refresh(background_tasks)
+
     return combat_session_public_payload(
         app_state.state,
         initiative_engine_locked=system_has_custom_logic_file(app_state.state.core.system),
@@ -245,7 +299,7 @@ async def next_turn(payload: dict = Body(default_factory=dict)):
 
 
 @router.post("/start")
-async def start_combat():
+async def start_combat(background_tasks: BackgroundTasks):
     await save_snapshot()
     app_state.state.core.is_active = True
     app_state.state.core.round = 1
@@ -254,6 +308,7 @@ async def start_combat():
     add_log("combat_start")
     await save_snapshot()
     await broadcast_state()
+    _queue_initiative_line_refresh(background_tasks)
     return combat_session_public_payload(
         app_state.state,
         initiative_engine_locked=system_has_custom_logic_file(app_state.state.core.system),
@@ -391,7 +446,7 @@ async def clear_combat_log():
 
 
 @router.post("/load")
-async def load_combat(payload: dict):
+async def load_combat(payload: dict, background_tasks: BackgroundTasks):
     await save_snapshot()
 
     # Полный вложенный снимок (экспорт / автосейв); иначе — плоский legacy-энкаунтер.
@@ -412,6 +467,7 @@ async def load_combat(payload: dict):
         )
         await save_snapshot()
         await broadcast_state()
+        _queue_initiative_line_refresh(background_tasks)
         return combat_session_public_payload(
             app_state.state,
             initiative_engine_locked=system_has_custom_logic_file(app_state.state.core.system),
@@ -466,6 +522,7 @@ async def load_combat(payload: dict):
 
     await save_snapshot()
     await broadcast_state()
+    _queue_initiative_line_refresh(background_tasks)
     return combat_session_public_payload(
         app_state.state,
         initiative_engine_locked=system_has_custom_logic_file(app_state.state.core.system),
