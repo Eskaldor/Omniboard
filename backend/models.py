@@ -10,13 +10,23 @@ class LedProfile(BaseModel):
     colors: list[str]  # e.g. ["#FF0000", "#000000"] or ["$ROLE_COLOR"]
 
 
-class LedTriggerRule(BaseModel):
+class HardwareTrigger(BaseModel):
     id: str
-    event_type: Literal["turn_start", "stat_change"]
+    event_type: Literal["turn_start", "stat_change", "miniature_bind"]
     target_stat: Optional[str] = None  # e.g. "hp" or "mana"
     led_profile_id: str  # references LedProfile.id
+    transition: Optional[str] = None
+    transition_color: Optional[str] = None
     duration_type: Literal["time", "turn"]
     duration_ms: Optional[int] = 1000  # ms when duration_type == "time"
+
+    @model_validator(mode="before")
+    @classmethod
+    def migrate_legacy_animation(cls, data: Any) -> Any:
+        if isinstance(data, dict) and "transition" not in data and "animation" in data:
+            data = dict(data)
+            data["transition"] = data.get("animation")
+        return data
 
 
 class Effect(BaseModel):
@@ -26,6 +36,8 @@ class Effect(BaseModel):
     description: Optional[str] = None
     icon: str = ""
     led_profile_id: Optional[str] = None  # Omnimini LED profile from system led_profiles.json
+    screen_transition: Optional[str] = None
+    screen_transition_color: Optional[str] = None
     is_base: bool = False
     show_on_miniature: bool = False  # deprecated, use render_on_mini
     render_on_mini: bool = True
@@ -33,6 +45,14 @@ class Effect(BaseModel):
     experimental_ai: bool = False
     ai_prompt: str = ""
     ai_variations: dict[str, str] = Field(default_factory=dict)
+
+    @model_validator(mode="before")
+    @classmethod
+    def migrate_legacy_screen_animation(cls, data: Any) -> Any:
+        if isinstance(data, dict) and "screen_transition" not in data and "screen_animation" in data:
+            data = dict(data)
+            data["screen_transition"] = data.get("screen_animation")
+        return data
 
 class Visibility(BaseModel):
     hp: bool = True
@@ -246,6 +266,21 @@ class MiniatureEntry(BaseModel):
     mac: Optional[str] = None
     name: str = ""
     notes: Optional[str] = None
+    binding_mode: Literal["actor", "slot"] = "actor"
+    slot_index: int = 0
+    slot_led_mode: Literal["actor", "custom"] = "actor"
+    slot_led_profile_id: Optional[str] = None
+    ip: Optional[str] = None
+    status: str = "offline"
+    last_seen: Optional[str] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def migrate_slot_index(cls, data: Any) -> Any:
+        if isinstance(data, dict) and data.get("slot_index") is None:
+            data = dict(data)
+            data["slot_index"] = 0
+        return data
 
     @model_validator(mode="after")
     def fill_mac_from_id(self) -> MiniatureEntry:
@@ -572,4 +607,31 @@ def combat_session_public_payload(
     data["can_undo"] = sess.history_index > 0
     data["can_redo"] = sess.history_index < len(sess.history_stack) - 1
     data["initiative_engine_locked"] = initiative_engine_locked
+    try:
+        from backend.routers.hardware import get_esp_manager
+        from backend.storage.miniatures_store import load_all as load_miniatures
+
+        devices = get_esp_manager().get_all()
+        by_id: dict[str, MiniatureEntry] = {m.id: m for m in load_miniatures()}
+        for mid, info in devices.items():
+            if mid not in by_id:
+                by_id[mid] = MiniatureEntry(
+                    id=mid,
+                    mac=str(info.get("mac") or mid),
+                    name=str(info.get("name") or mid),
+                )
+
+        miniatures: list[dict[str, Any]] = []
+        for mid in sorted(by_id):
+            mini = by_id[mid]
+            info = devices.get(mid, {})
+            payload = mini.model_dump(mode="json")
+            payload["name"] = (mini.name or str(info.get("name") or "") or mini.id)
+            payload["ip"] = info.get("ip")
+            payload["status"] = info.get("status") or "offline"
+            payload["last_seen"] = info.get("last_seen")
+            miniatures.append(payload)
+        data.setdefault("hardware", {})["miniatures"] = miniatures
+    except Exception:
+        data.setdefault("hardware", {})["miniatures"] = []
     return data

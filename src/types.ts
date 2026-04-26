@@ -6,6 +6,8 @@ export interface Effect {
   icon?: string;
   /** Optional Omnimini LED profile id (system led_profiles.json) */
   led_profile_id?: string | null;
+  screen_transition?: string;
+  screen_transition_color?: string;
   is_base?: boolean;
   show_on_miniature?: boolean;
   render_on_mini?: boolean;
@@ -103,11 +105,13 @@ export interface LedProfile {
   colors: string[];
 }
 
-export interface LedTriggerRule {
+export interface HardwareTrigger {
   id: string;
-  event_type: 'turn_start' | 'stat_change';
+  event_type: 'turn_start' | 'stat_change' | 'miniature_bind';
   target_stat?: string | null;
   led_profile_id: string;
+  transition?: string | null;
+  transition_color?: string | null;
   duration_type: 'time' | 'turn';
   duration_ms?: number | null;
 }
@@ -203,11 +207,21 @@ export interface MiniatureEntry {
   mac?: string | null;
   name: string;
   notes?: string | null;
+  binding_mode: 'actor' | 'slot';
+  slot_index: number;
+  slot_led_mode: 'actor' | 'custom';
+  slot_led_profile_id?: string | null;
+  ip?: string | null;
+  status?: string;
+  last_seen?: string | null;
 }
+
+export interface Miniature extends MiniatureEntry {}
 
 /** Глобальные флаги железа (ADR-18 / backend HardwareState). */
 export interface HardwareState {
   sync_led_to_ui: boolean;
+  miniatures?: Miniature[];
 }
 
 /** Результат одного броска в слоте матрицы (как RollResult с бэка). */

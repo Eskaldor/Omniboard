@@ -8,4 +8,4 @@ export { ActorRosterModal } from './Modals/ActorRosterModal';
 export { EncountersModal } from './Modals/EncountersModal';
 export { HardwareModal } from './Modals/HardwareModal';
 export { LedEffectsModal } from './Modals/LedEffectsModal';
-export { LedTriggersModal } from './Modals/LedTriggersModal';
+export { HardwareTriggersModal } from './Modals/HardwareTriggersModal';

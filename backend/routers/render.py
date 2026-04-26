@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import os
@@ -20,6 +21,21 @@ from backend.services.esp_manager import sanitize_mac_for_filename
 
 router = APIRouter(prefix="/api/render", tags=["render"])
 _log = logging.getLogger(__name__)
+
+NO_CACHE_HEADERS = {
+    "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+    "Pragma": "no-cache",
+    "Expires": "0",
+}
+
+
+def _actor_screen_transition(actor) -> tuple[str | None, str | None]:
+    for effect in getattr(actor, "effects", []) or []:
+        transition = (getattr(effect, "screen_transition", None) or "").strip()
+        if transition:
+            color = (getattr(effect, "screen_transition_color", None) or "").strip() or None
+            return transition, color
+    return None, None
 
 
 def _load_system_effects(system_name: str) -> list[dict]:
@@ -75,8 +91,10 @@ async def get_rendered_miniature(
 
     system_name = state.core.system
 
+    pushed_actor = actor
     if test_effects and test_effects.strip():
         render_actor = actor.model_copy(deep=True)
+        pushed_actor = render_actor
         effects_list = _load_system_effects(system_name)
         effects_by_id = {e.get("id"): e for e in effects_list if e.get("id")}
         for eff_id in (s.strip() for s in test_effects.split(",") if s.strip()):
@@ -85,15 +103,22 @@ async def get_rendered_miniature(
                 icon = eff_def.get("icon") or ""
                 name = eff_def.get("name") or eff_id
                 render_actor.effects.append(
-                    Effect(id=eff_id, name=name, icon=icon, render_on_mini=True)
+                    Effect(
+                        id=eff_id,
+                        name=name,
+                        icon=icon,
+                        screen_transition=eff_def.get("screen_transition") or eff_def.get("screen_animation"),
+                        screen_transition_color=eff_def.get("screen_transition_color"),
+                        render_on_mini=True,
+                    )
                 )
             else:
                 render_actor.effects.append(
                     Effect(id=eff_id, name=eff_id, icon="", render_on_mini=True)
                 )
-        output_path = render_miniature(render_actor, profile, system_name)
+        output_path = await asyncio.to_thread(render_miniature, render_actor, profile, system_name)
     else:
-        output_path = render_miniature(actor, profile, system_name)
+        output_path = await asyncio.to_thread(render_miniature, actor, profile, system_name)
 
     filename = os.path.basename(output_path)
     devices = hardware._esp.devices
@@ -104,13 +129,22 @@ async def get_rendered_miniature(
         try:
             safe_name = sanitize_mac_for_filename(target_mac) + ".png"
             dest_path = RENDER_DIR / safe_name
-            shutil.copy2(output_path, dest_path)
+            # Atomic copy to prevent corrupted PNG on concurrent updates.
+            tmp_path = dest_path.parent / f".{dest_path.stem}.{os.urandom(8).hex()}.tmp{dest_path.suffix}"
+            shutil.copy2(output_path, tmp_path)
+            os.replace(tmp_path, dest_path)
             led_payload = resolve_led_payload(actor_id)
+            transition, transition_color = _actor_screen_transition(pushed_actor)
             await hardware._esp.announce_image_update(
-                target_mac, safe_name, screen_bri=200, led_payload=led_payload
+                target_mac,
+                safe_name,
+                screen_bri=200,
+                led_payload=led_payload,
+                transition=transition,
+                transition_color=transition_color,
             )
         except OSError:
             pass
 
-    return FileResponse(output_path)
+    return FileResponse(output_path, headers=NO_CACHE_HEADERS)
 

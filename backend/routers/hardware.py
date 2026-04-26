@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 from pydantic import BaseModel
 
 from backend.models import MiniatureEntry
@@ -22,6 +22,10 @@ class MiniatureUpdate(BaseModel):
     name: Optional[str] = None
     mac: Optional[str] = None
     notes: Optional[str] = None
+    binding_mode: Optional[Literal["actor", "slot"]] = None
+    slot_index: Optional[int] = None
+    slot_led_mode: Optional[Literal["actor", "custom"]] = None
+    slot_led_profile_id: Optional[str] = None
 
 
 @router.get("/miniatures")
@@ -44,19 +48,32 @@ async def create_miniature(entry: MiniatureEntry):
 
 
 @router.patch("/miniatures/{mini_id:path}")
-async def update_miniature(mini_id: str, body: MiniatureUpdate):
+async def update_miniature(mini_id: str, body: MiniatureUpdate, background_tasks: BackgroundTasks):
     """Обновить запись по id (path — для MAC с двоеточиями)."""
     target = (mini_id or "").strip()
     if not target:
         raise HTTPException(status_code=400, detail="id is required")
     items = load_miniatures()
     idx = next((i for i, m in enumerate(items) if m.id == target), None)
-    if idx is None:
-        raise HTTPException(status_code=404, detail="miniature not found")
     patch = body.model_dump(exclude_unset=True)
-    updated = MiniatureEntry.model_validate({**items[idx].model_dump(), **patch, "id": target})
-    items[idx] = updated
+    if idx is None:
+        updated = MiniatureEntry.model_validate({"id": target, "mac": target, **patch})
+        items.append(updated)
+    else:
+        updated = MiniatureEntry.model_validate({**items[idx].model_dump(), **patch, "id": target})
+        items[idx] = updated
     save_miniatures(items)
+    _esp.reset_initiative_line_binding(target)
+    if updated.binding_mode == "slot":
+        async def _refresh_line() -> None:
+            try:
+                from backend import state as app_state
+
+                await _esp.refresh_initiative_line(app_state.state)
+            except Exception:
+                pass
+
+        background_tasks.add_task(_refresh_line)
     return updated
 
 
@@ -68,8 +85,10 @@ async def delete_miniature(mini_id: str):
     items = load_miniatures()
     next_items = [m for m in items if m.id != target]
     if len(next_items) == len(items):
-        raise HTTPException(status_code=404, detail="miniature not found")
+        _esp.reset_initiative_line_binding(target)
+        return {"status": "ok"}
     save_miniatures(next_items)
+    _esp.reset_initiative_line_binding(target)
     return {"status": "ok"}
 
 
@@ -103,6 +122,7 @@ async def scan():
 @router.post("/discover")
 async def discover():
     """Legacy name: UDP discover is removed; returns current mDNS state (no network ping)."""
+    await _esp.startup()
     return {
         "status": "ok",
         "active_minis": _esp.get_active_minis(),

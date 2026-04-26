@@ -13,7 +13,7 @@ import {
   EncountersModal,
   HardwareModal,
   LedEffectsModal,
-  LedTriggersModal,
+  HardwareTriggersModal,
 } from './components/Modals';
 import { GroupCreateModal } from './components/Modals/GroupCreateModal';
 import { CombatLog } from './components/CombatLog';
@@ -64,7 +64,7 @@ export default function App() {
   const [showEncounters, setShowEncounters] = useState(false);
   const [showHardware, setShowHardware] = useState(false);
   const [showLedEffects, setShowLedEffects] = useState(false);
-  const [showLedTriggers, setShowLedTriggers] = useState(false);
+  const [showHardwareTriggers, setShowHardwareTriggers] = useState(false);
   const [showLog, setShowLog] = useState(false);
   const [portraitSelectActorId, setPortraitSelectActorId] = useState<string | null>(null);
   const [showLegendPanel, setShowLegendPanel] = useState(false);
@@ -97,8 +97,9 @@ export default function App() {
   const showFactionColorsInTable = effectiveState?.display.show_faction_colors !== false;
 
   const matrixPrerolls = effectiveState?.session?.prerolls ?? {};
-  const showMatrixColumn =
-    (effectiveState?.core.is_active ?? false) || Object.keys(matrixPrerolls).length > 0;
+  // Matrix column is currently disabled in UI (work-in-progress).
+  // Only show it if server already has prerolls to display.
+  const showMatrixColumn = Object.keys(matrixPrerolls).length > 0;
 
   const generateMatrix = async () => {
     const res = await fetch('/api/combat/matrix/generate', { method: 'POST' });
@@ -215,7 +216,7 @@ export default function App() {
         onShowConfig={() => setShowConfig(true)}
         onShowHardware={() => setShowHardware(true)}
         onShowLedProfiles={() => setShowLedEffects(true)}
-        onShowLedTriggers={() => setShowLedTriggers(true)}
+        onShowHardwareTriggers={() => setShowHardwareTriggers(true)}
         showLegendPanel={showLegendPanel}
         onToggleLegendPanel={() => setShowLegendPanel((v) => !v)}
         legendConfig={legendConfig}
@@ -492,7 +493,7 @@ export default function App() {
         system={systemName}
         onSaved={refetchState}
       />
-      <LedTriggersModal isOpen={showLedTriggers} onClose={() => setShowLedTriggers(false)} />
+      <HardwareTriggersModal isOpen={showHardwareTriggers} onClose={() => setShowHardwareTriggers(false)} />
       {showRoster && <ActorRosterModal systemName={systemName} onClose={() => setShowRoster(false)} onAdd={addFromRoster} />}
       {showEncounters && (
         <EncountersModal
