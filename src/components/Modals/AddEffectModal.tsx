@@ -5,6 +5,21 @@ import { useTranslation } from 'react-i18next';
 import { slugify } from 'transliteration';
 import { LibraryModal } from './LibraryModal';
 
+const SCREEN_TRANSITION_OPTIONS = [
+  { value: 'none', label: 'Без эффекта' },
+  { value: 'flash', label: 'Вспышка' },
+  { value: 'wipe_down', label: 'Сдвиг вниз' },
+  { value: 'wipe_right', label: 'Сдвиг вправо' },
+  { value: 'shimmer', label: 'Мерцание' },
+  { value: 'dissolve', label: 'Растворение / Fade' },
+  { value: 'pixelate', label: 'Пикселизация' },
+  { value: 'matrix', label: 'Матрица' },
+] as const;
+
+function normalizeScreenTransition(value: string): string | undefined {
+  return value && value !== 'none' ? value : undefined;
+}
+
 export function AddEffectModal({
   actor,
   systemName,
@@ -34,6 +49,8 @@ export function AddEffectModal({
   const [showIconLibrary, setShowIconLibrary] = useState(false);
   const [ledProfiles, setLedProfiles] = useState<LedProfile[]>([]);
   const [ledProfileId, setLedProfileId] = useState('');
+  const [screenTransition, setScreenTransition] = useState('none');
+  const [screenTransitionColor, setScreenTransitionColor] = useState('#ffffff');
   const [quickSearch, setQuickSearch] = useState('');
   const [previewError, setPreviewError] = useState(false);
   const [previewResolutionWarning, setPreviewResolutionWarning] = useState(false);
@@ -87,6 +104,8 @@ export function AddEffectModal({
     if (!eff) {
       setName(quickSearch);
       setLedProfileId('');
+      setScreenTransition('none');
+      setScreenTransitionColor('#ffffff');
       if (!isCustomId) {
         const base = slugify(quickSearch, { separator: '_' });
         setTechnicalId(base ? `effect_${base}` : '');
@@ -112,6 +131,8 @@ export function AddEffectModal({
     setAiPrompt(eff.ai_prompt ?? '');
     setAiVariations(eff.ai_variations ?? {});
     setLedProfileId((eff.led_profile_id && String(eff.led_profile_id).trim()) || '');
+    setScreenTransition(eff.screen_transition || (eff as Effect & { screen_animation?: string }).screen_animation || 'none');
+    setScreenTransitionColor(eff.screen_transition_color || '#ffffff');
   };
 
   const handleNameChange = (val: string) => {
@@ -129,6 +150,7 @@ export function AddEffectModal({
 
   const buildEffectPayload = (): Record<string, unknown> => {
     const trimmedLed = ledProfileId.trim();
+    const transition = normalizeScreenTransition(screenTransition);
     return {
       id: technicalId,
       name,
@@ -136,6 +158,7 @@ export function AddEffectModal({
       duration: isInfinite ? null : (duration === '' ? 1 : duration),
       icon: icon || undefined,
       ...(trimmedLed ? { led_profile_id: trimmedLed } : {}),
+      ...(transition ? { screen_transition: transition, screen_transition_color: screenTransitionColor } : {}),
       render_on_mini: renderOnMini,
       render_on_panel: renderOnPanel,
       experimental_ai: experimentalAi,
@@ -172,6 +195,7 @@ export function AddEffectModal({
   const handleAdd = () => {
     if (!name || !technicalId) return;
     const trimmedLed = ledProfileId.trim();
+    const transition = normalizeScreenTransition(screenTransition);
     onAdd({
       id: technicalId,
       name,
@@ -179,6 +203,7 @@ export function AddEffectModal({
       duration: isInfinite ? null : (duration === '' ? 1 : duration),
       icon: icon || undefined,
       ...(trimmedLed ? { led_profile_id: trimmedLed } : {}),
+      ...(transition ? { screen_transition: transition, screen_transition_color: screenTransitionColor } : {}),
       render_on_mini: renderOnMini,
       render_on_panel: renderOnPanel,
       experimental_ai: experimentalAi,
@@ -436,6 +461,40 @@ export function AddEffectModal({
                   </option>
                 ))}
               </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">
+                Переход на экране
+              </label>
+              <select
+                value={screenTransition}
+                onChange={(e) => setScreenTransition(e.target.value)}
+                className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
+              >
+                {SCREEN_TRANSITION_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              {screenTransition !== 'none' && (
+                <label className="mt-2 flex items-center gap-2 text-xs text-zinc-500">
+                  Цвет перехода
+                  <input
+                    type="color"
+                    value={screenTransitionColor}
+                    onChange={(e) => setScreenTransitionColor(e.target.value)}
+                    className="h-8 w-10 cursor-pointer rounded border border-zinc-700 bg-zinc-950 p-1"
+                  />
+                  <input
+                    type="text"
+                    value={screenTransitionColor}
+                    onChange={(e) => setScreenTransitionColor(e.target.value)}
+                    className="min-w-0 flex-1 bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-emerald-500"
+                  />
+                </label>
+              )}
             </div>
 
             {/* AI Mode */}

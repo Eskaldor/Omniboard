@@ -42,7 +42,7 @@
     "device_manager": "Диспетчер устройств",
     "config": "Настройки",
     "edit_led_profiles": "Профили подсветки",
-    "configure_led_triggers": "Триггеры подсветки"
+    "configure_led_triggers": "Триггеры подсветки и экрана"
   },
   "toolbar": {
     "undo": "Отмена",
@@ -479,7 +479,7 @@
     "color_token_placeholder": "#RRGGBB или $ROLE_COLOR"
   },
   "led_triggers": {
-    "title": "Триггеры подсветки",
+    "title": "Триггеры подсветки и экрана",
     "add_trigger": "Добавить триггер",
     "configure_triggers": "Триггеры подсветки",
     "event_turn_start": "Начало хода",

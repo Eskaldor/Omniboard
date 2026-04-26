@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 from backend.layout_profiles_store import read_layout_profiles, write_layout_profiles
 from backend.led_profiles_store import read_led_profiles
-from backend.models import LayoutProfile, LedProfile, LedTriggerRule
+from backend.models import HardwareTrigger, LayoutProfile, LedProfile
 from backend.paths import ASSETS_DIR, DATA_DIR, LOCALES_DIR, get_actors_system_dir
 from backend.utils.config_loader import is_safe_system_subdirectory, load_config_with_override
 
@@ -95,13 +95,13 @@ async def get_system_led_triggers(system_name: str):
         raw = json.loads(file_path.read_text(encoding="utf-8"))
         if not isinstance(raw, list):
             return []
-        return [LedTriggerRule.model_validate(item) for item in raw]
+        return [HardwareTrigger.model_validate(item) for item in raw]
     except Exception:
         return []
 
 
 @router.post("/{system_name}/led_triggers")
-async def save_system_led_triggers(system_name: str, rules: list[LedTriggerRule]):
+async def save_system_led_triggers(system_name: str, rules: list[HardwareTrigger]):
     sys_dir = _system_dir(system_name)
     if not sys_dir:
         raise HTTPException(status_code=400, detail="invalid system name")

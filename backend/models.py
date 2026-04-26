@@ -10,13 +10,23 @@ class LedProfile(BaseModel):
     colors: list[str]  # e.g. ["#FF0000", "#000000"] or ["$ROLE_COLOR"]
 
 
-class LedTriggerRule(BaseModel):
+class HardwareTrigger(BaseModel):
     id: str
     event_type: Literal["turn_start", "stat_change"]
     target_stat: Optional[str] = None  # e.g. "hp" or "mana"
     led_profile_id: str  # references LedProfile.id
+    transition: Optional[str] = None
+    transition_color: Optional[str] = None
     duration_type: Literal["time", "turn"]
     duration_ms: Optional[int] = 1000  # ms when duration_type == "time"
+
+    @model_validator(mode="before")
+    @classmethod
+    def migrate_legacy_animation(cls, data: Any) -> Any:
+        if isinstance(data, dict) and "transition" not in data and "animation" in data:
+            data = dict(data)
+            data["transition"] = data.get("animation")
+        return data
 
 
 class Effect(BaseModel):
@@ -26,6 +36,8 @@ class Effect(BaseModel):
     description: Optional[str] = None
     icon: str = ""
     led_profile_id: Optional[str] = None  # Omnimini LED profile from system led_profiles.json
+    screen_transition: Optional[str] = None
+    screen_transition_color: Optional[str] = None
     is_base: bool = False
     show_on_miniature: bool = False  # deprecated, use render_on_mini
     render_on_mini: bool = True
@@ -33,6 +45,14 @@ class Effect(BaseModel):
     experimental_ai: bool = False
     ai_prompt: str = ""
     ai_variations: dict[str, str] = Field(default_factory=dict)
+
+    @model_validator(mode="before")
+    @classmethod
+    def migrate_legacy_screen_animation(cls, data: Any) -> Any:
+        if isinstance(data, dict) and "screen_transition" not in data and "screen_animation" in data:
+            data = dict(data)
+            data["screen_transition"] = data.get("screen_animation")
+        return data
 
 class Visibility(BaseModel):
     hp: bool = True

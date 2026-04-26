@@ -7,6 +7,7 @@ import asyncio
 import ipaddress
 import socket
 import threading
+import time
 from typing import Any, Iterable
 
 import httpx
@@ -158,7 +159,7 @@ class ESPManager:
 
     async def startup(self) -> None:
         if self._http is None:
-            self._http = httpx.AsyncClient(timeout=httpx.Timeout(5.0))
+            self._http = httpx.AsyncClient(timeout=httpx.Timeout(1.0))
         if self._zeroconf is not None:
             return
         self._zeroconf = Zeroconf()
@@ -238,9 +239,11 @@ class ESPManager:
         image_filename: str,
         screen_bri: int = 200,
         led_payload: dict[str, Any] | None = None,
+        transition: str | None = None,
+        transition_color: str | None = None,
     ) -> bool:
         base_url = f"http://{self.get_local_ip()}:{self.SERVER_PORT}"
-        img_url = f"{base_url}/api/render/output/{image_filename}"
+        img_url = f"{base_url}/api/render/output/{image_filename}?t={int(time.time())}"
         led: dict[str, Any] = (
             led_payload
             if led_payload is not None
@@ -256,7 +259,46 @@ class ESPManager:
             "screen_bri": max(0, min(255, screen_bri)),
             "led": led,
         }
-        return await self.send_update(esp_id, payload)
+        if transition and transition != "none":
+            payload["transition"] = transition
+            if transition_color:
+                payload["transition_params"] = {"color": transition_color}
+
+        # Strict short timeout: if ESP32 is offline / Wi-Fi lost,
+        # we must not hang background tasks for 10-30s.
+        self._known_ids.add(esp_id)
+        ip = await self._resolve_ip(esp_id)
+        if not ip:
+            log_esp_warning("Omnimini %s: no IP (mDNS / .local not resolved)", esp_id)
+            with self._lock:
+                self._online[esp_id] = False
+            return False
+
+        url = f"http://{ip}/update"
+        try:
+            async with httpx.AsyncClient(timeout=httpx.Timeout(1.0)) as client:
+                r = await client.post(url, json=payload)
+                r.raise_for_status()
+        except httpx.RequestError as exc:
+            log_esp_warning("Omnimini %s: HTTP request failed (%s): %s", esp_id, url, exc)
+            with self._lock:
+                self._online[esp_id] = False
+            return False
+        except httpx.HTTPStatusError as exc:
+            log_esp_warning(
+                "Omnimini %s: HTTP error %s from %s",
+                esp_id,
+                exc.response.status_code,
+                url,
+            )
+            with self._lock:
+                self._online[esp_id] = False
+            return False
+
+        with self._lock:
+            self.active_minis[esp_id] = ip
+            self._online[esp_id] = True
+        return True
 
     _SLEEP_PAYLOAD: dict[str, Any] = {
         "screen_bri": 0,

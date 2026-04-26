@@ -6,6 +6,8 @@ export interface Effect {
   icon?: string;
   /** Optional Omnimini LED profile id (system led_profiles.json) */
   led_profile_id?: string | null;
+  screen_transition?: string;
+  screen_transition_color?: string;
   is_base?: boolean;
   show_on_miniature?: boolean;
   render_on_mini?: boolean;
@@ -103,11 +105,13 @@ export interface LedProfile {
   colors: string[];
 }
 
-export interface LedTriggerRule {
+export interface HardwareTrigger {
   id: string;
   event_type: 'turn_start' | 'stat_change';
   target_stat?: string | null;
   led_profile_id: string;
+  transition?: string | null;
+  transition_color?: string | null;
   duration_type: 'time' | 'turn';
   duration_ms?: number | null;
 }

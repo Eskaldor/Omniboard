@@ -4,9 +4,9 @@ import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
 import { ColumnsContext } from '../../contexts/ColumnsContext';
 import { useCombatState } from '../../contexts/CombatStateContext';
-import type { ColumnConfig, LedProfile, LedTriggerRule } from '../../types';
+import type { ColumnConfig, HardwareTrigger, LedProfile } from '../../types';
 
-/** Value stored in LedTriggerRule.target_stat (API column id if set, else key). */
+/** Value stored in HardwareTrigger.target_stat (API column id if set, else key). */
 function columnStatId(col: ColumnConfig): string {
   const ext = col as ColumnConfig & { id?: string };
   return (ext.id && String(ext.id).trim()) || col.key;
@@ -29,19 +29,36 @@ function newRuleId(): string {
   return `rule-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-function createEmptyRule(profiles: LedProfile[]): LedTriggerRule {
+const SCREEN_TRANSITION_OPTIONS = [
+  { value: 'none', label: 'Без эффекта' },
+  { value: 'flash', label: 'Вспышка' },
+  { value: 'wipe_down', label: 'Сдвиг вниз' },
+  { value: 'wipe_right', label: 'Сдвиг вправо' },
+  { value: 'shimmer', label: 'Мерцание' },
+  { value: 'dissolve', label: 'Растворение / Fade' },
+  { value: 'pixelate', label: 'Пикселизация' },
+  { value: 'matrix', label: 'Матрица' },
+] as const;
+
+function normalizeTransition(value: unknown): HardwareTrigger['transition'] {
+  return typeof value === 'string' && value && value !== 'none' ? value : null;
+}
+
+function createEmptyRule(profiles: LedProfile[]): HardwareTrigger {
   const firstId = profiles[0]?.id ?? 'default_static';
   return {
     id: newRuleId(),
     event_type: 'turn_start',
     target_stat: null,
     led_profile_id: firstId,
+    transition: null,
+    transition_color: '#ffffff',
     duration_type: 'time',
     duration_ms: 1000,
   };
 }
 
-function normalizeLoadedRule(raw: unknown, profiles: LedProfile[]): LedTriggerRule {
+function normalizeLoadedRule(raw: unknown, profiles: LedProfile[]): HardwareTrigger {
   const firstId = profiles[0]?.id ?? 'default_static';
   if (!raw || typeof raw !== 'object') {
     return createEmptyRule(profiles);
@@ -57,12 +74,14 @@ function normalizeLoadedRule(raw: unknown, profiles: LedProfile[]): LedTriggerRu
     event_type: eventType,
     target_stat: typeof o.target_stat === 'string' ? o.target_stat : null,
     led_profile_id: ledId,
+    transition: normalizeTransition(o.transition ?? o.animation),
+    transition_color: typeof o.transition_color === 'string' && o.transition_color ? o.transition_color : '#ffffff',
     duration_type: durationType,
     duration_ms: durationMs,
   };
 }
 
-export function LedTriggersModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+export function HardwareTriggersModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { t } = useTranslation('core', { useSuspense: false });
   const columnsCtx = useContext(ColumnsContext);
   const { state } = useCombatState();
@@ -71,7 +90,7 @@ export function LedTriggersModal({ isOpen, onClose }: { isOpen: boolean; onClose
   const systemNameForI18n = system || 'D&D 5e';
 
   const [profiles, setProfiles] = useState<LedProfile[]>([]);
-  const [rules, setRules] = useState<LedTriggerRule[]>([]);
+  const [rules, setRules] = useState<HardwareTrigger[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -116,7 +135,7 @@ export function LedTriggersModal({ isOpen, onClose }: { isOpen: boolean; onClose
     void load();
   }, [isOpen, load]);
 
-  const updateRule = (id: string, patch: Partial<LedTriggerRule>) => {
+  const updateRule = (id: string, patch: Partial<HardwareTrigger>) => {
     setRules((prev) =>
       prev.map((r) => {
         if (r.id !== id) return r;
@@ -150,6 +169,8 @@ export function LedTriggersModal({ isOpen, onClose }: { isOpen: boolean; onClose
         event_type: r.event_type,
         target_stat: r.event_type === 'stat_change' ? (r.target_stat?.trim() || null) : null,
         led_profile_id: r.led_profile_id,
+        transition: normalizeTransition(r.transition),
+        transition_color: normalizeTransition(r.transition) ? (r.transition_color || '#ffffff') : null,
         duration_type: r.duration_type,
         duration_ms: r.duration_type === 'time' ? Math.max(0, r.duration_ms ?? 1000) : (r.duration_ms ?? 1000),
       }));
@@ -174,7 +195,7 @@ export function LedTriggersModal({ isOpen, onClose }: { isOpen: boolean; onClose
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-5xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
         <div className="p-4 border-b border-zinc-800 flex flex-wrap gap-2 justify-between items-center bg-zinc-900/50">
           <h3 className="text-lg font-medium text-zinc-100">
-            {t('led_triggers.title')}
+            Триггеры подсветки и экрана (Hardware Triggers)
           </h3>
           <button
             type="button"
@@ -209,7 +230,7 @@ export function LedTriggersModal({ isOpen, onClose }: { isOpen: boolean; onClose
                 {rules.map((rule) => (
                   <div
                     key={rule.id}
-                    className="grid grid-cols-1 gap-3 lg:gap-2 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,100px)_auto] items-end p-3 rounded-xl border border-zinc-800 bg-zinc-950/80"
+                    className="grid grid-cols-1 gap-3 lg:gap-2 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,100px)_auto] items-end p-3 rounded-xl border border-zinc-800 bg-zinc-950/80"
                   >
                     <div>
                       <label className="block text-xs text-zinc-500 mb-1">
@@ -219,7 +240,7 @@ export function LedTriggersModal({ isOpen, onClose }: { isOpen: boolean; onClose
                         value={rule.event_type}
                         onChange={(e) =>
                           updateRule(rule.id, {
-                            event_type: e.target.value as LedTriggerRule['event_type'],
+                            event_type: e.target.value as HardwareTrigger['event_type'],
                           })
                         }
                         className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
@@ -290,13 +311,46 @@ export function LedTriggersModal({ isOpen, onClose }: { isOpen: boolean; onClose
                     </div>
                     <div>
                       <label className="block text-xs text-zinc-500 mb-1">
+                        Переход экрана
+                      </label>
+                      <select
+                        value={rule.transition || 'none'}
+                        onChange={(e) => updateRule(rule.id, { transition: normalizeTransition(e.target.value) })}
+                        className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
+                      >
+                        {SCREEN_TRANSITION_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      {rule.transition && (
+                        <label className="mt-2 flex items-center gap-2 text-xs text-zinc-500">
+                          Цвет
+                          <input
+                            type="color"
+                            value={rule.transition_color || '#ffffff'}
+                            onChange={(e) => updateRule(rule.id, { transition_color: e.target.value })}
+                            className="h-8 w-10 cursor-pointer rounded border border-zinc-700 bg-zinc-900 p-1"
+                          />
+                          <input
+                            type="text"
+                            value={rule.transition_color || '#ffffff'}
+                            onChange={(e) => updateRule(rule.id, { transition_color: e.target.value })}
+                            className="min-w-0 flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-emerald-500"
+                          />
+                        </label>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-xs text-zinc-500 mb-1">
                         {t('led_triggers.duration')}
                       </label>
                       <select
                         value={rule.duration_type}
                         onChange={(e) =>
                           updateRule(rule.id, {
-                            duration_type: e.target.value as LedTriggerRule['duration_type'],
+                            duration_type: e.target.value as HardwareTrigger['duration_type'],
                           })
                         }
                         className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"

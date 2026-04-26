@@ -47,7 +47,7 @@ export interface AppHeaderProps {
   onShowMiniatures: () => void;
   onShowHardware: () => void;
   onShowLedProfiles: () => void;
-  onShowLedTriggers: () => void;
+  onShowHardwareTriggers: () => void;
   onShowLibrary: () => void;
   onShowConfig: () => void;
   showLegendPanel: boolean;
@@ -75,7 +75,7 @@ export function AppHeader(props: AppHeaderProps) {
     onShowMiniatures,
     onShowHardware,
     onShowLedProfiles,
-    onShowLedTriggers,
+    onShowHardwareTriggers,
     onShowLibrary,
     onShowConfig,
     showLegendPanel,
@@ -279,7 +279,7 @@ export function AppHeader(props: AppHeaderProps) {
             </button>
             <button
               type="button"
-              onClick={() => handleMiniaturesAction(onShowLedTriggers)}
+              onClick={() => handleMiniaturesAction(onShowHardwareTriggers)}
               className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-zinc-200 hover:bg-zinc-700 hover:text-zinc-100 transition-colors"
             >
               <Zap size={16} className="text-zinc-400 shrink-0" />

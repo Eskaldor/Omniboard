@@ -1,5 +1,5 @@
 """
-LED trigger rules: react to combat events and push Omnimini /update LED payloads.
+Hardware trigger rules: react to combat events and push Omnimini /update payloads.
 """
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ import json
 
 from backend import state as app_state
 from backend.led_resolver import ACTIVE_OVERRIDES, resolve_led_payload, resolve_led_payload_for_profile
-from backend.models import LedTriggerRule
+from backend.models import HardwareTrigger
 from backend.paths import DATA_DIR
 from backend.routers.hardware import _esp
 
@@ -24,7 +24,7 @@ def _safe_system_dir(system_name: str) -> bool:
     return True
 
 
-def _load_triggers(system_name: str) -> list[LedTriggerRule]:
+def _load_triggers(system_name: str) -> list[HardwareTrigger]:
     if not _safe_system_dir(system_name):
         return []
     path = (DATA_DIR / system_name.strip() / "led_triggers.json").resolve()
@@ -38,16 +38,16 @@ def _load_triggers(system_name: str) -> list[LedTriggerRule]:
         raw = json.loads(path.read_text(encoding="utf-8"))
         if not isinstance(raw, list):
             return []
-        return [LedTriggerRule.model_validate(item) for item in raw]
+        return [HardwareTrigger.model_validate(item) for item in raw]
     except (OSError, ValueError):
         return []
 
 
 def _find_matching_rule(
-    rules: list[LedTriggerRule],
+    rules: list[HardwareTrigger],
     event_type: str,
     target_stat: str | None,
-) -> LedTriggerRule | None:
+) -> HardwareTrigger | None:
     for rule in rules:
         if rule.event_type != event_type:
             continue
@@ -127,7 +127,12 @@ async def process_led_trigger(actor_id: str, event_type: str, target_stat: str |
         return
 
     ACTIVE_OVERRIDES[actor_id][rule.duration_type] = rule.led_profile_id
-    await _esp.send_update(mid, {"led": led})
+    payload = {"led": led}
+    if rule.transition and rule.transition != "none":
+        payload["transition"] = rule.transition
+        if rule.transition_color:
+            payload["transition_params"] = {"color": rule.transition_color}
+    await _esp.send_update(mid, payload)
 
     if rule.duration_type == "time":
         ms = rule.duration_ms if rule.duration_ms is not None else 1000
