@@ -1,4 +1,4 @@
-import { Settings, BookImage, MonitorSmartphone, Layers, Link2, ChevronDown } from 'lucide-react';
+import { Settings, BookImage, MonitorSmartphone, Layers, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useRef, useState, useEffect } from 'react';
 import type { CombatLogEntry, LegendConfig } from '../types';
@@ -13,7 +13,6 @@ export interface ToolbarProps {
   history: CombatLogEntry[];
   showLog: boolean;
   onToggleLog: () => void;
-  onShowMiniatures: () => void;
   onShowLibrary: () => void;
   onShowConfig: () => void;
   onToggleLegendPanel: () => void;
@@ -39,7 +38,6 @@ export function Toolbar(props: ToolbarProps) {
     history,
     showLog,
     onToggleLog,
-    onShowMiniatures,
     onShowLibrary,
     onShowConfig,
     onToggleLegendPanel,
@@ -124,14 +122,6 @@ export function Toolbar(props: ToolbarProps) {
               miniaturesDropdownOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-1 pointer-events-none'
             }`}
           >
-            <button
-              type="button"
-              onClick={() => handleMiniaturesAction(onShowMiniatures)}
-              className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-zinc-200 hover:bg-zinc-700 hover:text-zinc-100 transition-colors"
-            >
-              <Link2 size={16} className="text-zinc-400 shrink-0" />
-              {t('header.table_binding')}
-            </button>
             <button
               type="button"
               onClick={() => handleMiniaturesAction(openHardwareModal)}

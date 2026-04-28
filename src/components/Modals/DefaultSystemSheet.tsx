@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Download, Upload, Plus, RefreshCcw } from 'lucide-react';
+import { Save, Download, Upload, Plus, RefreshCcw, Wrench } from 'lucide-react';
 import { Actor, ColumnConfig } from '../../types';
 import { useCombat } from '../../contexts/CombatContext';
 import { useCombatState } from '../../contexts/CombatStateContext';
@@ -12,8 +12,15 @@ import {
   type StatOverrideDraft,
 } from '../../utils/stats';
 import { InlineInput } from '../InitiativeTracker/InlineInput';
+import { usePortraitCacheVersion } from '../../utils/portraitCache';
 
 type DeviceInfo = { name?: string; ip?: string; status?: string };
+
+function withCacheBuster(url: string, buster: string | number): string {
+  if (!url) return url;
+  const sep = url.includes('?') ? '&' : '?';
+  return `${url}${sep}v=${encodeURIComponent(String(buster))}`;
+}
 
 function StatValueEditor({
   actor,
@@ -168,11 +175,21 @@ export function DefaultSystemSheet({
   const emptyDash = t('common.empty_dash');
   const { state } = useCombatState();
   const { systemLayoutProfiles } = useCombat();
+  const portraitCacheVersion = usePortraitCacheVersion();
   const colName = (col: ColumnConfig) =>
     i18n.t(`${col.key}.name`, { ns: `systems/${systemName}` }) || col.label || col.key;
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [expertMode, setExpertMode] = useState(false);
   const [devices, setDevices] = useState<Record<string, DeviceInfo>>({});
+
+  const portraitSrc = React.useMemo(() => {
+    const url = actor.portrait ?? '';
+    if (!url) return '';
+    // Only bust cache for local-served assets (external URLs shouldn't be mutated).
+    const isLocal = url.startsWith('/assets/') || url.startsWith('/api/assets/');
+    const buster = `${portraitCacheVersion}-${actor.id}-${actor.name}-${url}`;
+    return isLocal ? withCacheBuster(url, buster) : url;
+  }, [actor.id, actor.name, actor.portrait, portraitCacheVersion]);
 
   const actors = state?.core.actors ?? [];
   const activeGroups = React.useMemo(() => {
@@ -270,27 +287,26 @@ export function DefaultSystemSheet({
 
   return (
     <div className="p-6 space-y-6 transition-opacity duration-150">
-      <div className="flex items-center justify-center">
-        <div className="inline-flex rounded-full bg-zinc-800 p-0.5 border border-zinc-700/50">
+      <div className="flex justify-end mb-4">
+        <label className="flex items-center cursor-pointer gap-3">
+          <span className="text-sm font-medium text-zinc-400">{t('modals.tab_expert')}</span>
           <button
             type="button"
-            onClick={() => setExpertMode(false)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              !expertMode ? 'bg-emerald-600 text-white' : 'text-zinc-400 hover:text-zinc-200'
+            role="switch"
+            aria-checked={expertMode}
+            onClick={() => setExpertMode((v) => !v)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-zinc-900 ${
+              expertMode ? 'bg-emerald-500' : 'bg-zinc-700'
             }`}
+            title={t('modals.tab_expert')}
           >
-            {t('config_modal.simple_mode')}
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                expertMode ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
           </button>
-          <button
-            type="button"
-            onClick={() => setExpertMode(true)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              expertMode ? 'bg-emerald-600 text-white' : 'text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            {t('config_modal.expert_mode')}
-          </button>
-        </div>
+        </label>
       </div>
 
       {!expertMode ? (
@@ -311,7 +327,7 @@ export function DefaultSystemSheet({
                 {actor.portrait ? (
                   <>
                     <img
-                      src={actor.portrait}
+                      src={portraitSrc}
                       alt={actor.name}
                       className="w-full h-full object-cover"
                       referrerPolicy="no-referrer"
@@ -432,7 +448,7 @@ export function DefaultSystemSheet({
                     onClick={() => {
                       const mac = actor.miniature_id;
                       if (!mac) return;
-                      fetch(`/api/render/${actor.id}?mac=${encodeURIComponent(mac)}`).catch(console.error);
+                      fetch(`/api/render/${actor.id}?mac=${encodeURIComponent(mac)}&t=${Date.now()}`).catch(console.error);
                     }}
                     disabled={!actor.miniature_id}
                     title={t('modals.refresh_miniature_screen')}

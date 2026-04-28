@@ -1,6 +1,6 @@
 # Omniboard — План рефакторинга
 
-> Создан: 01.03.2026 · Обновлено: 21.04.2026  
+> Создан: 01.03.2026 · Обновлено: 26.04.2026  
 > Статус: Активный план работ (P0 по стейту/роутерам закрыт — см. **«Выполнено»**)
 
 ---
@@ -17,6 +17,12 @@
 - В **`backend/models.py`**: **`CombatSession`** (**`core: CombatCore`**, **`display: DisplayState`**, **`hardware: HardwareState`**, **`session: SessionMeta`**), legacy-валидация, адаптеры к плоскому **`CombatState`** для движков.
 - **`history_stack`** / **`history_index`** перенесены в **`SessionMeta`** (единая модель сессии вместо разнесения по «двум историям» без структуры).
 - Профили раскладок мини-экрана **не** хранятся в **`DisplayState`**; загрузка через **`load_config_with_override`** и API **`/api/systems/{name}/layouts`**; глобальные миньки — **`/api/hardware/miniatures`** и **`data/miniatures.json`**.
+
+### Линия инициативы для аппаратных миниатюр (26.04.2026)
+- **`MiniatureEntry`** расширен режимами привязки: **`binding_mode`** (`actor` / `slot`), **`slot_index`** как offset от текущего хода, **`slot_led_mode`** (`actor` / `custom`) и **`slot_led_profile_id`** для LED-переопределения слота.
+- **`HardwareState` public payload** теперь содержит производный список **`hardware.miniatures`**: сохранённые записи из `data/miniatures.json` + текущие mDNS-устройства (`ip`, `status`, `last_seen`) без переноса этого runtime-среза в autosave.
+- **`HardwareModal`** стал единым диспетчером железа: таблица устройств, режим привязки, назначение актора/позиции очереди, LED-профиль слота, Blink/Forget и row-level loading. **`MiniaturesModal`** оставлена отдельно как редактор **вида/лейаута** экранов.
+- **`ESPManager.refresh_initiative_line`** пересчитывает slot-миниатюры после смены очереди/хода и пушит только изменившиеся цели, с `wipe_right` transition. HTTP timeout для ESP `/update` поднят до **20 s** из-за синхронных анимаций прошивки.
 
 ---
 
@@ -103,15 +109,28 @@ export async function apiCall<T>(url: string, options?: RequestInit): Promise<T>
 **Проблема:** Потеря соединения (спящий режим ноутбука) не восстанавливается автоматически.  
 **Решение:** Добавить в `useCombatState.ts` reconnect с exponential backoff.
 
+#### 7. Масштабирование proactive render / ESP push до 20 миниатюр
+**Проблема:** При 10-20 online ESP32 один ход может породить бурст CPU-рендера, дисковых операций и HTTP `/update`. UI уже не должен ждать эти side effects (см. ADR-21), но без ограничений фоновые задачи могут забить threadpool, Wi-Fi или сам event loop косвенной нагрузкой.
+
+**Предлагаемый план:**
+1. **Bounded render concurrency:** добавить общий `asyncio.Semaphore(2..4)` вокруг `asyncio.to_thread(render_miniature, ...)`, чтобы 20 рендеров не заняли весь threadpool/CPU одновременно.
+2. **Bounded ESP concurrency:** добавить semaphore на ESP `/update` (ориентир 4..6 одновременных запросов), чтобы не создавать сетевой шторм на роутере и ESP32.
+3. **Shared HTTP client for image announce:** не создавать новый `httpx.AsyncClient` в каждом `announce_image_update`; использовать общий клиент с firmware-aware timeout (сейчас принят ориентир **20 s** для экранных transition) и `Limits(max_connections=...)`.
+4. **Latest-wins render queue:** оформить coalescing по `actor_id` как явную очередь сервиса: если актор обновился 10 раз за секунду, рендерится только последнее состояние.
+5. **Priority lanes:** LED/turn feedback — быстрый lane; full PNG render/push — low-priority lane с debounce. На смене хода мастер должен сразу видеть UI, железо может догонять.
+6. **Timing logs / metrics:** логировать длительность `next_turn`, `broadcast_state`, `render_miniature`, atomic copy, ESP `/update`; без этого деградация на 20 миниатюрах будет плохо диагностироваться.
+
+**Критерий готовности:** при 20 привязанных online-миниатюрах `/api/combat/next-turn` отдаёт HTTP-ответ и WS-обновление без заметного UI лага, а фоновые render/ESP задачи завершаются best-effort без накопления бесконечной очереди.
+
 ---
 
 ### 🟢 P2 — Улучшения (можно отложить)
 
-#### 7. Миграция UI-строк на i18n
+#### 8. Миграция UI-строк на i18n
 **Зависимость:** Только после разбивки `App.tsx` (п.3)!  
 **Порядок:** При создании каждого нового компонента сразу добавлять `useTranslation` и выносить строки в `data/locales/ru/core.json`.
 
-#### 8. Чистка зависимостей `package.json`
+#### 9. Чистка зависимостей `package.json`
 **BUG-3, BUG-4:** Удалить `express`, `better-sqlite3`, добавить `package-lock.json` в `.gitignore`, переименовать `name` → `"omniboard"`.  
 **Сложность:** 2 минуты, можно сделать руками прямо сейчас.
 
@@ -191,6 +210,7 @@ export async function apiCall<T>(url: string, options?: RequestInit): Promise<T>
 | `actors`, `turn_queue`, `current_index`, `current_pass`, `round`, `is_manual_mode`, `engine_type`, `system`, `is_active`, `active_reaction_actor_id` | `CombatCore` |
 | `selected_layout_id`, `legend`, `show_group_colors`, `show_faction_colors`, `table_centered` | `DisplayState` (legacy-ключи `layout_profiles` / `layout` отбрасываются валидатором) |
 | `sync_led_to_ui` (+ будущие поля ESP) | `HardwareState` |
+| Производный список устройств (`miniatures`, `ip`, `status`, `last_seen`) | `HardwareState` public payload; источник — `data/miniatures.json` + mDNS, не обязательный autosave-контракт |
 | `history`, `history_cursor`, `enable_logging`, `autosave_enabled` | `SessionMeta` |
 | `history_stack`, `history_index` | **`SessionMeta`** (в `state.py` остаётся только глобальный экземпляр **`CombatSession`**) |
 
@@ -352,5 +372,6 @@ git commit -m "chore: add package-lock.json to .gitignore"
 
 - [x] Документация актуализирована
 - [x] P0-1, P0-2 и декомпозиция стейта (ADR-18, фаза 1) выполнены
+- [x] Линия инициативы и единый диспетчер железа реализованы (см. Progress Фаза 13.6)
 - [ ] План согласован с Nevrar (при необходимости — уточнение следующих приоритетов)
 - [x] Начало рефакторинга (архитектура бэкенда и стейта)

@@ -7,6 +7,13 @@ import { getMaxKey, getStatNumeric, isStatValuePayload } from '../../utils/stats
 import { InlineInput } from './InlineInput';
 import { StatNumericCell } from './StatEditPopover';
 import { TextEditorModal } from '../Modals/TextEditorModal';
+import { usePortraitCacheVersion } from '../../utils/portraitCache';
+
+function withCacheBuster(url: string, buster: string | number): string {
+  if (!url) return url;
+  const sep = url.includes('?') ? '&' : '?';
+  return `${url}${sep}v=${encodeURIComponent(String(buster))}`;
+}
 
 function matrixSlotSummary(
   rule: MatrixRuleGroup,
@@ -369,6 +376,7 @@ export const ActorRow = React.memo(function ActorRow({
 }: ActorRowProps) {
   const { t } = useTranslation('core', { useSuspense: false });
   const emptyDash = t('common.empty_dash');
+  const portraitCacheVersion = usePortraitCacheVersion();
 
   const colLabel = useCallback(
     (col: ColumnConfig) =>
@@ -417,20 +425,51 @@ export const ActorRow = React.memo(function ActorRow({
 
   const closeTextEditor = useCallback(() => setTextEditor(null), []);
 
-  const renderHash = useMemo(() => {
-    const relevantData = {
-      stats: actor.stats ?? {},
-      effects: (actor.effects ?? []).map((e) => e.id),
-      layout: actor.layout_profile_id ?? null,
-      name: actor.name ?? '',
-    };
-    try {
-      return btoa(unescape(encodeURIComponent(JSON.stringify(relevantData)))).slice(0, 12);
-    } catch {
-      // Fallback when btoa fails (should be rare); still changes when name changes
-      return String(actor.name ?? '').slice(0, 12);
+  // ---- Cache busters: ONLY primitives, no deep memo dependencies. ----
+  const hp = getStatNumeric(actor.stats?.hp, 0);
+
+  const effectsSig = useMemo(() => {
+    const list = actor.effects ?? [];
+    // String is a primitive; React compares by value.
+    return list.map((e) => `${e.id}:${e.duration ?? ''}`).join('|');
+  }, [actor.effects]);
+
+  const statsSig = useMemo(() => {
+    const stats = actor.stats ?? {};
+    const keys = Object.keys(stats).sort();
+    // Keep it cheap: only numeric-ish values affect the miniature overlay in most cases.
+    // This is not cryptographic; it just needs to change reliably.
+    const parts: string[] = [];
+    for (const k of keys) {
+      const raw = (stats as any)[k];
+      const n = isStatValuePayload(raw) ? getStatNumeric(raw, 0) : Number(raw);
+      parts.push(`${k}:${Number.isFinite(n) ? n : 0}`);
     }
-  }, [actor.effects, actor.layout_profile_id, actor.name, actor.stats]);
+    return parts.join('|');
+  }, [actor.stats]);
+
+  const miniBuster = `${actor.id}-${actor.name}-${actor.layout_profile_id ?? ''}-${hp}-${statsSig}-${effectsSig}`;
+
+  // Miniature is proactively rendered to disk; fetch the static file after a short delay.
+  const [miniUrl, setMiniUrl] = useState(() => `/api/render/output/${encodeURIComponent(actor.id)}.png`);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setMiniUrl(
+        `/api/render/output/${encodeURIComponent(actor.id)}.png?v=${encodeURIComponent(miniBuster)}`,
+      );
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [actor.id, miniBuster]);
+
+  const portraitBuster = `${portraitCacheVersion}-${actor.id}-${actor.name}-${actor.portrait ?? ''}`;
+
+  const portraitSrc = useMemo(() => {
+    const url = actor.portrait ?? '';
+    if (!url) return '';
+    // Only bust cache for local-served assets; external URLs shouldn't be mutated.
+    const isLocal = url.startsWith('/assets/') || url.startsWith('/api/assets/');
+    return isLocal ? withCacheBuster(url, portraitBuster) : url;
+  }, [actor.portrait, portraitBuster]);
 
   const handleRowClick = (e: React.MouseEvent<HTMLTableRowElement>) => {
     if (!manualRowActive) return;
@@ -473,7 +512,7 @@ export const ActorRow = React.memo(function ActorRow({
                   }`}
                 >
                   <img
-                    src={actor.miniature_id ? `/api/render/${actor.id}?rev=${renderHash}` : actor.portrait!}
+                    src={actor.miniature_id ? miniUrl : portraitSrc}
                     alt={actor.name}
                     className="w-full h-full object-cover"
                     referrerPolicy="no-referrer"

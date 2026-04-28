@@ -37,7 +37,7 @@ export function TableTab({
   return (
     <div className="space-y-3">
       <div className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
-        {t('config_modal.table')}
+        {t('config_modal.section_display')}
       </div>
 
       <div className="bg-zinc-950/40 border border-zinc-800 rounded-xl p-3">

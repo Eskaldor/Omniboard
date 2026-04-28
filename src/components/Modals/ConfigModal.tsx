@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, Save, Settings2, Monitor, Columns3, Languages } from 'lucide-react';
 import { ColumnConfig } from '../../types';
 import { useCombatState } from '../../contexts/CombatStateContext';
 import { useTranslation } from 'react-i18next';
@@ -7,6 +7,8 @@ import { SystemTab } from './ConfigTabs/SystemTab';
 import { ColumnsTab } from './ConfigTabs/ColumnsTab';
 import { TableTab } from './ConfigTabs/TableTab';
 import { LanguageTab } from './ConfigTabs/LanguageTab';
+
+type ConfigSectionId = 'system' | 'display' | 'columns' | 'language';
 
 function usePatchCombatSettings(refetchState: () => Promise<void>) {
   return useCallback(
@@ -61,7 +63,7 @@ export function ConfigModal({
   const [notice, setNotice] = useState<{ variant: 'success' | 'error'; text: string } | null>(null);
 
   const [labelDrafts, setLabelDrafts] = useState<Record<string, string>>({});
-  const [activeTab, setActiveTab] = useState<'system' | 'columns' | 'table' | 'language'>('system');
+  const [activeSection, setActiveSection] = useState<ConfigSectionId>('system');
 
   const currentLangCode = (i18n.language || '').split('-')[0];
 
@@ -361,13 +363,13 @@ export function ConfigModal({
     [patchLegend],
   );
 
-  const tabs = useMemo(
+  const sections = useMemo(
     () =>
       [
-        { id: 'system' as const, label: t('config_modal.tab_system') },
-        { id: 'columns' as const, label: t('config_modal.tab_columns') },
-        { id: 'table' as const, label: t('config_modal.tab_table') },
-        { id: 'language' as const, label: t('config_modal.tab_language') },
+        { id: 'system' as const, label: t('config_modal.section_system'), icon: Settings2 },
+        { id: 'display' as const, label: t('config_modal.section_display'), icon: Monitor },
+        { id: 'columns' as const, label: t('config_modal.section_columns'), icon: Columns3 },
+        { id: 'language' as const, label: t('config_modal.section_language'), icon: Languages },
       ] as const,
     [t],
   );
@@ -382,92 +384,146 @@ export function ConfigModal({
           </button>
         </div>
 
-        <div className="px-4 pt-3">
+        <div className="sm:hidden px-3 py-2 border-b border-zinc-800 bg-zinc-950/20">
           <div className="flex flex-wrap gap-2">
-            {tabs.map((tab) => {
-              const isActive = activeTab === tab.id;
+            {sections.map((section) => {
+              const isActive = activeSection === section.id;
+              const Icon = section.icon;
               return (
                 <button
-                  key={tab.id}
+                  key={section.id}
                   type="button"
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${
+                  onClick={() => setActiveSection(section.id)}
+                  className={`px-3 py-1.5 rounded-lg text-sm border transition-colors flex items-center gap-1.5 ${
                     isActive
                       ? 'bg-emerald-600/20 text-emerald-300 border-emerald-500/40'
                       : 'bg-zinc-950/30 text-zinc-300 border-zinc-800 hover:bg-zinc-800/40'
                   }`}
                 >
-                  {tab.label}
+                  <Icon size={14} />
+                  {section.label}
                 </button>
               );
             })}
           </div>
         </div>
 
-        <div className="p-4 overflow-y-auto flex-1 min-h-0">
-          {activeTab === 'system' && (
-            <SystemTab
-              inputClass={inputClass}
-              localSystemName={localSystemName}
-              setLocalSystemName={setLocalSystemName}
-              commitSystemName={commitSystemName}
-              showPresets={showPresets}
-              setShowPresets={setShowPresets}
-              presets={presets}
-              loadPreset={loadPreset}
-              applyCombatSystem={applyCombatSystem}
-              engineLocked={engineLocked}
-              engineType={engineType}
-              applyEngineType={applyEngineType}
-            />
-          )}
+        <div className="flex flex-1 min-h-0">
+          <nav className="hidden sm:flex flex-col gap-1 w-44 shrink-0 p-3 border-r border-zinc-800 bg-zinc-950/30">
+            {sections.map((section) => {
+              const isActive = activeSection === section.id;
+              const Icon = section.icon;
+              return (
+                <button
+                  key={section.id}
+                  type="button"
+                  onClick={() => setActiveSection(section.id)}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-sm border transition-colors flex items-center gap-2 ${
+                    isActive
+                      ? 'bg-emerald-600/15 text-emerald-300 border-emerald-500/40'
+                      : 'bg-transparent text-zinc-300 border-transparent hover:bg-zinc-800/40 hover:border-zinc-800'
+                  }`}
+                >
+                  <Icon size={16} className="shrink-0" />
+                  <span className="truncate">{section.label}</span>
+                </button>
+              );
+            })}
+          </nav>
 
-          {activeTab === 'columns' && (
-            <ColumnsTab
-              inputClass={inputClass}
-              columns={columns}
-              expertMode={expertMode}
-              setExpertMode={setExpertMode}
-              labelDrafts={labelDrafts}
-              setLabelDrafts={setLabelDrafts}
-              updateColumn={updateColumn}
-              toggleColumn={toggleColumn}
-              removeColumn={removeColumn}
-              moveColumn={moveColumn}
-              onAddColumn={onAddColumn}
-              handleExport={handleExport}
-              fileInputRef={fileInputRef}
-              handleImport={handleImport}
-              handleSave={handleSave}
-              notice={notice}
-              setNotice={setNotice}
-            />
-          )}
+          <div className="p-4 overflow-y-auto flex-1 min-h-0">
+            {activeSection === 'system' && (
+              <SystemTab
+                inputClass={inputClass}
+                localSystemName={localSystemName}
+                setLocalSystemName={setLocalSystemName}
+                commitSystemName={commitSystemName}
+                showPresets={showPresets}
+                setShowPresets={setShowPresets}
+                presets={presets}
+                loadPreset={loadPreset}
+                engineLocked={engineLocked}
+                engineType={engineType}
+                applyEngineType={applyEngineType}
+                onExport={handleExport}
+                onImport={handleImport}
+                fileInputRef={fileInputRef}
+              />
+            )}
 
-          {activeTab === 'table' && (
-            <TableTab
-              tableCentered={tableCentered}
-              onToggleTableCentered={onToggleTableCentered}
-              stickyFirstColumn={stickyFirstColumn}
-              onToggleStickyFirstColumn={onToggleStickyFirstColumn}
-              stickyLastColumn={stickyLastColumn}
-              onToggleStickyLastColumn={onToggleStickyLastColumn}
-              showGroupColors={showGroupColors}
-              onToggleShowGroupColors={onToggleShowGroupColors}
-              showFactionColors={showFactionColors}
-              onToggleShowFactionColors={onToggleShowFactionColors}
-            />
-          )}
+            {activeSection === 'columns' && (
+              <ColumnsTab
+                inputClass={inputClass}
+                columns={columns}
+                expertMode={expertMode}
+                setExpertMode={setExpertMode}
+                labelDrafts={labelDrafts}
+                setLabelDrafts={setLabelDrafts}
+                updateColumn={updateColumn}
+                toggleColumn={toggleColumn}
+                removeColumn={removeColumn}
+                moveColumn={moveColumn}
+                onAddColumn={onAddColumn}
+              />
+            )}
 
-          {activeTab === 'language' && (
-            <LanguageTab
-              languages={languages}
-              currentLangCode={currentLangCode}
-              currentLangFlag={currentLang?.flag ?? '🌐'}
-              flagFontStyle={flagFontStyle}
-              onChangeLanguage={changeLanguage}
-            />
+            {activeSection === 'display' && (
+              <TableTab
+                tableCentered={tableCentered}
+                onToggleTableCentered={onToggleTableCentered}
+                stickyFirstColumn={stickyFirstColumn}
+                onToggleStickyFirstColumn={onToggleStickyFirstColumn}
+                stickyLastColumn={stickyLastColumn}
+                onToggleStickyLastColumn={onToggleStickyLastColumn}
+                showGroupColors={showGroupColors}
+                onToggleShowGroupColors={onToggleShowGroupColors}
+                showFactionColors={showFactionColors}
+                onToggleShowFactionColors={onToggleShowFactionColors}
+              />
+            )}
+
+            {activeSection === 'language' && (
+              <LanguageTab
+                languages={languages}
+                currentLangCode={currentLangCode}
+                currentLangFlag={currentLang?.flag ?? '🌐'}
+                flagFontStyle={flagFontStyle}
+                onChangeLanguage={changeLanguage}
+              />
+            )}
+          </div>
+        </div>
+
+        <div className="border-t border-zinc-800 bg-zinc-950/40 p-3 flex flex-col gap-2">
+          {notice && (
+            <div
+              className={`flex items-start justify-between gap-2 rounded-lg border px-3 py-2 text-sm ${
+                notice.variant === 'success'
+                  ? 'border-emerald-700/50 bg-emerald-950/50 text-emerald-100'
+                  : 'border-red-700/50 bg-red-950/40 text-red-100'
+              }`}
+              role="status"
+            >
+              <span className="min-w-0 break-words">{notice.text}</span>
+              <button
+                type="button"
+                onClick={() => setNotice(null)}
+                className="shrink-0 rounded p-0.5 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
+                aria-label={t('common.close')}
+              >
+                <X size={16} />
+              </button>
+            </div>
           )}
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={() => void handleSave()}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 rounded-lg text-xs transition-colors"
+            >
+              <Save size={14} /> {t('common.save')}
+            </button>
+          </div>
         </div>
       </div>
     </div>

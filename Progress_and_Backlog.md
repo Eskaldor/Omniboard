@@ -1,6 +1,6 @@
 # Omniboard — Progress & Backlog
 
-> Обновлено: 25.04.2026
+> Обновлено: 28.04.2026
 
 ---
 
@@ -230,6 +230,53 @@
 
 ---
 
+## ✅ Фаза 13.5 — Proactive Render, ESP push и latency hardening (25.04.2026)
+
+- [x] **Event loop safety:** Pillow-композитор не вызывается напрямую из async-кода; рендер миниатюр выполняется через `asyncio.to_thread(...)`.
+- [x] **Atomic PNG writes:** итоговые PNG пишутся через временный файл и `os.replace`, чтобы фронт/ESP не читали частично записанную картинку при гонках.
+- [x] **Proactive render push:** при изменении актора и смене хода фоновые задачи заранее генерируют `/api/render/output/{actor_id}.png` и, если миниатюра online, пушат обновление на ESP.
+- [x] **UI-first next-turn:** `/api/combat/next-turn` сначала изменяет состояние и отправляет `broadcast_state()`, а LED/render/ESP side effects запускаются после этого одной фоновой пачкой через `asyncio.gather(..., return_exceptions=True)`.
+- [x] **ESP timeout hardening:** HTTP `/update` для ESP ограничен коротким timeout (~1 s), ошибки связи логируются и не блокируют боевой UI.
+  - **Update 26.04.2026:** для screen transitions timeout поднят до **20 s**, потому что прошивка синхронно держит HTTP-ответ до конца анимации; иначе устройство ложно помечалось offline.
+- [x] **Frontend cache-busting:** миниатюры используют delayed `img src` update (~250 ms) на статический output-файл; портреты получили глобальный `portraitCacheVersion` для принудительного сброса кэша локальных ассетов.
+
+---
+
+## ✅ Фаза 13.6 — Линия инициативы и единый диспетчер железа (26.04.2026)
+
+- [x] **Привязка миниатюры к слоту очереди:** `MiniatureEntry.binding_mode = "actor" | "slot"`, `slot_index` хранится как 0-based offset от `current_index`; в UI показывается человеческая нумерация (`1 = текущий ход`).
+- [x] **`refresh_initiative_line`:** `ESPManager` пересчитывает slot-миниатюры после изменения хода/старта боя, определяет целевого актора через `(current_index + slot_index) % len(turn_queue)` и пушит картинку с `transition="wipe_right"` / `transition_params.color`.
+- [x] **Best-effort обновление линии:** refresh вызывается фоном после `broadcast_state()` в combat routes (`next-turn`, `prev-turn`, `start`, загрузка/смена очереди), UI остаётся приоритетом.
+- [x] **Единый HardwareModal:** управление устройствами перенесено в плотную системную таблицу: status online/offline, режим `Персонаж` / `Слот очереди`, назначение, Blink и Forget; отдельная `MiniaturesModal` сохранена для настройки **вида/лейаута** экранов.
+- [x] **Глобальные миниатюры в публичном стейте:** `combatState.hardware.miniatures` собирается из `data/miniatures.json` + текущего mDNS discovery; пустое сохранённое имя не затирает friendly name из discovery.
+- [x] **Slot LED override:** для миниатюр в режиме очереди добавлены `slot_led_mode = "actor" | "custom"` и `slot_led_profile_id`; при `custom` LED payload берётся из системного `led_profiles.json`, игнорируя дефолтную подсветку актора.
+- [x] **mDNS discover hardening:** `POST /api/hardware/discover` теперь принудительно запускает mDNS browser через `_esp.startup()`, если сервис ещё не поднят.
+
+---
+
+## ✅ Фаза 13.7 — ConfigModal Redesign (28.04.2026)
+
+UX-ревизия `ConfigModal`: горизонтальные табы плохо распределяли плотность (System — 3 контрола с дубликатом, Table — 5 чекбоксов, Language — список, Columns — «полотно» из 7-колоночной grid + 4 уровней вложенных условных секций). Перешли на **сайдбар-настройки** с глобальным футером и **collapsible-карточки колонок**.
+
+- [x] **Сайдбар-навигация:** левая панель с иконками (`Settings2`, `Monitor`, `Columns3`, `Languages`) и активной emerald-подсветкой; на `<sm` коллапсируется в горизонтальные чипы. Состояние `activeTab` → `activeSection` (`'system' | 'display' | 'columns' | 'language'`); `TableTab` концептуально стал **Display** без переименования файла.
+- [x] **System-секция:** убран **дубликат** «Combat system» (было два контрола подряд — текстовое поле с шевроном-пресетов и `<select>` пресетов ниже); ярлыки переименованы — «Боевая система → Система», «Загрузить пресет → Выбрать систему» (новые ключи `config_modal.system`, `config_modal.choose_system` в 4 локалях; старые `combat_system` / `load_preset` оставлены как dead keys для обратной совместимости).
+- [x] **Export / Import** перенесены из футера в System-секцию (компактные кнопки по правому краю): концептуально они работают с **системой** (= конфигурацией полей), а не с произвольной частью настроек.
+- [x] **Columns-секция:**
+  - Каждая колонка — `ColumnCard` с компактной шапкой (move ↑↓ / label / type / visibility checkbox / chevron expand / Trash2) и сворачиваемым телом (Identifier & layout: `key`, `group`, `width`; тип-специфичные блоки; Mechanics; Expert).
+  - `expanded: Set<string>` локально в `ColumnsTab`, новая колонка автоматически открывается раскрытой.
+  - Toolbar сверху: заголовок + Simple/Expert toggle (переехал из глубины секции).
+  - В Expert-блоке `min/max` и чекбокс-опции переведены на `grid grid-cols-1 sm:grid-cols-2`; `min_key` / `max_key` — `flex-1 min-w-0`, числовые лимиты — `w-24 shrink-0` (раньше `w-16` — placeholder «Число» обрезался). Подсказки `InfoTooltip` рядом с лейблами теперь не уминаются wrap-ом.
+  - Add-column переехал в нижнюю строку с поддержкой Enter.
+- [x] **Display / Language:** `LanguageTab` рендерит языки в `grid sm:grid-cols-2 gap-2` (раньше — список во всю длину); заголовок Display переключён на `config_modal.section_display`.
+- [x] **Глобальный футер модалки:** один компактный Save справа + опциональный `notice`-баннер (success / error). Видимый на любой секции, т.к. notice показывает результат и Save, и ошибки Import; сам Save коммитит только колонки (это и было прежним поведением).
+- [x] **Локали:** `data/locales/{en,ru,ger,je}/core.json` — добавлены `section_{system,display,columns,language}`, `expand_details` / `collapse_details`, `system`, `choose_system`. `tab_*` оставлены ради совместимости.
+- [x] **Кастомный скроллбар:** `src/index.css` дополнен глобальными правилами для `*::-webkit-scrollbar` (тонкий 8px, `zinc-700/60` в покое → `zinc-600/80` hover → `emerald-500/70` active) и `scrollbar-width: thin` + `scrollbar-color` для Firefox. Существующие места со скрытыми скроллбарами (`MiniSheetModal`, `InitiativeTable`) не задеты — у их утилит выше специфичность.
+- [x] **Компоновка кнопок действий:** Save / Export / Import заменены с full-width на `inline-flex px-3 py-1.5` и выровнены по правому краю.
+
+**Связанные файлы:** `src/components/Modals/ConfigModal.tsx`, `src/components/Modals/ConfigTabs/{SystemTab,ColumnsTab,TableTab,LanguageTab}.tsx`, `src/index.css`, `data/locales/{en,ru,ger,je}/core.json`.
+
+---
+
 ## 🎯 ПЛАН НА СЛЕДУЮЩИЙ СПРИНТ
 
 ### Фаза 10 — The Compositor & Live Preview (выполнено)
@@ -269,5 +316,7 @@
 - [x] ESP32-C6: конечные автоматы, WiFiManager, OTA; связь и push — **TCP (HTTP) + mDNS**, неблокирующий LED, гамма, триггеры и стек приоритетов (фазы 10.5–10.7).
 - [x] Подключение по Wi-Fi с Captive Portal; Bluetooth — при необходимости отдельным спринтом.
 - [x] LED: `LayoutProfile` + `led_profiles.json` + легенда + `led_interceptor` + стек приоритетов (`resolve_led_payload`, триггеры `time`/`turn`).
+- [x] Proactive render / hardware push: UI broadcast не ждёт ESP/рендер; PNG пишется атомарно; ESP `/update` best-effort с коротким timeout — см. Фаза 13.5 и ADR-21.
+- [x] Линия инициативы для Omnimini: привязка к позиции очереди, wipe-transition при прокрутке, кастомный LED-профиль слота — см. Фаза 13.6.
 - [ ] Расширенная синхронизация LED (`sync_led_to_ui`): помимо пуша при рендере — например, обновление LED при смене хода/HP без перерисовки экрана (отдельные вызовы `send_update` по правилам UI).
 

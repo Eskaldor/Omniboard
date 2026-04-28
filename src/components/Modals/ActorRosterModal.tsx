@@ -3,6 +3,12 @@ import { X, Plus, Search } from 'lucide-react';
 import { Actor } from '../../types';
 import { useTranslation } from 'react-i18next';
 
+function withCacheBuster(url: string, buster: string | number): string {
+  if (!url) return url;
+  const sep = url.includes('?') ? '&' : '?';
+  return `${url}${sep}v=${encodeURIComponent(String(buster))}`;
+}
+
 export function ActorRosterModal({
   systemName,
   onClose,
@@ -15,6 +21,15 @@ export function ActorRosterModal({
   const { t } = useTranslation('core', { useSuspense: false });
   const [actors, setActors] = useState<Actor[]>([]);
   const [search, setSearch] = useState('');
+
+  const portraitSrc = (actor: Actor) => {
+    const url = actor.portrait ?? '';
+    if (!url) return '';
+    const isLocal = url.startsWith('/assets/') || url.startsWith('/api/assets/');
+    if (!isLocal) return url;
+    const key = `${actor.id}-${actor.name}-${url}`;
+    return withCacheBuster(url, key);
+  };
 
   useEffect(() => {
     fetch(`/api/systems/${encodeURIComponent(systemName)}/actors`)
@@ -57,7 +72,7 @@ export function ActorRosterModal({
                 key={actor.id}
                 className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex items-center gap-3 hover:border-zinc-700 transition-colors"
               >
-                <img src={actor.portrait} alt={actor.name} className="w-12 h-12 rounded-lg object-cover" />
+                <img src={portraitSrc(actor)} alt={actor.name} className="w-12 h-12 rounded-lg object-cover" />
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-zinc-200 truncate">{actor.name}</div>
                   <div className="text-xs text-zinc-500 capitalize">{actor.role}</div>

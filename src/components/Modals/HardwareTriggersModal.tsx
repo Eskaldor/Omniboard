@@ -64,7 +64,10 @@ function normalizeLoadedRule(raw: unknown, profiles: LedProfile[]): HardwareTrig
     return createEmptyRule(profiles);
   }
   const o = raw as Record<string, unknown>;
-  const eventType = o.event_type === 'stat_change' ? 'stat_change' : 'turn_start';
+  const eventType =
+    o.event_type === 'stat_change' || o.event_type === 'miniature_bind'
+      ? o.event_type
+      : 'turn_start';
   const durationType = o.duration_type === 'turn' ? 'turn' : 'time';
   const ledId = typeof o.led_profile_id === 'string' && o.led_profile_id ? o.led_profile_id : firstId;
   const durationMs =
@@ -140,7 +143,7 @@ export function HardwareTriggersModal({ isOpen, onClose }: { isOpen: boolean; on
       prev.map((r) => {
         if (r.id !== id) return r;
         const next = { ...r, ...patch };
-        if (patch.event_type === 'turn_start') {
+        if (patch.event_type && patch.event_type !== 'stat_change') {
           next.target_stat = null;
         }
         if (patch.duration_type === 'turn') {
@@ -247,6 +250,7 @@ export function HardwareTriggersModal({ isOpen, onClose }: { isOpen: boolean; on
                       >
                         <option value="turn_start">{t('led_triggers.event_turn_start')}</option>
                         <option value="stat_change">{t('led_triggers.event_stat_change')}</option>
+                        <option value="miniature_bind">Привязка миниатюры</option>
                       </select>
                     </div>
                     <div>

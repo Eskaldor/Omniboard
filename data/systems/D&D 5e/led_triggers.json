@@ -4,6 +4,8 @@
     "event_type": "turn_start",
     "target_stat": null,
     "led_profile_id": "led_1776539165222",
+    "transition": null,
+    "transition_color": null,
     "duration_type": "turn",
     "duration_ms": 1000
   },
@@ -12,7 +14,19 @@
     "event_type": "stat_change",
     "target_stat": "mana",
     "led_profile_id": "led_rainbow",
+    "transition": null,
+    "transition_color": null,
     "duration_type": "time",
     "duration_ms": 1000
+  },
+  {
+    "id": "4076b79b-befa-424e-8119-6419fe19877a",
+    "event_type": "miniature_bind",
+    "target_stat": null,
+    "led_profile_id": "default_static",
+    "transition": "shimmer",
+    "transition_color": "#ff0000",
+    "duration_type": "time",
+    "duration_ms": 5
   }
 ]

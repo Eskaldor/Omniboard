@@ -1,0 +1,39 @@
+[
+  {
+    "id": "default",
+    "name": "Default",
+    "frame_asset": "",
+    "show_portrait": true,
+    "top1": {
+      "type": "text",
+      "label": null,
+      "value_path": "name",
+      "max_value_path": null,
+      "color": null,
+      "bar_bg_color": null,
+      "theme_id": "mana",
+      "offset_x": 0,
+      "offset_y": 0,
+      "width": null,
+      "height": null,
+      "rotation": 0,
+      "show_text": true,
+      "show_label": true,
+      "show_max": true,
+      "font_id": "roboto_condensed-regular.ttf",
+      "font_size": null,
+      "bar_style": "solid"
+    },
+    "top2": null,
+    "bottom1": null,
+    "bottom2": null,
+    "left1": null,
+    "right1": null,
+    "font_id": "default.ttf",
+    "font_size": 18,
+    "bar_height": 16,
+    "led_profile_id": "default_static",
+    "led_color_source": "role",
+    "led_custom_color": "#FFFFFF"
+  }
+]

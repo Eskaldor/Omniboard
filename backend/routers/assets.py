@@ -15,6 +15,12 @@ from backend.utils.config_loader import load_config_with_override
 
 router = APIRouter(prefix="/api/assets", tags=["assets"])
 
+NO_CACHE_HEADERS = {
+    "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+    "Pragma": "no-cache",
+    "Expires": "0",
+}
+
 ALLOWED_EXT = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".ttf", ".otf"}
 
 # Only list files that match: lowercase id + allowed extension (excludes .DS_Store, etc.)
@@ -40,7 +46,7 @@ async def get_effect_icon(filename: str, system: str = None):
     paths_to_try.append(ASSETS_DIR / "effects" / filename)
     for p in paths_to_try:
         if p.is_file():
-            return FileResponse(p)
+            return FileResponse(p, headers=NO_CACHE_HEADERS)
     raise HTTPException(status_code=404, detail="Effect icon not found")
 
 
@@ -189,7 +195,7 @@ async def get_bar_texture(
 
     for p in paths_to_try:
         if p.is_file():
-            return FileResponse(p)
+            return FileResponse(p, headers=NO_CACHE_HEADERS)
 
     raise HTTPException(status_code=404, detail="Texture not found")
 

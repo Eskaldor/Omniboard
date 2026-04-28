@@ -4,6 +4,7 @@
 """
 import json
 import os
+import uuid
 from pathlib import Path
 
 from PIL import Image, ImageDraw
@@ -11,9 +12,9 @@ from backend.models import Actor, LayoutProfile, DisplayField, BarProfileConfig,
 from backend.paths import ASSETS_DIR, RENDER_DIR
 from backend.render_utils import (
     get_font,
-    draw_text_centered,
     create_textured_bar,
     apply_rotated_element,
+    hex_to_rgba,
 )
 
 os.makedirs(RENDER_DIR, exist_ok=True)
@@ -24,6 +25,40 @@ CANVAS_HEIGHT = 320
 # Отступы и размеры для слотов UI
 PAD = 10
 SLOT_HEIGHT_VERT = 80  # высота вертикальных слотов (left1, right1)
+
+
+def _field_text_color(field: DisplayField) -> tuple[int, int, int, int]:
+    return hex_to_rgba(field.text_color or field.color, (255, 255, 255, 255))
+
+
+def _field_label_color(field: DisplayField) -> tuple[int, int, int, int]:
+    return hex_to_rgba(field.label_color or field.color, (200, 200, 200, 255))
+
+
+def _text_width(draw: ImageDraw.ImageDraw, text: str, font) -> int:
+    if not text:
+        return 0
+    box = draw.textbbox((0, 0), text, font=font)
+    return box[2] - box[0]
+
+
+def draw_centered_segments(
+    draw: ImageDraw.ImageDraw,
+    box: tuple[int, int, int, int],
+    segments: list[tuple[str, tuple[int, int, int, int]]],
+    font,
+) -> None:
+    visible_segments = [(text, fill) for text, fill in segments if text]
+    if not visible_segments:
+        return
+
+    x1, y1, x2, y2 = box
+    total_width = sum(_text_width(draw, text, font) for text, _fill in visible_segments)
+    x = (x1 + x2 - total_width) / 2
+    y = (y1 + y2) / 2
+    for text, fill in visible_segments:
+        draw.text((x, y), text, font=font, fill=fill, anchor="lm")
+        x += _text_width(draw, text, font)
 
 
 def get_asset_path(
@@ -43,6 +78,20 @@ def get_asset_path(
     if default_path.is_file():
         return str(default_path)
     return None
+
+
+def _resolve_actor_portrait_path(actor: Actor, system_name: str | None) -> str | None:
+    is_revealed = getattr(actor, "is_revealed", True)
+    portrait_value = (actor.portrait or "").strip()
+    if not is_revealed or not portrait_value:
+        return get_asset_path("portraits", "mystery.png", None)
+
+    portrait_path = get_asset_path(
+        "portraits",
+        os.path.basename(portrait_value),
+        system_name,
+    ) or (portrait_value if os.path.isfile(portrait_value) else None)
+    return portrait_path or get_asset_path("portraits", "mystery.png", None)
 
 
 def draw_display_field(
@@ -136,11 +185,16 @@ def draw_display_field(
             label_str = f"{field.label}: " if (field.label and show_label) else ""
             val_str = str(val)
             max_str = f" / {max_val}" if (field.max_value_path and show_max) else ""
-            text = f"{label_str}{val_str}{max_str}"
-            fill = (255, 255, 255)
+            text_fill = _field_text_color(field)
+            label_fill = _field_label_color(field)
             text_box = (0, 0, draw_w, draw_h)
             draw_bar = ImageDraw.Draw(bar_img)
-            draw_text_centered(draw_bar, text_box, text, font, fill)
+            draw_centered_segments(
+                draw_bar,
+                text_box,
+                [(label_str, label_fill), (f"{val_str}{max_str}", text_fill)],
+                font,
+            )
 
         if is_rotated:
             apply_rotated_element(canvas, bar_img, x, y, field.rotation)
@@ -148,17 +202,30 @@ def draw_display_field(
             canvas.paste(bar_img, (x, y), bar_img)
 
     else:  # text
-        text = f"{field.label + ': ' if field.label else ''}{val}"
-        fill = (255, 255, 255)
+        show_label = getattr(field, "show_label", True)
+        label_str = f"{field.label}: " if (field.label and show_label) else ""
+        val_str = str(val)
+        text_fill = _field_text_color(field)
+        label_fill = _field_label_color(field)
 
         if is_rotated:
             layer = Image.new("RGBA", (draw_w, draw_h), (0, 0, 0, 0))
             draw_layer = ImageDraw.Draw(layer)
-            draw_text_centered(draw_layer, (0, 0, draw_w, draw_h), text, font, fill)
+            draw_centered_segments(
+                draw_layer,
+                (0, 0, draw_w, draw_h),
+                [(label_str, label_fill), (val_str, text_fill)],
+                font,
+            )
             apply_rotated_element(canvas, layer, x, y, field.rotation)
         else:
             draw = ImageDraw.Draw(canvas)
-            draw_text_centered(draw, (x, y, x + width, y + height), text, font, fill)
+            draw_centered_segments(
+                draw,
+                (x, y, x + width, y + height),
+                [(label_str, label_fill), (val_str, text_fill)],
+                font,
+            )
 
 
 def render_miniature(
@@ -173,12 +240,8 @@ def render_miniature(
     canvas = Image.new("RGBA", (CANVAS_WIDTH, CANVAS_HEIGHT), (0, 0, 0, 255))
 
     # —— СЛОЙ 1: Base (портрет) ——
-    if profile.show_portrait and actor.portrait:
-        portrait_path = get_asset_path(
-            "portraits",
-            os.path.basename(actor.portrait),
-            system_name,
-        ) or (actor.portrait if os.path.isfile(actor.portrait) else None)
+    if profile.show_portrait:
+        portrait_path = _resolve_actor_portrait_path(actor, system_name)
         if portrait_path:
             try:
                 portrait = Image.open(portrait_path).convert("RGBA")
@@ -266,5 +329,9 @@ def render_miniature(
     rgb_canvas = canvas.convert("RGB")
     paletted_canvas = rgb_canvas.convert("P", palette=Image.ADAPTIVE, colors=256)
 
-    paletted_canvas.save(out_path, "PNG", optimize=True, bits=8)
+    # Atomic write: save to a temp file, then replace the final path.
+    # Prevents corrupted images when multiple renders race for the same actor_id.
+    tmp_path = os.path.join(RENDER_DIR, f".{actor.id}.{uuid.uuid4().hex}.tmp.png")
+    paletted_canvas.save(tmp_path, "PNG", optimize=True, bits=8)
+    os.replace(tmp_path, out_path)
     return out_path
