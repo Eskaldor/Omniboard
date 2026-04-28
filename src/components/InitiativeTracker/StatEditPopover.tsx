@@ -280,6 +280,77 @@ export interface StatNumericCellProps {
   compact?: boolean;
 }
 
+export interface StatNumericPopoverCellProps {
+  actor: Actor;
+  column: ColumnConfig;
+  columnLabel: string;
+  systemName: string;
+  onUpdate: (updates: Partial<Actor>) => void;
+  onRollComplete?: () => void | Promise<void>;
+  compact?: boolean;
+  className?: string;
+}
+
+export function StatNumericPopoverCell({
+  actor,
+  column,
+  columnLabel,
+  systemName,
+  onUpdate,
+  onRollComplete,
+  compact = false,
+  className = '',
+}: StatNumericPopoverCellProps) {
+  const raw = actor.stats?.[column.key];
+  const draft = parseStatValueDraft(raw);
+  const display = getStatNumeric(raw, 0);
+  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
+
+  const open = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setAnchorRect(rect);
+  }, []);
+
+  const close = useCallback(() => setAnchorRect(null), []);
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={open}
+        className={`inline-flex items-center justify-end rounded border border-zinc-800 bg-zinc-950 tabular-nums text-zinc-200 hover:border-emerald-600/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 ${
+          compact ? 'px-1.5 py-1 text-xs min-w-[2.5rem]' : 'px-2 py-1 text-sm min-w-[3rem]'
+        } ${className}`}
+        title={columnLabel}
+      >
+        {display}
+      </button>
+
+      {anchorRect ? (
+        <StatEditPanel
+          columnKey={column.key}
+          columnLabel={columnLabel}
+          actorId={actor.id}
+          draft={draft}
+          anchorRect={anchorRect}
+          systemName={systemName}
+          onClose={close}
+          onSave={(statsPatch) => {
+            onUpdate({
+              stats: {
+                ...(actor.stats ?? {}),
+                ...statsPatch,
+              },
+            });
+          }}
+          onRollComplete={onRollComplete}
+        />
+      ) : null}
+    </>
+  );
+}
+
 export function StatNumericCell({
   actor,
   column,

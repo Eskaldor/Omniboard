@@ -4,7 +4,7 @@ import asyncio
 import json
 import uuid
 
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks
 
 from backend import combat_engine
 from backend import state as app_state
@@ -13,8 +13,10 @@ from backend.models import Actor, stat_cell_effective_scalar
 from backend.paths import get_system_columns_path
 from backend.routers.ws import broadcast_state
 from backend.services import led_interceptor
+from backend.services.hardware_triggers import find_hardware_trigger
 from backend.services.logger import add_log
 from backend.services.mechanics import MechanicsManager
+from backend.services.render_push import proactive_render_and_push
 
 
 router = APIRouter(prefix="/api/actors", tags=["actors"])
@@ -202,12 +204,13 @@ async def create_actor(actor: Actor):
 
 
 @router.patch("/{actor_id}")
-async def update_actor(actor_id: str, updates: dict):
+async def update_actor(actor_id: str, updates: dict, background_tasks: BackgroundTasks):
     await save_snapshot()
     for i, a in enumerate(app_state.state.core.actors):
         if a.id == actor_id:
             old_actor = a
             actor_dict = a.model_dump()
+            old_miniature_id = (old_actor.miniature_id or "").strip()
             old_stats = dict(actor_dict.get("stats") or {})
             changed_stat_keys: list[str] = []
             stats_patch = updates.get("stats")
@@ -230,6 +233,7 @@ async def update_actor(actor_id: str, updates: dict):
             new_actor = Actor(**actor_dict)
             system_name = getattr(app_state.state.core, "system", "") or ""
             new_actor = _mechanics.recalculate_actor_stats(new_actor, system_name)
+            new_miniature_id = (new_actor.miniature_id or "").strip()
             new_stats = dict(new_actor.model_dump().get("stats") or {})
 
             # Dynamic stat change logging from column config (numbers + checkbox_group nests)
@@ -274,6 +278,19 @@ async def update_actor(actor_id: str, updates: dict):
 
             for sk in changed_stat_keys:
                 asyncio.create_task(led_interceptor.process_led_trigger(actor_id, "stat_change", sk))
+
+            # Proactively (re)render miniature PNG and push update to ESP (non-blocking for HTTP response).
+            bind_rule = (
+                find_hardware_trigger(system_name or "D&D 5e", "miniature_bind")
+                if new_miniature_id and new_miniature_id != old_miniature_id
+                else None
+            )
+            background_tasks.add_task(
+                proactive_render_and_push,
+                actor_id,
+                transition=bind_rule.transition if bind_rule else None,
+                transition_color=bind_rule.transition_color if bind_rule else None,
+            )
 
             # Sync initiative to all actors in the same simultaneous group
             if (

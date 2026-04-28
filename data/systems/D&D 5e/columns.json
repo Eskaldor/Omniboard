@@ -3,7 +3,7 @@
   "columns": [
     {
       "key": "hp",
-      "label": "HP",
+      "label": "ХП",
       "showInTable": true,
       "type": "number",
       "width": "80px",
@@ -12,11 +12,12 @@
       "is_advanced": false,
       "display_as_fraction": false,
       "log_color": "#e70808",
-      "show_tooltip": false
+      "show_tooltip": false,
+      "is_rollable": true
     },
     {
       "key": "ac",
-      "label": "AC",
+      "label": "КД",
       "showInTable": true,
       "type": "number",
       "width": "80px",
@@ -28,28 +29,28 @@
     },
     {
       "key": "speed",
-      "label": "Speed",
+      "label": "Скорость",
       "showInTable": true,
       "type": "number",
       "width": "80px",
       "log_changes": false,
-      "show_in_mini_sheet": false,
+      "show_in_mini_sheet": true,
       "is_advanced": false,
       "display_as_fraction": false,
       "show_tooltip": false
     },
     {
       "key": "mana",
-      "label": "Mana",
+      "label": "Мана",
       "showInTable": true,
       "log_changes": true,
       "log_color": "#08b0e7",
       "type": "number",
       "width": "80px",
-      "show_in_mini_sheet": false,
+      "show_in_mini_sheet": true,
       "is_advanced": false,
       "max_key": "max_mana",
-      "display_as_fraction": false,
+      "display_as_fraction": true,
       "show_tooltip": false
     },
     {
@@ -67,7 +68,7 @@
     },
     {
       "key": "max_mana",
-      "label": "max_mana",
+      "label": "Макс мана",
       "showInTable": false,
       "type": "number",
       "width": "80px",
@@ -79,7 +80,7 @@
     },
     {
       "key": "com1",
-      "label": "com1",
+      "label": "Действия",
       "showInTable": true,
       "type": "checkbox_group",
       "width": "80px",
@@ -115,7 +116,7 @@
       "type": "checkbox_group",
       "width": "80px",
       "log_changes": false,
-      "show_in_mini_sheet": false,
+      "show_in_mini_sheet": true,
       "is_advanced": false,
       "reset_policy": "turn_start",
       "display_style": "dot",

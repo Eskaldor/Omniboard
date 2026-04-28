@@ -71,6 +71,8 @@ export interface DisplayField {
   value_path: string;
   max_value_path?: string;
   color?: string;
+  text_color?: string;
+  label_color?: string;
   bar_bg_color?: string;
   theme_id?: string;
   offset_x?: number;

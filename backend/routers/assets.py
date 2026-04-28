@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import re
 import shutil
+from pathlib import Path
 
 from PIL import Image
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
@@ -14,6 +15,12 @@ from backend.utils.config_loader import load_config_with_override
 
 
 router = APIRouter(prefix="/api/assets", tags=["assets"])
+
+NO_CACHE_HEADERS = {
+    "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+    "Pragma": "no-cache",
+    "Expires": "0",
+}
 
 ALLOWED_EXT = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".ttf", ".otf"}
 
@@ -40,7 +47,7 @@ async def get_effect_icon(filename: str, system: str = None):
     paths_to_try.append(ASSETS_DIR / "effects" / filename)
     for p in paths_to_try:
         if p.is_file():
-            return FileResponse(p)
+            return FileResponse(p, headers=NO_CACHE_HEADERS)
     raise HTTPException(status_code=404, detail="Effect icon not found")
 
 
@@ -189,7 +196,7 @@ async def get_bar_texture(
 
     for p in paths_to_try:
         if p.is_file():
-            return FileResponse(p)
+            return FileResponse(p, headers=NO_CACHE_HEADERS)
 
     raise HTTPException(status_code=404, detail="Texture not found")
 
@@ -222,6 +229,63 @@ def delete_bar_texture(
         file_path.unlink()
         return {"status": "ok", "deleted": True}
     return {"status": "not_found", "deleted": False}
+
+
+def _safe_notes_md_basename(name: str) -> bool:
+    if not name or ".." in name or "/" in name or "\\" in name:
+        return False
+    if not name.lower().endswith(".md"):
+        return False
+    return name.strip() == name and len(name) <= 255
+
+
+@router.get("/notes")
+async def list_notes_markdown(system: str | None = None):
+    """
+    Markdown files in ``data/assets/systems/{system}/notes`` (if system is safe)
+    then ``data/assets/default/notes``. System entries are listed first; duplicates
+    by filename are skipped when merging.
+    """
+    ordered: list[str] = []
+    seen: set[str] = set()
+    dirs: list[Path] = []
+    sys_key = (system or "").strip()
+    if sys_key and ".." not in sys_key and "/" not in sys_key and "\\" not in sys_key:
+        dirs.append(ASSETS_DIR / "systems" / sys_key / "notes")
+    dirs.append(ASSETS_DIR / "default" / "notes")
+    for d in dirs:
+        if not d.is_dir():
+            continue
+        for f in sorted(d.iterdir(), key=lambda p: p.name.lower()):
+            if not f.is_file() or f.suffix.lower() != ".md":
+                continue
+            if not _safe_notes_md_basename(f.name):
+                continue
+            if f.name not in seen:
+                seen.add(f.name)
+                ordered.append(f.name)
+    return ordered
+
+
+@router.get("/systems/{system}/ui/logo.png")
+async def get_system_ui_logo(system: str):
+    """ADR-4: system-specific UI logo only (``systems/{system}/ui/logo.png``)."""
+    if not system or ".." in system or "/" in system or "\\" in system:
+        raise HTTPException(status_code=400, detail="Invalid system name")
+    s = system.strip()
+    p = ASSETS_DIR / "systems" / s / "ui" / "logo.png"
+    if p.is_file():
+        return FileResponse(p, headers=NO_CACHE_HEADERS)
+    raise HTTPException(status_code=404, detail="Logo not found")
+
+
+@router.get("/default/ui/logo.png")
+async def get_default_ui_logo():
+    """ADR-4: packaged default UI logo (``default/ui/logo.png``)."""
+    p = ASSETS_DIR / "default" / "ui" / "logo.png"
+    if p.is_file():
+        return FileResponse(p, headers=NO_CACHE_HEADERS)
+    raise HTTPException(status_code=404, detail="Logo not found")
 
 
 @router.get("/{category}")

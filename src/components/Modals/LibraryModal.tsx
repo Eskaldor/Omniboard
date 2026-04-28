@@ -3,6 +3,7 @@ import { X, Upload, Trash2, Lock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Effect } from '../../types';
 import { ImageCropperModal, type CropCompletePayload } from './ImageCropperModal';
+import { bumpPortraitCacheVersion } from '../../utils/portraitCache';
 
 export function LibraryModal({
   onClose,
@@ -248,6 +249,7 @@ export function LibraryModal({
           setLastUploadedUrlWithWarning(newUrl);
         } else {
           onSelect(newUrl);
+          bumpPortraitCacheVersion();
           onClose();
         }
       }
@@ -298,6 +300,7 @@ export function LibraryModal({
       }
       setPendingOverwritePayload(null);
       setOverwrittenUrlCacheBust({ url: data.url, t: Date.now() });
+      bumpPortraitCacheVersion();
       handleCropperClose();
       if (onSelect && tab === 'effects' && data?.url) {
         onSelect(data.url);

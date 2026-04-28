@@ -74,7 +74,9 @@ class DisplayField(BaseModel):
     label: Optional[str] = None
     value_path: str
     max_value_path: Optional[str] = None
-    color: Optional[str] = None
+    color: Optional[str] = None  # Backward-compatible/default text color
+    text_color: Optional[str] = None  # Цвет основного значения или текста внутри бара
+    label_color: Optional[str] = None  # Цвет подписи/label
     bar_bg_color: Optional[str] = None  # Цвет подложки бара (HEX)
     theme_id: Optional[str] = None  # Идентификатор темы/папки для текстурированных баров
     offset_x: int = 0

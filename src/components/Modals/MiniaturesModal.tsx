@@ -161,6 +161,9 @@ export function MiniaturesModal({
     [localProfiles, selectedProfileId]
   );
 
+  const colorInputValue = (value: string | undefined, fallback: string) =>
+    /^#[0-9A-Fa-f]{6}$/.test(value ?? '') ? (value as string) : fallback;
+
   const setSelectedProfile = (updates: Partial<LayoutProfile>) => {
     if (!selectedProfile) return;
     const next = { ...selectedProfile, ...updates };
@@ -181,6 +184,8 @@ export function MiniaturesModal({
         label: field.label !== undefined ? field.label : current?.label,
         max_value_path: field.max_value_path !== undefined ? field.max_value_path : current?.max_value_path,
         color: field.color !== undefined ? field.color : current?.color,
+        text_color: field.text_color !== undefined ? field.text_color : current?.text_color,
+        label_color: field.label_color !== undefined ? field.label_color : current?.label_color,
         bar_bg_color: field.bar_bg_color !== undefined ? field.bar_bg_color : current?.bar_bg_color,
         show_text: field.show_text !== undefined ? field.show_text : (current as DisplayField)?.show_text ?? true,
         show_label: field.show_label !== undefined ? field.show_label : (current as DisplayField)?.show_label ?? true,
@@ -361,6 +366,47 @@ export function MiniaturesModal({
                 </div>
               </>
             )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div>
+                <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.text_color')}</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={colorInputValue(slot.text_color, colorInputValue(slot.color, '#FFFFFF'))}
+                    onChange={(e) => updateSlot(slotName, { text_color: e.target.value })}
+                    className="w-10 h-9 rounded border border-zinc-600 cursor-pointer bg-zinc-900 p-0 shrink-0"
+                  />
+                  <input
+                    type="text"
+                    value={slot.text_color ?? ''}
+                    placeholder={slot.color ?? '#FFFFFF'}
+                    onChange={(e) => updateSlot(slotName, { text_color: e.target.value || undefined })}
+                    className="min-w-0 flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1.5 text-sm text-zinc-200 font-mono focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+              {slot.show_label !== false && (
+                <div>
+                  <label className="block text-xs text-zinc-500 mb-1">{t('miniature_layout.label_color')}</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={colorInputValue(slot.label_color, colorInputValue(slot.color, '#C8C8C8'))}
+                      onChange={(e) => updateSlot(slotName, { label_color: e.target.value })}
+                      className="w-10 h-9 rounded border border-zinc-600 cursor-pointer bg-zinc-900 p-0 shrink-0"
+                    />
+                    <input
+                      type="text"
+                      value={slot.label_color ?? ''}
+                      placeholder={slot.color ?? '#C8C8C8'}
+                      onChange={(e) => updateSlot(slotName, { label_color: e.target.value || undefined })}
+                      className="min-w-0 flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1.5 text-sm text-zinc-200 font-mono focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
 
             {isEnabled && slot && isExpertMode && (
               <div className="pt-3 mt-3 border-t border-zinc-800/50 space-y-3">

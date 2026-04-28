@@ -19,11 +19,14 @@ import { GroupCreateModal } from './components/Modals/GroupCreateModal';
 import { CombatLog } from './components/CombatLog';
 import { InitiativeTable } from './components/InitiativeTracker/InitiativeTable';
 import { AppHeader } from './components/AppHeader';
+import { GMConsoleSlider } from './components/GMConsole/GMConsoleSlider';
 import { CombatToolbar, ManualModeToggle } from './components/CombatToolbar';
 import { useCombatState } from './contexts/CombatStateContext';
 import { useColumns } from './contexts/ColumnsContext';
+import { useGMConsole } from './contexts/GMConsoleContext';
 import { CombatProvider } from './contexts/CombatContext';
 import { useDebouncedActorSync } from './hooks/useDebouncedActorSync';
+import { bumpPortraitCacheVersion } from './utils/portraitCache';
 
 // Survives remounts and HMR: when context state is temporarily null, keep showing last state
 let lastKnownState: CombatState | null = null;
@@ -76,6 +79,7 @@ export default function App() {
   const [createGroupModal, setCreateGroupModal] = useState<{ name: string; color: string; groupId?: string; layoutProfileId?: string } | null>(null);
   const [showGroupCreateModal, setShowGroupCreateModal] = useState(false);
   const { t } = useTranslation('core', { useSuspense: false });
+  const { isFabSummoned, summonConsole } = useGMConsole();
 
   // Ленивая загрузка локалей активной системы
   const loadSystemLocale = async (name: string) => {
@@ -204,7 +208,10 @@ export default function App() {
 
   return (
     <CombatProvider>
-    <div className="min-h-screen bg-zinc-950 text-zinc-200 flex flex-col font-sans">
+    <div
+      className="min-h-screen bg-zinc-950 text-zinc-200 flex flex-col font-sans"
+      data-system={effectiveState?.core.system || 'default'}
+    >
       <AppHeader
         history={effectiveState.session.history ?? []}
         showLog={showLog}
@@ -262,6 +269,15 @@ export default function App() {
               <button onClick={() => setShowRoster(true)} className="flex items-center gap-1 text-sm text-zinc-400 hover:text-zinc-300">
                 <Users size={16} /> {t('main.roster')}
               </button>
+              {!isFabSummoned ? (
+                <button
+                  type="button"
+                  onClick={() => summonConsole()}
+                  className="flex items-center gap-1 text-sm text-indigo-400 hover:text-indigo-300"
+                >
+                  {t('gm_console.summon_console')}
+                </button>
+              ) : null}
               <ManualModeToggle
                 isManualMode={effectiveState.core.is_manual_mode ?? false}
                 onToggle={async (next) => {
@@ -304,7 +320,7 @@ export default function App() {
                     const groupName = createGroupModal.name;
                     const layoutProfileId = createGroupModal.layoutProfileId ?? null;
                     for (const actorId of selectedActorIds) {
-                      await fetch(`/api/actors/${actorId}`, {
+                      const res = await fetch(`/api/actors/${actorId}`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -475,6 +491,7 @@ export default function App() {
           onClose={() => setPortraitSelectActorId(null)} 
           onSelect={(url) => {
             updateActorField(portraitSelectActorId, 'portrait', url);
+            bumpPortraitCacheVersion();
             setPortraitSelectActorId(null);
           }} 
           systemName={systemName}
@@ -515,6 +532,7 @@ export default function App() {
           setShowLegendPanel(false);
         }}
       />
+      <GMConsoleSlider />
     </div>
     </CombatProvider>
   );

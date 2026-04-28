@@ -12,15 +12,45 @@
   "has_acted": false,
   "portrait": "/assets/systems/D&D 5e/portraits/goblin_mag.png",
   "show_portrait": true,
-  "miniature_id": "1",
+  "miniature_id": null,
   "layout_profile_id": "1776798216413",
   "stats": {
-    "hp": 50,
-    "ac": 10,
-    "speed": 30,
-    "mana": 52,
-    "max_mana": 60,
-    "com": 0,
+    "hp": {
+      "base": 50,
+      "formula_id": null,
+      "overrides": [],
+      "value": 50
+    },
+    "ac": {
+      "base": 10,
+      "formula_id": null,
+      "overrides": [],
+      "value": 10
+    },
+    "speed": {
+      "base": 30,
+      "formula_id": null,
+      "overrides": [],
+      "value": 30
+    },
+    "mana": {
+      "base": 52,
+      "formula_id": null,
+      "overrides": [],
+      "value": 52
+    },
+    "max_mana": {
+      "base": 60,
+      "formula_id": null,
+      "overrides": [],
+      "value": 60
+    },
+    "com": {
+      "base": 0,
+      "formula_id": null,
+      "overrides": [],
+      "value": 0
+    },
     "com1": {
       "Реакция": true,
       "Бонусное ": true,
@@ -32,28 +62,12 @@
       "res3": true,
       "slot_3": true,
       "slot_4": true,
-      "slot_5": false,
-      "slot_6": false,
-      "slot_7": false
+      "slot_5": true,
+      "slot_6": true,
+      "slot_7": true
     }
   },
-  "effects": [
-    {
-      "id": "effect_pozhar",
-      "name": "Пожар",
-      "duration": 1,
-      "description": "",
-      "icon": "pozhar.png",
-      "led_profile_id": null,
-      "is_base": false,
-      "show_on_miniature": false,
-      "render_on_mini": true,
-      "render_on_panel": true,
-      "experimental_ai": false,
-      "ai_prompt": "",
-      "ai_variations": {}
-    }
-  ],
+  "effects": [],
   "visibility": {
     "hp": true,
     "stats": true,

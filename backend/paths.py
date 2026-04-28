@@ -74,6 +74,8 @@ def ensure_dirs() -> None:
     (DEFAULT_ASSETS_DIR / "frames").mkdir(exist_ok=True)
     (DEFAULT_ASSETS_DIR / "effects").mkdir(exist_ok=True)
     (DEFAULT_ASSETS_DIR / "fonts").mkdir(exist_ok=True)
+    (DEFAULT_ASSETS_DIR / "notes").mkdir(exist_ok=True)
+    (DEFAULT_ASSETS_DIR / "ui").mkdir(parents=True, exist_ok=True)
     (DEFAULT_ASSETS_DIR / "config").mkdir(parents=True, exist_ok=True)
     (ASSETS_DIR / "effects").mkdir(exist_ok=True)
     SYSTEMS_ASSETS_DIR.mkdir(exist_ok=True)
