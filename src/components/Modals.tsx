@@ -9,3 +9,4 @@ export { EncountersModal } from './Modals/EncountersModal';
 export { HardwareModal } from './Modals/HardwareModal';
 export { LedEffectsModal } from './Modals/LedEffectsModal';
 export { HardwareTriggersModal } from './Modals/HardwareTriggersModal';
+export { ClearCombatModal } from './Modals/ClearCombatModal';

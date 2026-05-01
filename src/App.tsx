@@ -14,6 +14,7 @@ import {
   HardwareModal,
   LedEffectsModal,
   HardwareTriggersModal,
+  ClearCombatModal,
 } from './components/Modals';
 import { GroupCreateModal } from './components/Modals/GroupCreateModal';
 import { CombatLog } from './components/CombatLog';
@@ -78,6 +79,7 @@ export default function App() {
   const [selectedActorIds, setSelectedActorIds] = useState<Set<string>>(new Set());
   const [createGroupModal, setCreateGroupModal] = useState<{ name: string; color: string; groupId?: string; layoutProfileId?: string } | null>(null);
   const [showGroupCreateModal, setShowGroupCreateModal] = useState(false);
+  const [showClearCombatModal, setShowClearCombatModal] = useState(false);
   const { t } = useTranslation('core', { useSuspense: false });
   const { isFabSummoned, summonConsole } = useGMConsole();
 
@@ -126,13 +128,6 @@ export default function App() {
     // State is pushed via WebSocket broadcast; no refetch to avoid UI freeze
   };
 
-  const resetCombat = async () => {
-    if (confirm("Reset combat? This will clear the queue, reset the round to 1, and remove all effects.")) {
-      await fetch('/api/combat/reset', { method: 'POST' });
-      refetchState();
-    }
-  };
-
   const undoCombat = async () => {
     await fetch('/api/combat/undo', { method: 'POST' });
     refetchState();
@@ -140,13 +135,6 @@ export default function App() {
   const redoCombat = async () => {
     await fetch('/api/combat/redo', { method: 'POST' });
     refetchState();
-  };
-
-  const clearCombat = async () => {
-    if (confirm("Clear combat? This will remove all actors and reset the combat state.")) {
-      await fetch('/api/combat/clear', { method: 'POST' });
-      refetchState();
-    }
   };
 
   const deleteActor = async (actorId: string) => {
@@ -397,6 +385,7 @@ export default function App() {
 
       <CombatToolbar
         isActive={effectiveState.core.is_active}
+        actorCount={effectiveState.core.actors?.length ?? 0}
         isManualMode={effectiveState.core.is_manual_mode ?? false}
         engineType={effectiveState.core.engine_type ?? 'standard'}
         canUndo={effectiveState?.can_undo ?? false}
@@ -404,12 +393,17 @@ export default function App() {
         onStartCombat={startCombat}
         onEndCombat={endCombat}
         onNextTurn={nextTurn}
-        onReset={resetCombat}
-        onClearCombat={clearCombat}
+        onOpenClearCombatModal={() => setShowClearCombatModal(true)}
         onUndo={undoCombat}
         onRedo={redoCombat}
         // Matrix generation is hidden while base roll UX is being refactored.
         onGenerateMatrix={undefined}
+      />
+
+      <ClearCombatModal
+        isOpen={showClearCombatModal}
+        onClose={() => setShowClearCombatModal(false)}
+        onSettled={refetchState}
       />
 
       {/* Modals */}

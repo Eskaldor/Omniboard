@@ -59,5 +59,9 @@
   "Note": {
     "name": "Note",
     "short": "Note"
-  }
+  },
+  "mech1": "Mech1",
+  "mech2": "Mech2",
+  "mech3": "Mech3",
+  "mech4": "Mech4"
 }

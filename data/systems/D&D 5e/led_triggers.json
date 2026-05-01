@@ -28,5 +28,15 @@
     "transition_color": "#ff0000",
     "duration_type": "time",
     "duration_ms": 5
+  },
+  {
+    "id": "0c6192b5-fe9f-4451-82c9-9ea719032a59",
+    "event_type": "initiative_shift",
+    "target_stat": null,
+    "led_profile_id": "default_static",
+    "transition": null,
+    "transition_color": null,
+    "duration_type": "time",
+    "duration_ms": 1000
   }
 ]
