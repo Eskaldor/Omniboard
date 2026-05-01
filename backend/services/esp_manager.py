@@ -420,8 +420,26 @@ class ESPManager:
         },
     }
 
-    async def sleep_all(self, extra_ids: Iterable[str] | None = None) -> None:
-        """Turn off TFT backlight and LEDs on every discovered Omnimini."""
+    async def sleep_all(
+        self,
+        extra_ids: Iterable[str] | None = None,
+        *,
+        only_ids: Iterable[str] | None = None,
+    ) -> None:
+        """Turn off TFT backlight and LEDs on Omnimini devices.
+
+        By default, targets every known/discovered device plus ``extra_ids``.
+        When ``only_ids`` is set, only those miniature IDs receive the sleep payload
+        (e.g. miniatures unbound from actors that were removed from the table).
+        """
+        if only_ids is not None:
+            targets = {s.strip() for s in only_ids if (s or "").strip()}
+            if not targets:
+                return
+            tasks = [self.send_update(eid, self._SLEEP_PAYLOAD) for eid in targets]
+            await asyncio.gather(*tasks, return_exceptions=True)
+            return
+
         active = set(self.get_active_minis().keys())
         extras = {s.strip() for s in (extra_ids or ()) if (s or "").strip()}
         all_targets = self._known_ids.union(active).union(extras)

@@ -47,6 +47,8 @@
     "redo": "Redo",
     "reset": "Reset",
     "clear_combat": "Clear Combat",
+    "clear_table": "Clear Table",
+    "stop_combat": "Stop Combat",
     "end_combat": "End Combat",
     "display_group_colors": "Display group colors",
     "display_faction_colors": "Display faction (role) colors",
@@ -249,6 +251,12 @@
     "no_actors_in_combat": "No actors in combat."
   },
   "modals": {
+    "clear_combat": {
+      "title": "Clear table for the next scene?",
+      "keep_pinned": "Keep pinned actors (Party / NPCs)",
+      "auto_start": "Auto-start new combat",
+      "request_failed": "Could not clear or start combat. Check your connection and try again."
+    },
     "config": "Settings",
     "miniature_layout_config": "Miniature Layout Config",
     "asset_library": "Asset Library",

@@ -145,16 +145,22 @@ def reset_combat_state() -> None:
         actor.effects = []
 
 
-def clear_combat_state() -> None:
-    """Fully clear tracker: remove only non-pinned actors; keep queue, round and history cleared."""
+def clear_combat_state(*, keep_pinned: bool = True) -> None:
+    """Clear tracker: optionally keep pinned actors; reset queue, round, pass; strip timed effects from kept actors."""
     st = app_state.state
-    st.core.actors = [a for a in st.core.actors if getattr(a, "is_pinned", False)]
+    if keep_pinned:
+        st.core.actors = [a for a in st.core.actors if getattr(a, "is_pinned", False)]
+    else:
+        st.core.actors = []
+    for actor in st.core.actors:
+        actor.effects = [e for e in actor.effects if e.duration is None]
     st.core.turn_queue = []
     st.core.current_index = 0
     st.core.round = 1
+    st.core.current_pass = 1
+    st.core.is_active = False
     st.session.history = []
     st.session.prerolls = {}
-    st.core.is_active = False
 
 
 def next_turn(log: LogFn) -> None:

@@ -1,1 +1,42 @@
-[]
+[
+  {
+    "id": "1",
+    "mac": "1",
+    "name": "",
+    "notes": null,
+    "binding_mode": "actor",
+    "slot_index": 0,
+    "slot_led_mode": "actor",
+    "slot_led_profile_id": null
+  },
+  {
+    "id": "2",
+    "mac": "2",
+    "name": "",
+    "notes": null,
+    "binding_mode": "slot",
+    "slot_index": 2,
+    "slot_led_mode": "actor",
+    "slot_led_profile_id": null
+  },
+  {
+    "id": "6",
+    "mac": "6",
+    "name": "",
+    "notes": null,
+    "binding_mode": "slot",
+    "slot_index": 0,
+    "slot_led_mode": "actor",
+    "slot_led_profile_id": null
+  },
+  {
+    "id": "8",
+    "mac": "8",
+    "name": "",
+    "notes": null,
+    "binding_mode": "slot",
+    "slot_index": 1,
+    "slot_led_mode": "actor",
+    "slot_led_profile_id": null
+  }
+]

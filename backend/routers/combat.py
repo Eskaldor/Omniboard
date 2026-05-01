@@ -1,6 +1,10 @@
 from __future__ import annotations
 
 import asyncio
+import logging
+import uuid
+from datetime import datetime
+from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Body, HTTPException
 
@@ -13,6 +17,7 @@ from backend.engines.manager import (
 )
 from backend.history import save_snapshot
 from backend.models import (
+    ClearCombatRequest,
     CombatSession,
     LegendConfig,
     LogEntry,
@@ -25,7 +30,11 @@ from backend.routers.hardware import get_esp_manager
 from backend.routers.ws import broadcast_state
 from backend.services import led_interceptor
 from backend.services.dice import DiceManager
-from backend.services.logger import add_log
+from backend.services.logger import (
+    add_log,
+    combat_history_archive_json,
+    combat_history_archive_markdown,
+)
 from backend.services.matrix import MatrixManager
 from backend.services.render_push import proactive_render_and_push
 
@@ -33,6 +42,17 @@ from backend.services.render_push import proactive_render_and_push
 router = APIRouter(prefix="/api/combat", tags=["combat"])
 
 _dice = DiceManager()
+_archive_warn = logging.getLogger("omniboard.combat_archive")
+
+
+def _write_combat_archive_sync(md_text: str, json_text: str) -> None:
+    archives_dir = LOGS_DIR / "archives"
+    archives_dir.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    suffix = uuid.uuid4().hex[:8]
+    stem = archives_dir / f"combat_{stamp}_{suffix}"
+    stem.with_suffix(".md").write_text(md_text, encoding="utf-8")
+    stem.with_suffix(".json").write_text(json_text, encoding="utf-8")
 
 
 async def _refresh_initiative_line_safe(session: CombatSession) -> None:
@@ -319,6 +339,13 @@ async def start_combat(background_tasks: BackgroundTasks):
 async def end_combat():
     await save_snapshot()
     combat_engine.end_combat(add_log)
+    history = list(app_state.state.session.history)
+    md_text = combat_history_archive_markdown(history)
+    json_text = combat_history_archive_json(history)
+    try:
+        await asyncio.to_thread(_write_combat_archive_sync, md_text, json_text)
+    except Exception:
+        _archive_warn.warning("combat log archive write failed", exc_info=True)
     await save_snapshot()
     await broadcast_state()
     return combat_session_public_payload(
@@ -343,24 +370,44 @@ async def reset_combat():
 
 
 @router.post("/clear")
-async def clear_combat():
-    """Fully clear the tracker: all actors, queue, round, history, log files."""
-    await save_snapshot()
-    bound_miniature_ids = {
-        m
-        for m in (
-            str(a.miniature_id).strip()
-            for a in app_state.state.core.actors
-            if a.miniature_id
+async def clear_combat(body: ClearCombatRequest = Body(default_factory=ClearCombatRequest)):
+    """Clear the table: optional pinned retention; disk logs cleared; undo stack preserved."""
+    st = app_state.state
+    actors = list(st.core.actors)
+    if body.keep_pinned:
+        removed = [a for a in actors if not getattr(a, "is_pinned", False)]
+        retained_for_minis = [a for a in actors if getattr(a, "is_pinned", False)]
+    else:
+        removed = actors
+        retained_for_minis = []
+    retained_mini_ids = {
+        mid
+        for mid in (
+            str(getattr(a, "miniature_id", None) or "").strip()
+            for a in retained_for_minis
         )
-        if m
+        if mid
     }
-    combat_engine.clear_combat_state()
+    removed_miniature_ids = {
+        mid
+        for mid in (
+            str(getattr(a, "miniature_id", None) or "").strip()
+            for a in removed
+        )
+        if mid
+    }
+    removed_miniature_ids -= retained_mini_ids
+
+    await save_snapshot()
+    combat_engine.clear_combat_state(keep_pinned=body.keep_pinned)
+
     (LOGS_DIR / "latest_combat.json").write_text("[]", encoding="utf-8")
     (LOGS_DIR / "latest_combat.md").write_text("", encoding="utf-8")
+
     await save_snapshot()
     await broadcast_state()
-    await get_esp_manager().sleep_all(extra_ids=bound_miniature_ids)
+    if removed_miniature_ids:
+        await get_esp_manager().sleep_all(only_ids=removed_miniature_ids)
     return combat_session_public_payload(
         app_state.state,
         initiative_engine_locked=system_has_custom_logic_file(app_state.state.core.system),

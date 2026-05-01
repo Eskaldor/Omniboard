@@ -33,7 +33,9 @@
     "undo": "Отмена",
     "redo": "Повтор",
     "reset": "Сброс",
-    "clear_combat": "Очистить бой",
+    "clear_combat": "Kampf leeren",
+    "clear_table": "Tisch leeren",
+    "stop_combat": "Kampf stoppen",
     "end_combat": "Закончить бой",
     "display_group_colors": "Показывать цвета групп",
     "display_faction_colors": "Показывать цвета ролей",
@@ -210,6 +212,12 @@
     "assign_to_group": "Назначить в группу"
   },
   "modals": {
+    "clear_combat": {
+      "title": "Tisch für die nächste Szene leeren?",
+      "keep_pinned": "Angeheftete Akteure behalten (Gruppe / NPCs)",
+      "auto_start": "Neuen Kampf automatisch starten",
+      "request_failed": "Tisch konnte nicht geleert oder der Kampf nicht gestartet werden. Verbindung prüfen und erneut versuchen."
+    },
     "config": "Einstellungen",
     "miniature_layout_config": "Настройка раскладки миниатюр",
     "asset_library": "Библиотека ресурсов",

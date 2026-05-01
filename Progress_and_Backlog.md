@@ -19,7 +19,7 @@
 - [x] Тик эффектов при смене раунда (duration -1, удаление при 0)
 - [x] Undo/Redo: `history_stack[]` + 20 снэпшотов, `/api/combat/undo` + `/redo`
 - [x] Флаги `can_undo` / `can_redo` в `/api/combat/state`
-- [x] `POST /api/combat/clear` — полная очистка трекера
+- [x] `POST /api/combat/clear` — очистка трекера (полная или с сохранением закреплённых акторов; см. май 2026)
 
 ## ✅ Фаза 3 — Лог боя
 - [x] `LogEntry` с типами: hp_change, effect_added/removed, turn_start, round_start, combat_start/end, actor_joined/left, text
@@ -126,7 +126,7 @@
 - [x] **Фронт:** тип `LedProfile` в `src/types.ts`, модалка `LedEffectsModal.tsx` (список + редактор + превью CSS, «Сохранить всё»), секция «Default LED» в `MiniaturesModal.tsx`, кнопка входа в профили LED из `BarCustomizerModal.tsx`, строки в `data/locales/*/core.json`.
 - [x] **Разрешение перед отправкой на миниатюру:** `backend/led_resolver.py` → `resolve_led_payload(actor_id)` читает актёра, layout, `led_profiles.json`, легенду и подставляет цвета в объект `led` для прошивки.
 - [x] **`announce_image_update`:** опциональный аргумент `led_payload`; если `None` — прежнее поведение (LED «выкл» / чёрный); иначе в JSON уходит разрешённый профиль (`backend/services/esp_manager.py`, вызов из `backend/routers/render.py`).
-- [x] **`POST /api/combat/clear`:** при очистке боя в `sleep_all` передаются `extra_ids` привязанных минек, чтобы увести в сон и устройства вне текущего mDNS-списка (`backend/routers/combat.py`).
+- [x] **`POST /api/combat/clear`:** точечный сон железа через `sleep_all(only_ids=...)` только для миниатюр удалённых акторов; миниатюры оставшихся на столе акторов не затрагиваются (`backend/routers/combat.py`; см. **ADR-23**).
 
 ---
 
@@ -284,6 +284,17 @@ UX-ревизия `ConfigModal`: горизонтальные табы плох�
 - [x] **Компоновка кнопок действий:** Save / Export / Import заменены с full-width на `inline-flex px-3 py-1.5` и выровнены по правому краю.
 
 **Связанные файлы:** `src/components/Modals/ConfigModal.tsx`, `src/components/Modals/ConfigTabs/{SystemTab,ColumnsTab,TableTab,LanguageTab}.tsx`, `src/index.css`, `data/locales/{en,ru,ger,je}/core.json`.
+
+---
+
+## ✅ Жизненный цикл боя, ротация логов и умная очистка стола (Май 2026)
+
+- [x] Линейный процесс боя (Start -> Stop -> Clear) через State Machine в UI.
+- [x] Автоматическая архивация логов в `data/logs/archives/` прямым асинхронным чтением из памяти (защита от гонки потоков).
+- [x] Умная очистка стола (Selective Clear): сохранение закрепленных акторов (pinned) и их бесконечных эффектов (`duration is None`).
+- [x] Изоляция железа: `sleep_all(only_ids=...)` усыпляет только удаляемые миниатюры.
+- [x] Обратимость очистки: возврат `save_snapshot()` перед очисткой и сохранение технического стека Undo/Redo.
+- [x] UI/UX: `ClearCombatModal`, интеграция `react-hot-toast` и исправление багов немецкой локализации.
 
 ---
 

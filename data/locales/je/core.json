@@ -34,6 +34,8 @@
     "redo": "Повтор",
     "reset": "Сброс",
     "clear_combat": "Очистить бой",
+    "clear_table": "Clear table",
+    "stop_combat": "Stop combat",
     "end_combat": "Закончить бой",
     "display_group_colors": "Показывать цвета групп",
     "display_faction_colors": "Показывать цвета ролей",
@@ -210,6 +212,12 @@
     "assign_to_group": "Назначить в группу"
   },
   "modals": {
+    "clear_combat": {
+      "title": "Clear table for the next scene?",
+      "keep_pinned": "Keep pinned actors (Party / NPCs)",
+      "auto_start": "Auto-start new combat",
+      "request_failed": "Could not clear or start combat. Check your connection and try again."
+    },
     "config": "Настройки",
     "miniature_layout_config": "Настройка раскладки миниатюр",
     "asset_library": "Библиотека ресурсов",

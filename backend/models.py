@@ -316,6 +316,10 @@ class MatrixUseRequest(BaseModel):
     index: int
 
 
+class ClearCombatRequest(BaseModel):
+    keep_pinned: bool = True
+
+
 class CombatCore(BaseModel):
     """Механика боя: акторы, очередь, раунд, движок, активность."""
 
