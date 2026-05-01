@@ -10,3 +10,14 @@ __pycache__/
 *.pyc
 venv/
 package-lock.json
+
+# Claude / Cursor local worktrees and agent metadata
+.claude/
+
+# Generated miniature renders (API / compositor output). Already-tracked files stay tracked.
+data/render/*.png
+data/render/*.jpg
+data/render/*.jpeg
+data/render/*.webp
+data/render/*.tmp.png
+
