@@ -138,7 +138,7 @@ async def get_rendered_miniature(
             await hardware._esp.announce_image_update(
                 target_mac,
                 safe_name,
-                screen_bri=200,
+                screen_bri=app_state.state.hardware.screen_brightness,
                 led_payload=led_payload,
                 transition=transition,
                 transition_color=transition_color,

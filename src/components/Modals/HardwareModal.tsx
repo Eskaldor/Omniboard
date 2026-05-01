@@ -18,6 +18,56 @@ export function HardwareModal({ onClose }: { onClose: () => void }) {
   const currentIndex = state?.core.current_index ?? 0;
   const systemName = state?.core.system ?? '';
   const miniatures = state?.hardware.miniatures ?? [];
+  const sortedMiniatures = useMemo(
+    () => [...miniatures].sort((a, b) => (a.name || a.id).localeCompare(b.name || b.id)),
+    [miniatures]
+  );
+
+  const currentBrightness = state?.hardware?.screen_brightness ?? 78;
+  const [brightnessInput, setBrightnessInput] = useState(String(currentBrightness));
+
+  useEffect(() => {
+    setBrightnessInput(String(state?.hardware?.screen_brightness ?? 78));
+  }, [state?.hardware?.screen_brightness]);
+
+  const handleBrightnessChange = async (val: number) => {
+    try {
+      await fetch('/api/combat/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ screen_brightness: val }),
+      });
+
+      const activeMacs = sortedMiniatures
+        .filter((m) => (m.status || '').toLowerCase() === 'online')
+        .map((m) => m.mac || m.id);
+      await Promise.all(
+        activeMacs.map((mac) =>
+          fetch(`/api/hardware/${encodeURIComponent(mac)}/update`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ screen_bri: val }),
+          }).catch(() => {})
+        )
+      );
+
+      await refetchState();
+    } catch (err) {
+      console.error('Failed to update brightness', err);
+    }
+  };
+
+  const commitBrightnessFromInput = async () => {
+    const n = parseInt(brightnessInput, 10);
+    if (Number.isNaN(n)) {
+      setBrightnessInput(String(currentBrightness));
+      return;
+    }
+    const clamped = Math.max(1, Math.min(100, n));
+    setBrightnessInput(String(clamped));
+    if (clamped === currentBrightness) return;
+    await handleBrightnessChange(clamped);
+  };
 
   const actorByMiniatureId = useMemo(() => {
     const map = new Map<string, string>();
@@ -222,8 +272,6 @@ export function HardwareModal({ onClose }: { onClose: () => void }) {
   const controlClass =
     'w-full bg-zinc-950 border border-zinc-700 rounded-md px-2 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-emerald-500 disabled:opacity-60';
 
-  const sortedMiniatures = [...miniatures].sort((a, b) => (a.name || a.id).localeCompare(b.name || b.id));
-
   const renderAssignment = (mini: Miniature) => {
     const mode = mini.binding_mode ?? 'actor';
     const boundActorId = actorByMiniatureId.get(mini.id) ?? '';
@@ -298,11 +346,32 @@ export function HardwareModal({ onClose }: { onClose: () => void }) {
         <div className="p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50 shrink-0">
           <h3 className="text-lg font-medium text-zinc-100">{t('header.device_manager')}</h3>
           <div className="flex items-center gap-2">
+            <div className="inline-flex h-8 items-center gap-2 rounded-lg bg-zinc-700 px-3 text-sm font-normal leading-none text-zinc-200">
+              <span className="shrink-0">Яркость</span>
+              <input
+                type="number"
+                min={1}
+                max={100}
+                inputMode="numeric"
+                value={brightnessInput}
+                onChange={(e) => setBrightnessInput(e.target.value)}
+                onBlur={() => void commitBrightnessFromInput()}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    void commitBrightnessFromInput();
+                  }
+                }}
+                className="box-border h-6 w-10 shrink-0 rounded border border-zinc-600 bg-zinc-900 px-1 text-center text-sm font-normal tabular-nums leading-none text-zinc-200 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-emerald-500/50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                aria-label="Яркость экрана, проценты (1–100)"
+              />
+              <span className="shrink-0 leading-none text-zinc-400">%</span>
+            </div>
             <button
               type="button"
               onClick={fetchDevices}
               disabled={loading}
-              className="flex items-center gap-2 px-3 py-1.5 bg-zinc-700 hover:bg-zinc-600 disabled:opacity-50 text-zinc-200 rounded-lg text-sm transition-colors"
+              className="flex h-8 items-center gap-2 rounded-lg bg-zinc-700 px-3 py-0 text-sm font-normal leading-none text-zinc-200 transition-colors hover:bg-zinc-600 disabled:opacity-50"
             >
               <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
               {t('hardware.refresh')}
@@ -311,7 +380,7 @@ export function HardwareModal({ onClose }: { onClose: () => void }) {
               type="button"
               onClick={handleDiscover}
               disabled={isSearching}
-              className="flex items-center gap-2 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg text-sm transition-colors"
+              className="flex h-8 items-center gap-2 rounded-lg bg-emerald-600 px-3 py-0 text-sm font-normal leading-none text-white transition-colors hover:bg-emerald-500 disabled:opacity-50"
             >
               {isSearching ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
               {t('hardware.discover')}

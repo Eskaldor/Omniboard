@@ -137,7 +137,7 @@ async def proactive_render_and_push(
                 await hardware._esp.announce_image_update(
                     target_mac,
                     safe_name,
-                    screen_bri=200,
+                    screen_bri=app_state.state.hardware.screen_brightness,
                     led_payload=push_led_payload,
                     transition=push_transition,
                     transition_color=push_transition_color,

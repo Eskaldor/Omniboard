@@ -1,6 +1,6 @@
 # Omniboard — Progress & Backlog
 
-> Обновлено: 28.04.2026
+> Обновлено: 01.05.2026
 
 ---
 
@@ -143,6 +143,16 @@
 - [x] Единый интерфейс управления железом (`MiniaturesModal`).
 
 *Ранний bring-up (фаза 10.5) опирался на UDP discovery и push; актуальная схема доставки команд и обнаружения — TCP (HTTP) поверх mDNS, см. ADR-15.*
+
+---
+
+## ✅ Фаза 10.8 — Omnimini: яркость экрана, триггер сдвига инициативы, сохранение led_triggers — 01.05.2026
+
+- [x] **`HardwareState.screen_brightness`:** шкала **1–100 %** (значения **>100** в JSON при загрузке считаются legacy **0–255** и конвертируются в проценты); дефолт **78** (~ прежний 200/255); поле в **`LEGACY_HARDWARE_KEYS`**; при **`combat_session_merged_with_combat_state`** яркость не сбрасывается.
+- [x] **API и пуш картинки:** **`PATCH /api/combat/settings`** принимает **`screen_brightness`** и возвращает его в ответе; **`announce_image_update`** / **`render_push`** передают на прошивку **`screen_bri`** в диапазоне **1–100** (из текущего стейта сессии).
+- [x] **Device Manager (`HardwareModal`):** ввод яркости с клавиатуры; после сохранения в сессии — параллельный **`POST /api/hardware/{mac}/update`** с **`screen_bri`** для устройств со статусом **online**; блок яркости выровнен по высоте с кнопками шапки.
+- [x] **`HardwareTrigger.event_type`:** добавлен **`initiative_shift`**; в **`ESPManager.refresh_initiative_line`** переход и цвет экрана берутся из **`find_hardware_trigger(system, "initiative_shift")`** (нет правила или **`transition: "none"`** → без перехода), вместо хардкода **`wipe_right`**.
+- [x] **`POST /api/systems/{name}/led_triggers`:** тело — JSON-массив; разбор через **`Request.json()`** и поэлементная валидация **`HardwareTrigger.model_validate`** (422 с **`index`** и **`errors`**); у триггера в модели **`str_strip_whitespace=True`**. Фронт (**`HardwareTriggersModal`**) нормализует **`event_type`**, не отправляет пустой **`led_profile_id`** (fallback **`default_static`**), при ошибке сохранения показывает детали ответа API.
 
 ### Логика управления LED-профилями
 

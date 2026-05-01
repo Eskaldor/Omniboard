@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from typing import Any, ClassVar, Dict, List, Literal, Optional, Union
 
 class LedProfile(BaseModel):
@@ -11,8 +11,10 @@ class LedProfile(BaseModel):
 
 
 class HardwareTrigger(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+
     id: str
-    event_type: Literal["turn_start", "stat_change", "miniature_bind"]
+    event_type: Literal["turn_start", "stat_change", "miniature_bind", "initiative_shift"]
     target_stat: Optional[str] = None  # e.g. "hp" or "mana"
     led_profile_id: str  # references LedProfile.id
     transition: Optional[str] = None
@@ -358,6 +360,23 @@ class HardwareState(BaseModel):
     """Глобальные флаги железа (LED и т.п.)."""
 
     sync_led_to_ui: bool = True
+    # 1–100 (%). В старых сейвах могло быть 0–255; при загрузке значения >100 переводятся в проценты.
+    screen_brightness: int = 78
+
+    @field_validator("screen_brightness", mode="before")
+    @classmethod
+    def normalize_screen_brightness_percent(cls, v: Any) -> int:
+        if v is None:
+            return 78
+        try:
+            n = int(v)
+        except (TypeError, ValueError):
+            return 78
+        if n > 100:
+            return max(1, min(100, int(round((n / 255) * 100))))
+        if n < 1:
+            return 1
+        return min(100, n)
 
 
 class SessionMeta(BaseModel):
@@ -408,7 +427,7 @@ class CombatSession(BaseModel):
             "layout_profiles",
         }
     )
-    LEGACY_HARDWARE_KEYS: ClassVar[frozenset[str]] = frozenset({"sync_led_to_ui"})
+    LEGACY_HARDWARE_KEYS: ClassVar[frozenset[str]] = frozenset({"sync_led_to_ui", "screen_brightness"})
     LEGACY_SESSION_KEYS: ClassVar[frozenset[str]] = frozenset(
         {
             "history",
@@ -583,7 +602,10 @@ def combat_session_merged_with_combat_state(
             active_reaction_actor_id=cs.active_reaction_actor_id,
         ),
         display=session.display,
-        hardware=HardwareState(sync_led_to_ui=cs.sync_led_to_ui),
+        hardware=HardwareState(
+            sync_led_to_ui=cs.sync_led_to_ui,
+            screen_brightness=session.hardware.screen_brightness,
+        ),
         session=SessionMeta(
             history=list(cs.history),
             history_cursor=cs.history_cursor,

@@ -390,6 +390,9 @@ async def update_combat_settings(payload: dict):
         raw = str(payload.get("engine_type") or "").strip().lower()
         if raw in ("standard", "phase", "popcorn"):
             app_state.state.core.engine_type = raw
+    if "screen_brightness" in payload:
+        # 1–100 (%); нормализация и миграция с 0–255 — в HardwareState
+        app_state.state.hardware.screen_brightness = int(payload["screen_brightness"])
 
     await save_snapshot()
     # Persist current state of settings immediately to disk (non-blocking)
@@ -404,6 +407,7 @@ async def update_combat_settings(payload: dict):
         "selected_layout_id": app_state.state.display.selected_layout_id,
         "is_manual_mode": app_state.state.core.is_manual_mode,
         "engine_type": app_state.state.core.engine_type,
+        "screen_brightness": app_state.state.hardware.screen_brightness,
     }
 
 

@@ -4,8 +4,8 @@ import json
 import re
 from typing import Any, Optional
 
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from fastapi import APIRouter, HTTPException, Request
+from pydantic import BaseModel, ValidationError
 
 from backend.layout_profiles_store import read_layout_profiles, write_layout_profiles
 from backend.led_profiles_store import read_led_profiles
@@ -101,10 +101,35 @@ async def get_system_led_triggers(system_name: str):
 
 
 @router.post("/{system_name}/led_triggers")
-async def save_system_led_triggers(system_name: str, rules: list[HardwareTrigger]):
+async def save_system_led_triggers(system_name: str, request: Request) -> list[HardwareTrigger]:
+    """Parse JSON array explicitly so validation errors stay predictable (incl. ``initiative_shift``)."""
     sys_dir = _system_dir(system_name)
     if not sys_dir:
         raise HTTPException(status_code=400, detail="invalid system name")
+    try:
+        raw = await request.json()
+    except ValueError as exc:
+        # Starlette may surface JSONDecodeError as ValueError for malformed/empty bodies.
+        raise HTTPException(status_code=422, detail=f"invalid JSON body: {exc}") from exc
+    if not isinstance(raw, list):
+        raise HTTPException(
+            status_code=422,
+            detail="body must be a JSON array of hardware trigger objects",
+        )
+    rules: list[HardwareTrigger] = []
+    for index, item in enumerate(raw):
+        if not isinstance(item, dict):
+            raise HTTPException(
+                status_code=422,
+                detail=f"trigger at index {index} must be an object, not {type(item).__name__}",
+            )
+        try:
+            rules.append(HardwareTrigger.model_validate(item))
+        except ValidationError as exc:
+            raise HTTPException(
+                status_code=422,
+                detail={"message": "trigger validation failed", "index": index, "errors": exc.errors()},
+            ) from exc
     sys_dir.mkdir(parents=True, exist_ok=True)
     file_path = sys_dir / "led_triggers.json"
     serialized = [r.model_dump(mode="json") for r in rules]

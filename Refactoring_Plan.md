@@ -1,6 +1,6 @@
 # Omniboard — План рефакторинга
 
-> Создан: 01.03.2026 · Обновлено: 26.04.2026  
+> Создан: 01.03.2026 · Обновлено: 01.05.2026  
 > Статус: Активный план работ (P0 по стейту/роутерам закрыт — см. **«Выполнено»**)
 
 ---
@@ -22,7 +22,8 @@
 - **`MiniatureEntry`** расширен режимами привязки: **`binding_mode`** (`actor` / `slot`), **`slot_index`** как offset от текущего хода, **`slot_led_mode`** (`actor` / `custom`) и **`slot_led_profile_id`** для LED-переопределения слота.
 - **`HardwareState` public payload** теперь содержит производный список **`hardware.miniatures`**: сохранённые записи из `data/miniatures.json` + текущие mDNS-устройства (`ip`, `status`, `last_seen`) без переноса этого runtime-среза в autosave.
 - **`HardwareModal`** стал единым диспетчером железа: таблица устройств, режим привязки, назначение актора/позиции очереди, LED-профиль слота, Blink/Forget и row-level loading. **`MiniaturesModal`** оставлена отдельно как редактор **вида/лейаута** экранов.
-- **`ESPManager.refresh_initiative_line`** пересчитывает slot-миниатюры после смены очереди/хода и пушит только изменившиеся цели, с `wipe_right` transition. HTTP timeout для ESP `/update` поднят до **20 s** из-за синхронных анимаций прошивки.
+- **`ESPManager.refresh_initiative_line`** пересчитывает slot-миниатюры после смены очереди/хода и пушит только изменившиеся цели; переход экрана задаётся правилом **`initiative_shift`** в `data/systems/<system>/led_triggers.json` (**`find_hardware_trigger`**, без хардкода **`wipe_right`**). HTTP timeout для ESP `/update` поднят до **20 s** из-за синхронных анимаций прошивки.
+- См. также **Фаза 10.8** в **`Progress_and_Backlog.md`**: глобальная яркость экрана (**1–100 %**), **`PATCH /api/combat/settings`**, явная валидация **`POST .../led_triggers`**.
 
 ---
 

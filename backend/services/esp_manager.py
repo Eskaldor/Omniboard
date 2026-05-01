@@ -245,6 +245,13 @@ class ESPManager:
         if not slot_minis:
             return
 
+        system = (getattr(combat_session.core, "system", "") or "").strip() or "D&D 5e"
+        from backend.services.hardware_triggers import find_hardware_trigger
+
+        shift_rule = find_hardware_trigger(system, "initiative_shift")
+        shift_trans = shift_rule.transition if shift_rule and shift_rule.transition != "none" else None
+        shift_trans_color = shift_rule.transition_color if shift_rule else None
+
         current_index = int(getattr(combat_session.core, "current_index", 0) or 0)
         queue_len = len(queue)
         tasks = []
@@ -274,8 +281,8 @@ class ESPManager:
                     actor_id,
                     mac=mini.id,
                     led_payload=led_payload,
-                    transition="wipe_right",
-                    transition_color="#FFFFFF",
+                    transition=shift_trans,
+                    transition_color=shift_trans_color,
                 )
             )
 
@@ -341,7 +348,7 @@ class ESPManager:
         self,
         esp_id: str,
         image_filename: str,
-        screen_bri: int = 200,
+        screen_bri: int = 78,
         led_payload: dict[str, Any] | None = None,
         transition: str | None = None,
         transition_color: str | None = None,
@@ -360,7 +367,7 @@ class ESPManager:
         )
         payload: dict[str, Any] = {
             "img_url": img_url,
-            "screen_bri": max(0, min(255, screen_bri)),
+            "screen_bri": max(1, min(100, int(screen_bri))),
             "led": led,
         }
         if transition and transition != "none":
@@ -427,7 +434,7 @@ class ESPManager:
         return await self.send_update(
             esp_id,
             {
-                "screen_bri": 200,
+                "screen_bri": 100,
                 "led": {
                     "mode": "static",
                     "colors": ["#00FF00"],

@@ -109,7 +109,7 @@ export interface LedProfile {
 
 export interface HardwareTrigger {
   id: string;
-  event_type: 'turn_start' | 'stat_change' | 'miniature_bind';
+  event_type: 'turn_start' | 'stat_change' | 'miniature_bind' | 'initiative_shift';
   target_stat?: string | null;
   led_profile_id: string;
   transition?: string | null;
@@ -223,6 +223,8 @@ export interface Miniature extends MiniatureEntry {}
 /** Глобальные флаги железа (ADR-18 / backend HardwareState). */
 export interface HardwareState {
   sync_led_to_ui: boolean;
+  /** Яркость экрана Omnimini, 1–100 (%). */
+  screen_brightness?: number;
   miniatures?: Miniature[];
 }
 

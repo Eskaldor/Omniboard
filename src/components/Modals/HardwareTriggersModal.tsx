@@ -58,16 +58,23 @@ function createEmptyRule(profiles: LedProfile[]): HardwareTrigger {
   };
 }
 
+const TRIGGER_EVENT_TYPES = new Set<HardwareTrigger['event_type']>([
+  'turn_start',
+  'stat_change',
+  'miniature_bind',
+  'initiative_shift',
+]);
+
 function normalizeLoadedRule(raw: unknown, profiles: LedProfile[]): HardwareTrigger {
   const firstId = profiles[0]?.id ?? 'default_static';
   if (!raw || typeof raw !== 'object') {
     return createEmptyRule(profiles);
   }
   const o = raw as Record<string, unknown>;
-  const eventType =
-    o.event_type === 'stat_change' || o.event_type === 'miniature_bind'
-      ? o.event_type
-      : 'turn_start';
+  const rawEvent = typeof o.event_type === 'string' ? o.event_type.trim() : '';
+  const eventType: HardwareTrigger['event_type'] = TRIGGER_EVENT_TYPES.has(rawEvent as HardwareTrigger['event_type'])
+    ? (rawEvent as HardwareTrigger['event_type'])
+    : 'turn_start';
   const durationType = o.duration_type === 'turn' ? 'turn' : 'time';
   const ledId = typeof o.led_profile_id === 'string' && o.led_profile_id ? o.led_profile_id : firstId;
   const durationMs =
@@ -167,24 +174,51 @@ export function HardwareTriggersModal({ isOpen, onClose }: { isOpen: boolean; on
     setSaving(true);
     setError(null);
     try {
-      const payload = rules.map((r) => ({
-        id: r.id,
-        event_type: r.event_type,
-        target_stat: r.event_type === 'stat_change' ? (r.target_stat?.trim() || null) : null,
-        led_profile_id: r.led_profile_id,
-        transition: normalizeTransition(r.transition),
-        transition_color: normalizeTransition(r.transition) ? (r.transition_color || '#ffffff') : null,
-        duration_type: r.duration_type,
-        duration_ms: r.duration_type === 'time' ? Math.max(0, r.duration_ms ?? 1000) : (r.duration_ms ?? 1000),
-      }));
+      const payload = rules.map((r) => {
+        const rawEt = String(r.event_type ?? '').trim();
+        const event_type: HardwareTrigger['event_type'] = TRIGGER_EVENT_TYPES.has(rawEt as HardwareTrigger['event_type'])
+          ? (rawEt as HardwareTrigger['event_type'])
+          : 'turn_start';
+        return {
+          id: r.id,
+          event_type,
+          target_stat: event_type === 'stat_change' ? (r.target_stat?.trim() || null) : null,
+          led_profile_id: String(r.led_profile_id ?? '').trim() || 'default_static',
+          transition: normalizeTransition(r.transition),
+          transition_color: normalizeTransition(r.transition) ? (r.transition_color || '#ffffff') : null,
+          duration_type: r.duration_type,
+          duration_ms: r.duration_type === 'time' ? Math.max(0, r.duration_ms ?? 1000) : (r.duration_ms ?? 1000),
+        };
+      });
       const res = await fetch(`/api/systems/${encodeURIComponent(system)}/led_triggers`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error(String(res.status));
+      if (!res.ok) {
+        let detailMsg = '';
+        try {
+          const errBody = (await res.json()) as { detail?: unknown };
+          const d = errBody?.detail;
+          if (typeof d === 'string') {
+            detailMsg = d;
+          } else if (Array.isArray(d) && d.length > 0) {
+            const first = d[0] as { msg?: string; loc?: unknown };
+            detailMsg = first?.msg ? String(first.msg) : JSON.stringify(d[0]);
+          } else if (d && typeof d === 'object' && 'errors' in d && Array.isArray((d as { errors: unknown }).errors)) {
+            const errs = (d as { errors: Array<{ msg?: string; type?: string }> }).errors;
+            detailMsg = errs[0]?.msg ?? JSON.stringify(errs[0]);
+          }
+        } catch {
+          /* ignore parse errors */
+        }
+        console.error('led_triggers save failed', res.status, detailMsg);
+        setError(detailMsg ? `${t('led_triggers.save_failed')} (${detailMsg})` : t('led_triggers.save_failed'));
+        return;
+      }
       onClose();
-    } catch {
+    } catch (e) {
+      console.error(e);
       setError(t('led_triggers.save_failed'));
     } finally {
       setSaving(false);
@@ -251,6 +285,7 @@ export function HardwareTriggersModal({ isOpen, onClose }: { isOpen: boolean; on
                         <option value="turn_start">{t('led_triggers.event_turn_start')}</option>
                         <option value="stat_change">{t('led_triggers.event_stat_change')}</option>
                         <option value="miniature_bind">Привязка миниатюры</option>
+                        <option value="initiative_shift">Сдвиг по линии инициативы</option>
                       </select>
                     </div>
                     <div>
