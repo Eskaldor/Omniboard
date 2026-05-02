@@ -407,6 +407,7 @@ export default function App() {
           systemName={systemName}
           onClose={() => setSelectedActor(null)} 
           onUpdate={updateActorField}
+          onPatchActor={(updates) => updateActor(selectedActor.id, updates)}
           onPortraitClick={() => {
             setPortraitSelectActorId(selectedActor.id);
             setSelectedActor(null);

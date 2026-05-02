@@ -32,6 +32,12 @@ export function mergeActorPatchBodies(
         isPlainObject(prevStats) ? prevStats : {},
         value,
       );
+    } else if (key === 'actions' && isPlainObject(value)) {
+      const prevActions = base['actions'];
+      base['actions'] = deepMergeRecords(
+        isPlainObject(prevActions) ? prevActions : {},
+        value,
+      );
     } else {
       base[key] = value;
     }
@@ -49,6 +55,11 @@ export function applyActorPatchOptimistic(actor: Actor, patch: Record<string, un
         next.stats as Record<string, unknown>,
         value,
       ) as Actor['stats'];
+    } else if (key === 'actions' && isPlainObject(value)) {
+      next.actions = deepMergeRecords(
+        (next.actions ?? {}) as Record<string, unknown>,
+        value,
+      ) as Actor['actions'];
     } else {
       (next as unknown as Record<string, unknown>)[key] = value;
     }

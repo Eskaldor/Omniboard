@@ -229,6 +229,16 @@ async def update_actor(actor_id: str, updates: dict, background_tasks: Backgroun
                 else:
                     actor_dict["stats"].update(sp)
                 del updates["stats"]
+            if "actions" in updates:
+                ap = updates["actions"]
+                if isinstance(ap, dict):
+                    if actor_dict.get("actions") is None:
+                        actor_dict["actions"] = {}
+                    actor_dict["actions"] = _deep_merge_dict(
+                        dict(actor_dict["actions"]),
+                        ap,
+                    )
+                del updates["actions"]
             actor_dict.update(updates)
             new_actor = Actor(**actor_dict)
             system_name = getattr(app_state.state.core, "system", "") or ""

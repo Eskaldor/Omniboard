@@ -14,7 +14,9 @@ export function ActionsPanel({
   onRollAction: (formula: string, comment: string) => void | Promise<void>;
 }) {
   const { t } = useTranslation('core', { useSuspense: false });
-  const entries = Object.entries(systemActions);
+  const entries = Object.entries(systemActions).filter(
+    ([actionKey]) => actor.actions?.[actionKey]?.show_on_panel !== false,
+  );
 
   if (entries.length === 0) {
     return (

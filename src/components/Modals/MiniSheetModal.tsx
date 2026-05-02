@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { BookOpen, Cpu, List, X } from 'lucide-react';
+import { BookOpen, List, Swords, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Actor, ColumnConfig } from '../../types';
 import { useCombatState } from '../../contexts/CombatStateContext';
 import { useTranslation } from 'react-i18next';
 import { DefaultSystemSheet } from './DefaultSystemSheet';
-import { ExpertActorEditor } from './ExpertActorEditor';
 import { ActionsPanel } from './ActionsPanel';
+import { ActorActionEditor } from './ActorActionEditor';
 import { getSystemSheet } from '../Systems/SheetRegistry';
 import { useSystemSheetLayout } from '../../hooks/useSystemSheetLayout';
 import { useSystemActions } from '../../hooks/useSystemActions';
@@ -19,6 +19,7 @@ export function MiniSheetModal({
   systemName,
   onClose,
   onUpdate,
+  onPatchActor,
   onPortraitClick,
 }: {
   actor: Actor;
@@ -26,13 +27,16 @@ export function MiniSheetModal({
   systemName: string;
   onClose: () => void;
   onUpdate?: (id: string, field: string, value: unknown) => void;
+  /** Debounced PATCH merge (preferred over raw fetch). */
+  onPatchActor: (updates: Partial<Actor>) => void;
   onPortraitClick?: () => void;
 }) {
   const { t } = useTranslation('core', { useSuspense: false });
   const { state } = useCombatState();
   const liveActor = state?.core.actors.find((a) => a.id === actor.id) ?? actor;
   const [localName, setLocalName] = useState(liveActor.name);
-  const [viewMode, setViewMode] = useState<'lore' | 'gm' | 'expert'>('gm');
+  const [sheetSidebar, setSheetSidebar] = useState<'lore' | 'gm'>('gm');
+  const [isEditingActions, setIsEditingActions] = useState(false);
   const [activeTab, setActiveTab] = useState<'stats' | 'actions'>('stats');
   const miniSheetCols = columns.filter((c) => c.show_in_mini_sheet);
 
@@ -80,6 +84,20 @@ export function MiniSheetModal({
         : 'border-transparent text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30'
     }`;
 
+  const selectLore = () => {
+    setSheetSidebar('lore');
+    setIsEditingActions(false);
+  };
+
+  const selectGm = () => {
+    setSheetSidebar('gm');
+    setIsEditingActions(false);
+  };
+
+  const selectActionEditor = () => {
+    setIsEditingActions(true);
+  };
+
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl">
@@ -112,7 +130,7 @@ export function MiniSheetModal({
           </div>
         </div>
 
-        {viewMode === 'gm' && (
+        {!isEditingActions && sheetSidebar === 'gm' && (
           <div className="flex border-b border-zinc-800 bg-zinc-950/30">
             <button
               type="button"
@@ -136,9 +154,9 @@ export function MiniSheetModal({
             <button
               type="button"
               title={t('modals.tab_lore')}
-              onClick={() => setViewMode('lore')}
+              onClick={selectLore}
               className={`p-1.5 rounded-md transition-colors ${
-                viewMode === 'lore'
+                sheetSidebar === 'lore' && !isEditingActions
                   ? 'text-emerald-400 bg-zinc-800/60'
                   : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30'
               }`}
@@ -148,9 +166,9 @@ export function MiniSheetModal({
             <button
               type="button"
               title={t('modals.tab_gm')}
-              onClick={() => setViewMode('gm')}
+              onClick={selectGm}
               className={`p-1.5 rounded-md transition-colors ${
-                viewMode === 'gm'
+                sheetSidebar === 'gm' && !isEditingActions
                   ? 'text-emerald-400 bg-zinc-800/60'
                   : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30'
               }`}
@@ -159,51 +177,47 @@ export function MiniSheetModal({
             </button>
             <button
               type="button"
-              title={t('modals.tab_expert')}
-              onClick={() => setViewMode('expert')}
+              title={t('modals.tab_action_editor')}
+              onClick={selectActionEditor}
               className={`p-1.5 rounded-md transition-colors ${
-                viewMode === 'expert'
+                isEditingActions
                   ? 'text-emerald-400 bg-zinc-800/60'
                   : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30'
               }`}
             >
-              <Cpu size={16} />
+              <Swords size={16} />
             </button>
           </div>
 
           <div className="flex-1 overflow-y-auto max-h-[75vh] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-            {viewMode === 'lore' ? (
-              <LoreSheet actor={liveActor} columns={miniSheetCols} systemName={systemName} />
-            ) : viewMode === 'gm' ? (
-              activeTab === 'actions' ? (
-                actionsLoading ? (
-                  <div className="p-4 text-sm text-zinc-500">{t('modals.mini_sheet_layout_loading')}</div>
-                ) : (
-                  <ActionsPanel
-                    actor={liveActor}
-                    systemActions={systemActions}
-                    onRollAction={handleRollAction}
-                  />
-                )
+            {isEditingActions ? (
+              actionsLoading ? (
+                <div className="p-4 text-sm text-zinc-500">{t('modals.mini_sheet_layout_loading')}</div>
               ) : (
-                <DefaultSystemSheet
+                <ActorActionEditor actor={liveActor} systemActions={systemActions} onPatchActor={onPatchActor} />
+              )
+            ) : sheetSidebar === 'lore' ? (
+              <LoreSheet actor={liveActor} columns={miniSheetCols} systemName={systemName} />
+            ) : activeTab === 'actions' ? (
+              actionsLoading ? (
+                <div className="p-4 text-sm text-zinc-500">{t('modals.mini_sheet_layout_loading')}</div>
+              ) : (
+                <ActionsPanel
                   actor={liveActor}
-                  columns={miniSheetCols}
-                  systemName={systemName}
-                  onUpdate={onUpdate}
-                  onOpenPortraitPicker={onPortraitClick}
-                  sheetMode={sheetMode}
-                  sheetLayout={sheetLayout}
-                  sheetLayoutLoading={sheetLayoutLoading}
+                  systemActions={systemActions}
+                  onRollAction={handleRollAction}
                 />
               )
             ) : (
-              <ExpertActorEditor
+              <DefaultSystemSheet
                 actor={liveActor}
-                columns={columns}
+                columns={miniSheetCols}
                 systemName={systemName}
                 onUpdate={onUpdate}
                 onOpenPortraitPicker={onPortraitClick}
+                sheetMode={sheetMode}
+                sheetLayout={sheetLayout}
+                sheetLayoutLoading={sheetLayoutLoading}
               />
             )}
           </div>
