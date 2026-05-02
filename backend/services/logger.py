@@ -63,7 +63,12 @@ def entry_dict_to_md_line(entry: dict) -> str:
         expr = det.get("expression", "")
         tot = det.get("total", "?")
         det_str = det.get("details", "")
-        return f"{name} roll: {expr} → **{tot}** ({det_str})"
+        comment = det.get("comment")
+        line = f"{name} roll: {expr} → **{tot}** ({det_str})"
+        if isinstance(comment, str) and comment.strip():
+            safe = comment.strip().replace("*", "")
+            line += f" *(Комментарий: {safe})*"
+        return line
     return f"[{t}]"
 
 

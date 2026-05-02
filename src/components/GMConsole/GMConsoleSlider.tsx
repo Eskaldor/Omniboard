@@ -1,9 +1,39 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AnimatePresence, motion } from 'motion/react';
-import { BookOpen, ChevronDown, Plus, Terminal, X } from 'lucide-react';
+import { BookOpen, Bot, ChevronDown, Dices, Plus } from 'lucide-react';
+import { useCombatState } from '../../contexts/CombatStateContext';
 import { useColumns } from '../../contexts/ColumnsContext';
 import { useGMConsole } from '../../contexts/GMConsoleContext';
+import type { Actor } from '../../types';
+import { NoteCard } from './NoteCard';
+
+const MODE_CONFIG = {
+  note: {
+    icon: BookOpen,
+    color: 'text-blue-400',
+    ring: 'focus:border-blue-500 focus:ring-blue-500/40',
+    placeholderKey: 'gm_console.placeholder_note',
+  },
+  roll: {
+    icon: Dices,
+    color: 'text-yellow-400',
+    ring: 'focus:border-yellow-500 focus:ring-yellow-500/40',
+    placeholderKey: 'gm_console.placeholder_roll',
+  },
+  ai: {
+    icon: Bot,
+    color: 'text-rose-500',
+    ring: 'focus:border-rose-500 focus:ring-rose-500/40',
+    placeholderKey: 'gm_console.placeholder_ai',
+  },
+} as const;
+
+function cycleInputMode(m: 'note' | 'roll' | 'ai'): 'note' | 'roll' | 'ai' {
+  if (m === 'note') return 'roll';
+  if (m === 'roll') return 'ai';
+  return 'note';
+}
 
 const springPanel = { type: 'spring' as const, stiffness: 380, damping: 32 };
 const springNotes = { type: 'spring' as const, stiffness: 360, damping: 28 };
@@ -17,16 +47,75 @@ function newColumn(): NoteColumn {
   return { id: crypto.randomUUID(), selected: '' };
 }
 
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/** Parse roll terminal: `#` comment, all `@Actor` mentions (case-insensitive), then sanitize leftover `@` tokens. */
+function parseRollTerminalInput(
+  text: string,
+  actorList: Actor[],
+): { expression: string; comment: string | null; matchedActors: Actor[] } {
+  const hashIdx = text.indexOf('#');
+  let comment: string | null = null;
+  let working: string;
+  if (hashIdx === -1) {
+    working = text;
+  } else {
+    const afterHash = text.slice(hashIdx + 1).trim();
+    comment = afterHash.length > 0 ? afterHash : null;
+    working = text.slice(0, hashIdx).trimEnd();
+  }
+  const namedActors = actorList.filter((a) => (a.name ?? '').trim().length > 0);
+  const sorted = [...namedActors].sort((a, b) => b.name.length - a.name.length);
+  const matchedActors: Actor[] = [];
+  for (const a of sorted) {
+    const name = (a.name ?? '').trim();
+    if (!name) continue;
+    const needleRe = new RegExp(`@${escapeRegExp(name)}`, 'gi');
+    const occ = (working.match(needleRe) ?? []).length;
+    for (let i = 0; i < occ; i += 1) {
+      matchedActors.push(a);
+    }
+    working = working.replace(needleRe, '');
+  }
+  working = working.replace(/@[^\s#]+/g, '').trim();
+  return { expression: working.trim(), comment, matchedActors };
+}
+
+function buildRollRequestPayload(expression: string, comment: string | null): string {
+  const body: { expression: string; is_preroll: false; comment?: string } = {
+    expression,
+    is_preroll: false,
+  };
+  const c = comment?.trim();
+  if (c) body.comment = c;
+  return JSON.stringify(body);
+}
+
 export function GMConsoleSlider() {
   const { t } = useTranslation('core', { useSuspense: false });
+  const { state: combatState } = useCombatState();
   const { systemName } = useColumns();
   const { isFabSummoned, setIsFabSummoned } = useGMConsole();
   const [panelOpen, setPanelOpen] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
   const [noteColumns, setNoteColumns] = useState<NoteColumn[]>(() => [newColumn()]);
   const [noteFiles, setNoteFiles] = useState<string[]>([]);
+  const [command, setCommand] = useState('');
+  const [inputMode, setInputMode] = useState<'note' | 'roll' | 'ai'>('note');
+  const [actionStatus, setActionStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [showRollHelp, setShowRollHelp] = useState(false);
   const [logoTier, setLogoTier] = useState(0);
   const fabClickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const actionStatusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rollHelpTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const commandRef = useRef(command);
+  const terminalInputRef = useRef<HTMLInputElement>(null);
+  commandRef.current = command;
+
+  const actors = combatState?.core?.actors ?? [];
 
   const systemLogoSrc = useMemo(
     () => `/api/assets/systems/${encodeURIComponent(systemName)}/ui/logo.png`,
@@ -63,8 +152,65 @@ export function GMConsoleSlider() {
   useEffect(() => {
     return () => {
       if (fabClickTimerRef.current) clearTimeout(fabClickTimerRef.current);
+      if (actionStatusTimerRef.current) clearTimeout(actionStatusTimerRef.current);
+      if (rollHelpTimerRef.current) clearTimeout(rollHelpTimerRef.current);
     };
   }, []);
+
+  const flashActionStatus = useCallback((status: 'success' | 'error') => {
+    setActionStatus(status);
+    if (actionStatusTimerRef.current) clearTimeout(actionStatusTimerRef.current);
+    actionStatusTimerRef.current = setTimeout(() => {
+      setActionStatus('idle');
+      actionStatusTimerRef.current = null;
+    }, 1500);
+  }, []);
+
+  const updateMentionFromValue = useCallback(
+    (value: string, mode: 'note' | 'roll' | 'ai') => {
+      if (mode !== 'roll') {
+        setMentionQuery(null);
+        return;
+      }
+      const m = /@([^\s]*)$/.exec(value);
+      setMentionQuery(m ? m[1] : null);
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (inputMode !== 'roll') {
+      setMentionQuery(null);
+      return;
+    }
+    updateMentionFromValue(commandRef.current, 'roll');
+  }, [inputMode, updateMentionFromValue]);
+
+  const mentionFilteredActors = useMemo(() => {
+    if (mentionQuery === null) return [];
+    const q = mentionQuery.toLowerCase();
+    return actors.filter((a) => a.name.toLowerCase().includes(q));
+  }, [actors, mentionQuery]);
+
+  const handleCommandChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      setCommand(value);
+      updateMentionFromValue(value, inputMode);
+    },
+    [inputMode, updateMentionFromValue],
+  );
+
+  const selectMentionActor = useCallback(
+    (actor: Actor) => {
+      const v = commandRef.current;
+      const next = v.replace(/@[^\s]*$/, `@${actor.name} `);
+      setCommand(next);
+      setMentionQuery(null);
+      queueMicrotask(() => terminalInputRef.current?.focus());
+    },
+    [],
+  );
 
   const setColumnSelected = useCallback((id: string, selected: string) => {
     setNoteColumns((prev) => prev.map((c) => (c.id === id ? { ...c, selected } : c)));
@@ -78,6 +224,14 @@ export function GMConsoleSlider() {
     setNoteColumns((cols) => cols.filter((c) => c.id !== id));
   }, []);
 
+  const handleNoteSelectFile = useCallback((columnId: string, file: string) => {
+    setColumnSelected(columnId, file);
+  }, [setColumnSelected]);
+
+  const handleNoteRemove = useCallback((columnId: string) => {
+    removeColumn(columnId);
+  }, [removeColumn]);
+
   const handleFabSingleClick = useCallback(() => {
     if (fabClickTimerRef.current) clearTimeout(fabClickTimerRef.current);
     fabClickTimerRef.current = setTimeout(() => {
@@ -85,6 +239,96 @@ export function GMConsoleSlider() {
       setPanelOpen((v) => !v);
     }, FAB_CLICK_DELAY_MS);
   }, []);
+
+  const handleCommandKeyDown = useCallback(
+    async (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Escape' && mentionQuery !== null) {
+        e.preventDefault();
+        setMentionQuery(null);
+        return;
+      }
+
+      if (e.key === 'Tab' && commandRef.current.trim() === '') {
+        e.preventDefault();
+        setInputMode((m) => cycleInputMode(m));
+        return;
+      }
+
+      if (e.key !== 'Enter') return;
+      const trimmed = commandRef.current.trim();
+      if (!trimmed) return;
+      e.preventDefault();
+
+      if (inputMode === 'note') {
+        try {
+          const res = await fetch('/api/combat/log/note', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: trimmed }),
+          });
+          if (!res.ok) throw new Error(String(res.status));
+          setCommand('');
+          flashActionStatus('success');
+        } catch {
+          flashActionStatus('error');
+        }
+        return;
+      }
+
+      if (inputMode === 'roll') {
+        const trimmedRoll = commandRef.current.trim();
+        if (trimmedRoll === '?') {
+          setShowRollHelp(true);
+          setCommand('');
+          flashActionStatus('success');
+          if (rollHelpTimerRef.current) clearTimeout(rollHelpTimerRef.current);
+          rollHelpTimerRef.current = setTimeout(() => {
+            setShowRollHelp(false);
+            rollHelpTimerRef.current = null;
+          }, 5000);
+          return;
+        }
+        const raw = commandRef.current;
+        const { expression, comment, matchedActors } = parseRollTerminalInput(raw, actors);
+        if (!expression) {
+          flashActionStatus('error');
+          return;
+        }
+        const payloadJson = buildRollRequestPayload(expression, comment);
+        try {
+          if (matchedActors.length > 0) {
+            const responses = await Promise.all(
+              matchedActors.map((actor) =>
+                fetch(`/api/combat/actors/${encodeURIComponent(actor.id)}/roll`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: payloadJson,
+                }),
+              ),
+            );
+            if (responses.some((r) => !r.ok)) throw new Error('roll failed');
+          } else {
+            const res = await fetch('/api/combat/roll', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: payloadJson,
+            });
+            if (!res.ok) throw new Error(String(res.status));
+          }
+          setCommand('');
+          setMentionQuery(null);
+          flashActionStatus('success');
+        } catch {
+          flashActionStatus('error');
+        }
+        return;
+      }
+
+      setCommand('');
+      flashActionStatus('success');
+    },
+    [actors, flashActionStatus, inputMode, mentionQuery],
+  );
 
   const handleFabDoubleClick = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -101,6 +345,24 @@ export function GMConsoleSlider() {
 
   const toolBtnClass =
     'rounded-lg border border-slate-800 bg-slate-800/80 px-3 py-2 text-xs font-medium text-slate-400 opacity-80';
+
+  const ModeIcon = MODE_CONFIG[inputMode].icon;
+  const modeRing = MODE_CONFIG[inputMode].ring;
+  const placeholderKey = MODE_CONFIG[inputMode].placeholderKey;
+
+  const iconColorClass =
+    actionStatus === 'success'
+      ? 'text-green-400'
+      : actionStatus === 'error'
+        ? 'text-red-400'
+        : MODE_CONFIG[inputMode].color;
+
+  const statusChrome =
+    actionStatus === 'success'
+      ? '!border-green-500 !ring-2 !ring-green-500 focus:!border-green-500 focus:!ring-green-500'
+      : actionStatus === 'error'
+        ? '!border-red-500 !ring-2 !ring-red-500 focus:!border-red-500 focus:!ring-red-500'
+        : '';
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[35] flex flex-col justify-end">
@@ -130,42 +392,16 @@ export function GMConsoleSlider() {
                   >
                     <div className="pointer-events-none flex w-full flex-row items-end gap-4 overflow-x-auto px-4 pb-4">
                       {noteColumns.map((col) => (
-                        <div
+                        <NoteCard
                           key={col.id}
-                          className="pointer-events-auto flex min-h-[160px] min-w-[250px] max-w-md flex-1 flex-col gap-2 rounded-xl border border-slate-700 bg-slate-900/95 p-2 shadow-2xl backdrop-blur-md"
-                        >
-                          <div className="flex items-center gap-2">
-                            <select
-                              className="min-w-0 flex-1 rounded-md border border-slate-800 bg-slate-800 px-2 py-1.5 text-xs text-slate-200 outline-none focus:border-slate-600 focus:ring-2 focus:ring-slate-600/40"
-                              value={col.selected}
-                              onChange={(e) => setColumnSelected(col.id, e.target.value)}
-                              aria-label={t('gm_console.select_note_placeholder')}
-                            >
-                              <option value="">{t('gm_console.select_note_placeholder')}</option>
-                              {noteFiles.map((name) => (
-                                <option key={name} value={name}>
-                                  {name}
-                                </option>
-                              ))}
-                            </select>
-                            {noteColumns.length > 1 ? (
-                              <button
-                                type="button"
-                                onClick={() => removeColumn(col.id)}
-                                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-700 bg-slate-800 text-slate-400 transition hover:border-slate-600 hover:bg-slate-700 hover:text-slate-200"
-                                title={t('gm_console.remove_column')}
-                                aria-label={t('gm_console.remove_column')}
-                              >
-                                <X size={16} aria-hidden />
-                              </button>
-                            ) : null}
-                          </div>
-                          <div className="min-h-[100px] flex-1 rounded-md border border-dashed border-slate-700/70 bg-slate-950/50 p-2 text-xs leading-relaxed text-slate-500">
-                            {col.selected === ''
-                              ? t('gm_console.empty_note_placeholder')
-                              : t('gm_console.note_preview_placeholder')}
-                          </div>
-                        </div>
+                          id={col.id}
+                          systemName={systemName}
+                          selectedFile={col.selected}
+                          availableFiles={noteFiles}
+                          onSelectFile={handleNoteSelectFile}
+                          onRemove={handleNoteRemove}
+                          canRemove={noteColumns.length > 1}
+                        />
                       ))}
                       {noteColumns.length < MAX_NOTE_COLUMNS ? (
                         <button
@@ -218,14 +454,65 @@ export function GMConsoleSlider() {
                   </button>
                 </div>
 
-                <div className="flex items-center gap-2 border-t border-slate-800/80 bg-slate-950 px-3 py-2.5">
-                  <Terminal size={18} className="shrink-0 text-slate-400" aria-hidden />
-                  <input
-                    type="text"
-                    className="min-w-0 flex-1 rounded-md border border-slate-800 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-slate-600 focus:ring-2 focus:ring-slate-600/40"
-                    placeholder={t('gm_console.command_placeholder')}
-                    aria-label={t('gm_console.command_aria')}
-                  />
+                <div className="relative border-t border-slate-800/80 bg-slate-950 px-3 py-2.5">
+                  {inputMode === 'roll' && showRollHelp ? (
+                    <div
+                      className="pointer-events-none absolute bottom-full right-0 z-50 mb-2 max-w-[min(100%,20rem)] rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs text-slate-300 shadow-xl"
+                      role="status"
+                    >
+                      {t('gm_console.roll_help_tooltip')}
+                    </div>
+                  ) : null}
+                  {inputMode === 'roll' && mentionQuery !== null ? (
+                    <ul
+                      id="gm-console-mention-list"
+                      role="listbox"
+                      className="pointer-events-auto absolute bottom-full left-3 right-3 z-30 mb-2 max-h-48 overflow-y-auto rounded-lg border border-slate-700 bg-slate-800 shadow-xl"
+                    >
+                      {mentionFilteredActors.length === 0 ? (
+                        <li className="px-3 py-2 text-xs text-slate-500">{t('gm_console.mention_no_results')}</li>
+                      ) : (
+                        mentionFilteredActors.map((a) => (
+                          <li key={a.id} role="option">
+                            <button
+                              type="button"
+                              className="w-full cursor-pointer px-3 py-2 text-left text-sm text-slate-200 transition-colors hover:bg-slate-700"
+                              onMouseDown={(ev) => {
+                                ev.preventDefault();
+                                selectMentionActor(a);
+                              }}
+                            >
+                              {a.name}
+                            </button>
+                          </li>
+                        ))
+                      )}
+                    </ul>
+                  ) : null}
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setInputMode((m) => cycleInputMode(m))}
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-slate-800 bg-slate-800/80 text-slate-300 transition-colors duration-300 hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500/50 ${statusChrome}`}
+                      title={t(placeholderKey)}
+                      aria-label={t(placeholderKey)}
+                    >
+                      <ModeIcon size={18} className={`transition-colors duration-300 ${iconColorClass}`} aria-hidden />
+                    </button>
+                    <input
+                      ref={terminalInputRef}
+                      type="text"
+                      value={command}
+                      onChange={handleCommandChange}
+                      onKeyDown={handleCommandKeyDown}
+                      className={`min-w-0 flex-1 rounded-md border border-slate-800 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition-colors duration-300 ${actionStatus !== 'idle' ? statusChrome : `focus:ring-2 ${modeRing}`}`}
+                      placeholder={t(placeholderKey)}
+                      aria-label={t('gm_console.command_aria')}
+                      aria-expanded={inputMode === 'roll' && mentionQuery !== null}
+                      aria-controls="gm-console-mention-list"
+                      autoComplete="off"
+                    />
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -248,7 +535,7 @@ export function GMConsoleSlider() {
             >
               {logoTier >= 2 ? (
                 <span className="font-serif text-2xl font-semibold tracking-tight text-slate-100" aria-hidden>
-                  O
+                  {t('gm_console.fab_fallback')}
                 </span>
               ) : (
                 <img

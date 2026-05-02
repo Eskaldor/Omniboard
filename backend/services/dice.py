@@ -142,7 +142,9 @@ class DiceManager:
             return ShadowrunEngine()
         return D20Engine()
 
-    def execute_roll(self, expression: str, system_name: str, actor: Actor) -> RollResult:
+    def execute_roll(
+        self, expression: str, system_name: str, actor: Optional[Actor] = None
+    ) -> RollResult:
         engine = self.get_engine(system_name)
         try:
             return engine.roll(expression, actor)
@@ -151,7 +153,7 @@ class DiceManager:
                 "execute_roll failed expr=%r system=%r actor=%s: %s",
                 expression,
                 system_name,
-                getattr(actor, "id", "?"),
+                getattr(actor, "id", None) if actor is not None else "—",
                 e,
             )
             safe_expr = (expression or "").strip()

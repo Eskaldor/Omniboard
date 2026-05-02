@@ -6,6 +6,7 @@ import shutil
 from pathlib import Path
 
 from PIL import Image
+from pydantic import BaseModel
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 
@@ -265,6 +266,47 @@ async def list_notes_markdown(system: str | None = None):
                 seen.add(f.name)
                 ordered.append(f.name)
     return ordered
+
+
+class NoteSavePayload(BaseModel):
+    system: str
+    file: str
+    content: str
+
+
+@router.get("/notes/content")
+async def get_note_markdown_content(system: str | None = None, file: str | None = None):
+    """Read note text: system ``notes/{file}`` if present, else ``default/notes/{file}``."""
+    if not file or not _safe_notes_md_basename(file):
+        raise HTTPException(status_code=400, detail="Invalid note filename")
+    path: Path | None = None
+    sys_key = (system or "").strip()
+    if sys_key and ".." not in sys_key and "/" not in sys_key and "\\" not in sys_key:
+        candidate = ASSETS_DIR / "systems" / sys_key / "notes" / file
+        if candidate.is_file():
+            path = candidate
+    if path is None:
+        candidate = ASSETS_DIR / "default" / "notes" / file
+        if candidate.is_file():
+            path = candidate
+    if path is None:
+        return {"content": ""}
+    return {"content": path.read_text(encoding="utf-8")}
+
+
+@router.post("/notes")
+async def save_note_markdown(payload: NoteSavePayload):
+    """Write markdown to ``data/assets/systems/{system}/notes/{file}`` (creates directories)."""
+    sys_key = payload.system.strip()
+    if not sys_key or ".." in sys_key or "/" in sys_key or "\\" in sys_key:
+        raise HTTPException(status_code=400, detail="Invalid system name")
+    if not _safe_notes_md_basename(payload.file):
+        raise HTTPException(status_code=400, detail="Invalid note filename")
+    notes_dir = ASSETS_DIR / "systems" / sys_key / "notes"
+    notes_dir.mkdir(parents=True, exist_ok=True)
+    target = notes_dir / payload.file
+    target.write_text(payload.content, encoding="utf-8")
+    return {"status": "ok"}
 
 
 @router.get("/systems/{system}/ui/logo.png")

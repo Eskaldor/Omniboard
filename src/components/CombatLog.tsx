@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { FolderOpen, Trash2, Send } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import ReactMarkdown from 'react-markdown';
 import type { CombatLogEntry } from '../types';
 
 export type LogEntryView = CombatLogEntry;
@@ -123,6 +124,10 @@ function LogEvent({ entry, index }: { entry: LogEntryView; index: number }) {
       const expr = typeof entry.details?.expression === 'string' ? entry.details.expression : '';
       const total = entry.details?.total;
       const det = typeof entry.details?.details === 'string' ? entry.details.details : '';
+      const rollComment =
+        typeof entry.details?.comment === 'string' && entry.details.comment.trim() !== ''
+          ? entry.details.comment.trim()
+          : '';
       return (
         <div className="py-1.5 px-2 rounded border-l-2 border-indigo-600/50 bg-indigo-950/25 text-sm text-zinc-200">
           <span className="text-zinc-400">🎲</span>{' '}
@@ -139,7 +144,21 @@ function LogEvent({ entry, index }: { entry: LogEntryView; index: number }) {
               <span className="font-mono text-indigo-300 font-medium">{String(total)}</span>
             </>
           )}
-          {det ? <div className="mt-0.5 text-xs text-zinc-500 font-mono break-words">{det}</div> : null}
+          {det ? (
+            <div className="mt-0.5 text-xs text-zinc-500 font-mono break-words [&_strong]:font-bold [&_strong]:text-zinc-200">
+              <ReactMarkdown
+                components={{
+                  p: ({ children }) => <span className="inline">{children}</span>,
+                  strong: ({ children }) => <strong className="font-bold text-zinc-200">{children}</strong>,
+                }}
+              >
+                {det}
+              </ReactMarkdown>
+            </div>
+          ) : null}
+          {rollComment ? (
+            <div className="mt-1 border-l-2 border-zinc-600 pl-2 text-sm italic text-zinc-400">{rollComment}</div>
+          ) : null}
         </div>
       );
     }

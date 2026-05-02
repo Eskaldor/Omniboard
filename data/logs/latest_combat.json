@@ -1,1 +1,193 @@
-[]
+[
+  {
+    "type": "stat_change",
+    "round": 1,
+    "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "details": {
+      "stat_key": "hp",
+      "stat_name": "\u0425\u041f",
+      "amount": 5,
+      "color": "#e70808"
+    }
+  },
+  {
+    "type": "text",
+    "round": 1,
+    "actor_id": null,
+    "actor_name": null,
+    "details": {
+      "message": "\u0413\u043e\u0431\u043b\u0438\u043d\u044b \u0431\u0443\u043d\u0442\u0443\u044e\u0442",
+      "is_gm_note": true
+    }
+  },
+  {
+    "type": "text",
+    "round": 1,
+    "actor_id": null,
+    "actor_name": null,
+    "details": {
+      "message": "\u0430",
+      "is_gm_note": true
+    }
+  },
+  {
+    "type": "text",
+    "round": 1,
+    "actor_id": null,
+    "actor_name": null,
+    "details": {
+      "message": "\u0413\u043e\u0431\u043b\u0438\u043d\u044b \u0432\u0441\u0451 \u0435\u0449\u0451 \u0431\u0430\u0441\u0442\u0443\u044e\u0442",
+      "is_gm_note": true
+    }
+  },
+  {
+    "type": "roll",
+    "round": 1,
+    "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "details": {
+      "expression": "2d10",
+      "formula": "2d10",
+      "total": 14,
+      "details": "2d10 (**10**, 4) = `14`",
+      "is_glitch": false,
+      "is_crit_glitch": false
+    }
+  },
+  {
+    "type": "roll",
+    "round": 1,
+    "actor_id": null,
+    "actor_name": "GM",
+    "details": {
+      "expression": "2d6",
+      "formula": "2d6",
+      "total": 4,
+      "details": "2d6 (2, 2) = `4`",
+      "is_glitch": false,
+      "is_crit_glitch": false,
+      "is_generic_roll": true
+    }
+  },
+  {
+    "type": "roll",
+    "round": 1,
+    "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "details": {
+      "expression": "2d6+3",
+      "formula": "2d6+3",
+      "total": 10,
+      "details": "2d6 (4, 3) + 3 = `10`",
+      "is_glitch": false,
+      "is_crit_glitch": false
+    }
+  },
+  {
+    "type": "roll",
+    "round": 1,
+    "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "details": {
+      "expression": "1d6",
+      "formula": "1d6",
+      "total": 5,
+      "details": "1d6 (5) = `5`",
+      "is_glitch": false,
+      "is_crit_glitch": false,
+      "comment": "\u041e\u0433\u0435\u043d\u043d\u0430\u044f \u0441\u0442\u0440\u0435\u043b\u0430"
+    }
+  },
+  {
+    "type": "roll",
+    "round": 1,
+    "actor_id": null,
+    "actor_name": "GM",
+    "details": {
+      "expression": "1d6",
+      "formula": "1d6",
+      "total": 3,
+      "details": "1d6 (3) = `3`",
+      "is_glitch": false,
+      "is_crit_glitch": false,
+      "comment": "\u041e\u0433\u043d\u0435\u043d\u043d\u0430\u044f \u0441\u0442\u0440\u0435\u043b\u0430",
+      "is_generic_roll": true
+    }
+  },
+  {
+    "type": "roll",
+    "round": 1,
+    "actor_id": null,
+    "actor_name": "GM",
+    "details": {
+      "expression": "1d6",
+      "formula": "1d6",
+      "total": 3,
+      "details": "1d6 (3) = `3`",
+      "is_glitch": false,
+      "is_crit_glitch": false,
+      "comment": "\u041e\u0433\u043d\u0435\u043d\u043d\u0430\u044f \u0441\u0442\u0440\u0435\u043b\u0430",
+      "is_generic_roll": true
+    }
+  },
+  {
+    "type": "roll",
+    "round": 1,
+    "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "details": {
+      "expression": "1d6",
+      "formula": "1d6",
+      "total": 1,
+      "details": "1d6 (**1**) = `1`",
+      "is_glitch": false,
+      "is_crit_glitch": false,
+      "comment": "\u041e\u0433\u043d\u0435\u043d\u043d\u0430\u044f \u0441\u0442\u0440\u0435\u043b\u0430"
+    }
+  },
+  {
+    "type": "roll",
+    "round": 1,
+    "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
+    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "details": {
+      "expression": "1d6 @\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+      "formula": "1d6 @\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+      "total": 0,
+      "details": "(d20 error)",
+      "is_glitch": false,
+      "is_crit_glitch": false
+    }
+  },
+  {
+    "type": "roll",
+    "round": 1,
+    "actor_id": null,
+    "actor_name": "GM",
+    "details": {
+      "expression": ",",
+      "formula": ",",
+      "total": 0,
+      "details": "(d20 error)",
+      "is_glitch": false,
+      "is_crit_glitch": false,
+      "is_generic_roll": true
+    }
+  },
+  {
+    "type": "roll",
+    "round": 1,
+    "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
+    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "details": {
+      "expression": "2d6",
+      "formula": "2d6",
+      "total": 12,
+      "details": "2d6 (**6**, **6**) = `12`",
+      "is_glitch": false,
+      "is_crit_glitch": false,
+      "comment": "\u0411\u0438\u043f"
+    }
+  }
+]

@@ -309,6 +309,7 @@ class LogEntry(BaseModel):
 class RollRequest(BaseModel):
     expression: str
     is_preroll: bool = False
+    comment: Optional[str] = None
 
 
 class MatrixUseRequest(BaseModel):

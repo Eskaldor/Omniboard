@@ -29,7 +29,7 @@ from backend.paths import LOGS_DIR
 from backend.routers.hardware import get_esp_manager
 from backend.routers.ws import broadcast_state
 from backend.services import led_interceptor
-from backend.services.dice import DiceManager
+from backend.services.dice import DiceManager, RollResult
 from backend.services.logger import (
     add_log,
     combat_history_archive_json,
@@ -99,6 +99,44 @@ async def get_state():
     )
 
 
+def _roll_log_details(body: RollRequest, result: RollResult) -> dict[str, Any]:
+    """Serialize roll log details with JSON-safe primitive values only."""
+    d: dict[str, Any] = {
+        "expression": str(body.expression or "").strip(),
+        "formula": str(result.formula),
+        "total": int(result.total),
+        "details": str(result.details),
+        "is_glitch": bool(result.is_glitch),
+        "is_crit_glitch": bool(result.is_crit_glitch),
+    }
+    if body.comment and str(body.comment).strip():
+        d["comment"] = str(body.comment).strip()
+    return d
+
+
+@router.post("/roll")
+async def roll_generic(body: RollRequest):
+    """Системный бросок без привязки к актору ([stat] не подставляются)."""
+    st = app_state.state
+    expr = (body.expression or "").strip()
+    if not expr:
+        raise HTTPException(status_code=400, detail="expression is required")
+    system_name = (st.core.system or "").strip()
+    result = _dice.execute_roll(expr, system_name, None)
+    if not body.is_preroll:
+        log_details = dict(_roll_log_details(body, result))
+        log_details["is_generic_roll"] = True
+        add_log(
+            "roll",
+            actor_id=None,
+            actor_name="GM",
+            details=log_details,
+        )
+    await save_snapshot()
+    await broadcast_state()
+    return result.model_dump(mode="json")
+
+
 @router.post("/actors/{actor_id}/roll")
 async def roll_for_actor(actor_id: str, body: RollRequest):
     """Бросок кубов с подстановкой [stat] из актора; опционально без записи в лог (preroll)."""
@@ -116,14 +154,7 @@ async def roll_for_actor(actor_id: str, body: RollRequest):
             "roll",
             actor_id=actor.id,
             actor_name=actor.name,
-            details={
-                "expression": body.expression,
-                "formula": result.formula,
-                "total": result.total,
-                "details": result.details,
-                "is_glitch": result.is_glitch,
-                "is_crit_glitch": result.is_crit_glitch,
-            },
+            details=_roll_log_details(body, result),
         )
     await save_snapshot()
     await broadcast_state()

@@ -1,6 +1,135 @@
 {
   "core": {
-    "actors": [],
+    "actors": [
+      {
+        "id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+        "name": "Гоблин маг",
+        "role": "enemy",
+        "is_revealed": true,
+        "is_pinned": true,
+        "group_id": null,
+        "group_name": null,
+        "group_mode": null,
+        "group_color": null,
+        "initiative": 0,
+        "has_acted": false,
+        "portrait": "/assets/systems/D&D 5e/portraits/goblin_mag.png",
+        "show_portrait": true,
+        "miniature_id": null,
+        "layout_profile_id": "1776798216413",
+        "stats": {
+          "hp": {
+            "base": 50,
+            "formula_id": null,
+            "overrides": [
+              {
+                "source": "Блес",
+                "value": 5
+              }
+            ],
+            "value": 55
+          },
+          "ac": {
+            "base": 10,
+            "formula_id": null,
+            "overrides": [],
+            "value": 10
+          },
+          "speed": {
+            "base": 30,
+            "formula_id": null,
+            "overrides": [],
+            "value": 30
+          },
+          "mana": {
+            "base": 52,
+            "formula_id": null,
+            "overrides": [],
+            "value": 52
+          },
+          "max_mana": {
+            "base": 60,
+            "formula_id": null,
+            "overrides": [],
+            "value": 60
+          },
+          "com": {
+            "base": 0,
+            "formula_id": null,
+            "overrides": [],
+            "value": 0
+          },
+          "com1": {
+            "Реакция": true,
+            "Бонусное ": true,
+            "Основное": true
+          },
+          "bladpul": {
+            "res1": true,
+            "res2": true,
+            "res3": true,
+            "slot_3": true,
+            "slot_4": true,
+            "slot_5": true,
+            "slot_6": true,
+            "slot_7": true
+          }
+        },
+        "effects": [],
+        "visibility": {
+          "hp": true,
+          "stats": true,
+          "effects": true,
+          "name": true
+        },
+        "hotbar": []
+      },
+      {
+        "id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
+        "name": "Новый участник",
+        "role": "enemy",
+        "is_revealed": true,
+        "is_pinned": false,
+        "group_id": null,
+        "group_name": null,
+        "group_mode": null,
+        "group_color": null,
+        "initiative": 0,
+        "has_acted": false,
+        "portrait": "",
+        "show_portrait": false,
+        "miniature_id": null,
+        "layout_profile_id": null,
+        "stats": {
+          "hp": {
+            "base": 10,
+            "formula_id": null,
+            "overrides": [],
+            "value": 10
+          },
+          "ac": {
+            "base": 10,
+            "formula_id": null,
+            "overrides": [],
+            "value": 10
+          },
+          "speed": {
+            "base": 30,
+            "formula_id": null,
+            "overrides": [],
+            "value": 30
+          }
+        },
+        "effects": [],
+        "visibility": {
+          "hp": true,
+          "stats": true,
+          "effects": true,
+          "name": true
+        },
+        "hotbar": []
+      }
+    ],
     "turn_queue": [],
     "current_index": 0,
     "current_pass": 1,
@@ -30,13 +159,284 @@
     "screen_brightness": 78
   },
   "session": {
-    "history": [],
+    "history": [
+      {
+        "type": "stat_change",
+        "round": 1,
+        "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+        "actor_name": "Гоблин маг",
+        "details": {
+          "stat_key": "hp",
+          "stat_name": "ХП",
+          "amount": 5,
+          "color": "#e70808"
+        }
+      },
+      {
+        "type": "text",
+        "round": 1,
+        "actor_id": null,
+        "actor_name": null,
+        "details": {
+          "message": "Гоблины бунтуют",
+          "is_gm_note": true
+        }
+      },
+      {
+        "type": "text",
+        "round": 1,
+        "actor_id": null,
+        "actor_name": null,
+        "details": {
+          "message": "а",
+          "is_gm_note": true
+        }
+      },
+      {
+        "type": "text",
+        "round": 1,
+        "actor_id": null,
+        "actor_name": null,
+        "details": {
+          "message": "Гоблины всё ещё бастуют",
+          "is_gm_note": true
+        }
+      },
+      {
+        "type": "roll",
+        "round": 1,
+        "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+        "actor_name": "Гоблин маг",
+        "details": {
+          "expression": "2d10",
+          "formula": "2d10",
+          "total": 14,
+          "details": "2d10 (**10**, 4) = `14`",
+          "is_glitch": false,
+          "is_crit_glitch": false
+        }
+      },
+      {
+        "type": "roll",
+        "round": 1,
+        "actor_id": null,
+        "actor_name": "GM",
+        "details": {
+          "expression": "2d6",
+          "formula": "2d6",
+          "total": 4,
+          "details": "2d6 (2, 2) = `4`",
+          "is_glitch": false,
+          "is_crit_glitch": false,
+          "is_generic_roll": true
+        }
+      },
+      {
+        "type": "roll",
+        "round": 1,
+        "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+        "actor_name": "Гоблин маг",
+        "details": {
+          "expression": "2d6+3",
+          "formula": "2d6+3",
+          "total": 10,
+          "details": "2d6 (4, 3) + 3 = `10`",
+          "is_glitch": false,
+          "is_crit_glitch": false
+        }
+      },
+      {
+        "type": "roll",
+        "round": 1,
+        "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+        "actor_name": "Гоблин маг",
+        "details": {
+          "expression": "1d6",
+          "formula": "1d6",
+          "total": 5,
+          "details": "1d6 (5) = `5`",
+          "is_glitch": false,
+          "is_crit_glitch": false,
+          "comment": "Огенная стрела"
+        }
+      },
+      {
+        "type": "roll",
+        "round": 1,
+        "actor_id": null,
+        "actor_name": "GM",
+        "details": {
+          "expression": "1d6",
+          "formula": "1d6",
+          "total": 3,
+          "details": "1d6 (3) = `3`",
+          "is_glitch": false,
+          "is_crit_glitch": false,
+          "comment": "Огненная стрела",
+          "is_generic_roll": true
+        }
+      },
+      {
+        "type": "roll",
+        "round": 1,
+        "actor_id": null,
+        "actor_name": "GM",
+        "details": {
+          "expression": "1d6",
+          "formula": "1d6",
+          "total": 3,
+          "details": "1d6 (3) = `3`",
+          "is_glitch": false,
+          "is_crit_glitch": false,
+          "comment": "Огненная стрела",
+          "is_generic_roll": true
+        }
+      },
+      {
+        "type": "roll",
+        "round": 1,
+        "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+        "actor_name": "Гоблин маг",
+        "details": {
+          "expression": "1d6",
+          "formula": "1d6",
+          "total": 1,
+          "details": "1d6 (**1**) = `1`",
+          "is_glitch": false,
+          "is_crit_glitch": false,
+          "comment": "Огненная стрела"
+        }
+      },
+      {
+        "type": "roll",
+        "round": 1,
+        "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
+        "actor_name": "Новый участник",
+        "details": {
+          "expression": "1d6 @Гоблин маг",
+          "formula": "1d6 @Гоблин маг",
+          "total": 0,
+          "details": "(d20 error)",
+          "is_glitch": false,
+          "is_crit_glitch": false
+        }
+      },
+      {
+        "type": "roll",
+        "round": 1,
+        "actor_id": null,
+        "actor_name": "GM",
+        "details": {
+          "expression": ",",
+          "formula": ",",
+          "total": 0,
+          "details": "(d20 error)",
+          "is_glitch": false,
+          "is_crit_glitch": false,
+          "is_generic_roll": true
+        }
+      },
+      {
+        "type": "roll",
+        "round": 1,
+        "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
+        "actor_name": "Новый участник",
+        "details": {
+          "expression": "2d6",
+          "formula": "2d6",
+          "total": 12,
+          "details": "2d6 (**6**, **6**) = `12`",
+          "is_glitch": false,
+          "is_crit_glitch": false,
+          "comment": "Бип"
+        }
+      }
+    ],
     "history_cursor": -1,
     "enable_logging": true,
     "autosave_enabled": true,
     "history_stack": [
       {
-        "actors": [],
+        "actors": [
+          {
+            "id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "name": "Гоблин маг",
+            "role": "enemy",
+            "is_revealed": true,
+            "is_pinned": true,
+            "group_id": null,
+            "group_name": null,
+            "group_mode": null,
+            "group_color": null,
+            "initiative": 0,
+            "has_acted": false,
+            "portrait": "/assets/systems/D&D 5e/portraits/goblin_mag.png",
+            "show_portrait": true,
+            "miniature_id": null,
+            "layout_profile_id": "1776798216413",
+            "stats": {
+              "hp": {
+                "base": 50,
+                "formula_id": null,
+                "overrides": [],
+                "value": 50
+              },
+              "ac": {
+                "base": 10,
+                "formula_id": null,
+                "overrides": [],
+                "value": 10
+              },
+              "speed": {
+                "base": 30,
+                "formula_id": null,
+                "overrides": [],
+                "value": 30
+              },
+              "mana": {
+                "base": 52,
+                "formula_id": null,
+                "overrides": [],
+                "value": 52
+              },
+              "max_mana": {
+                "base": 60,
+                "formula_id": null,
+                "overrides": [],
+                "value": 60
+              },
+              "com": {
+                "base": 0,
+                "formula_id": null,
+                "overrides": [],
+                "value": 0
+              },
+              "com1": {
+                "Реакция": true,
+                "Бонусное ": true,
+                "Основное": true
+              },
+              "bladpul": {
+                "res1": true,
+                "res2": true,
+                "res3": true,
+                "slot_3": true,
+                "slot_4": true,
+                "slot_5": true,
+                "slot_6": true,
+                "slot_7": true
+              }
+            },
+            "effects": [],
+            "visibility": {
+              "hp": true,
+              "stats": true,
+              "effects": true,
+              "name": true
+            },
+            "hotbar": []
+          }
+        ],
         "turn_queue": [],
         "current_index": 0,
         "current_pass": 1,
@@ -65,9 +465,4006 @@
         "enable_logging": true,
         "autosave_enabled": true,
         "prerolls": {}
+      },
+      {
+        "actors": [
+          {
+            "id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "name": "Гоблин маг",
+            "role": "enemy",
+            "is_revealed": true,
+            "is_pinned": true,
+            "group_id": null,
+            "group_name": null,
+            "group_mode": null,
+            "group_color": null,
+            "initiative": 0,
+            "has_acted": false,
+            "portrait": "/assets/systems/D&D 5e/portraits/goblin_mag.png",
+            "show_portrait": true,
+            "miniature_id": null,
+            "layout_profile_id": "1776798216413",
+            "stats": {
+              "hp": {
+                "base": 50,
+                "formula_id": null,
+                "overrides": [
+                  {
+                    "source": "Блес",
+                    "value": 5
+                  }
+                ],
+                "value": 55
+              },
+              "ac": {
+                "base": 10,
+                "formula_id": null,
+                "overrides": [],
+                "value": 10
+              },
+              "speed": {
+                "base": 30,
+                "formula_id": null,
+                "overrides": [],
+                "value": 30
+              },
+              "mana": {
+                "base": 52,
+                "formula_id": null,
+                "overrides": [],
+                "value": 52
+              },
+              "max_mana": {
+                "base": 60,
+                "formula_id": null,
+                "overrides": [],
+                "value": 60
+              },
+              "com": {
+                "base": 0,
+                "formula_id": null,
+                "overrides": [],
+                "value": 0
+              },
+              "com1": {
+                "Реакция": true,
+                "Бонусное ": true,
+                "Основное": true
+              },
+              "bladpul": {
+                "res1": true,
+                "res2": true,
+                "res3": true,
+                "slot_3": true,
+                "slot_4": true,
+                "slot_5": true,
+                "slot_6": true,
+                "slot_7": true
+              }
+            },
+            "effects": [],
+            "visibility": {
+              "hp": true,
+              "stats": true,
+              "effects": true,
+              "name": true
+            },
+            "hotbar": []
+          }
+        ],
+        "turn_queue": [],
+        "current_index": 0,
+        "current_pass": 1,
+        "round": 1,
+        "engine_type": "standard",
+        "is_manual_mode": false,
+        "system": "D&D 5e",
+        "is_active": false,
+        "active_reaction_actor_id": null,
+        "selected_layout_id": "default",
+        "legend": {
+          "player": "#10b981",
+          "enemy": "#ef4444",
+          "ally": "#3b82f6",
+          "neutral": "#a1a1aa"
+        },
+        "show_group_colors": true,
+        "show_faction_colors": true,
+        "table_centered": true,
+        "sticky_first_column": true,
+        "sticky_last_column": true,
+        "sync_led_to_ui": true,
+        "screen_brightness": 78,
+        "history": [
+          {
+            "type": "stat_change",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "stat_key": "hp",
+              "stat_name": "ХП",
+              "amount": 5,
+              "color": "#e70808"
+            }
+          }
+        ],
+        "history_cursor": -1,
+        "enable_logging": true,
+        "autosave_enabled": true,
+        "prerolls": {}
+      },
+      {
+        "actors": [
+          {
+            "id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "name": "Гоблин маг",
+            "role": "enemy",
+            "is_revealed": true,
+            "is_pinned": true,
+            "group_id": null,
+            "group_name": null,
+            "group_mode": null,
+            "group_color": null,
+            "initiative": 0,
+            "has_acted": false,
+            "portrait": "/assets/systems/D&D 5e/portraits/goblin_mag.png",
+            "show_portrait": true,
+            "miniature_id": null,
+            "layout_profile_id": "1776798216413",
+            "stats": {
+              "hp": {
+                "base": 50,
+                "formula_id": null,
+                "overrides": [
+                  {
+                    "source": "Блес",
+                    "value": 5
+                  }
+                ],
+                "value": 55
+              },
+              "ac": {
+                "base": 10,
+                "formula_id": null,
+                "overrides": [],
+                "value": 10
+              },
+              "speed": {
+                "base": 30,
+                "formula_id": null,
+                "overrides": [],
+                "value": 30
+              },
+              "mana": {
+                "base": 52,
+                "formula_id": null,
+                "overrides": [],
+                "value": 52
+              },
+              "max_mana": {
+                "base": 60,
+                "formula_id": null,
+                "overrides": [],
+                "value": 60
+              },
+              "com": {
+                "base": 0,
+                "formula_id": null,
+                "overrides": [],
+                "value": 0
+              },
+              "com1": {
+                "Реакция": true,
+                "Бонусное ": true,
+                "Основное": true
+              },
+              "bladpul": {
+                "res1": true,
+                "res2": true,
+                "res3": true,
+                "slot_3": true,
+                "slot_4": true,
+                "slot_5": true,
+                "slot_6": true,
+                "slot_7": true
+              }
+            },
+            "effects": [],
+            "visibility": {
+              "hp": true,
+              "stats": true,
+              "effects": true,
+              "name": true
+            },
+            "hotbar": []
+          }
+        ],
+        "turn_queue": [],
+        "current_index": 0,
+        "current_pass": 1,
+        "round": 1,
+        "engine_type": "standard",
+        "is_manual_mode": false,
+        "system": "D&D 5e",
+        "is_active": false,
+        "active_reaction_actor_id": null,
+        "selected_layout_id": "default",
+        "legend": {
+          "player": "#10b981",
+          "enemy": "#ef4444",
+          "ally": "#3b82f6",
+          "neutral": "#a1a1aa"
+        },
+        "show_group_colors": true,
+        "show_faction_colors": true,
+        "table_centered": true,
+        "sticky_first_column": true,
+        "sticky_last_column": true,
+        "sync_led_to_ui": true,
+        "screen_brightness": 78,
+        "history": [
+          {
+            "type": "stat_change",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "stat_key": "hp",
+              "stat_name": "ХП",
+              "amount": 5,
+              "color": "#e70808"
+            }
+          }
+        ],
+        "history_cursor": -1,
+        "enable_logging": true,
+        "autosave_enabled": true,
+        "prerolls": {}
+      },
+      {
+        "actors": [
+          {
+            "id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "name": "Гоблин маг",
+            "role": "enemy",
+            "is_revealed": true,
+            "is_pinned": true,
+            "group_id": null,
+            "group_name": null,
+            "group_mode": null,
+            "group_color": null,
+            "initiative": 0,
+            "has_acted": false,
+            "portrait": "/assets/systems/D&D 5e/portraits/goblin_mag.png",
+            "show_portrait": true,
+            "miniature_id": null,
+            "layout_profile_id": "1776798216413",
+            "stats": {
+              "hp": {
+                "base": 50,
+                "formula_id": null,
+                "overrides": [
+                  {
+                    "source": "Блес",
+                    "value": 5
+                  }
+                ],
+                "value": 55
+              },
+              "ac": {
+                "base": 10,
+                "formula_id": null,
+                "overrides": [],
+                "value": 10
+              },
+              "speed": {
+                "base": 30,
+                "formula_id": null,
+                "overrides": [],
+                "value": 30
+              },
+              "mana": {
+                "base": 52,
+                "formula_id": null,
+                "overrides": [],
+                "value": 52
+              },
+              "max_mana": {
+                "base": 60,
+                "formula_id": null,
+                "overrides": [],
+                "value": 60
+              },
+              "com": {
+                "base": 0,
+                "formula_id": null,
+                "overrides": [],
+                "value": 0
+              },
+              "com1": {
+                "Реакция": true,
+                "Бонусное ": true,
+                "Основное": true
+              },
+              "bladpul": {
+                "res1": true,
+                "res2": true,
+                "res3": true,
+                "slot_3": true,
+                "slot_4": true,
+                "slot_5": true,
+                "slot_6": true,
+                "slot_7": true
+              }
+            },
+            "effects": [],
+            "visibility": {
+              "hp": true,
+              "stats": true,
+              "effects": true,
+              "name": true
+            },
+            "hotbar": []
+          }
+        ],
+        "turn_queue": [],
+        "current_index": 0,
+        "current_pass": 1,
+        "round": 1,
+        "engine_type": "standard",
+        "is_manual_mode": false,
+        "system": "D&D 5e",
+        "is_active": false,
+        "active_reaction_actor_id": null,
+        "selected_layout_id": "default",
+        "legend": {
+          "player": "#10b981",
+          "enemy": "#ef4444",
+          "ally": "#3b82f6",
+          "neutral": "#a1a1aa"
+        },
+        "show_group_colors": true,
+        "show_faction_colors": true,
+        "table_centered": true,
+        "sticky_first_column": true,
+        "sticky_last_column": true,
+        "sync_led_to_ui": true,
+        "screen_brightness": 78,
+        "history": [
+          {
+            "type": "stat_change",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "stat_key": "hp",
+              "stat_name": "ХП",
+              "amount": 5,
+              "color": "#e70808"
+            }
+          }
+        ],
+        "history_cursor": -1,
+        "enable_logging": true,
+        "autosave_enabled": true,
+        "prerolls": {}
+      },
+      {
+        "actors": [
+          {
+            "id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "name": "Гоблин маг",
+            "role": "enemy",
+            "is_revealed": true,
+            "is_pinned": true,
+            "group_id": null,
+            "group_name": null,
+            "group_mode": null,
+            "group_color": null,
+            "initiative": 0,
+            "has_acted": false,
+            "portrait": "/assets/systems/D&D 5e/portraits/goblin_mag.png",
+            "show_portrait": true,
+            "miniature_id": null,
+            "layout_profile_id": "1776798216413",
+            "stats": {
+              "hp": {
+                "base": 50,
+                "formula_id": null,
+                "overrides": [
+                  {
+                    "source": "Блес",
+                    "value": 5
+                  }
+                ],
+                "value": 55
+              },
+              "ac": {
+                "base": 10,
+                "formula_id": null,
+                "overrides": [],
+                "value": 10
+              },
+              "speed": {
+                "base": 30,
+                "formula_id": null,
+                "overrides": [],
+                "value": 30
+              },
+              "mana": {
+                "base": 52,
+                "formula_id": null,
+                "overrides": [],
+                "value": 52
+              },
+              "max_mana": {
+                "base": 60,
+                "formula_id": null,
+                "overrides": [],
+                "value": 60
+              },
+              "com": {
+                "base": 0,
+                "formula_id": null,
+                "overrides": [],
+                "value": 0
+              },
+              "com1": {
+                "Реакция": true,
+                "Бонусное ": true,
+                "Основное": true
+              },
+              "bladpul": {
+                "res1": true,
+                "res2": true,
+                "res3": true,
+                "slot_3": true,
+                "slot_4": true,
+                "slot_5": true,
+                "slot_6": true,
+                "slot_7": true
+              }
+            },
+            "effects": [],
+            "visibility": {
+              "hp": true,
+              "stats": true,
+              "effects": true,
+              "name": true
+            },
+            "hotbar": []
+          }
+        ],
+        "turn_queue": [],
+        "current_index": 0,
+        "current_pass": 1,
+        "round": 1,
+        "engine_type": "standard",
+        "is_manual_mode": false,
+        "system": "D&D 5e",
+        "is_active": false,
+        "active_reaction_actor_id": null,
+        "selected_layout_id": "default",
+        "legend": {
+          "player": "#10b981",
+          "enemy": "#ef4444",
+          "ally": "#3b82f6",
+          "neutral": "#a1a1aa"
+        },
+        "show_group_colors": true,
+        "show_faction_colors": true,
+        "table_centered": true,
+        "sticky_first_column": true,
+        "sticky_last_column": true,
+        "sync_led_to_ui": true,
+        "screen_brightness": 78,
+        "history": [
+          {
+            "type": "stat_change",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "stat_key": "hp",
+              "stat_name": "ХП",
+              "amount": 5,
+              "color": "#e70808"
+            }
+          }
+        ],
+        "history_cursor": -1,
+        "enable_logging": true,
+        "autosave_enabled": true,
+        "prerolls": {}
+      },
+      {
+        "actors": [
+          {
+            "id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "name": "Гоблин маг",
+            "role": "enemy",
+            "is_revealed": true,
+            "is_pinned": true,
+            "group_id": null,
+            "group_name": null,
+            "group_mode": null,
+            "group_color": null,
+            "initiative": 0,
+            "has_acted": false,
+            "portrait": "/assets/systems/D&D 5e/portraits/goblin_mag.png",
+            "show_portrait": true,
+            "miniature_id": null,
+            "layout_profile_id": "1776798216413",
+            "stats": {
+              "hp": {
+                "base": 50,
+                "formula_id": null,
+                "overrides": [
+                  {
+                    "source": "Блес",
+                    "value": 5
+                  }
+                ],
+                "value": 55
+              },
+              "ac": {
+                "base": 10,
+                "formula_id": null,
+                "overrides": [],
+                "value": 10
+              },
+              "speed": {
+                "base": 30,
+                "formula_id": null,
+                "overrides": [],
+                "value": 30
+              },
+              "mana": {
+                "base": 52,
+                "formula_id": null,
+                "overrides": [],
+                "value": 52
+              },
+              "max_mana": {
+                "base": 60,
+                "formula_id": null,
+                "overrides": [],
+                "value": 60
+              },
+              "com": {
+                "base": 0,
+                "formula_id": null,
+                "overrides": [],
+                "value": 0
+              },
+              "com1": {
+                "Реакция": true,
+                "Бонусное ": true,
+                "Основное": true
+              },
+              "bladpul": {
+                "res1": true,
+                "res2": true,
+                "res3": true,
+                "slot_3": true,
+                "slot_4": true,
+                "slot_5": true,
+                "slot_6": true,
+                "slot_7": true
+              }
+            },
+            "effects": [],
+            "visibility": {
+              "hp": true,
+              "stats": true,
+              "effects": true,
+              "name": true
+            },
+            "hotbar": []
+          }
+        ],
+        "turn_queue": [],
+        "current_index": 0,
+        "current_pass": 1,
+        "round": 1,
+        "engine_type": "standard",
+        "is_manual_mode": false,
+        "system": "D&D 5e",
+        "is_active": false,
+        "active_reaction_actor_id": null,
+        "selected_layout_id": "default",
+        "legend": {
+          "player": "#10b981",
+          "enemy": "#ef4444",
+          "ally": "#3b82f6",
+          "neutral": "#a1a1aa"
+        },
+        "show_group_colors": true,
+        "show_faction_colors": true,
+        "table_centered": true,
+        "sticky_first_column": true,
+        "sticky_last_column": true,
+        "sync_led_to_ui": true,
+        "screen_brightness": 78,
+        "history": [
+          {
+            "type": "stat_change",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "stat_key": "hp",
+              "stat_name": "ХП",
+              "amount": 5,
+              "color": "#e70808"
+            }
+          }
+        ],
+        "history_cursor": -1,
+        "enable_logging": true,
+        "autosave_enabled": true,
+        "prerolls": {}
+      },
+      {
+        "actors": [
+          {
+            "id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "name": "Гоблин маг",
+            "role": "enemy",
+            "is_revealed": true,
+            "is_pinned": true,
+            "group_id": null,
+            "group_name": null,
+            "group_mode": null,
+            "group_color": null,
+            "initiative": 0,
+            "has_acted": false,
+            "portrait": "/assets/systems/D&D 5e/portraits/goblin_mag.png",
+            "show_portrait": true,
+            "miniature_id": null,
+            "layout_profile_id": "1776798216413",
+            "stats": {
+              "hp": {
+                "base": 50,
+                "formula_id": null,
+                "overrides": [
+                  {
+                    "source": "Блес",
+                    "value": 5
+                  }
+                ],
+                "value": 55
+              },
+              "ac": {
+                "base": 10,
+                "formula_id": null,
+                "overrides": [],
+                "value": 10
+              },
+              "speed": {
+                "base": 30,
+                "formula_id": null,
+                "overrides": [],
+                "value": 30
+              },
+              "mana": {
+                "base": 52,
+                "formula_id": null,
+                "overrides": [],
+                "value": 52
+              },
+              "max_mana": {
+                "base": 60,
+                "formula_id": null,
+                "overrides": [],
+                "value": 60
+              },
+              "com": {
+                "base": 0,
+                "formula_id": null,
+                "overrides": [],
+                "value": 0
+              },
+              "com1": {
+                "Реакция": true,
+                "Бонусное ": true,
+                "Основное": true
+              },
+              "bladpul": {
+                "res1": true,
+                "res2": true,
+                "res3": true,
+                "slot_3": true,
+                "slot_4": true,
+                "slot_5": true,
+                "slot_6": true,
+                "slot_7": true
+              }
+            },
+            "effects": [],
+            "visibility": {
+              "hp": true,
+              "stats": true,
+              "effects": true,
+              "name": true
+            },
+            "hotbar": []
+          }
+        ],
+        "turn_queue": [],
+        "current_index": 0,
+        "current_pass": 1,
+        "round": 1,
+        "engine_type": "standard",
+        "is_manual_mode": false,
+        "system": "D&D 5e",
+        "is_active": false,
+        "active_reaction_actor_id": null,
+        "selected_layout_id": "default",
+        "legend": {
+          "player": "#10b981",
+          "enemy": "#ef4444",
+          "ally": "#3b82f6",
+          "neutral": "#a1a1aa"
+        },
+        "show_group_colors": true,
+        "show_faction_colors": true,
+        "table_centered": true,
+        "sticky_first_column": true,
+        "sticky_last_column": true,
+        "sync_led_to_ui": true,
+        "screen_brightness": 78,
+        "history": [
+          {
+            "type": "stat_change",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "stat_key": "hp",
+              "stat_name": "ХП",
+              "amount": 5,
+              "color": "#e70808"
+            }
+          }
+        ],
+        "history_cursor": -1,
+        "enable_logging": true,
+        "autosave_enabled": true,
+        "prerolls": {}
+      },
+      {
+        "actors": [
+          {
+            "id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "name": "Гоблин маг",
+            "role": "enemy",
+            "is_revealed": true,
+            "is_pinned": true,
+            "group_id": null,
+            "group_name": null,
+            "group_mode": null,
+            "group_color": null,
+            "initiative": 0,
+            "has_acted": false,
+            "portrait": "/assets/systems/D&D 5e/portraits/goblin_mag.png",
+            "show_portrait": true,
+            "miniature_id": null,
+            "layout_profile_id": "1776798216413",
+            "stats": {
+              "hp": {
+                "base": 50,
+                "formula_id": null,
+                "overrides": [
+                  {
+                    "source": "Блес",
+                    "value": 5
+                  }
+                ],
+                "value": 55
+              },
+              "ac": {
+                "base": 10,
+                "formula_id": null,
+                "overrides": [],
+                "value": 10
+              },
+              "speed": {
+                "base": 30,
+                "formula_id": null,
+                "overrides": [],
+                "value": 30
+              },
+              "mana": {
+                "base": 52,
+                "formula_id": null,
+                "overrides": [],
+                "value": 52
+              },
+              "max_mana": {
+                "base": 60,
+                "formula_id": null,
+                "overrides": [],
+                "value": 60
+              },
+              "com": {
+                "base": 0,
+                "formula_id": null,
+                "overrides": [],
+                "value": 0
+              },
+              "com1": {
+                "Реакция": true,
+                "Бонусное ": true,
+                "Основное": true
+              },
+              "bladpul": {
+                "res1": true,
+                "res2": true,
+                "res3": true,
+                "slot_3": true,
+                "slot_4": true,
+                "slot_5": true,
+                "slot_6": true,
+                "slot_7": true
+              }
+            },
+            "effects": [],
+            "visibility": {
+              "hp": true,
+              "stats": true,
+              "effects": true,
+              "name": true
+            },
+            "hotbar": []
+          }
+        ],
+        "turn_queue": [],
+        "current_index": 0,
+        "current_pass": 1,
+        "round": 1,
+        "engine_type": "standard",
+        "is_manual_mode": false,
+        "system": "D&D 5e",
+        "is_active": false,
+        "active_reaction_actor_id": null,
+        "selected_layout_id": "default",
+        "legend": {
+          "player": "#10b981",
+          "enemy": "#ef4444",
+          "ally": "#3b82f6",
+          "neutral": "#a1a1aa"
+        },
+        "show_group_colors": true,
+        "show_faction_colors": true,
+        "table_centered": true,
+        "sticky_first_column": true,
+        "sticky_last_column": true,
+        "sync_led_to_ui": true,
+        "screen_brightness": 78,
+        "history": [
+          {
+            "type": "stat_change",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "stat_key": "hp",
+              "stat_name": "ХП",
+              "amount": 5,
+              "color": "#e70808"
+            }
+          }
+        ],
+        "history_cursor": -1,
+        "enable_logging": true,
+        "autosave_enabled": true,
+        "prerolls": {}
+      },
+      {
+        "actors": [
+          {
+            "id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "name": "Гоблин маг",
+            "role": "enemy",
+            "is_revealed": true,
+            "is_pinned": true,
+            "group_id": null,
+            "group_name": null,
+            "group_mode": null,
+            "group_color": null,
+            "initiative": 0,
+            "has_acted": false,
+            "portrait": "/assets/systems/D&D 5e/portraits/goblin_mag.png",
+            "show_portrait": true,
+            "miniature_id": null,
+            "layout_profile_id": "1776798216413",
+            "stats": {
+              "hp": {
+                "base": 50,
+                "formula_id": null,
+                "overrides": [
+                  {
+                    "source": "Блес",
+                    "value": 5
+                  }
+                ],
+                "value": 55
+              },
+              "ac": {
+                "base": 10,
+                "formula_id": null,
+                "overrides": [],
+                "value": 10
+              },
+              "speed": {
+                "base": 30,
+                "formula_id": null,
+                "overrides": [],
+                "value": 30
+              },
+              "mana": {
+                "base": 52,
+                "formula_id": null,
+                "overrides": [],
+                "value": 52
+              },
+              "max_mana": {
+                "base": 60,
+                "formula_id": null,
+                "overrides": [],
+                "value": 60
+              },
+              "com": {
+                "base": 0,
+                "formula_id": null,
+                "overrides": [],
+                "value": 0
+              },
+              "com1": {
+                "Реакция": true,
+                "Бонусное ": true,
+                "Основное": true
+              },
+              "bladpul": {
+                "res1": true,
+                "res2": true,
+                "res3": true,
+                "slot_3": true,
+                "slot_4": true,
+                "slot_5": true,
+                "slot_6": true,
+                "slot_7": true
+              }
+            },
+            "effects": [],
+            "visibility": {
+              "hp": true,
+              "stats": true,
+              "effects": true,
+              "name": true
+            },
+            "hotbar": []
+          }
+        ],
+        "turn_queue": [],
+        "current_index": 0,
+        "current_pass": 1,
+        "round": 1,
+        "engine_type": "standard",
+        "is_manual_mode": false,
+        "system": "D&D 5e",
+        "is_active": false,
+        "active_reaction_actor_id": null,
+        "selected_layout_id": "default",
+        "legend": {
+          "player": "#10b981",
+          "enemy": "#ef4444",
+          "ally": "#3b82f6",
+          "neutral": "#a1a1aa"
+        },
+        "show_group_colors": true,
+        "show_faction_colors": true,
+        "table_centered": true,
+        "sticky_first_column": true,
+        "sticky_last_column": true,
+        "sync_led_to_ui": true,
+        "screen_brightness": 78,
+        "history": [
+          {
+            "type": "stat_change",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "stat_key": "hp",
+              "stat_name": "ХП",
+              "amount": 5,
+              "color": "#e70808"
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "Гоблины бунтуют",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "а",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "Гоблины всё ещё бастуют",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "2d10",
+              "formula": "2d10",
+              "total": 14,
+              "details": "2d10 (**10**, 4) = `14`",
+              "is_glitch": false,
+              "is_crit_glitch": false
+            }
+          }
+        ],
+        "history_cursor": -1,
+        "enable_logging": true,
+        "autosave_enabled": true,
+        "prerolls": {}
+      },
+      {
+        "actors": [
+          {
+            "id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "name": "Гоблин маг",
+            "role": "enemy",
+            "is_revealed": true,
+            "is_pinned": true,
+            "group_id": null,
+            "group_name": null,
+            "group_mode": null,
+            "group_color": null,
+            "initiative": 0,
+            "has_acted": false,
+            "portrait": "/assets/systems/D&D 5e/portraits/goblin_mag.png",
+            "show_portrait": true,
+            "miniature_id": null,
+            "layout_profile_id": "1776798216413",
+            "stats": {
+              "hp": {
+                "base": 50,
+                "formula_id": null,
+                "overrides": [
+                  {
+                    "source": "Блес",
+                    "value": 5
+                  }
+                ],
+                "value": 55
+              },
+              "ac": {
+                "base": 10,
+                "formula_id": null,
+                "overrides": [],
+                "value": 10
+              },
+              "speed": {
+                "base": 30,
+                "formula_id": null,
+                "overrides": [],
+                "value": 30
+              },
+              "mana": {
+                "base": 52,
+                "formula_id": null,
+                "overrides": [],
+                "value": 52
+              },
+              "max_mana": {
+                "base": 60,
+                "formula_id": null,
+                "overrides": [],
+                "value": 60
+              },
+              "com": {
+                "base": 0,
+                "formula_id": null,
+                "overrides": [],
+                "value": 0
+              },
+              "com1": {
+                "Реакция": true,
+                "Бонусное ": true,
+                "Основное": true
+              },
+              "bladpul": {
+                "res1": true,
+                "res2": true,
+                "res3": true,
+                "slot_3": true,
+                "slot_4": true,
+                "slot_5": true,
+                "slot_6": true,
+                "slot_7": true
+              }
+            },
+            "effects": [],
+            "visibility": {
+              "hp": true,
+              "stats": true,
+              "effects": true,
+              "name": true
+            },
+            "hotbar": []
+          }
+        ],
+        "turn_queue": [],
+        "current_index": 0,
+        "current_pass": 1,
+        "round": 1,
+        "engine_type": "standard",
+        "is_manual_mode": false,
+        "system": "D&D 5e",
+        "is_active": false,
+        "active_reaction_actor_id": null,
+        "selected_layout_id": "default",
+        "legend": {
+          "player": "#10b981",
+          "enemy": "#ef4444",
+          "ally": "#3b82f6",
+          "neutral": "#a1a1aa"
+        },
+        "show_group_colors": true,
+        "show_faction_colors": true,
+        "table_centered": true,
+        "sticky_first_column": true,
+        "sticky_last_column": true,
+        "sync_led_to_ui": true,
+        "screen_brightness": 78,
+        "history": [
+          {
+            "type": "stat_change",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "stat_key": "hp",
+              "stat_name": "ХП",
+              "amount": 5,
+              "color": "#e70808"
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "Гоблины бунтуют",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "а",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "Гоблины всё ещё бастуют",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "2d10",
+              "formula": "2d10",
+              "total": 14,
+              "details": "2d10 (**10**, 4) = `14`",
+              "is_glitch": false,
+              "is_crit_glitch": false
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": "GM",
+            "details": {
+              "expression": "2d6",
+              "formula": "2d6",
+              "total": 4,
+              "details": "2d6 (2, 2) = `4`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "is_generic_roll": true
+            }
+          }
+        ],
+        "history_cursor": -1,
+        "enable_logging": true,
+        "autosave_enabled": true,
+        "prerolls": {}
+      },
+      {
+        "actors": [
+          {
+            "id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "name": "Гоблин маг",
+            "role": "enemy",
+            "is_revealed": true,
+            "is_pinned": true,
+            "group_id": null,
+            "group_name": null,
+            "group_mode": null,
+            "group_color": null,
+            "initiative": 0,
+            "has_acted": false,
+            "portrait": "/assets/systems/D&D 5e/portraits/goblin_mag.png",
+            "show_portrait": true,
+            "miniature_id": null,
+            "layout_profile_id": "1776798216413",
+            "stats": {
+              "hp": {
+                "base": 50,
+                "formula_id": null,
+                "overrides": [
+                  {
+                    "source": "Блес",
+                    "value": 5
+                  }
+                ],
+                "value": 55
+              },
+              "ac": {
+                "base": 10,
+                "formula_id": null,
+                "overrides": [],
+                "value": 10
+              },
+              "speed": {
+                "base": 30,
+                "formula_id": null,
+                "overrides": [],
+                "value": 30
+              },
+              "mana": {
+                "base": 52,
+                "formula_id": null,
+                "overrides": [],
+                "value": 52
+              },
+              "max_mana": {
+                "base": 60,
+                "formula_id": null,
+                "overrides": [],
+                "value": 60
+              },
+              "com": {
+                "base": 0,
+                "formula_id": null,
+                "overrides": [],
+                "value": 0
+              },
+              "com1": {
+                "Реакция": true,
+                "Бонусное ": true,
+                "Основное": true
+              },
+              "bladpul": {
+                "res1": true,
+                "res2": true,
+                "res3": true,
+                "slot_3": true,
+                "slot_4": true,
+                "slot_5": true,
+                "slot_6": true,
+                "slot_7": true
+              }
+            },
+            "effects": [],
+            "visibility": {
+              "hp": true,
+              "stats": true,
+              "effects": true,
+              "name": true
+            },
+            "hotbar": []
+          }
+        ],
+        "turn_queue": [],
+        "current_index": 0,
+        "current_pass": 1,
+        "round": 1,
+        "engine_type": "standard",
+        "is_manual_mode": false,
+        "system": "D&D 5e",
+        "is_active": false,
+        "active_reaction_actor_id": null,
+        "selected_layout_id": "default",
+        "legend": {
+          "player": "#10b981",
+          "enemy": "#ef4444",
+          "ally": "#3b82f6",
+          "neutral": "#a1a1aa"
+        },
+        "show_group_colors": true,
+        "show_faction_colors": true,
+        "table_centered": true,
+        "sticky_first_column": true,
+        "sticky_last_column": true,
+        "sync_led_to_ui": true,
+        "screen_brightness": 78,
+        "history": [
+          {
+            "type": "stat_change",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "stat_key": "hp",
+              "stat_name": "ХП",
+              "amount": 5,
+              "color": "#e70808"
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "Гоблины бунтуют",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "а",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "Гоблины всё ещё бастуют",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "2d10",
+              "formula": "2d10",
+              "total": 14,
+              "details": "2d10 (**10**, 4) = `14`",
+              "is_glitch": false,
+              "is_crit_glitch": false
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": "GM",
+            "details": {
+              "expression": "2d6",
+              "formula": "2d6",
+              "total": 4,
+              "details": "2d6 (2, 2) = `4`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "is_generic_roll": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "2d6+3",
+              "formula": "2d6+3",
+              "total": 10,
+              "details": "2d6 (4, 3) + 3 = `10`",
+              "is_glitch": false,
+              "is_crit_glitch": false
+            }
+          }
+        ],
+        "history_cursor": -1,
+        "enable_logging": true,
+        "autosave_enabled": true,
+        "prerolls": {}
+      },
+      {
+        "actors": [
+          {
+            "id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "name": "Гоблин маг",
+            "role": "enemy",
+            "is_revealed": true,
+            "is_pinned": true,
+            "group_id": null,
+            "group_name": null,
+            "group_mode": null,
+            "group_color": null,
+            "initiative": 0,
+            "has_acted": false,
+            "portrait": "/assets/systems/D&D 5e/portraits/goblin_mag.png",
+            "show_portrait": true,
+            "miniature_id": null,
+            "layout_profile_id": "1776798216413",
+            "stats": {
+              "hp": {
+                "base": 50,
+                "formula_id": null,
+                "overrides": [
+                  {
+                    "source": "Блес",
+                    "value": 5
+                  }
+                ],
+                "value": 55
+              },
+              "ac": {
+                "base": 10,
+                "formula_id": null,
+                "overrides": [],
+                "value": 10
+              },
+              "speed": {
+                "base": 30,
+                "formula_id": null,
+                "overrides": [],
+                "value": 30
+              },
+              "mana": {
+                "base": 52,
+                "formula_id": null,
+                "overrides": [],
+                "value": 52
+              },
+              "max_mana": {
+                "base": 60,
+                "formula_id": null,
+                "overrides": [],
+                "value": 60
+              },
+              "com": {
+                "base": 0,
+                "formula_id": null,
+                "overrides": [],
+                "value": 0
+              },
+              "com1": {
+                "Реакция": true,
+                "Бонусное ": true,
+                "Основное": true
+              },
+              "bladpul": {
+                "res1": true,
+                "res2": true,
+                "res3": true,
+                "slot_3": true,
+                "slot_4": true,
+                "slot_5": true,
+                "slot_6": true,
+                "slot_7": true
+              }
+            },
+            "effects": [],
+            "visibility": {
+              "hp": true,
+              "stats": true,
+              "effects": true,
+              "name": true
+            },
+            "hotbar": []
+          }
+        ],
+        "turn_queue": [],
+        "current_index": 0,
+        "current_pass": 1,
+        "round": 1,
+        "engine_type": "standard",
+        "is_manual_mode": false,
+        "system": "D&D 5e",
+        "is_active": false,
+        "active_reaction_actor_id": null,
+        "selected_layout_id": "default",
+        "legend": {
+          "player": "#10b981",
+          "enemy": "#ef4444",
+          "ally": "#3b82f6",
+          "neutral": "#a1a1aa"
+        },
+        "show_group_colors": true,
+        "show_faction_colors": true,
+        "table_centered": true,
+        "sticky_first_column": true,
+        "sticky_last_column": true,
+        "sync_led_to_ui": true,
+        "screen_brightness": 78,
+        "history": [
+          {
+            "type": "stat_change",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "stat_key": "hp",
+              "stat_name": "ХП",
+              "amount": 5,
+              "color": "#e70808"
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "Гоблины бунтуют",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "а",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "Гоблины всё ещё бастуют",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "2d10",
+              "formula": "2d10",
+              "total": 14,
+              "details": "2d10 (**10**, 4) = `14`",
+              "is_glitch": false,
+              "is_crit_glitch": false
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": "GM",
+            "details": {
+              "expression": "2d6",
+              "formula": "2d6",
+              "total": 4,
+              "details": "2d6 (2, 2) = `4`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "is_generic_roll": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "2d6+3",
+              "formula": "2d6+3",
+              "total": 10,
+              "details": "2d6 (4, 3) + 3 = `10`",
+              "is_glitch": false,
+              "is_crit_glitch": false
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "1d6",
+              "formula": "1d6",
+              "total": 5,
+              "details": "1d6 (5) = `5`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "comment": "Огенная стрела"
+            }
+          }
+        ],
+        "history_cursor": -1,
+        "enable_logging": true,
+        "autosave_enabled": true,
+        "prerolls": {}
+      },
+      {
+        "actors": [
+          {
+            "id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "name": "Гоблин маг",
+            "role": "enemy",
+            "is_revealed": true,
+            "is_pinned": true,
+            "group_id": null,
+            "group_name": null,
+            "group_mode": null,
+            "group_color": null,
+            "initiative": 0,
+            "has_acted": false,
+            "portrait": "/assets/systems/D&D 5e/portraits/goblin_mag.png",
+            "show_portrait": true,
+            "miniature_id": null,
+            "layout_profile_id": "1776798216413",
+            "stats": {
+              "hp": {
+                "base": 50,
+                "formula_id": null,
+                "overrides": [
+                  {
+                    "source": "Блес",
+                    "value": 5
+                  }
+                ],
+                "value": 55
+              },
+              "ac": {
+                "base": 10,
+                "formula_id": null,
+                "overrides": [],
+                "value": 10
+              },
+              "speed": {
+                "base": 30,
+                "formula_id": null,
+                "overrides": [],
+                "value": 30
+              },
+              "mana": {
+                "base": 52,
+                "formula_id": null,
+                "overrides": [],
+                "value": 52
+              },
+              "max_mana": {
+                "base": 60,
+                "formula_id": null,
+                "overrides": [],
+                "value": 60
+              },
+              "com": {
+                "base": 0,
+                "formula_id": null,
+                "overrides": [],
+                "value": 0
+              },
+              "com1": {
+                "Реакция": true,
+                "Бонусное ": true,
+                "Основное": true
+              },
+              "bladpul": {
+                "res1": true,
+                "res2": true,
+                "res3": true,
+                "slot_3": true,
+                "slot_4": true,
+                "slot_5": true,
+                "slot_6": true,
+                "slot_7": true
+              }
+            },
+            "effects": [],
+            "visibility": {
+              "hp": true,
+              "stats": true,
+              "effects": true,
+              "name": true
+            },
+            "hotbar": []
+          }
+        ],
+        "turn_queue": [],
+        "current_index": 0,
+        "current_pass": 1,
+        "round": 1,
+        "engine_type": "standard",
+        "is_manual_mode": false,
+        "system": "D&D 5e",
+        "is_active": false,
+        "active_reaction_actor_id": null,
+        "selected_layout_id": "default",
+        "legend": {
+          "player": "#10b981",
+          "enemy": "#ef4444",
+          "ally": "#3b82f6",
+          "neutral": "#a1a1aa"
+        },
+        "show_group_colors": true,
+        "show_faction_colors": true,
+        "table_centered": true,
+        "sticky_first_column": true,
+        "sticky_last_column": true,
+        "sync_led_to_ui": true,
+        "screen_brightness": 78,
+        "history": [
+          {
+            "type": "stat_change",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "stat_key": "hp",
+              "stat_name": "ХП",
+              "amount": 5,
+              "color": "#e70808"
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "Гоблины бунтуют",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "а",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "Гоблины всё ещё бастуют",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "2d10",
+              "formula": "2d10",
+              "total": 14,
+              "details": "2d10 (**10**, 4) = `14`",
+              "is_glitch": false,
+              "is_crit_glitch": false
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": "GM",
+            "details": {
+              "expression": "2d6",
+              "formula": "2d6",
+              "total": 4,
+              "details": "2d6 (2, 2) = `4`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "is_generic_roll": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "2d6+3",
+              "formula": "2d6+3",
+              "total": 10,
+              "details": "2d6 (4, 3) + 3 = `10`",
+              "is_glitch": false,
+              "is_crit_glitch": false
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "1d6",
+              "formula": "1d6",
+              "total": 5,
+              "details": "1d6 (5) = `5`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "comment": "Огенная стрела"
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": "GM",
+            "details": {
+              "expression": "1d6",
+              "formula": "1d6",
+              "total": 3,
+              "details": "1d6 (3) = `3`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "comment": "Огненная стрела",
+              "is_generic_roll": true
+            }
+          }
+        ],
+        "history_cursor": -1,
+        "enable_logging": true,
+        "autosave_enabled": true,
+        "prerolls": {}
+      },
+      {
+        "actors": [
+          {
+            "id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "name": "Гоблин маг",
+            "role": "enemy",
+            "is_revealed": true,
+            "is_pinned": true,
+            "group_id": null,
+            "group_name": null,
+            "group_mode": null,
+            "group_color": null,
+            "initiative": 0,
+            "has_acted": false,
+            "portrait": "/assets/systems/D&D 5e/portraits/goblin_mag.png",
+            "show_portrait": true,
+            "miniature_id": null,
+            "layout_profile_id": "1776798216413",
+            "stats": {
+              "hp": {
+                "base": 50,
+                "formula_id": null,
+                "overrides": [
+                  {
+                    "source": "Блес",
+                    "value": 5
+                  }
+                ],
+                "value": 55
+              },
+              "ac": {
+                "base": 10,
+                "formula_id": null,
+                "overrides": [],
+                "value": 10
+              },
+              "speed": {
+                "base": 30,
+                "formula_id": null,
+                "overrides": [],
+                "value": 30
+              },
+              "mana": {
+                "base": 52,
+                "formula_id": null,
+                "overrides": [],
+                "value": 52
+              },
+              "max_mana": {
+                "base": 60,
+                "formula_id": null,
+                "overrides": [],
+                "value": 60
+              },
+              "com": {
+                "base": 0,
+                "formula_id": null,
+                "overrides": [],
+                "value": 0
+              },
+              "com1": {
+                "Реакция": true,
+                "Бонусное ": true,
+                "Основное": true
+              },
+              "bladpul": {
+                "res1": true,
+                "res2": true,
+                "res3": true,
+                "slot_3": true,
+                "slot_4": true,
+                "slot_5": true,
+                "slot_6": true,
+                "slot_7": true
+              }
+            },
+            "effects": [],
+            "visibility": {
+              "hp": true,
+              "stats": true,
+              "effects": true,
+              "name": true
+            },
+            "hotbar": []
+          }
+        ],
+        "turn_queue": [],
+        "current_index": 0,
+        "current_pass": 1,
+        "round": 1,
+        "engine_type": "standard",
+        "is_manual_mode": false,
+        "system": "D&D 5e",
+        "is_active": false,
+        "active_reaction_actor_id": null,
+        "selected_layout_id": "default",
+        "legend": {
+          "player": "#10b981",
+          "enemy": "#ef4444",
+          "ally": "#3b82f6",
+          "neutral": "#a1a1aa"
+        },
+        "show_group_colors": true,
+        "show_faction_colors": true,
+        "table_centered": true,
+        "sticky_first_column": true,
+        "sticky_last_column": true,
+        "sync_led_to_ui": true,
+        "screen_brightness": 78,
+        "history": [
+          {
+            "type": "stat_change",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "stat_key": "hp",
+              "stat_name": "ХП",
+              "amount": 5,
+              "color": "#e70808"
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "Гоблины бунтуют",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "а",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "Гоблины всё ещё бастуют",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "2d10",
+              "formula": "2d10",
+              "total": 14,
+              "details": "2d10 (**10**, 4) = `14`",
+              "is_glitch": false,
+              "is_crit_glitch": false
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": "GM",
+            "details": {
+              "expression": "2d6",
+              "formula": "2d6",
+              "total": 4,
+              "details": "2d6 (2, 2) = `4`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "is_generic_roll": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "2d6+3",
+              "formula": "2d6+3",
+              "total": 10,
+              "details": "2d6 (4, 3) + 3 = `10`",
+              "is_glitch": false,
+              "is_crit_glitch": false
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "1d6",
+              "formula": "1d6",
+              "total": 5,
+              "details": "1d6 (5) = `5`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "comment": "Огенная стрела"
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": "GM",
+            "details": {
+              "expression": "1d6",
+              "formula": "1d6",
+              "total": 3,
+              "details": "1d6 (3) = `3`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "comment": "Огненная стрела",
+              "is_generic_roll": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": "GM",
+            "details": {
+              "expression": "1d6",
+              "formula": "1d6",
+              "total": 3,
+              "details": "1d6 (3) = `3`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "comment": "Огненная стрела",
+              "is_generic_roll": true
+            }
+          }
+        ],
+        "history_cursor": -1,
+        "enable_logging": true,
+        "autosave_enabled": true,
+        "prerolls": {}
+      },
+      {
+        "actors": [
+          {
+            "id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "name": "Гоблин маг",
+            "role": "enemy",
+            "is_revealed": true,
+            "is_pinned": true,
+            "group_id": null,
+            "group_name": null,
+            "group_mode": null,
+            "group_color": null,
+            "initiative": 0,
+            "has_acted": false,
+            "portrait": "/assets/systems/D&D 5e/portraits/goblin_mag.png",
+            "show_portrait": true,
+            "miniature_id": null,
+            "layout_profile_id": "1776798216413",
+            "stats": {
+              "hp": {
+                "base": 50,
+                "formula_id": null,
+                "overrides": [
+                  {
+                    "source": "Блес",
+                    "value": 5
+                  }
+                ],
+                "value": 55
+              },
+              "ac": {
+                "base": 10,
+                "formula_id": null,
+                "overrides": [],
+                "value": 10
+              },
+              "speed": {
+                "base": 30,
+                "formula_id": null,
+                "overrides": [],
+                "value": 30
+              },
+              "mana": {
+                "base": 52,
+                "formula_id": null,
+                "overrides": [],
+                "value": 52
+              },
+              "max_mana": {
+                "base": 60,
+                "formula_id": null,
+                "overrides": [],
+                "value": 60
+              },
+              "com": {
+                "base": 0,
+                "formula_id": null,
+                "overrides": [],
+                "value": 0
+              },
+              "com1": {
+                "Реакция": true,
+                "Бонусное ": true,
+                "Основное": true
+              },
+              "bladpul": {
+                "res1": true,
+                "res2": true,
+                "res3": true,
+                "slot_3": true,
+                "slot_4": true,
+                "slot_5": true,
+                "slot_6": true,
+                "slot_7": true
+              }
+            },
+            "effects": [],
+            "visibility": {
+              "hp": true,
+              "stats": true,
+              "effects": true,
+              "name": true
+            },
+            "hotbar": []
+          }
+        ],
+        "turn_queue": [],
+        "current_index": 0,
+        "current_pass": 1,
+        "round": 1,
+        "engine_type": "standard",
+        "is_manual_mode": false,
+        "system": "D&D 5e",
+        "is_active": false,
+        "active_reaction_actor_id": null,
+        "selected_layout_id": "default",
+        "legend": {
+          "player": "#10b981",
+          "enemy": "#ef4444",
+          "ally": "#3b82f6",
+          "neutral": "#a1a1aa"
+        },
+        "show_group_colors": true,
+        "show_faction_colors": true,
+        "table_centered": true,
+        "sticky_first_column": true,
+        "sticky_last_column": true,
+        "sync_led_to_ui": true,
+        "screen_brightness": 78,
+        "history": [
+          {
+            "type": "stat_change",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "stat_key": "hp",
+              "stat_name": "ХП",
+              "amount": 5,
+              "color": "#e70808"
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "Гоблины бунтуют",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "а",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "Гоблины всё ещё бастуют",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "2d10",
+              "formula": "2d10",
+              "total": 14,
+              "details": "2d10 (**10**, 4) = `14`",
+              "is_glitch": false,
+              "is_crit_glitch": false
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": "GM",
+            "details": {
+              "expression": "2d6",
+              "formula": "2d6",
+              "total": 4,
+              "details": "2d6 (2, 2) = `4`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "is_generic_roll": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "2d6+3",
+              "formula": "2d6+3",
+              "total": 10,
+              "details": "2d6 (4, 3) + 3 = `10`",
+              "is_glitch": false,
+              "is_crit_glitch": false
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "1d6",
+              "formula": "1d6",
+              "total": 5,
+              "details": "1d6 (5) = `5`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "comment": "Огенная стрела"
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": "GM",
+            "details": {
+              "expression": "1d6",
+              "formula": "1d6",
+              "total": 3,
+              "details": "1d6 (3) = `3`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "comment": "Огненная стрела",
+              "is_generic_roll": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": "GM",
+            "details": {
+              "expression": "1d6",
+              "formula": "1d6",
+              "total": 3,
+              "details": "1d6 (3) = `3`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "comment": "Огненная стрела",
+              "is_generic_roll": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "1d6",
+              "formula": "1d6",
+              "total": 1,
+              "details": "1d6 (**1**) = `1`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "comment": "Огненная стрела"
+            }
+          }
+        ],
+        "history_cursor": -1,
+        "enable_logging": true,
+        "autosave_enabled": true,
+        "prerolls": {}
+      },
+      {
+        "actors": [
+          {
+            "id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "name": "Гоблин маг",
+            "role": "enemy",
+            "is_revealed": true,
+            "is_pinned": true,
+            "group_id": null,
+            "group_name": null,
+            "group_mode": null,
+            "group_color": null,
+            "initiative": 0,
+            "has_acted": false,
+            "portrait": "/assets/systems/D&D 5e/portraits/goblin_mag.png",
+            "show_portrait": true,
+            "miniature_id": null,
+            "layout_profile_id": "1776798216413",
+            "stats": {
+              "hp": {
+                "base": 50,
+                "formula_id": null,
+                "overrides": [
+                  {
+                    "source": "Блес",
+                    "value": 5
+                  }
+                ],
+                "value": 55
+              },
+              "ac": {
+                "base": 10,
+                "formula_id": null,
+                "overrides": [],
+                "value": 10
+              },
+              "speed": {
+                "base": 30,
+                "formula_id": null,
+                "overrides": [],
+                "value": 30
+              },
+              "mana": {
+                "base": 52,
+                "formula_id": null,
+                "overrides": [],
+                "value": 52
+              },
+              "max_mana": {
+                "base": 60,
+                "formula_id": null,
+                "overrides": [],
+                "value": 60
+              },
+              "com": {
+                "base": 0,
+                "formula_id": null,
+                "overrides": [],
+                "value": 0
+              },
+              "com1": {
+                "Реакция": true,
+                "Бонусное ": true,
+                "Основное": true
+              },
+              "bladpul": {
+                "res1": true,
+                "res2": true,
+                "res3": true,
+                "slot_3": true,
+                "slot_4": true,
+                "slot_5": true,
+                "slot_6": true,
+                "slot_7": true
+              }
+            },
+            "effects": [],
+            "visibility": {
+              "hp": true,
+              "stats": true,
+              "effects": true,
+              "name": true
+            },
+            "hotbar": []
+          }
+        ],
+        "turn_queue": [],
+        "current_index": 0,
+        "current_pass": 1,
+        "round": 1,
+        "engine_type": "standard",
+        "is_manual_mode": false,
+        "system": "D&D 5e",
+        "is_active": false,
+        "active_reaction_actor_id": null,
+        "selected_layout_id": "default",
+        "legend": {
+          "player": "#10b981",
+          "enemy": "#ef4444",
+          "ally": "#3b82f6",
+          "neutral": "#a1a1aa"
+        },
+        "show_group_colors": true,
+        "show_faction_colors": true,
+        "table_centered": true,
+        "sticky_first_column": true,
+        "sticky_last_column": true,
+        "sync_led_to_ui": true,
+        "screen_brightness": 78,
+        "history": [
+          {
+            "type": "stat_change",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "stat_key": "hp",
+              "stat_name": "ХП",
+              "amount": 5,
+              "color": "#e70808"
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "Гоблины бунтуют",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "а",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "Гоблины всё ещё бастуют",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "2d10",
+              "formula": "2d10",
+              "total": 14,
+              "details": "2d10 (**10**, 4) = `14`",
+              "is_glitch": false,
+              "is_crit_glitch": false
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": "GM",
+            "details": {
+              "expression": "2d6",
+              "formula": "2d6",
+              "total": 4,
+              "details": "2d6 (2, 2) = `4`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "is_generic_roll": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "2d6+3",
+              "formula": "2d6+3",
+              "total": 10,
+              "details": "2d6 (4, 3) + 3 = `10`",
+              "is_glitch": false,
+              "is_crit_glitch": false
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "1d6",
+              "formula": "1d6",
+              "total": 5,
+              "details": "1d6 (5) = `5`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "comment": "Огенная стрела"
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": "GM",
+            "details": {
+              "expression": "1d6",
+              "formula": "1d6",
+              "total": 3,
+              "details": "1d6 (3) = `3`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "comment": "Огненная стрела",
+              "is_generic_roll": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": "GM",
+            "details": {
+              "expression": "1d6",
+              "formula": "1d6",
+              "total": 3,
+              "details": "1d6 (3) = `3`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "comment": "Огненная стрела",
+              "is_generic_roll": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "1d6",
+              "formula": "1d6",
+              "total": 1,
+              "details": "1d6 (**1**) = `1`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "comment": "Огненная стрела"
+            }
+          }
+        ],
+        "history_cursor": -1,
+        "enable_logging": true,
+        "autosave_enabled": true,
+        "prerolls": {}
+      },
+      {
+        "actors": [
+          {
+            "id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "name": "Гоблин маг",
+            "role": "enemy",
+            "is_revealed": true,
+            "is_pinned": true,
+            "group_id": null,
+            "group_name": null,
+            "group_mode": null,
+            "group_color": null,
+            "initiative": 0,
+            "has_acted": false,
+            "portrait": "/assets/systems/D&D 5e/portraits/goblin_mag.png",
+            "show_portrait": true,
+            "miniature_id": null,
+            "layout_profile_id": "1776798216413",
+            "stats": {
+              "hp": {
+                "base": 50,
+                "formula_id": null,
+                "overrides": [
+                  {
+                    "source": "Блес",
+                    "value": 5
+                  }
+                ],
+                "value": 55
+              },
+              "ac": {
+                "base": 10,
+                "formula_id": null,
+                "overrides": [],
+                "value": 10
+              },
+              "speed": {
+                "base": 30,
+                "formula_id": null,
+                "overrides": [],
+                "value": 30
+              },
+              "mana": {
+                "base": 52,
+                "formula_id": null,
+                "overrides": [],
+                "value": 52
+              },
+              "max_mana": {
+                "base": 60,
+                "formula_id": null,
+                "overrides": [],
+                "value": 60
+              },
+              "com": {
+                "base": 0,
+                "formula_id": null,
+                "overrides": [],
+                "value": 0
+              },
+              "com1": {
+                "Реакция": true,
+                "Бонусное ": true,
+                "Основное": true
+              },
+              "bladpul": {
+                "res1": true,
+                "res2": true,
+                "res3": true,
+                "slot_3": true,
+                "slot_4": true,
+                "slot_5": true,
+                "slot_6": true,
+                "slot_7": true
+              }
+            },
+            "effects": [],
+            "visibility": {
+              "hp": true,
+              "stats": true,
+              "effects": true,
+              "name": true
+            },
+            "hotbar": []
+          },
+          {
+            "id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
+            "name": "Новый участник",
+            "role": "enemy",
+            "is_revealed": true,
+            "is_pinned": false,
+            "group_id": null,
+            "group_name": null,
+            "group_mode": null,
+            "group_color": null,
+            "initiative": 0,
+            "has_acted": false,
+            "portrait": "",
+            "show_portrait": false,
+            "miniature_id": null,
+            "layout_profile_id": null,
+            "stats": {
+              "hp": {
+                "base": 10,
+                "formula_id": null,
+                "overrides": [],
+                "value": 10
+              },
+              "ac": {
+                "base": 10,
+                "formula_id": null,
+                "overrides": [],
+                "value": 10
+              },
+              "speed": {
+                "base": 30,
+                "formula_id": null,
+                "overrides": [],
+                "value": 30
+              }
+            },
+            "effects": [],
+            "visibility": {
+              "hp": true,
+              "stats": true,
+              "effects": true,
+              "name": true
+            },
+            "hotbar": []
+          }
+        ],
+        "turn_queue": [],
+        "current_index": 0,
+        "current_pass": 1,
+        "round": 1,
+        "engine_type": "standard",
+        "is_manual_mode": false,
+        "system": "D&D 5e",
+        "is_active": false,
+        "active_reaction_actor_id": null,
+        "selected_layout_id": "default",
+        "legend": {
+          "player": "#10b981",
+          "enemy": "#ef4444",
+          "ally": "#3b82f6",
+          "neutral": "#a1a1aa"
+        },
+        "show_group_colors": true,
+        "show_faction_colors": true,
+        "table_centered": true,
+        "sticky_first_column": true,
+        "sticky_last_column": true,
+        "sync_led_to_ui": true,
+        "screen_brightness": 78,
+        "history": [
+          {
+            "type": "stat_change",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "stat_key": "hp",
+              "stat_name": "ХП",
+              "amount": 5,
+              "color": "#e70808"
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "Гоблины бунтуют",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "а",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "Гоблины всё ещё бастуют",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "2d10",
+              "formula": "2d10",
+              "total": 14,
+              "details": "2d10 (**10**, 4) = `14`",
+              "is_glitch": false,
+              "is_crit_glitch": false
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": "GM",
+            "details": {
+              "expression": "2d6",
+              "formula": "2d6",
+              "total": 4,
+              "details": "2d6 (2, 2) = `4`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "is_generic_roll": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "2d6+3",
+              "formula": "2d6+3",
+              "total": 10,
+              "details": "2d6 (4, 3) + 3 = `10`",
+              "is_glitch": false,
+              "is_crit_glitch": false
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "1d6",
+              "formula": "1d6",
+              "total": 5,
+              "details": "1d6 (5) = `5`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "comment": "Огенная стрела"
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": "GM",
+            "details": {
+              "expression": "1d6",
+              "formula": "1d6",
+              "total": 3,
+              "details": "1d6 (3) = `3`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "comment": "Огненная стрела",
+              "is_generic_roll": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": "GM",
+            "details": {
+              "expression": "1d6",
+              "formula": "1d6",
+              "total": 3,
+              "details": "1d6 (3) = `3`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "comment": "Огненная стрела",
+              "is_generic_roll": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "1d6",
+              "formula": "1d6",
+              "total": 1,
+              "details": "1d6 (**1**) = `1`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "comment": "Огненная стрела"
+            }
+          }
+        ],
+        "history_cursor": -1,
+        "enable_logging": true,
+        "autosave_enabled": true,
+        "prerolls": {}
+      },
+      {
+        "actors": [
+          {
+            "id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "name": "Гоблин маг",
+            "role": "enemy",
+            "is_revealed": true,
+            "is_pinned": true,
+            "group_id": null,
+            "group_name": null,
+            "group_mode": null,
+            "group_color": null,
+            "initiative": 0,
+            "has_acted": false,
+            "portrait": "/assets/systems/D&D 5e/portraits/goblin_mag.png",
+            "show_portrait": true,
+            "miniature_id": null,
+            "layout_profile_id": "1776798216413",
+            "stats": {
+              "hp": {
+                "base": 50,
+                "formula_id": null,
+                "overrides": [
+                  {
+                    "source": "Блес",
+                    "value": 5
+                  }
+                ],
+                "value": 55
+              },
+              "ac": {
+                "base": 10,
+                "formula_id": null,
+                "overrides": [],
+                "value": 10
+              },
+              "speed": {
+                "base": 30,
+                "formula_id": null,
+                "overrides": [],
+                "value": 30
+              },
+              "mana": {
+                "base": 52,
+                "formula_id": null,
+                "overrides": [],
+                "value": 52
+              },
+              "max_mana": {
+                "base": 60,
+                "formula_id": null,
+                "overrides": [],
+                "value": 60
+              },
+              "com": {
+                "base": 0,
+                "formula_id": null,
+                "overrides": [],
+                "value": 0
+              },
+              "com1": {
+                "Реакция": true,
+                "Бонусное ": true,
+                "Основное": true
+              },
+              "bladpul": {
+                "res1": true,
+                "res2": true,
+                "res3": true,
+                "slot_3": true,
+                "slot_4": true,
+                "slot_5": true,
+                "slot_6": true,
+                "slot_7": true
+              }
+            },
+            "effects": [],
+            "visibility": {
+              "hp": true,
+              "stats": true,
+              "effects": true,
+              "name": true
+            },
+            "hotbar": []
+          },
+          {
+            "id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
+            "name": "Новый участник",
+            "role": "enemy",
+            "is_revealed": true,
+            "is_pinned": false,
+            "group_id": null,
+            "group_name": null,
+            "group_mode": null,
+            "group_color": null,
+            "initiative": 0,
+            "has_acted": false,
+            "portrait": "",
+            "show_portrait": false,
+            "miniature_id": null,
+            "layout_profile_id": null,
+            "stats": {
+              "hp": {
+                "base": 10,
+                "formula_id": null,
+                "overrides": [],
+                "value": 10
+              },
+              "ac": {
+                "base": 10,
+                "formula_id": null,
+                "overrides": [],
+                "value": 10
+              },
+              "speed": {
+                "base": 30,
+                "formula_id": null,
+                "overrides": [],
+                "value": 30
+              }
+            },
+            "effects": [],
+            "visibility": {
+              "hp": true,
+              "stats": true,
+              "effects": true,
+              "name": true
+            },
+            "hotbar": []
+          }
+        ],
+        "turn_queue": [],
+        "current_index": 0,
+        "current_pass": 1,
+        "round": 1,
+        "engine_type": "standard",
+        "is_manual_mode": false,
+        "system": "D&D 5e",
+        "is_active": false,
+        "active_reaction_actor_id": null,
+        "selected_layout_id": "default",
+        "legend": {
+          "player": "#10b981",
+          "enemy": "#ef4444",
+          "ally": "#3b82f6",
+          "neutral": "#a1a1aa"
+        },
+        "show_group_colors": true,
+        "show_faction_colors": true,
+        "table_centered": true,
+        "sticky_first_column": true,
+        "sticky_last_column": true,
+        "sync_led_to_ui": true,
+        "screen_brightness": 78,
+        "history": [
+          {
+            "type": "stat_change",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "stat_key": "hp",
+              "stat_name": "ХП",
+              "amount": 5,
+              "color": "#e70808"
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "Гоблины бунтуют",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "а",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "Гоблины всё ещё бастуют",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "2d10",
+              "formula": "2d10",
+              "total": 14,
+              "details": "2d10 (**10**, 4) = `14`",
+              "is_glitch": false,
+              "is_crit_glitch": false
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": "GM",
+            "details": {
+              "expression": "2d6",
+              "formula": "2d6",
+              "total": 4,
+              "details": "2d6 (2, 2) = `4`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "is_generic_roll": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "2d6+3",
+              "formula": "2d6+3",
+              "total": 10,
+              "details": "2d6 (4, 3) + 3 = `10`",
+              "is_glitch": false,
+              "is_crit_glitch": false
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "1d6",
+              "formula": "1d6",
+              "total": 5,
+              "details": "1d6 (5) = `5`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "comment": "Огенная стрела"
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": "GM",
+            "details": {
+              "expression": "1d6",
+              "formula": "1d6",
+              "total": 3,
+              "details": "1d6 (3) = `3`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "comment": "Огненная стрела",
+              "is_generic_roll": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": "GM",
+            "details": {
+              "expression": "1d6",
+              "formula": "1d6",
+              "total": 3,
+              "details": "1d6 (3) = `3`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "comment": "Огненная стрела",
+              "is_generic_roll": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "1d6",
+              "formula": "1d6",
+              "total": 1,
+              "details": "1d6 (**1**) = `1`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "comment": "Огненная стрела"
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
+            "actor_name": "Новый участник",
+            "details": {
+              "expression": "1d6 @Гоблин маг",
+              "formula": "1d6 @Гоблин маг",
+              "total": 0,
+              "details": "(d20 error)",
+              "is_glitch": false,
+              "is_crit_glitch": false
+            }
+          }
+        ],
+        "history_cursor": -1,
+        "enable_logging": true,
+        "autosave_enabled": true,
+        "prerolls": {}
+      },
+      {
+        "actors": [
+          {
+            "id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "name": "Гоблин маг",
+            "role": "enemy",
+            "is_revealed": true,
+            "is_pinned": true,
+            "group_id": null,
+            "group_name": null,
+            "group_mode": null,
+            "group_color": null,
+            "initiative": 0,
+            "has_acted": false,
+            "portrait": "/assets/systems/D&D 5e/portraits/goblin_mag.png",
+            "show_portrait": true,
+            "miniature_id": null,
+            "layout_profile_id": "1776798216413",
+            "stats": {
+              "hp": {
+                "base": 50,
+                "formula_id": null,
+                "overrides": [
+                  {
+                    "source": "Блес",
+                    "value": 5
+                  }
+                ],
+                "value": 55
+              },
+              "ac": {
+                "base": 10,
+                "formula_id": null,
+                "overrides": [],
+                "value": 10
+              },
+              "speed": {
+                "base": 30,
+                "formula_id": null,
+                "overrides": [],
+                "value": 30
+              },
+              "mana": {
+                "base": 52,
+                "formula_id": null,
+                "overrides": [],
+                "value": 52
+              },
+              "max_mana": {
+                "base": 60,
+                "formula_id": null,
+                "overrides": [],
+                "value": 60
+              },
+              "com": {
+                "base": 0,
+                "formula_id": null,
+                "overrides": [],
+                "value": 0
+              },
+              "com1": {
+                "Реакция": true,
+                "Бонусное ": true,
+                "Основное": true
+              },
+              "bladpul": {
+                "res1": true,
+                "res2": true,
+                "res3": true,
+                "slot_3": true,
+                "slot_4": true,
+                "slot_5": true,
+                "slot_6": true,
+                "slot_7": true
+              }
+            },
+            "effects": [],
+            "visibility": {
+              "hp": true,
+              "stats": true,
+              "effects": true,
+              "name": true
+            },
+            "hotbar": []
+          },
+          {
+            "id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
+            "name": "Новый участник",
+            "role": "enemy",
+            "is_revealed": true,
+            "is_pinned": false,
+            "group_id": null,
+            "group_name": null,
+            "group_mode": null,
+            "group_color": null,
+            "initiative": 0,
+            "has_acted": false,
+            "portrait": "",
+            "show_portrait": false,
+            "miniature_id": null,
+            "layout_profile_id": null,
+            "stats": {
+              "hp": {
+                "base": 10,
+                "formula_id": null,
+                "overrides": [],
+                "value": 10
+              },
+              "ac": {
+                "base": 10,
+                "formula_id": null,
+                "overrides": [],
+                "value": 10
+              },
+              "speed": {
+                "base": 30,
+                "formula_id": null,
+                "overrides": [],
+                "value": 30
+              }
+            },
+            "effects": [],
+            "visibility": {
+              "hp": true,
+              "stats": true,
+              "effects": true,
+              "name": true
+            },
+            "hotbar": []
+          }
+        ],
+        "turn_queue": [],
+        "current_index": 0,
+        "current_pass": 1,
+        "round": 1,
+        "engine_type": "standard",
+        "is_manual_mode": false,
+        "system": "D&D 5e",
+        "is_active": false,
+        "active_reaction_actor_id": null,
+        "selected_layout_id": "default",
+        "legend": {
+          "player": "#10b981",
+          "enemy": "#ef4444",
+          "ally": "#3b82f6",
+          "neutral": "#a1a1aa"
+        },
+        "show_group_colors": true,
+        "show_faction_colors": true,
+        "table_centered": true,
+        "sticky_first_column": true,
+        "sticky_last_column": true,
+        "sync_led_to_ui": true,
+        "screen_brightness": 78,
+        "history": [
+          {
+            "type": "stat_change",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "stat_key": "hp",
+              "stat_name": "ХП",
+              "amount": 5,
+              "color": "#e70808"
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "Гоблины бунтуют",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "а",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "Гоблины всё ещё бастуют",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "2d10",
+              "formula": "2d10",
+              "total": 14,
+              "details": "2d10 (**10**, 4) = `14`",
+              "is_glitch": false,
+              "is_crit_glitch": false
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": "GM",
+            "details": {
+              "expression": "2d6",
+              "formula": "2d6",
+              "total": 4,
+              "details": "2d6 (2, 2) = `4`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "is_generic_roll": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "2d6+3",
+              "formula": "2d6+3",
+              "total": 10,
+              "details": "2d6 (4, 3) + 3 = `10`",
+              "is_glitch": false,
+              "is_crit_glitch": false
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "1d6",
+              "formula": "1d6",
+              "total": 5,
+              "details": "1d6 (5) = `5`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "comment": "Огенная стрела"
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": "GM",
+            "details": {
+              "expression": "1d6",
+              "formula": "1d6",
+              "total": 3,
+              "details": "1d6 (3) = `3`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "comment": "Огненная стрела",
+              "is_generic_roll": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": "GM",
+            "details": {
+              "expression": "1d6",
+              "formula": "1d6",
+              "total": 3,
+              "details": "1d6 (3) = `3`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "comment": "Огненная стрела",
+              "is_generic_roll": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "1d6",
+              "formula": "1d6",
+              "total": 1,
+              "details": "1d6 (**1**) = `1`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "comment": "Огненная стрела"
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
+            "actor_name": "Новый участник",
+            "details": {
+              "expression": "1d6 @Гоблин маг",
+              "formula": "1d6 @Гоблин маг",
+              "total": 0,
+              "details": "(d20 error)",
+              "is_glitch": false,
+              "is_crit_glitch": false
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": "GM",
+            "details": {
+              "expression": ",",
+              "formula": ",",
+              "total": 0,
+              "details": "(d20 error)",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "is_generic_roll": true
+            }
+          }
+        ],
+        "history_cursor": -1,
+        "enable_logging": true,
+        "autosave_enabled": true,
+        "prerolls": {}
+      },
+      {
+        "actors": [
+          {
+            "id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "name": "Гоблин маг",
+            "role": "enemy",
+            "is_revealed": true,
+            "is_pinned": true,
+            "group_id": null,
+            "group_name": null,
+            "group_mode": null,
+            "group_color": null,
+            "initiative": 0,
+            "has_acted": false,
+            "portrait": "/assets/systems/D&D 5e/portraits/goblin_mag.png",
+            "show_portrait": true,
+            "miniature_id": null,
+            "layout_profile_id": "1776798216413",
+            "stats": {
+              "hp": {
+                "base": 50,
+                "formula_id": null,
+                "overrides": [
+                  {
+                    "source": "Блес",
+                    "value": 5
+                  }
+                ],
+                "value": 55
+              },
+              "ac": {
+                "base": 10,
+                "formula_id": null,
+                "overrides": [],
+                "value": 10
+              },
+              "speed": {
+                "base": 30,
+                "formula_id": null,
+                "overrides": [],
+                "value": 30
+              },
+              "mana": {
+                "base": 52,
+                "formula_id": null,
+                "overrides": [],
+                "value": 52
+              },
+              "max_mana": {
+                "base": 60,
+                "formula_id": null,
+                "overrides": [],
+                "value": 60
+              },
+              "com": {
+                "base": 0,
+                "formula_id": null,
+                "overrides": [],
+                "value": 0
+              },
+              "com1": {
+                "Реакция": true,
+                "Бонусное ": true,
+                "Основное": true
+              },
+              "bladpul": {
+                "res1": true,
+                "res2": true,
+                "res3": true,
+                "slot_3": true,
+                "slot_4": true,
+                "slot_5": true,
+                "slot_6": true,
+                "slot_7": true
+              }
+            },
+            "effects": [],
+            "visibility": {
+              "hp": true,
+              "stats": true,
+              "effects": true,
+              "name": true
+            },
+            "hotbar": []
+          },
+          {
+            "id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
+            "name": "Новый участник",
+            "role": "enemy",
+            "is_revealed": true,
+            "is_pinned": false,
+            "group_id": null,
+            "group_name": null,
+            "group_mode": null,
+            "group_color": null,
+            "initiative": 0,
+            "has_acted": false,
+            "portrait": "",
+            "show_portrait": false,
+            "miniature_id": null,
+            "layout_profile_id": null,
+            "stats": {
+              "hp": {
+                "base": 10,
+                "formula_id": null,
+                "overrides": [],
+                "value": 10
+              },
+              "ac": {
+                "base": 10,
+                "formula_id": null,
+                "overrides": [],
+                "value": 10
+              },
+              "speed": {
+                "base": 30,
+                "formula_id": null,
+                "overrides": [],
+                "value": 30
+              }
+            },
+            "effects": [],
+            "visibility": {
+              "hp": true,
+              "stats": true,
+              "effects": true,
+              "name": true
+            },
+            "hotbar": []
+          }
+        ],
+        "turn_queue": [],
+        "current_index": 0,
+        "current_pass": 1,
+        "round": 1,
+        "engine_type": "standard",
+        "is_manual_mode": false,
+        "system": "D&D 5e",
+        "is_active": false,
+        "active_reaction_actor_id": null,
+        "selected_layout_id": "default",
+        "legend": {
+          "player": "#10b981",
+          "enemy": "#ef4444",
+          "ally": "#3b82f6",
+          "neutral": "#a1a1aa"
+        },
+        "show_group_colors": true,
+        "show_faction_colors": true,
+        "table_centered": true,
+        "sticky_first_column": true,
+        "sticky_last_column": true,
+        "sync_led_to_ui": true,
+        "screen_brightness": 78,
+        "history": [
+          {
+            "type": "stat_change",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "stat_key": "hp",
+              "stat_name": "ХП",
+              "amount": 5,
+              "color": "#e70808"
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "Гоблины бунтуют",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "а",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "text",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": null,
+            "details": {
+              "message": "Гоблины всё ещё бастуют",
+              "is_gm_note": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "2d10",
+              "formula": "2d10",
+              "total": 14,
+              "details": "2d10 (**10**, 4) = `14`",
+              "is_glitch": false,
+              "is_crit_glitch": false
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": "GM",
+            "details": {
+              "expression": "2d6",
+              "formula": "2d6",
+              "total": 4,
+              "details": "2d6 (2, 2) = `4`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "is_generic_roll": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "2d6+3",
+              "formula": "2d6+3",
+              "total": 10,
+              "details": "2d6 (4, 3) + 3 = `10`",
+              "is_glitch": false,
+              "is_crit_glitch": false
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "1d6",
+              "formula": "1d6",
+              "total": 5,
+              "details": "1d6 (5) = `5`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "comment": "Огенная стрела"
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": "GM",
+            "details": {
+              "expression": "1d6",
+              "formula": "1d6",
+              "total": 3,
+              "details": "1d6 (3) = `3`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "comment": "Огненная стрела",
+              "is_generic_roll": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": "GM",
+            "details": {
+              "expression": "1d6",
+              "formula": "1d6",
+              "total": 3,
+              "details": "1d6 (3) = `3`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "comment": "Огненная стрела",
+              "is_generic_roll": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+            "actor_name": "Гоблин маг",
+            "details": {
+              "expression": "1d6",
+              "formula": "1d6",
+              "total": 1,
+              "details": "1d6 (**1**) = `1`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "comment": "Огненная стрела"
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
+            "actor_name": "Новый участник",
+            "details": {
+              "expression": "1d6 @Гоблин маг",
+              "formula": "1d6 @Гоблин маг",
+              "total": 0,
+              "details": "(d20 error)",
+              "is_glitch": false,
+              "is_crit_glitch": false
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": null,
+            "actor_name": "GM",
+            "details": {
+              "expression": ",",
+              "formula": ",",
+              "total": 0,
+              "details": "(d20 error)",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "is_generic_roll": true
+            }
+          },
+          {
+            "type": "roll",
+            "round": 1,
+            "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
+            "actor_name": "Новый участник",
+            "details": {
+              "expression": "2d6",
+              "formula": "2d6",
+              "total": 12,
+              "details": "2d6 (**6**, **6**) = `12`",
+              "is_glitch": false,
+              "is_crit_glitch": false,
+              "comment": "Бип"
+            }
+          }
+        ],
+        "history_cursor": -1,
+        "enable_logging": true,
+        "autosave_enabled": true,
+        "prerolls": {}
       }
     ],
-    "history_index": 0,
+    "history_index": 19,
     "prerolls": {}
   }
 }
