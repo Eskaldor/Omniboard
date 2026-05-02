@@ -1,6 +1,6 @@
 # Omniboard — Progress & Backlog
 
-> Обновлено: 01.05.2026 (GM Console / броски — дополнение)
+> Обновлено: 02.05.2026 (синхронизация с кодом: ESP timeout, линия инициативы / `initiative_shift`)
 
 ---
 
@@ -246,8 +246,7 @@
 - [x] **Atomic PNG writes:** итоговые PNG пишутся через временный файл и `os.replace`, чтобы фронт/ESP не читали частично записанную картинку при гонках.
 - [x] **Proactive render push:** при изменении актора и смене хода фоновые задачи заранее генерируют `/api/render/output/{actor_id}.png` и, если миниатюра online, пушат обновление на ESP.
 - [x] **UI-first next-turn:** `/api/combat/next-turn` сначала изменяет состояние и отправляет `broadcast_state()`, а LED/render/ESP side effects запускаются после этого одной фоновой пачкой через `asyncio.gather(..., return_exceptions=True)`.
-- [x] **ESP timeout hardening:** HTTP `/update` для ESP ограничен коротким timeout (~1 s), ошибки связи логируются и не блокируют боевой UI.
-  - **Update 26.04.2026:** для screen transitions timeout поднят до **20 s**, потому что прошивка синхронно держит HTTP-ответ до конца анимации; иначе устройство ложно помечалось offline.
+- [x] **ESP timeout hardening:** HTTP `/update` для ESP — **best-effort** с **`httpx.Timeout(20 s)`** на стороне бэкенда (прошивка может держать ответ до конца экранной анимации; короткий timeout давал ложный offline). Ошибки связи логируются и не блокируют боевой UI — см. ADR-21.
 - [x] **Frontend cache-busting:** миниатюры используют delayed `img src` update (~250 ms) на статический output-файл; портреты получили глобальный `portraitCacheVersion` для принудительного сброса кэша локальных ассетов.
 
 ---
@@ -255,7 +254,7 @@
 ## ✅ Фаза 13.6 — Линия инициативы и единый диспетчер железа (26.04.2026)
 
 - [x] **Привязка миниатюры к слоту очереди:** `MiniatureEntry.binding_mode = "actor" | "slot"`, `slot_index` хранится как 0-based offset от `current_index`; в UI показывается человеческая нумерация (`1 = текущий ход`).
-- [x] **`refresh_initiative_line`:** `ESPManager` пересчитывает slot-миниатюры после изменения хода/старта боя, определяет целевого актора через `(current_index + slot_index) % len(turn_queue)` и пушит картинку с `transition="wipe_right"` / `transition_params.color`.
+- [x] **`refresh_initiative_line`:** `ESPManager` пересчитывает slot-миниатюры после изменения хода/старта боя, определяет целевого актора через `(current_index + slot_index) % len(turn_queue)` и пушит картинку с **`transition`** / **`transition_color`** из правила **`initiative_shift`** в `data/systems/<system>/led_triggers.json` (`find_hardware_trigger`; при **`transition: "none"`** или отсутствии правила — без анимации). Детали и яркость экрана — **Фаза 10.8**.
 - [x] **Best-effort обновление линии:** refresh вызывается фоном после `broadcast_state()` в combat routes (`next-turn`, `prev-turn`, `start`, загрузка/смена очереди), UI остаётся приоритетом.
 - [x] **Единый HardwareModal:** управление устройствами перенесено в плотную системную таблицу: status online/offline, режим `Персонаж` / `Слот очереди`, назначение, Blink и Forget; отдельная `MiniaturesModal` сохранена для настройки **вида/лейаута** экранов.
 - [x] **Глобальные миниатюры в публичном стейте:** `combatState.hardware.miniatures` собирается из `data/miniatures.json` + текущего mDNS discovery; пустое сохранённое имя не затирает friendly name из discovery.
@@ -320,7 +319,7 @@ UX-ревизия `ConfigModal`: горизонтальные табы плох�
 - [x] **ESP32 по сети:** push команд и картинки по TCP (HTTP) + mDNS; см. Фазы 10.5–10.7 и ADR-15.
 
 ### Следующий фокус (см. беклог)
-**Экономика действий** (Фаза 11.5), **архитектурная декомпозиция стейта** (Фаза 11.8), **UI настроек / таблица / i18n конфига** (Фаза 12) и **боевая математика / Dice Engine / Roll Matrix** (Фаза 13) закрыты. Плагин `logic.py` на уровне системы (ADR-12), Hotbar, реакции и GM Console остаются в дорожной карте.
+**Экономика действий** (Фаза 11.5), **архитектурная декомпозиция стейта** (Фаза 11.8), **UI настроек / таблица / i18n конфига** (Фаза 12) и **боевая математика / Dice Engine / Roll Matrix** (Фаза 13) закрыты. Плагин `logic.py` на уровне системы (ADR-12), Hotbar, реакции и **расширение** GM Console (отдельный маршрут / второй монитор) остаются в дорожной карте.
 
 ---
 
@@ -344,13 +343,13 @@ UX-ревизия `ConfigModal`: горизонтальные табы плох�
 - [ ] **Reactions**: UI для `active_reaction_actor_id` (отслеживание реакций)
 - [ ] **GM Console (расширение):** отдельная страница `/gm-console` или pop-out для второго монитора (полноэкранная ширма). *Встроенная нижняя консоль с терминалом бросков, режимами Note/Roll/AI и Smart Notes — см. раздел «GM Console — терминал, броски и Smart Notes» выше.*
 - [x] **Sticky Columns:** фиксация первой/последней колонки при горизонтальной прокрутке широкой таблицы — см. Фаза 12.
-- [x] **Улучшенный UI Раундов:** крупная плашка раунда в **AppHeader** (стиль Shield Maiden); опционально позже — framer-motion и дублирование в тулбаре.
+- [x] **Улучшенный UI Раундов:** крупная плашка раунда в **AppHeader** (стиль Shield Maiden); опционально позже — анимации через **`motion`** и дублирование в тулбаре.
 
 ### 🔩 Аппаратная часть (основной объём ✅ — см. Фазы 10.5–10.7)
 - [x] ESP32-C6: конечные автоматы, WiFiManager, OTA; связь и push — **TCP (HTTP) + mDNS**, неблокирующий LED, гамма, триггеры и стек приоритетов (фазы 10.5–10.7).
 - [x] Подключение по Wi-Fi с Captive Portal; Bluetooth — при необходимости отдельным спринтом.
 - [x] LED: `LayoutProfile` + `led_profiles.json` + легенда + `led_interceptor` + стек приоритетов (`resolve_led_payload`, триггеры `time`/`turn`).
-- [x] Proactive render / hardware push: UI broadcast не ждёт ESP/рендер; PNG пишется атомарно; ESP `/update` best-effort с коротким timeout — см. Фаза 13.5 и ADR-21.
-- [x] Линия инициативы для Omnimini: привязка к позиции очереди, wipe-transition при прокрутке, кастомный LED-профиль слота — см. Фаза 13.6.
+- [x] Proactive render / hardware push: UI broadcast не ждёт ESP/рендер; PNG пишется атомарно; ESP `/update` — **best-effort** с timeout **20 s** на клиенте бэкенда — см. Фаза 13.5 и ADR-21.
+- [x] Линия инициативы для Omnimini: привязка к позиции очереди, переход экрана из **`initiative_shift`** (`led_triggers.json`), кастомный LED-профиль слота — см. Фаза 13.6 и **Фаза 10.8**.
 - [ ] Расширенная синхронизация LED (`sync_led_to_ui`): помимо пуша при рендере — например, обновление LED при смене хода/HP без перерисовки экрана (отдельные вызовы `send_update` по правилам UI).
 

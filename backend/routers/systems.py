@@ -61,6 +61,13 @@ async def save_system_layout_profiles(system_name: str, profiles: list[LayoutPro
     return profiles
 
 
+@router.get("/{system_name}/layouts/sheet")
+async def get_system_sheet_layout(system_name: str):
+    if not is_safe_system_subdirectory(system_name):
+        raise HTTPException(status_code=400, detail="invalid system name")
+    return load_config_with_override(system_name, "sheet_layout.json")
+
+
 @router.get("/{system_name}/led_profiles")
 async def get_system_led_profiles(system_name: str):
     if _system_dir(system_name) is None:
@@ -219,6 +226,13 @@ async def get_system_mechanics(system_name: str):
         raise HTTPException(status_code=400, detail="invalid system name")
     data = load_config_with_override(system_name, "mechanics.json")
     return data if isinstance(data, dict) else {"system_dice": "1d20", "formulas": {}}
+
+
+@router.get("/{system_name}/actions")
+async def get_system_actions(system_name: str):
+    if not is_safe_system_subdirectory(system_name):
+        raise HTTPException(status_code=400, detail="invalid system name")
+    return load_config_with_override(system_name, "actions.json")
 
 
 @router.post("/{system_name}/columns")

@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState, useEffect } from 'react';
-import { X, Save, Settings2, Monitor, Columns3, Languages } from 'lucide-react';
+import { X, Save, Settings2, Monitor, Columns3, Languages, FileText } from 'lucide-react';
 import { ColumnConfig } from '../../types';
 import { useCombatState } from '../../contexts/CombatStateContext';
 import { useTranslation } from 'react-i18next';
@@ -7,8 +7,9 @@ import { SystemTab } from './ConfigTabs/SystemTab';
 import { ColumnsTab } from './ConfigTabs/ColumnsTab';
 import { TableTab } from './ConfigTabs/TableTab';
 import { LanguageTab } from './ConfigTabs/LanguageTab';
+import { SheetTab, type SheetMode } from './ConfigTabs/SheetTab';
 
-type ConfigSectionId = 'system' | 'display' | 'columns' | 'language';
+type ConfigSectionId = 'system' | 'display' | 'columns' | 'sheet' | 'language';
 
 function usePatchCombatSettings(refetchState: () => Promise<void>) {
   return useCallback(
@@ -363,12 +364,28 @@ export function ConfigModal({
     [patchLegend],
   );
 
+  const rawSheetMode = state?.display.sheet_mode;
+  const sheetMode: SheetMode =
+    rawSheetMode === 'universal' || rawSheetMode === 'system' ? rawSheetMode : 'raw';
+
+  const onSetSheetMode = useCallback(
+    async (mode: SheetMode) => {
+      try {
+        await patchCombatSettings({ sheet_mode: mode });
+      } catch (err) {
+        console.error('Failed to set sheet mode', err);
+      }
+    },
+    [patchCombatSettings],
+  );
+
   const sections = useMemo(
     () =>
       [
         { id: 'system' as const, label: t('config_modal.section_system'), icon: Settings2 },
         { id: 'display' as const, label: t('config_modal.section_display'), icon: Monitor },
         { id: 'columns' as const, label: t('config_modal.section_columns'), icon: Columns3 },
+        { id: 'sheet' as const, label: t('config_modal.section_sheet'), icon: FileText },
         { id: 'language' as const, label: t('config_modal.section_language'), icon: Languages },
       ] as const,
     [t],
@@ -480,6 +497,10 @@ export function ConfigModal({
                 showFactionColors={showFactionColors}
                 onToggleShowFactionColors={onToggleShowFactionColors}
               />
+            )}
+
+            {activeSection === 'sheet' && (
+              <SheetTab sheetMode={sheetMode} onSetSheetMode={onSetSheetMode} />
             )}
 
             {activeSection === 'language' && (

@@ -222,6 +222,12 @@ def _actor_stats_migrate_before(raw: Any) -> Dict[str, Any]:
     return out
 
 
+class ActorActionOverride(BaseModel):
+    show_on_panel: bool = False
+    formula_override: Optional[str] = None
+    comment: Optional[str] = None
+
+
 class Actor(BaseModel):
     id: str
     name: str
@@ -242,6 +248,20 @@ class Actor(BaseModel):
     effects: List[Effect] = []
     visibility: Visibility = Visibility()
     hotbar: List[HotbarAction] = []
+    actions: Dict[str, ActorActionOverride] = Field(default_factory=dict)
+
+    @field_validator("actions", mode="before")
+    @classmethod
+    def coerce_actor_actions(cls, v: Any) -> Any:
+        if v is None or not isinstance(v, dict):
+            return {}
+        out: dict[str, Any] = {}
+        for k, val in v.items():
+            key = str(k).strip()
+            if not key or not isinstance(val, dict):
+                continue
+            out[key] = val
+        return out
 
     @model_validator(mode="before")
     @classmethod
@@ -249,10 +269,13 @@ class Actor(BaseModel):
         """Legacy stats ``{\"hp\": 10}`` -> StatValue(base=10, value=10) по ключу."""
         if not isinstance(data, dict):
             return data
-        if "stats" not in data:
-            return data
         merged = dict(data)
-        merged["stats"] = _actor_stats_migrate_before(merged.get("stats"))
+        if "actions" not in merged or merged.get("actions") is None:
+            merged["actions"] = {}
+        elif not isinstance(merged.get("actions"), dict):
+            merged["actions"] = {}
+        if "stats" in merged:
+            merged["stats"] = _actor_stats_migrate_before(merged.get("stats"))
         return merged
 
 
@@ -349,6 +372,7 @@ class DisplayState(BaseModel):
     table_centered: bool = True
     sticky_first_column: bool = True
     sticky_last_column: bool = True
+    sheet_mode: Literal["raw", "universal", "system"] = "raw"
 
     @model_validator(mode="before")
     @classmethod
@@ -428,6 +452,7 @@ class CombatSession(BaseModel):
             "show_group_colors",
             "show_faction_colors",
             "table_centered",
+            "sheet_mode",
             "layout",
             "layout_profiles",
         }

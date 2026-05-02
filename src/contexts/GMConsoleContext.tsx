@@ -1,5 +1,7 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
+/** Roll / FAB UI lives in ``GMConsoleSlider`` (not this file). Macro syntax ``@Actor !key`` is resolved there via ``useSystemActions`` + ``tryResolveActorMacroRoll``. */
+
 export type GMConsoleContextValue = {
   isFabSummoned: boolean;
   setIsFabSummoned: React.Dispatch<React.SetStateAction<boolean>>;

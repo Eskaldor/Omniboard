@@ -458,6 +458,10 @@ async def update_combat_settings(payload: dict):
         app_state.state.display.sticky_first_column = bool(payload["sticky_first_column"])
     if "sticky_last_column" in payload:
         app_state.state.display.sticky_last_column = bool(payload["sticky_last_column"])
+    if "sheet_mode" in payload:
+        raw_mode = str(payload.get("sheet_mode") or "").strip().lower()
+        if raw_mode in ("raw", "universal", "system"):
+            app_state.state.display.sheet_mode = raw_mode
     if "selected_layout_id" in payload:
         sid = str(payload.get("selected_layout_id") or "").strip()
         if sid:
@@ -482,6 +486,7 @@ async def update_combat_settings(payload: dict):
         "table_centered": app_state.state.display.table_centered,
         "sticky_first_column": app_state.state.display.sticky_first_column,
         "sticky_last_column": app_state.state.display.sticky_last_column,
+        "sheet_mode": app_state.state.display.sheet_mode,
         "selected_layout_id": app_state.state.display.selected_layout_id,
         "is_manual_mode": app_state.state.core.is_manual_mode,
         "engine_type": app_state.state.core.engine_type,

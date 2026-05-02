@@ -7,6 +7,8 @@ import { useCombatState } from '../../contexts/CombatStateContext';
 import { useColumns } from '../../contexts/ColumnsContext';
 import { useGMConsole } from '../../contexts/GMConsoleContext';
 import type { Actor } from '../../types';
+import type { SystemActionDef } from '../../hooks/useSystemActions';
+import { useSystemActions } from '../../hooks/useSystemActions';
 import { NoteCard } from './NoteCard';
 
 const MODE_CONFIG = {
@@ -50,6 +52,44 @@ function newColumn(): NoteColumn {
 
 function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/** Split optional `#` trailing comment (same convention as ``parseRollTerminalInput``). */
+function splitHashCommentRoll(text: string): { working: string; hashComment: string | null } {
+  const hashIdx = text.indexOf('#');
+  if (hashIdx === -1) return { working: text.trim(), hashComment: null };
+  const after = text.slice(hashIdx + 1).trim();
+  return {
+    working: text.slice(0, hashIdx).trimEnd().trim(),
+    hashComment: after.length > 0 ? after : null,
+  };
+}
+
+/**
+ * Roll mode: ``@ActorName !macro_key`` uses merged ``actions.json`` for the current system
+ * (with per-actor ``formula_override`` / ``comment`` when present).
+ */
+function tryResolveActorMacroRoll(
+  working: string,
+  hashComment: string | null,
+  actorList: Actor[],
+  actions: Record<string, SystemActionDef>,
+): { actor: Actor; expression: string; comment: string } | null {
+  const m = /^\s*@(.+?)\s+!([\w-]+)\s*$/i.exec(working);
+  if (!m) return null;
+  const actorName = m[1].trim();
+  const macroKey = m[2].trim();
+  if (!macroKey) return null;
+  const actor = actorList.find((a) => (a.name ?? '').trim().toLowerCase() === actorName.toLowerCase());
+  if (!actor) return null;
+  const def = actions[macroKey];
+  if (!def?.formula?.trim()) return null;
+  const ov = actor.actions?.[macroKey];
+  const expression = (ov?.formula_override?.trim() || def.formula).trim();
+  if (!expression) return null;
+  const baseComment = (ov?.comment?.trim() || def.name).trim() || macroKey;
+  const comment = [baseComment, hashComment?.trim()].filter(Boolean).join(' · ');
+  return { actor, expression, comment };
 }
 
 /** Parse roll terminal: `#` comment, all `@Actor` mentions (case-insensitive), then sanitize leftover `@` tokens. */
@@ -98,6 +138,8 @@ export function GMConsoleSlider() {
   const { t } = useTranslation('core', { useSuspense: false });
   const { state: combatState } = useCombatState();
   const { systemName } = useColumns();
+  const combatSystem = ((combatState?.core.system ?? systemName) || '').trim();
+  const { actions: systemActions } = useSystemActions(combatSystem);
   const { isFabSummoned, setIsFabSummoned } = useGMConsole();
   const [panelOpen, setPanelOpen] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
@@ -297,6 +339,29 @@ export function GMConsoleSlider() {
           return;
         }
         const raw = commandRef.current;
+        const { working, hashComment } = splitHashCommentRoll(raw);
+        const macroRoll = tryResolveActorMacroRoll(working, hashComment, actors, systemActions);
+        if (macroRoll) {
+          const payloadJson = buildRollRequestPayload(macroRoll.expression, macroRoll.comment || null);
+          try {
+            const res = await fetch(
+              `/api/combat/actors/${encodeURIComponent(macroRoll.actor.id)}/roll`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: payloadJson,
+              },
+            );
+            if (!res.ok) throw new Error(String(res.status));
+            setCommand('');
+            setMentionQuery(null);
+            flashActionStatus('success');
+          } catch {
+            flashActionStatus('error');
+          }
+          return;
+        }
+
         const { expression, comment, matchedActors } = parseRollTerminalInput(raw, actors);
         if (!expression) {
           flashActionStatus('error');
@@ -335,7 +400,7 @@ export function GMConsoleSlider() {
       setCommand('');
       flashActionStatus('success');
     },
-    [actors, flashActionStatus, inputMode, mentionQuery],
+    [actors, flashActionStatus, inputMode, mentionQuery, systemActions],
   );
 
   const handleFabDoubleClick = useCallback(

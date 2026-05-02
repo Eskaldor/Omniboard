@@ -1,0 +1,38 @@
+{
+  "death_save": {
+    "name": "Спасбросок от смерти",
+    "formula": "1d20"
+  },
+  "initiative": {
+    "name": "Инициатива (кость)",
+    "formula": "1d20"
+  },
+  "potion_healing_minor": {
+    "name": "Зелье лечения (малое)",
+    "formula": "2d4 + 2"
+  },
+  "hit_slashing": {
+    "name": "Урон рубящее оружие",
+    "formula": "1d8"
+  },
+  "hit_greatsword": {
+    "name": "Урон двуручный меч",
+    "formula": "2d6"
+  },
+  "guidance": {
+    "name": "Указание (Guidance)",
+    "formula": "1d4"
+  },
+  "bardic_inspiration": {
+    "name": "Бардовское вдохновение",
+    "formula": "1d6"
+  },
+  "wild_magic_table": {
+    "name": "Дикая магия (таблица)",
+    "formula": "1d100"
+  },
+  "hit_firebolt": {
+    "name": "Огненный снаряд (урон)",
+    "formula": "1d10"
+  }
+}

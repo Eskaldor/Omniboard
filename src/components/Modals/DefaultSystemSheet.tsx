@@ -28,6 +28,9 @@ import {
 } from '../../utils/stats';
 import { InlineInput } from '../InitiativeTracker/InlineInput';
 import { usePortraitCacheVersion } from '../../utils/portraitCache';
+import type { SystemSheetLayout } from '../../hooks/useSystemSheetLayout';
+
+export type MiniSheetStatsMode = 'raw' | 'universal' | 'system';
 
 type DeviceInfo = { name?: string; ip?: string; status?: string };
 
@@ -351,18 +354,72 @@ function StatRow({
   );
 }
 
+function renderMiniSheetStatColumnNodes(
+  actor: Actor,
+  orderedColumns: ColumnConfig[],
+  lookupColumns: ColumnConfig[],
+  colName: (col: ColumnConfig) => string,
+  onUpdate?: (id: string, field: string, value: unknown) => void,
+): React.ReactNode {
+  return orderedColumns.map((col) => {
+    const maxKey = getMaxKey(col);
+    const showAsFraction = (col.display_as_fraction ?? false) && !!maxKey;
+    const pairColumn = maxKey ? lookupColumns.find((c) => c.key === maxKey) : undefined;
+
+    if (showAsFraction && pairColumn) {
+      return (
+        <React.Fragment key={col.key}>
+          <StatRow
+            actor={actor}
+            column={col}
+            pairColumn={pairColumn}
+            label={colName(col)}
+            onUpdate={onUpdate}
+          />
+        </React.Fragment>
+      );
+    }
+
+    if (pairColumn) {
+      return (
+        <React.Fragment key={col.key}>
+          <StatRow actor={actor} column={col} label={colName(col)} onUpdate={onUpdate} />
+          <StatRow
+            actor={actor}
+            column={pairColumn}
+            label={colName(pairColumn)}
+            onUpdate={onUpdate}
+          />
+        </React.Fragment>
+      );
+    }
+
+    return (
+      <React.Fragment key={col.key}>
+        <StatRow actor={actor} column={col} label={colName(col)} onUpdate={onUpdate} />
+      </React.Fragment>
+    );
+  });
+}
+
 export function DefaultSystemSheet({
   actor,
   columns,
   systemName,
   onUpdate,
   onOpenPortraitPicker,
+  sheetMode = 'raw',
+  sheetLayout = null,
+  sheetLayoutLoading = false,
 }: {
   actor: Actor;
   columns: ColumnConfig[];
   systemName: string;
   onUpdate?: (id: string, field: string, value: unknown) => void;
   onOpenPortraitPicker?: () => void;
+  sheetMode?: MiniSheetStatsMode;
+  sheetLayout?: SystemSheetLayout | null;
+  sheetLayoutLoading?: boolean;
 }) {
   const { t } = useTranslation('core', { useSuspense: false });
   const { state } = useCombatState();
@@ -515,6 +572,103 @@ export function DefaultSystemSheet({
     { value: 'none', label: t('modals.none') },
   ];
 
+  const statsLayoutTab = useMemo(() => {
+    const tabs = sheetLayout?.tabs;
+    if (!tabs?.length) return null;
+    return tabs.find((tab) => tab.id === 'stats') ?? null;
+  }, [sheetLayout]);
+
+  const columnsByGroup = useMemo(() => {
+    const order: string[] = [];
+    const byGroup = new Map<string, ColumnConfig[]>();
+    for (const col of columns) {
+      const g = col.group ?? '';
+      if (!byGroup.has(g)) {
+        byGroup.set(g, []);
+        order.push(g);
+      }
+      byGroup.get(g)!.push(col);
+    }
+    return { order, byGroup };
+  }, [columns]);
+
+  const detailsShellClass =
+    'group rounded-lg border border-zinc-800 bg-zinc-950/40 overflow-hidden';
+  const summaryClass =
+    'flex cursor-pointer list-none items-center gap-2 px-3 py-2 bg-zinc-800 text-sm text-zinc-200 border-b border-zinc-700/50 [&::-webkit-details-marker]:hidden';
+  const statGridClass = 'columns-2 gap-x-5 [column-fill:balance]';
+
+  const renderStatsColumnPanel = () => {
+    if (columns.length === 0) {
+      return <div className="text-xs text-zinc-600 italic px-1">{t('modals.stats')}: —</div>;
+    }
+
+    if (sheetLayoutLoading && sheetMode === 'system') {
+      return <div className="text-xs text-zinc-500 px-1 py-2">{t('modals.mini_sheet_layout_loading')}</div>;
+    }
+
+    const gridFor = (ordered: ColumnConfig[]) => (
+      <div className={statGridClass}>
+        {renderMiniSheetStatColumnNodes(actor, ordered, columns, colName, onUpdate)}
+      </div>
+    );
+
+    if (sheetMode === 'raw') {
+      return gridFor(columns);
+    }
+
+    if (sheetMode === 'universal') {
+      return (
+        <div className="space-y-2">
+          {columnsByGroup.order.map((gKey) => (
+            <details key={gKey || '__ungrouped'} open className={detailsShellClass}>
+              <summary className={summaryClass}>
+                <ChevronDown
+                  size={14}
+                  className="shrink-0 text-zinc-500 transition-transform group-open:rotate-180"
+                />
+                <span className="font-medium truncate">
+                  {gKey === '' ? t('modals.mini_sheet_group_other') : gKey}
+                </span>
+              </summary>
+              <div className="p-2">{gridFor(columnsByGroup.byGroup.get(gKey) ?? [])}</div>
+            </details>
+          ))}
+        </div>
+      );
+    }
+
+    const accordions = statsLayoutTab?.accordions;
+    if (!accordions?.length) {
+      return gridFor(columns);
+    }
+
+    const sections = accordions.map((acc, idx) => {
+      const ordered = acc.columns
+        .map((key) => columns.find((c) => c.key === key && c.show_in_mini_sheet))
+        .filter((c): c is ColumnConfig => !!c);
+      if (ordered.length === 0) return null;
+      return (
+        <details key={`${acc.name}-${idx}`} open className={detailsShellClass}>
+          <summary className={summaryClass}>
+            <ChevronDown
+              size={14}
+              className="shrink-0 text-zinc-500 transition-transform group-open:rotate-180"
+            />
+            <span className="font-medium truncate">{acc.name}</span>
+          </summary>
+          <div className="p-2">{gridFor(ordered)}</div>
+        </details>
+      );
+    });
+
+    if (sections.every((s) => s == null)) {
+      return gridFor(columns);
+    }
+
+    return <div className="space-y-2">{sections}</div>;
+  };
+
   return (
     <div className="p-5 space-y-4">
       <section className="flex gap-4">
@@ -575,65 +729,7 @@ export function DefaultSystemSheet({
           </div>
         </div>
 
-        <div className="flex-1 min-w-0">
-          {columns.length > 0 ? (
-            <div className="columns-2 gap-x-5 [column-fill:balance]">
-              {columns.map((col) => {
-                const maxKey = getMaxKey(col);
-                const showAsFraction = (col.display_as_fraction ?? false) && !!maxKey;
-                const pairColumn = maxKey
-                  ? columns.find((c) => c.key === maxKey)
-                  : undefined;
-
-                if (showAsFraction && pairColumn) {
-                  return (
-                    <React.Fragment key={col.key}>
-                      <StatRow
-                        actor={actor}
-                        column={col}
-                        pairColumn={pairColumn}
-                        label={colName(col)}
-                        onUpdate={onUpdate}
-                      />
-                    </React.Fragment>
-                  );
-                }
-
-                if (pairColumn) {
-                  return (
-                    <React.Fragment key={col.key}>
-                      <StatRow
-                        actor={actor}
-                        column={col}
-                        label={colName(col)}
-                        onUpdate={onUpdate}
-                      />
-                      <StatRow
-                        actor={actor}
-                        column={pairColumn}
-                        label={colName(pairColumn)}
-                        onUpdate={onUpdate}
-                      />
-                    </React.Fragment>
-                  );
-                }
-
-                return (
-                  <React.Fragment key={col.key}>
-                    <StatRow
-                      actor={actor}
-                      column={col}
-                      label={colName(col)}
-                      onUpdate={onUpdate}
-                    />
-                  </React.Fragment>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="text-xs text-zinc-600 italic px-1">{t('modals.stats')}: —</div>
-          )}
-        </div>
+        <div className="flex-1 min-w-0">{renderStatsColumnPanel()}</div>
       </section>
 
       {showSetup && (

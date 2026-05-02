@@ -56,6 +56,15 @@ export interface Actor {
   effects: Effect[];
   visibility: Visibility;
   hotbar: HotbarAction[];
+  /** Per-action overrides for system macros (mini-sheet / rolls). */
+  actions?: Record<
+    string,
+    {
+      show_on_panel?: boolean;
+      formula_override?: string | null;
+      comment?: string | null;
+    }
+  >;
 }
 
 export interface LegendConfig {
@@ -201,6 +210,8 @@ export interface DisplayState {
   sticky_first_column?: boolean;
   /** Sticky last column in initiative table (UI). */
   sticky_last_column?: boolean;
+  /** Mini-sheet layout mode (config only; rendering uses this in later phases). */
+  sheet_mode?: 'raw' | 'universal' | 'system';
 }
 
 /** Запись в глобальном списке Omnimini (data/miniatures.json). */
