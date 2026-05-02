@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { AnimatePresence, motion } from 'motion/react';
 import { BookOpen, Bot, ChevronDown, Dices, Plus } from 'lucide-react';
@@ -11,19 +12,19 @@ import { NoteCard } from './NoteCard';
 const MODE_CONFIG = {
   note: {
     icon: BookOpen,
-    color: 'text-blue-400',
-    ring: 'focus:border-blue-500 focus:ring-blue-500/40',
+    color: 'text-emerald-400',
+    ring: 'focus:border-emerald-500 focus:ring-emerald-500/40',
     placeholderKey: 'gm_console.placeholder_note',
   },
   roll: {
     icon: Dices,
-    color: 'text-yellow-400',
-    ring: 'focus:border-yellow-500 focus:ring-yellow-500/40',
+    color: 'text-amber-400',
+    ring: 'focus:border-amber-500 focus:ring-amber-500/40',
     placeholderKey: 'gm_console.placeholder_roll',
   },
   ai: {
     icon: Bot,
-    color: 'text-rose-500',
+    color: 'text-rose-400',
     ring: 'focus:border-rose-500 focus:ring-rose-500/40',
     placeholderKey: 'gm_console.placeholder_ai',
   },
@@ -106,6 +107,7 @@ export function GMConsoleSlider() {
   const [inputMode, setInputMode] = useState<'note' | 'roll' | 'ai'>('note');
   const [actionStatus, setActionStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [mentionFixedBottom, setMentionFixedBottom] = useState(0);
   const [showRollHelp, setShowRollHelp] = useState(false);
   const [logoTier, setLogoTier] = useState(0);
   const fabClickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -185,6 +187,12 @@ export function GMConsoleSlider() {
     }
     updateMentionFromValue(commandRef.current, 'roll');
   }, [inputMode, updateMentionFromValue]);
+
+  useEffect(() => {
+    if (mentionQuery === null || !terminalInputRef.current) return;
+    const rect = terminalInputRef.current.getBoundingClientRect();
+    setMentionFixedBottom(window.innerHeight - rect.top + 8);
+  }, [mentionQuery]);
 
   const mentionFilteredActors = useMemo(() => {
     if (mentionQuery === null) return [];
@@ -344,7 +352,7 @@ export function GMConsoleSlider() {
   );
 
   const toolBtnClass =
-    'rounded-lg border border-slate-800 bg-slate-800/80 px-3 py-2 text-xs font-medium text-slate-400 opacity-80';
+    'rounded-lg border border-zinc-700/60 bg-zinc-800/60 px-3 py-2 text-xs font-medium text-zinc-500 cursor-not-allowed';
 
   const ModeIcon = MODE_CONFIG[inputMode].icon;
   const modeRing = MODE_CONFIG[inputMode].ring;
@@ -407,7 +415,7 @@ export function GMConsoleSlider() {
                         <button
                           type="button"
                           onClick={addNoteColumn}
-                          className="pointer-events-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-700 text-slate-200 transition hover:bg-slate-600"
+                          className="pointer-events-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-700 text-zinc-200 transition hover:bg-zinc-600"
                           title={t('gm_console.add_note_column')}
                           aria-label={t('gm_console.add_note_column')}
                         >
@@ -419,30 +427,30 @@ export function GMConsoleSlider() {
                 ) : null}
               </AnimatePresence>
 
-              <div className="relative z-20 flex w-full flex-col pointer-events-auto border-t border-slate-800 bg-slate-950 shadow-[0_-8px_32px_rgba(0,0,0,0.45)]">
-                <div className="flex flex-wrap items-center gap-2 border-b border-slate-800 bg-slate-800/50 px-3 py-2">
+              <div className="relative z-20 flex w-full flex-col pointer-events-auto border-t border-zinc-800 bg-zinc-950 shadow-[0_-8px_40px_rgba(0,0,0,0.6)]">
+                <div className="flex flex-wrap items-center gap-2 border-b border-zinc-800 bg-zinc-900/80 px-3 py-2">
                   <button
                     type="button"
                     onClick={() => setNotesOpen((v) => !v)}
                     aria-expanded={notesOpen}
                     title={t('gm_console.toggle_notes')}
-                    className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                    className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                       notesOpen
-                        ? 'bg-yellow-500 text-yellow-950 ring-2 ring-yellow-400/80 ring-offset-2 ring-offset-slate-950'
-                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-slate-100'
+                        ? 'bg-emerald-600/20 text-emerald-400 ring-1 ring-emerald-500/50'
+                        : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-zinc-100'
                     }`}
                   >
-                    <BookOpen size={16} aria-hidden />
+                    <BookOpen size={15} aria-hidden />
                     <motion.span
                       animate={{ rotate: notesOpen ? 180 : 0 }}
                       transition={springNotes}
                       className="inline-flex"
                     >
-                      <ChevronDown size={16} aria-hidden />
+                      <ChevronDown size={15} aria-hidden />
                     </motion.span>
                     <span className="hidden sm:inline">{t('gm_console.toggle_notes')}</span>
                   </button>
-                  <span className="h-6 w-px shrink-0 bg-slate-700" aria-hidden />
+                  <span className="h-5 w-px shrink-0 bg-zinc-700/60" aria-hidden />
                   <button type="button" disabled className={toolBtnClass}>
                     {t('gm_console.placeholder_initiative')}
                   </button>
@@ -454,50 +462,24 @@ export function GMConsoleSlider() {
                   </button>
                 </div>
 
-                <div className="relative border-t border-slate-800/80 bg-slate-950 px-3 py-2.5">
+                <div className="relative bg-zinc-950 px-3 py-2.5">
                   {inputMode === 'roll' && showRollHelp ? (
                     <div
-                      className="pointer-events-none absolute bottom-full right-0 z-50 mb-2 max-w-[min(100%,20rem)] rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs text-slate-300 shadow-xl"
+                      className="pointer-events-none absolute bottom-full right-0 z-50 mb-2 max-w-[min(100%,20rem)] rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-xs text-zinc-300 shadow-xl"
                       role="status"
                     >
                       {t('gm_console.roll_help_tooltip')}
                     </div>
                   ) : null}
-                  {inputMode === 'roll' && mentionQuery !== null ? (
-                    <ul
-                      id="gm-console-mention-list"
-                      role="listbox"
-                      className="pointer-events-auto absolute bottom-full left-3 right-3 z-30 mb-2 max-h-48 overflow-y-auto rounded-lg border border-slate-700 bg-slate-800 shadow-xl"
-                    >
-                      {mentionFilteredActors.length === 0 ? (
-                        <li className="px-3 py-2 text-xs text-slate-500">{t('gm_console.mention_no_results')}</li>
-                      ) : (
-                        mentionFilteredActors.map((a) => (
-                          <li key={a.id} role="option">
-                            <button
-                              type="button"
-                              className="w-full cursor-pointer px-3 py-2 text-left text-sm text-slate-200 transition-colors hover:bg-slate-700"
-                              onMouseDown={(ev) => {
-                                ev.preventDefault();
-                                selectMentionActor(a);
-                              }}
-                            >
-                              {a.name}
-                            </button>
-                          </li>
-                        ))
-                      )}
-                    </ul>
-                  ) : null}
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => setInputMode((m) => cycleInputMode(m))}
-                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-slate-800 bg-slate-800/80 text-slate-300 transition-colors duration-300 hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500/50 ${statusChrome}`}
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-zinc-700/60 bg-zinc-800 text-zinc-300 transition-colors duration-300 hover:bg-zinc-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500/50 ${statusChrome}`}
                       title={t(placeholderKey)}
                       aria-label={t(placeholderKey)}
                     >
-                      <ModeIcon size={18} className={`transition-colors duration-300 ${iconColorClass}`} aria-hidden />
+                      <ModeIcon size={17} className={`transition-colors duration-300 ${iconColorClass}`} aria-hidden />
                     </button>
                     <input
                       ref={terminalInputRef}
@@ -505,7 +487,7 @@ export function GMConsoleSlider() {
                       value={command}
                       onChange={handleCommandChange}
                       onKeyDown={handleCommandKeyDown}
-                      className={`min-w-0 flex-1 rounded-md border border-slate-800 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition-colors duration-300 ${actionStatus !== 'idle' ? statusChrome : `focus:ring-2 ${modeRing}`}`}
+                      className={`min-w-0 flex-1 rounded-md border border-zinc-700/60 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 outline-none transition-colors duration-300 ${actionStatus !== 'idle' ? statusChrome : `focus:ring-2 ${modeRing}`}`}
                       placeholder={t(placeholderKey)}
                       aria-label={t('gm_console.command_aria')}
                       aria-expanded={inputMode === 'roll' && mentionQuery !== null}
@@ -521,7 +503,11 @@ export function GMConsoleSlider() {
       </div>
 
       {isFabSummoned ? (
-        <div className="pointer-events-none fixed bottom-20 left-1/2 z-30 w-full max-w-full -translate-x-1/2">
+        <motion.div
+          className="pointer-events-none fixed left-1/2 z-30 w-full max-w-full -translate-x-1/2"
+          animate={{ bottom: panelOpen ? '6rem' : '0.25rem' }}
+          transition={springPanel}
+        >
           <div className="flex justify-center">
             <button
               type="button"
@@ -531,10 +517,10 @@ export function GMConsoleSlider() {
               aria-controls={panelOpen ? 'gm-console-panel' : undefined}
               aria-label={panelOpen ? t('gm_console.aria_close_panel') : t('gm_console.aria_open_panel')}
               title={panelOpen ? t('gm_console.aria_close_panel') : t('gm_console.aria_open_panel')}
-              className="pointer-events-auto flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-slate-600 bg-slate-800 shadow-lg ring-slate-700/50 transition hover:border-slate-500 hover:ring-4 focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-500/50"
+              className="pointer-events-auto flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-emerald-600/50 bg-zinc-900 shadow-[0_0_18px_rgba(16,185,129,0.5),0_0_36px_rgba(16,185,129,0.18),0_4px_20px_rgba(0,0,0,0.5)] transition-all duration-200 hover:border-emerald-500/70 hover:shadow-[0_0_22px_rgba(16,185,129,0.65),0_0_44px_rgba(16,185,129,0.22)] focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60"
             >
               {logoTier >= 2 ? (
-                <span className="font-serif text-2xl font-semibold tracking-tight text-slate-100" aria-hidden>
+                <span className="font-serif text-[1.35rem] font-bold leading-none tracking-tight text-zinc-100" aria-hidden>
                   {t('gm_console.fab_fallback')}
                 </span>
               ) : (
@@ -549,8 +535,37 @@ export function GMConsoleSlider() {
               )}
             </button>
           </div>
-        </div>
+        </motion.div>
       ) : null}
+
+      {inputMode === 'roll' && mentionQuery !== null && createPortal(
+        <ul
+          id="gm-console-mention-list"
+          role="listbox"
+          style={{ bottom: mentionFixedBottom }}
+          className="fixed left-3 right-3 z-[9999] max-h-48 overflow-y-auto rounded-xl border border-zinc-700/80 bg-zinc-900/95 shadow-2xl backdrop-blur-sm"
+        >
+          {mentionFilteredActors.length === 0 ? (
+            <li className="px-3 py-2 text-xs text-zinc-500">{t('gm_console.mention_no_results')}</li>
+          ) : (
+            mentionFilteredActors.map((a) => (
+              <li key={a.id} role="option">
+                <button
+                  type="button"
+                  className="w-full cursor-pointer px-3 py-2 text-left text-sm text-zinc-200 transition-colors hover:bg-zinc-800"
+                  onMouseDown={(ev) => {
+                    ev.preventDefault();
+                    selectMentionActor(a);
+                  }}
+                >
+                  {a.name}
+                </button>
+              </li>
+            ))
+          )}
+        </ul>,
+        document.body,
+      )}
     </div>
   );
 }

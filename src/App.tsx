@@ -81,7 +81,7 @@ export default function App() {
   const [showGroupCreateModal, setShowGroupCreateModal] = useState(false);
   const [showClearCombatModal, setShowClearCombatModal] = useState(false);
   const { t } = useTranslation('core', { useSuspense: false });
-  const { isFabSummoned, summonConsole } = useGMConsole();
+  const { isFabSummoned, summonConsole, dismissConsole } = useGMConsole();
 
   // Ленивая загрузка локалей активной системы
   const loadSystemLocale = async (name: string) => {
@@ -257,15 +257,6 @@ export default function App() {
               <button onClick={() => setShowRoster(true)} className="flex items-center gap-1 text-sm text-zinc-400 hover:text-zinc-300">
                 <Users size={16} /> {t('main.roster')}
               </button>
-              {!isFabSummoned ? (
-                <button
-                  type="button"
-                  onClick={() => summonConsole()}
-                  className="flex items-center gap-1 text-sm text-indigo-400 hover:text-indigo-300"
-                >
-                  {t('gm_console.summon_console')}
-                </button>
-              ) : null}
               <ManualModeToggle
                 isManualMode={effectiveState.core.is_manual_mode ?? false}
                 onToggle={async (next) => {
@@ -390,12 +381,14 @@ export default function App() {
         engineType={effectiveState.core.engine_type ?? 'standard'}
         canUndo={effectiveState?.can_undo ?? false}
         canRedo={effectiveState?.can_redo ?? false}
+        isFabSummoned={isFabSummoned}
         onStartCombat={startCombat}
         onEndCombat={endCombat}
         onNextTurn={nextTurn}
         onOpenClearCombatModal={() => setShowClearCombatModal(true)}
         onUndo={undoCombat}
         onRedo={redoCombat}
+        onToggleConsole={isFabSummoned ? dismissConsole : summonConsole}
         // Matrix generation is hidden while base roll UX is being refactored.
         onGenerateMatrix={undefined}
       />

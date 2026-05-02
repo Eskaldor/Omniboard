@@ -27,12 +27,12 @@ export function ManualModeToggle({ isManualMode, onToggle }: ManualModeTogglePro
       title={t('toolbar.manual_mode_hint')}
       className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
         isManualMode
-          ? 'bg-amber-500/20 text-amber-200 border-amber-400/70 shadow-[0_0_12px_rgba(251,191,36,0.25)]'
+          ? 'bg-emerald-600/20 text-emerald-300 border-emerald-600/50 shadow-[0_0_12px_rgba(16,185,129,0.2)]'
           : 'bg-zinc-800/80 text-zinc-400 border-zinc-700 hover:border-zinc-600 hover:text-zinc-200'
       }`}
       aria-pressed={isManualMode}
     >
-      <Hand size={16} className={isManualMode ? 'text-amber-300' : 'text-zinc-500'} />
+      <Hand size={16} className={isManualMode ? 'text-emerald-300' : 'text-zinc-500'} />
       {t('toolbar.manual_mode')}
     </button>
   );
@@ -47,12 +47,14 @@ export interface CombatToolbarProps {
   engineType?: string;
   canUndo: boolean;
   canRedo: boolean;
+  isFabSummoned: boolean;
   onStartCombat: () => void;
   onEndCombat: () => void;
   onNextTurn: () => void;
   onOpenClearCombatModal: () => void;
   onUndo: () => void;
   onRedo: () => void;
+  onToggleConsole: () => void;
   /** Active combat: generate matrix prerolls (POST /api/combat/matrix/generate). */
   onGenerateMatrix?: () => void | Promise<void>;
 }
@@ -64,12 +66,14 @@ export function CombatToolbar({
   engineType = 'standard',
   canUndo,
   canRedo,
+  isFabSummoned,
   onStartCombat,
   onEndCombat,
   onNextTurn,
   onOpenClearCombatModal,
   onUndo,
   onRedo,
+  onToggleConsole,
   onGenerateMatrix,
 }: CombatToolbarProps) {
   const { t } = useTranslation('core', { useSuspense: false });
@@ -77,7 +81,7 @@ export function CombatToolbar({
   const nextRoundLike = isManualMode || et === 'popcorn' || et === 'phase';
 
   return (
-    <footer className="bg-zinc-900 border-t border-zinc-800 p-4 flex justify-between items-center">
+    <footer className="bg-zinc-900 border-t border-zinc-800 px-4 py-3 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
       <div className="flex gap-2">
         <button
           onClick={onUndo}
@@ -95,6 +99,21 @@ export function CombatToolbar({
         >
           <Redo size={16} /> {t('toolbar.redo')}
         </button>
+      </div>
+
+      <div className="flex items-center justify-center">
+        {!isFabSummoned && (
+          <button
+            type="button"
+            onClick={onToggleConsole}
+            title={t('gm_console.summon_console')}
+            className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900 text-zinc-500 shadow-[inset_0_1px_4px_rgba(0,0,0,0.5)] transition-all duration-300 hover:border-zinc-500 hover:text-zinc-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60 select-none"
+          >
+            <span className="font-serif text-[1.35rem] font-bold leading-none tracking-tight" aria-hidden>
+              {t('gm_console.fab_fallback')}
+            </span>
+          </button>
+        )}
       </div>
 
       <div className="flex gap-3 items-center flex-wrap justify-end">

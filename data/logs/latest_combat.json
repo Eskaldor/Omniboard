@@ -189,5 +189,88 @@
       "is_crit_glitch": false,
       "comment": "\u0411\u0438\u043f"
     }
+  },
+  {
+    "type": "stat_change",
+    "round": 1,
+    "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "details": {
+      "stat_key": "com1",
+      "stat_name": "\u0414\u0435\u0439\u0441\u0442\u0432\u0438\u044f",
+      "item_key": "\u0411\u043e\u043d\u0443\u0441\u043d\u043e\u0435 ",
+      "item_label": "\u0411",
+      "message": "\u0414\u0435\u0439\u0441\u0442\u0432\u0438\u044f [\u0411]: \u274c",
+      "checkbox_value": false,
+      "amount": 0,
+      "color": "#a1a1aa"
+    }
+  },
+  {
+    "type": "stat_change",
+    "round": 1,
+    "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "details": {
+      "stat_key": "com1",
+      "stat_name": "\u0414\u0435\u0439\u0441\u0442\u0432\u0438\u044f",
+      "item_key": "\u0420\u0435\u0430\u043a\u0446\u0438\u044f",
+      "item_label": "\u0420",
+      "message": "\u0414\u0435\u0439\u0441\u0442\u0432\u0438\u044f [\u0420]: \u274c",
+      "checkbox_value": false,
+      "amount": 0,
+      "color": "#a1a1aa"
+    }
+  },
+  {
+    "type": "stat_change",
+    "round": 1,
+    "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "details": {
+      "stat_key": "com1",
+      "stat_name": "\u0414\u0435\u0439\u0441\u0442\u0432\u0438\u044f",
+      "item_key": "\u041e\u0441\u043d\u043e\u0432\u043d\u043e\u0435",
+      "item_label": "\u041e",
+      "message": "\u0414\u0435\u0439\u0441\u0442\u0432\u0438\u044f [\u041e]: \u274c",
+      "checkbox_value": false,
+      "amount": 0,
+      "color": "#a1a1aa"
+    }
+  },
+  {
+    "type": "combat_start",
+    "round": 1,
+    "actor_id": null,
+    "actor_name": null,
+    "details": {}
+  },
+  {
+    "type": "turn_start",
+    "round": 1,
+    "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
+    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "details": {}
+  },
+  {
+    "type": "turn_start",
+    "round": 1,
+    "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
+    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "details": {}
+  },
+  {
+    "type": "turn_start",
+    "round": 1,
+    "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
+    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "details": {}
+  },
+  {
+    "type": "turn_start",
+    "round": 1,
+    "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
+    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "details": {}
   }
 ]
