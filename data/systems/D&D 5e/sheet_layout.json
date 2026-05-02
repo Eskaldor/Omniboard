@@ -1,0 +1,29 @@
+{
+  "tabs": [
+    {
+      "id": "stats",
+      "name": "Характеристики",
+      "accordions": [
+        {
+          "name": "Базовые",
+          "columns": [
+            "hp",
+            "ac"
+          ]
+        },
+        {
+          "name": "Защитные",
+          "columns": [
+            "speed",
+            "Ammo"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "actions",
+      "name": "Действия",
+      "content": "actions_panel"
+    }
+  ]
+}

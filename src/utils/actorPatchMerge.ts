@@ -19,6 +19,40 @@ function deepMergeRecords(
   return out;
 }
 
+/** Deep-merge actor `actions`; `null` removes a macro key (delete custom macro). */
+function deepMergeActorActions(
+  base: Record<string, unknown>,
+  patch: Record<string, unknown>,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = { ...base };
+  for (const [k, v] of Object.entries(patch)) {
+    if (v === null) {
+      delete out[k];
+    } else if (isPlainObject(v) && isPlainObject(out[k])) {
+      out[k] = deepMergeRecords(out[k] as Record<string, unknown>, v);
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
+}
+
+/** Deep-merge `actions_panel_override` payloads (lists such as `accordions` replace on patch, like Python). */
+function deepMergeActionsPanelOverride(
+  base: Record<string, unknown>,
+  patch: Record<string, unknown>,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = { ...base };
+  for (const [k, v] of Object.entries(patch)) {
+    if (isPlainObject(v) && isPlainObject(out[k])) {
+      out[k] = deepMergeRecords(out[k] as Record<string, unknown>, v);
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
+}
+
 /** Collapse rapid UI edits into one PATCH body; deep-merge `stats` keys. */
 export function mergeActorPatchBodies(
   previous: Record<string, unknown> | undefined,
@@ -34,10 +68,22 @@ export function mergeActorPatchBodies(
       );
     } else if (key === 'actions' && isPlainObject(value)) {
       const prevActions = base['actions'];
-      base['actions'] = deepMergeRecords(
+      base['actions'] = deepMergeActorActions(
         isPlainObject(prevActions) ? prevActions : {},
         value,
       );
+    } else if (key === 'actions_panel_override') {
+      if (value === null) {
+        delete base['actions_panel_override'];
+      } else if (isPlainObject(value)) {
+        const prev = base['actions_panel_override'];
+        base['actions_panel_override'] = deepMergeActionsPanelOverride(
+          isPlainObject(prev) ? prev : {},
+          value,
+        );
+      } else {
+        base[key] = value;
+      }
     } else {
       base[key] = value;
     }
@@ -56,12 +102,25 @@ export function applyActorPatchOptimistic(actor: Actor, patch: Record<string, un
         value,
       ) as Actor['stats'];
     } else if (key === 'actions' && isPlainObject(value)) {
-      next.actions = deepMergeRecords(
+      next.actions = deepMergeActorActions(
         (next.actions ?? {}) as Record<string, unknown>,
         value,
       ) as Actor['actions'];
+    } else if (key === 'actions_panel_override') {
+      if (value === null) {
+        next.actions_panel_override = undefined;
+      } else if (isPlainObject(value)) {
+        const prevRaw = next.actions_panel_override;
+        const prev =
+          prevRaw !== undefined && prevRaw !== null && typeof prevRaw === 'object' && !Array.isArray(prevRaw)
+            ? { ...(prevRaw as Record<string, unknown>) }
+            : {};
+        next.actions_panel_override = deepMergeActionsPanelOverride(prev, value) as Actor['actions_panel_override'];
+      } else {
+        (next as Record<string, unknown>)[key] = value;
+      }
     } else {
-      (next as unknown as Record<string, unknown>)[key] = value;
+      (next as Record<string, unknown>)[key] = value;
     }
   }
   return next;

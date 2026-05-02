@@ -223,9 +223,60 @@ def _actor_stats_migrate_before(raw: Any) -> Dict[str, Any]:
 
 
 class ActorActionOverride(BaseModel):
-    show_on_panel: bool = False
+    show_on_panel: bool = True
     formula_override: Optional[str] = None
     comment: Optional[str] = None
+    custom_name: Optional[str] = None
+    custom_formula: Optional[str] = None
+
+
+class ActorActionsPanelAccordion(BaseModel):
+    name: str = ""
+    columns: List[str] = Field(default_factory=list)
+    display: Optional[Literal["accordion", "open"]] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def coerce_accordion_columns(cls, data: Any) -> Any:
+        if data is None or not isinstance(data, dict):
+            return {"name": "", "columns": []}
+        d = dict(data)
+        cols_raw = d.get("columns")
+        out_cols: list[str] = []
+        if isinstance(cols_raw, list):
+            for x in cols_raw:
+                if isinstance(x, str):
+                    s = x.strip()
+                    if s:
+                        out_cols.append(s)
+                elif x is not None:
+                    s = str(x).strip()
+                    if s:
+                        out_cols.append(s)
+        d["columns"] = out_cols
+        nm = d.get("name")
+        d["name"] = nm if isinstance(nm, str) else (str(nm) if nm is not None else "")
+        disp = d.get("display")
+        if disp is not None and disp not in ("accordion", "open"):
+            d.pop("display", None)
+        return d
+
+
+class ActorActionsPanelOverride(BaseModel):
+    accordions: List[ActorActionsPanelAccordion] = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def coerce_panel_override_root(cls, data: Any) -> Any:
+        if data is None:
+            return {}
+        if not isinstance(data, dict):
+            return {}
+        d = dict(data)
+        acc = d.get("accordions")
+        if not isinstance(acc, list):
+            d["accordions"] = []
+        return d
 
 
 class Actor(BaseModel):
@@ -244,11 +295,13 @@ class Actor(BaseModel):
     show_portrait: bool = False
     miniature_id: Optional[str] = None
     layout_profile_id: Optional[str] = None  # Привязка к профилю отображения
+    sheet_profile_id: Optional[str] = None  # Mini-sheet template id from sheet_profiles.json
     stats: Dict[str, ActorStatCell] = Field(default_factory=dict)
     effects: List[Effect] = []
     visibility: Visibility = Visibility()
     hotbar: List[HotbarAction] = []
     actions: Dict[str, ActorActionOverride] = Field(default_factory=dict)
+    actions_panel_override: Optional[ActorActionsPanelOverride] = None
 
     @field_validator("actions", mode="before")
     @classmethod

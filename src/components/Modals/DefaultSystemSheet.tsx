@@ -28,9 +28,10 @@ import {
 } from '../../utils/stats';
 import { InlineInput } from '../InitiativeTracker/InlineInput';
 import { usePortraitCacheVersion } from '../../utils/portraitCache';
-import type { SystemSheetLayout } from '../../hooks/useSystemSheetLayout';
-
-export type MiniSheetStatsMode = 'raw' | 'universal' | 'system';
+import {
+  normalizeSheetAccordionDisplay,
+  type SystemSheetProfile,
+} from '../../hooks/useSystemSheetProfiles';
 
 type DeviceInfo = { name?: string; ip?: string; status?: string };
 
@@ -408,18 +409,16 @@ export function DefaultSystemSheet({
   systemName,
   onUpdate,
   onOpenPortraitPicker,
-  sheetMode = 'raw',
-  sheetLayout = null,
-  sheetLayoutLoading = false,
+  activeProfile = null,
+  sheetProfilesLoading = false,
 }: {
   actor: Actor;
   columns: ColumnConfig[];
   systemName: string;
   onUpdate?: (id: string, field: string, value: unknown) => void;
   onOpenPortraitPicker?: () => void;
-  sheetMode?: MiniSheetStatsMode;
-  sheetLayout?: SystemSheetLayout | null;
-  sheetLayoutLoading?: boolean;
+  activeProfile?: SystemSheetProfile | null;
+  sheetProfilesLoading?: boolean;
 }) {
   const { t } = useTranslation('core', { useSuspense: false });
   const { state } = useCombatState();
@@ -573,24 +572,10 @@ export function DefaultSystemSheet({
   ];
 
   const statsLayoutTab = useMemo(() => {
-    const tabs = sheetLayout?.tabs;
+    const tabs = activeProfile?.tabs;
     if (!tabs?.length) return null;
     return tabs.find((tab) => tab.id === 'stats') ?? null;
-  }, [sheetLayout]);
-
-  const columnsByGroup = useMemo(() => {
-    const order: string[] = [];
-    const byGroup = new Map<string, ColumnConfig[]>();
-    for (const col of columns) {
-      const g = col.group ?? '';
-      if (!byGroup.has(g)) {
-        byGroup.set(g, []);
-        order.push(g);
-      }
-      byGroup.get(g)!.push(col);
-    }
-    return { order, byGroup };
-  }, [columns]);
+  }, [activeProfile]);
 
   const detailsShellClass =
     'group rounded-lg border border-zinc-800 bg-zinc-950/40 overflow-hidden';
@@ -603,7 +588,7 @@ export function DefaultSystemSheet({
       return <div className="text-xs text-zinc-600 italic px-1">{t('modals.stats')}: —</div>;
     }
 
-    if (sheetLayoutLoading && sheetMode === 'system') {
+    if (sheetProfilesLoading && !activeProfile) {
       return <div className="text-xs text-zinc-500 px-1 py-2">{t('modals.mini_sheet_layout_loading')}</div>;
     }
 
@@ -612,31 +597,6 @@ export function DefaultSystemSheet({
         {renderMiniSheetStatColumnNodes(actor, ordered, columns, colName, onUpdate)}
       </div>
     );
-
-    if (sheetMode === 'raw') {
-      return gridFor(columns);
-    }
-
-    if (sheetMode === 'universal') {
-      return (
-        <div className="space-y-2">
-          {columnsByGroup.order.map((gKey) => (
-            <details key={gKey || '__ungrouped'} open className={detailsShellClass}>
-              <summary className={summaryClass}>
-                <ChevronDown
-                  size={14}
-                  className="shrink-0 text-zinc-500 transition-transform group-open:rotate-180"
-                />
-                <span className="font-medium truncate">
-                  {gKey === '' ? t('modals.mini_sheet_group_other') : gKey}
-                </span>
-              </summary>
-              <div className="p-2">{gridFor(columnsByGroup.byGroup.get(gKey) ?? [])}</div>
-            </details>
-          ))}
-        </div>
-      );
-    }
 
     const accordions = statsLayoutTab?.accordions;
     if (!accordions?.length) {
@@ -648,17 +608,35 @@ export function DefaultSystemSheet({
         .map((key) => columns.find((c) => c.key === key && c.show_in_mini_sheet))
         .filter((c): c is ColumnConfig => !!c);
       if (ordered.length === 0) return null;
+
+      const heading = (acc.name || '').trim() || t('modals.mini_sheet_group_other');
+      const mode = normalizeSheetAccordionDisplay(acc.display);
+      const grid = gridFor(ordered);
+
       return (
-        <details key={`${acc.name}-${idx}`} open className={detailsShellClass}>
-          <summary className={summaryClass}>
-            <ChevronDown
-              size={14}
-              className="shrink-0 text-zinc-500 transition-transform group-open:rotate-180"
-            />
-            <span className="font-medium truncate">{acc.name}</span>
-          </summary>
-          <div className="p-2">{gridFor(ordered)}</div>
-        </details>
+        <div key={`${acc.name}-${idx}`} className="space-y-2">
+          <div className="flex items-center gap-3 px-1 pt-1">
+            <span className="h-px flex-1 bg-zinc-700/70 min-w-[1rem]" aria-hidden />
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 shrink-0 max-w-[70%] truncate">
+              {heading}
+            </span>
+            <span className="h-px flex-1 bg-zinc-700/70 min-w-[1rem]" aria-hidden />
+          </div>
+          {mode === 'open' ? (
+            <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-2">{grid}</div>
+          ) : (
+            <details open className={detailsShellClass}>
+              <summary className={summaryClass}>
+                <ChevronDown
+                  size={14}
+                  className="shrink-0 text-zinc-500 transition-transform group-open:rotate-180"
+                />
+                <span className="font-medium truncate">{heading}</span>
+              </summary>
+              <div className="p-2">{grid}</div>
+            </details>
+          )}
+        </div>
       );
     });
 
@@ -666,7 +644,7 @@ export function DefaultSystemSheet({
       return gridFor(columns);
     }
 
-    return <div className="space-y-2">{sections}</div>;
+    return <div className="space-y-4">{sections}</div>;
   };
 
   return (

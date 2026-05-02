@@ -4,7 +4,7 @@ import json
 import re
 from typing import Any, Optional
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Body, HTTPException, Request
 from pydantic import BaseModel, ValidationError
 
 from backend.layout_profiles_store import read_layout_profiles, write_layout_profiles
@@ -61,11 +61,26 @@ async def save_system_layout_profiles(system_name: str, profiles: list[LayoutPro
     return profiles
 
 
-@router.get("/{system_name}/layouts/sheet")
-async def get_system_sheet_layout(system_name: str):
+@router.get("/{system_name}/sheet_profiles")
+async def get_system_sheet_profiles(system_name: str):
     if not is_safe_system_subdirectory(system_name):
         raise HTTPException(status_code=400, detail="invalid system name")
-    return load_config_with_override(system_name, "sheet_layout.json")
+    return load_config_with_override(system_name, "sheet_profiles.json")
+
+
+@router.post("/{system_name}/sheet_profiles")
+async def save_system_sheet_profiles(system_name: str, payload: list[Any] = Body(...)):
+    """Persist sheet profile override under ``data/systems/<name>/sheet_profiles.json``."""
+    sys_dir = _system_dir(system_name)
+    if sys_dir is None:
+        raise HTTPException(status_code=400, detail="invalid system name")
+    sys_dir.mkdir(parents=True, exist_ok=True)
+    file_path = sys_dir / "sheet_profiles.json"
+    file_path.write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    return {"status": "ok"}
 
 
 @router.get("/{system_name}/led_profiles")

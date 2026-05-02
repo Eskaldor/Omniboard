@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { BookOpen, List, Swords, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Actor, ColumnConfig } from '../../types';
@@ -8,10 +8,12 @@ import { DefaultSystemSheet } from './DefaultSystemSheet';
 import { ActionsPanel } from './ActionsPanel';
 import { ActorActionEditor } from './ActorActionEditor';
 import { getSystemSheet } from '../Systems/SheetRegistry';
-import { useSystemSheetLayout } from '../../hooks/useSystemSheetLayout';
+import {
+  resolveActiveSheetProfile,
+  useSystemSheetProfiles,
+} from '../../hooks/useSystemSheetProfiles';
 import { useSystemActions } from '../../hooks/useSystemActions';
-
-type SheetMode = 'raw' | 'universal' | 'system';
+import { mergeActorActionDefs } from '../../utils/mergeActorActionDefs';
 
 export function MiniSheetModal({
   actor,
@@ -41,12 +43,29 @@ export function MiniSheetModal({
   const miniSheetCols = columns.filter((c) => c.show_in_mini_sheet);
 
   const combatSystem = ((state?.core.system ?? systemName) || '').trim();
-  const { layout: sheetLayout, loading: sheetLayoutLoading } = useSystemSheetLayout(systemName);
+  const { profiles: sheetProfiles, loading: sheetProfilesLoading } = useSystemSheetProfiles(combatSystem);
   const { actions: systemActions, loading: actionsLoading } = useSystemActions(combatSystem);
 
-  const rawSheetMode = state?.display.sheet_mode;
-  const sheetMode: SheetMode =
-    rawSheetMode === 'universal' || rawSheetMode === 'system' ? rawSheetMode : 'raw';
+  const mergedActionDefs = useMemo(
+    () => mergeActorActionDefs(systemActions, liveActor),
+    [systemActions, liveActor],
+  );
+
+  const activeProfile = useMemo(
+    () => resolveActiveSheetProfile(sheetProfiles, liveActor.sheet_profile_id),
+    [sheetProfiles, liveActor.sheet_profile_id],
+  );
+
+  const resolvedFallbackId = useMemo(
+    () => resolveActiveSheetProfile(sheetProfiles, null)?.id ?? '',
+    [sheetProfiles],
+  );
+
+  const explicitProfileId = (liveActor.sheet_profile_id ?? '').trim();
+  const profileSelectValue =
+    explicitProfileId && sheetProfiles.some((p) => p.id === explicitProfileId)
+      ? explicitProfileId
+      : resolvedFallbackId;
 
   useEffect(() => {
     setLocalName(liveActor.name);
@@ -120,6 +139,22 @@ export function MiniSheetModal({
             />
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            {sheetProfiles.length > 0 && (
+              <select
+                value={profileSelectValue}
+                onChange={(e) => onPatchActor({ sheet_profile_id: e.target.value })}
+                disabled={sheetProfilesLoading}
+                className="text-sm bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-zinc-300 max-w-[11rem] truncate disabled:opacity-50"
+                title={t('config_modal.sheet_profiles_select_aria')}
+                aria-label={t('config_modal.sheet_profiles_select_aria')}
+              >
+                {sheetProfiles.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            )}
             <button
               onClick={onClose}
               className="p-1 rounded-md text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 transition-colors"
@@ -194,7 +229,13 @@ export function MiniSheetModal({
               actionsLoading ? (
                 <div className="p-4 text-sm text-zinc-500">{t('modals.mini_sheet_layout_loading')}</div>
               ) : (
-                <ActorActionEditor actor={liveActor} systemActions={systemActions} onPatchActor={onPatchActor} />
+                <ActorActionEditor
+                  actor={liveActor}
+                  systemActions={systemActions}
+                  mergedActionDefs={mergedActionDefs}
+                  profileActionsTab={activeProfile?.tabs?.find((tab) => tab.id === 'actions')}
+                  onPatchActor={onPatchActor}
+                />
               )
             ) : sheetSidebar === 'lore' ? (
               <LoreSheet actor={liveActor} columns={miniSheetCols} systemName={systemName} />
@@ -204,8 +245,9 @@ export function MiniSheetModal({
               ) : (
                 <ActionsPanel
                   actor={liveActor}
-                  systemActions={systemActions}
+                  mergedActionDefs={mergedActionDefs}
                   onRollAction={handleRollAction}
+                  actionsTab={activeProfile?.tabs?.find((tab) => tab.id === 'actions')}
                 />
               )
             ) : (
@@ -215,9 +257,8 @@ export function MiniSheetModal({
                 systemName={systemName}
                 onUpdate={onUpdate}
                 onOpenPortraitPicker={onPortraitClick}
-                sheetMode={sheetMode}
-                sheetLayout={sheetLayout}
-                sheetLayoutLoading={sheetLayoutLoading}
+                activeProfile={activeProfile}
+                sheetProfilesLoading={sheetProfilesLoading}
               />
             )}
           </div>

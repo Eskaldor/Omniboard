@@ -7,7 +7,7 @@ import { SystemTab } from './ConfigTabs/SystemTab';
 import { ColumnsTab } from './ConfigTabs/ColumnsTab';
 import { TableTab } from './ConfigTabs/TableTab';
 import { LanguageTab } from './ConfigTabs/LanguageTab';
-import { SheetTab, type SheetMode } from './ConfigTabs/SheetTab';
+import { SheetTab } from './ConfigTabs/SheetTab';
 
 type ConfigSectionId = 'system' | 'display' | 'columns' | 'sheet' | 'language';
 
@@ -364,21 +364,6 @@ export function ConfigModal({
     [patchLegend],
   );
 
-  const rawSheetMode = state?.display.sheet_mode;
-  const sheetMode: SheetMode =
-    rawSheetMode === 'universal' || rawSheetMode === 'system' ? rawSheetMode : 'raw';
-
-  const onSetSheetMode = useCallback(
-    async (mode: SheetMode) => {
-      try {
-        await patchCombatSettings({ sheet_mode: mode });
-      } catch (err) {
-        console.error('Failed to set sheet mode', err);
-      }
-    },
-    [patchCombatSettings],
-  );
-
   const sections = useMemo(
     () =>
       [
@@ -499,9 +484,7 @@ export function ConfigModal({
               />
             )}
 
-            {activeSection === 'sheet' && (
-              <SheetTab sheetMode={sheetMode} onSetSheetMode={onSetSheetMode} />
-            )}
+            {activeSection === 'sheet' && <SheetTab />}
 
             {activeSection === 'language' && (
               <LanguageTab

@@ -1,6 +1,6 @@
 # Nevrar's Omniboard — ТЗ v2.0
 
-> Обновлено: 02.05.2026 (+ GM Console / ESP / `led_triggers`; §4–§4.1 — полная сводка маршрутов vs `backend/routers/`)
+> Обновлено: 02.05.2026 (+ GM Console / ESP / `led_triggers`; §4–§4.1 — полная сводка маршрутов vs `backend/routers/`); **§2.1.3** — мини-лист, `sheet_profiles`, группировка stats/actions, override на актёре
 > Стек сменился с Vue 3 на React 19 (сгенерировано в Google AI Studio).
 
 ## 📌 Суть проекта
@@ -105,6 +105,25 @@ data/
 - `**matrix.json**` загружается тем же Asset Override-путём; `generation_rules[]` задаёт выражение, количество слотов и режим отображения (`single` / `pair`) для пред-бросков.
 - Правило проекта: игровой куб, формулы и матрицы не хардкодятся в TS/Python; системные отличия живут в JSON-конфигах.
 
+### 2.1.3. Мини-лист персонажа: `sheet_profiles`, группировка, действия
+
+**Назначение:** шаблоны листа (merge default + `data/systems/<system>/config/sheet_profiles.json`, API профилей листа) задают, как на **мини-карточке** (модалка двойного клика по актору) показываются **сводка (stats)** и **действия (actions)**.
+
+**Структура вкладок профиля:**
+
+- Вкладка **`stats`**: массив **`accordions[]`**. Каждый блок: **`name`**, **`columns`** (ключи колонок из `columns.json`, фильтр по `show_in_mini_sheet` при рендере), опционально **`display`**: **`open`** — только декоративный заголовок (линии + название) и сетка статов; **`accordion`** — под тем же заголовком блок `<details>`, в **summary** отображается **имя секции** (категория).
+- Вкладка **`actions`**: тот же массив **`accordions`**, но **`columns`** содержат **id макросов** из системного **`actions.json`**. Режимы **`display`** те же. Без групп / пустой список групп → плоская сетка всех макросов (с учётом фильтра **`show_on_panel`** у актёра).
+
+**Legacy:** устаревшее поле **`panel_action_keys`** при загрузке профилей конвертируется в **`accordions`** (см. `migrateLegacySheetTab` в `src/hooks/useSystemSheetProfiles.ts`); допускается только массив **строк** для ключей.
+
+**Актёр поверх шаблона:**
+
+- **`sheet_profile_id`** — выбранный профиль листа для мини-карточки.
+- **`actions`** — переопределения макросов: видимость, подстановка формулы, комментарий к броску; **`custom_name` / `custom_formula`** — макрос только у этого персонажа.
+- **`actions_panel_override`** — если задано (`{ accordions: [...] }`), **полностью подменяет** группировку вкладки «Действия» из профиля. PATCH: на сервере и клиенте — **глубокий merge** объекта; **`null`** в PATCH снимает override. Удаление кастомного макроса: в **`actions`** передать **`null`** по ключу (отдельный merge с удалением по `null`).
+
+**Клиент:** `DefaultSystemSheet.tsx` (сводка), `ActionsPanel.tsx` (действия), `ActorActionEditor.tsx` (редактор с подвкладками), `mergeActorActionDefs`, `actorPatchMerge.ts`.
+
 ### 2.2. Движки и автосброс ресурсов (Action Economy)
 
 Базовый класс `**BaseInitiativeEngine**` (`backend/engines/base.py`) реализует `**_reset_actor_resources(state, actor_id, trigger)**`: читается `columns.json` активной системы (`get_system_columns_path`), для колонок с `type == "checkbox_group"` и `reset_policy == trigger` во вложенном словаре `actor.stats[column_key]` всем перечисленным в `**items**` `id` выставляется `**true**`.
@@ -119,7 +138,7 @@ data/
 
 **Решение — паттерн «глобальный патч-менеджер»** (`src/utils/actorPatchMerge.ts`):
 
-- Карта `**pendingByActorId`**: для каждого `actor_id` накапливается тело будущего PATCH (в т.ч. **deep merge** вложенных `stats`).
+- Карта `**pendingByActorId`**: для каждого `actor_id` накапливается тело будущего PATCH (в т.ч. **deep merge** вложенных `stats`, **`actions`** с удалением ключа по `null`, **`actions_panel_override`** с глубоким слиянием и сбросом по `null` — см. §2.1.3).
 - Любое входящее состояние боя (**WebSocket**, `**refetchState`**, fallback fetch) перед записью в стейт React проходит через `**applyPendingPatchesToCombatState**`: к снимку с сервера повторно применяется накопленный optimistic-патч, пока запрос не ушёл и карта для актора не очищена.
 
 **Локальные overrides в `CheckboxGroupCell`:** для мгновенного отклика чекбоксов/точек используется локальный словарь; при сбое сети добавлен **Anti-Stuck Timeout (3000 ms)** — таймер сбрасывает overrides, чтобы UI сошёлся с сервером.
@@ -192,10 +211,13 @@ Markdown-экспорт лога (`backend/services/logger.py`) и UI лога �
 - `portrait`: str
 - `miniature_id`: Optional[str]
 - `layout_profile_id`: Optional[str] — id профиля из merge-списка раскладок активной системы
+- `sheet_profile_id`: Optional[str] — id шаблона мини-листа из `sheet_profiles` (см. §2.1.3)
 - `stats`: Dict[str, ActorStatCell] — `StatValue` для чисел, `str` для текстовых колонок, вложенный dict для `checkbox_group`
 - `effects`: List[Effect]
 - `visibility`: Visibility
 - `hotbar`: List[HotbarAction]
+- `actions`: Dict[str, ActorActionOverride] — переопределения макросов и кастомные макросы персонажа (см. §2.1.3); PATCH мержит вложенные ключи; `null` по ключу удаляет запись
+- `actions_panel_override`: Optional[ActorActionsPanelOverride] — собственная группировка вкладки «Действия» на мини-листе; при наличии заменяет секции из `sheet_profiles` (см. §2.1.3)
 
 ### CombatSession (корневой агрегат сессии боя, ADR-18)
 

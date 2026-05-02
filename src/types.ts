@@ -52,6 +52,8 @@ export interface Actor {
   miniature_id: string | null;
   /** Привязка к профилю отображения миниатюры */
   layout_profile_id?: string | null;
+  /** Mini-sheet template id (`sheet_profiles.json`) */
+  sheet_profile_id?: string | null;
   stats: Record<string, any>;
   effects: Effect[];
   visibility: Visibility;
@@ -63,9 +65,32 @@ export interface Actor {
       show_on_panel?: boolean;
       formula_override?: string | null;
       comment?: string | null;
+      /** Display name for an actor-only macro (when `custom_formula` is set). */
+      custom_name?: string | null;
+      /** When set, defines a macro that exists only on this actor (merged into the action panel). */
+      custom_formula?: string | null;
     }
   >;
+  /**
+   * When set, replaces the sheet profile's Actions-tab grouping for this actor.
+   * When omitted, the active sheet template's actions tab is used.
+   */
+  actions_panel_override?: ActorActionsPanelOverride;
 }
+
+/** Per-actor Actions panel layout (same shape as the actions tab in `sheet_profiles`). */
+export interface ActorActionsPanelOverride {
+  accordions: Array<{
+    name: string;
+    columns: string[];
+    display?: 'accordion' | 'open';
+  }>;
+}
+
+/** PATCH fragment for `Actor.actions`: `null` removes a macro key (server + client merge). */
+export type ActorActionsMergePatch = Partial<
+  Record<string, NonNullable<Actor['actions']>[string] | null>
+>;
 
 export interface LegendConfig {
   player: string;

@@ -1,18 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { SheetSummaryEditor } from './SheetSummaryEditor';
+import { SheetActionsEditor } from './SheetActionsEditor';
 
 export type SheetMode = 'raw' | 'universal' | 'system';
 
-const SHEET_MODES: SheetMode[] = ['raw', 'universal', 'system'];
+type SheetSubTabId = 'system_view' | 'summary' | 'actions';
 
-export function SheetTab({
-  sheetMode,
-  onSetSheetMode,
-}: {
-  sheetMode: SheetMode;
-  onSetSheetMode: (mode: SheetMode) => Promise<void>;
-}) {
+const SHEET_SUB_TABS: SheetSubTabId[] = ['system_view', 'summary', 'actions'];
+
+export function SheetTab() {
   const { t } = useTranslation('core', { useSuspense: false });
+  const [activeSubTab, setActiveSubTab] = useState<SheetSubTabId>('summary');
+
+  const pillBase =
+    'px-3 py-2 rounded-lg text-sm font-medium border transition-colors whitespace-nowrap';
+  const pillInactive = 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700/80 hover:border-zinc-600';
+  const pillActive = 'bg-emerald-600 text-white border-emerald-500 shadow-sm shadow-emerald-900/30';
 
   return (
     <div className="space-y-3">
@@ -20,29 +24,28 @@ export function SheetTab({
         {t('config_modal.section_sheet')}
       </div>
 
-      <div className="bg-zinc-950/40 border border-zinc-800 rounded-xl p-3 space-y-2">
-        <div className="text-xs text-zinc-500">{t('config_modal.sheet_mode_title')}</div>
-        <div className="flex flex-col gap-2">
-          {SHEET_MODES.map((mode) => {
-            const active = sheetMode === mode;
-            return (
-              <button
-                key={mode}
-                type="button"
-                onClick={() => {
-                  if (!active) void onSetSheetMode(mode);
-                }}
-                className={`w-full text-left rounded-lg border px-3 py-2.5 text-sm transition-colors ${
-                  active
-                    ? 'bg-emerald-600/15 text-emerald-200 border-emerald-500/40'
-                    : 'bg-zinc-900/50 text-zinc-300 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/30'
-                }`}
-              >
-                {t(`config_modal.sheet_mode_${mode}`)}
-              </button>
-            );
-          })}
-        </div>
+      <div className="flex flex-wrap gap-2">
+        {SHEET_SUB_TABS.map((id) => {
+          const active = activeSubTab === id;
+          return (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setActiveSubTab(id)}
+              className={`${pillBase} ${active ? pillActive : pillInactive}`}
+            >
+              {t(`config_modal.sheet_subtab_${id === 'system_view' ? 'system' : id}`)}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="bg-zinc-950/40 border border-zinc-800 rounded-xl p-4 min-h-[140px]">
+        {activeSubTab === 'system_view' && (
+          <div className="text-sm text-zinc-400 leading-relaxed">{t('config_modal.sheet_placeholder_system_view')}</div>
+        )}
+        {activeSubTab === 'summary' && <SheetSummaryEditor />}
+        {activeSubTab === 'actions' && <SheetActionsEditor />}
       </div>
     </div>
   );

@@ -245,6 +245,15 @@ actor_id = turn_queue[target_index]
 2. **Универсальный табличный вид** — текущий `DefaultSystemSheet`: колонки из `columns.json`, база/overrides, профиль миниатюры.
 3. **Кастомный системно-адаптированный вид** — отдельные шаблоны под систему (как Foundry sheets), где UI отражает язык конкретной игры.
 
+**Дополнение (реализовано в коде, май 2026 — см. также `Omniboard_TZ.md` §2.1.3):**
+
+- **Глобальные шаблоны листа** (`sheet_profiles.json`, API `GET/POST …/config/sheet_profiles`): вкладки профиля включают **`stats`** и **`actions`**. Обе используют массив **`accordions[]`**: у блока есть **`name`**, **`columns`** (для stats — ключи колонок с `show_in_mini_sheet`; для actions — id макросов из `actions.json`), опционально **`display`**: **`open`** (контент под декоративным заголовком всегда виден) или **`accordion`** (контент в `<details>`; в summary показывается **имя секции**, а не общая подпись).
+- **Декоративный заголовок секции** — горизонтальные линии и название (единый паттерн для сводки и действий на мини-листе).
+- **Legacy:** старый **`panel_action_keys`** на вкладке `actions` мигрирует в `accordions` при парсинге (`migrateLegacySheetTab` в `src/hooks/useSystemSheetProfiles.ts`); в payload сохранения поле вычищается (`normalizeSheetProfilesForSave`).
+- **Пер-персонажное переопределение вкладки «Действия»:** у актёра **`actions_panel_override`** той же формы, что и секции шаблона; если задано — **полностью заменяет** группировку из профиля на мини-листе. PATCH на бэкенде **глубоко мержит** объект с существующим; **`null`** снимает override. На клиенте то же в `actorPatchMerge.ts`. Редактор в мини-модалке: подвкладки «группировка / свои макросы», кастомные макросы через `custom_formula` / `custom_name` в `actor.actions`.
+- **Слияние макросов:** `mergeActorActionDefs` объединяет системный `actions.json` и актёрские кастомные определения для рендера и редактора.
+- **Модели Pydantic:** у `ActorActionsPanelOverride` / `ActorActionsPanelAccordion` — **before**-валидаторы, чтобы битые снимки сессии не роняли разбор `CombatSession` (в т.ч. **`columns`** как список строк).
+
 ### ~~🧊 Checkbox Groups (Action Economy)~~ → **в продукте**
 
 Реализовано: тип `checkbox_group` в `columns.json`, UI в трекере, автосброс через `BaseInitiativeEngine._reset_actor_resources` при `turn_start`, deep-merge PATCH, логирование. См. `Omniboard_TZ.md` §2.1–2.4.

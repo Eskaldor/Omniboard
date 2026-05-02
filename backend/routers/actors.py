@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import uuid
+from typing import Any, Dict, cast
 
 from fastapi import APIRouter, BackgroundTasks
 
@@ -24,14 +25,34 @@ router = APIRouter(prefix="/api/actors", tags=["actors"])
 _mechanics = MechanicsManager()
 
 
-def _deep_merge_dict(base: dict, patch: dict) -> dict:
+def _deep_merge_dict(base: Dict[str, Any], patch: Dict[str, Any]) -> Dict[str, Any]:
     """Recursive dict merge; patch values win. Used for ``stats`` PATCH bodies."""
-    out = dict(base)
+    out: Dict[str, Any] = dict(base)
     for k, v in patch.items():
         if isinstance(v, dict) and isinstance(out.get(k), dict):
-            out[k] = _deep_merge_dict(out[k], v)  # type: ignore[arg-type]
+            out[k] = _deep_merge_dict(
+                cast(Dict[str, Any], out[k]),
+                cast(Dict[str, Any], v),
+            )
         else:
             out[k] = v
+    return out
+
+
+def _deep_merge_actor_actions(base: Dict[str, Any], patch: Dict[str, Any]) -> Dict[str, Any]:
+    """Like :func:`_deep_merge_dict`, but ``null`` removes an action key (for deleting custom macros)."""
+    out: Dict[str, Any] = dict(base)
+    for k, v in patch.items():
+        ks = str(k)
+        if v is None:
+            out.pop(ks, None)
+        elif isinstance(v, dict) and isinstance(out.get(ks), dict):
+            out[ks] = _deep_merge_dict(
+                cast(Dict[str, Any], out[ks]),
+                cast(Dict[str, Any], v),
+            )
+        else:
+            out[ks] = v
     return out
 
 
@@ -224,7 +245,8 @@ async def update_actor(actor_id: str, updates: dict, background_tasks: Backgroun
                 sp = updates["stats"]
                 if isinstance(sp, dict):
                     actor_dict["stats"] = _deep_merge_dict(
-                        dict(actor_dict["stats"]), sp
+                        cast(Dict[str, Any], dict(actor_dict["stats"])),
+                        cast(Dict[str, Any], sp),
                     )
                 else:
                     actor_dict["stats"].update(sp)
@@ -234,11 +256,27 @@ async def update_actor(actor_id: str, updates: dict, background_tasks: Backgroun
                 if isinstance(ap, dict):
                     if actor_dict.get("actions") is None:
                         actor_dict["actions"] = {}
-                    actor_dict["actions"] = _deep_merge_dict(
-                        dict(actor_dict["actions"]),
-                        ap,
+                    actor_dict["actions"] = _deep_merge_actor_actions(
+                        cast(Dict[str, Any], dict(actor_dict["actions"])),
+                        cast(Dict[str, Any], ap),
                     )
                 del updates["actions"]
+            if "actions_panel_override" in updates:
+                apo_upd = updates.pop("actions_panel_override")
+                if apo_upd is None:
+                    actor_dict["actions_panel_override"] = None
+                elif isinstance(apo_upd, dict):
+                    ex_raw = actor_dict.get("actions_panel_override")
+                    ex = ex_raw if isinstance(ex_raw, dict) else None
+                    if ex is not None:
+                        actor_dict["actions_panel_override"] = _deep_merge_dict(
+                            cast(Dict[str, Any], dict(ex)),
+                            cast(Dict[str, Any], apo_upd),
+                        )
+                    else:
+                        actor_dict["actions_panel_override"] = apo_upd
+                else:
+                    actor_dict["actions_panel_override"] = apo_upd
             actor_dict.update(updates)
             new_actor = Actor(**actor_dict)
             system_name = getattr(app_state.state.core, "system", "") or ""
