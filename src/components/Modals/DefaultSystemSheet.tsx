@@ -577,11 +577,20 @@ export function DefaultSystemSheet({
     return tabs.find((tab) => tab.id === 'stats') ?? null;
   }, [activeProfile]);
 
-  const detailsShellClass =
-    'group rounded-lg border border-zinc-800 bg-zinc-950/40 overflow-hidden';
-  const summaryClass =
-    'flex cursor-pointer list-none items-center gap-2 px-3 py-2 bg-zinc-800 text-sm text-zinc-200 border-b border-zinc-700/50 [&::-webkit-details-marker]:hidden';
   const statGridClass = 'columns-2 gap-x-5 [column-fill:balance]';
+
+  // Per-section open/closed state for `accordion` display mode (collapsed by default).
+  const statsSectionKeys = useMemo(
+    () =>
+      (statsLayoutTab?.accordions ?? []).map(
+        (a, idx) => `${idx}:${(a.name || '').trim()}:${normalizeSheetAccordionDisplay(a.display)}`,
+      ),
+    [statsLayoutTab],
+  );
+  const [statsOpenMap, setStatsOpenMap] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    setStatsOpenMap({});
+  }, [statsSectionKeys.join('|')]);
 
   const renderStatsColumnPanel = () => {
     if (columns.length === 0) {
@@ -611,30 +620,46 @@ export function DefaultSystemSheet({
 
       const heading = (acc.name || '').trim() || t('modals.mini_sheet_group_other');
       const mode = normalizeSheetAccordionDisplay(acc.display);
+      const sectionKey = statsSectionKeys[idx];
+      const isCollapsible = mode === 'accordion';
+      const isOpen = isCollapsible ? statsOpenMap[sectionKey] === true : true;
       const grid = gridFor(ordered);
+
+      const headingInner = (
+        <>
+          <span className="h-px flex-1 bg-zinc-700/70 min-w-[1rem]" aria-hidden />
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 shrink-0 max-w-[70%] truncate">
+            {heading}
+          </span>
+          {isCollapsible && (
+            <ChevronDown
+              size={12}
+              className={`shrink-0 text-zinc-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+              aria-hidden
+            />
+          )}
+          <span className="h-px flex-1 bg-zinc-700/70 min-w-[1rem]" aria-hidden />
+        </>
+      );
 
       return (
         <div key={`${acc.name}-${idx}`} className="space-y-2">
-          <div className="flex items-center gap-3 px-1 pt-1">
-            <span className="h-px flex-1 bg-zinc-700/70 min-w-[1rem]" aria-hidden />
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 shrink-0 max-w-[70%] truncate">
-              {heading}
-            </span>
-            <span className="h-px flex-1 bg-zinc-700/70 min-w-[1rem]" aria-hidden />
-          </div>
-          {mode === 'open' ? (
-            <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-2">{grid}</div>
+          {isCollapsible ? (
+            <button
+              type="button"
+              onClick={() =>
+                setStatsOpenMap((prev) => ({ ...prev, [sectionKey]: !isOpen }))
+              }
+              aria-expanded={isOpen}
+              className="flex w-full items-center gap-3 px-1 pt-1 text-left"
+            >
+              {headingInner}
+            </button>
           ) : (
-            <details open className={detailsShellClass}>
-              <summary className={summaryClass}>
-                <ChevronDown
-                  size={14}
-                  className="shrink-0 text-zinc-500 transition-transform group-open:rotate-180"
-                />
-                <span className="font-medium truncate">{heading}</span>
-              </summary>
-              <div className="p-2">{grid}</div>
-            </details>
+            <div className="flex items-center gap-3 px-1 pt-1">{headingInner}</div>
+          )}
+          {isOpen && (
+            <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-2">{grid}</div>
           )}
         </div>
       );

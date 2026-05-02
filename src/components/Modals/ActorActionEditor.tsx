@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Actor, ActorActionsMergePatch, ActorActionsPanelOverride } from '../../types';
 import type { SystemActionDef } from '../../hooks/useSystemActions';
@@ -7,6 +7,14 @@ import { normalizeSheetAccordionDisplay } from '../../hooks/useSystemSheetProfil
 import { ActorActionsLayoutEditor } from './ActorActionsLayoutEditor';
 
 type Ov = NonNullable<Actor['actions']>[string];
+type SubTab = 'grouping' | 'custom' | 'base';
+
+type BaseDraftEntry = {
+  show_on_panel: boolean;
+  formula_override: string;
+  comment: string;
+};
+type BaseDraftMap = Record<string, BaseDraftEntry>;
 
 function mergeEntry(prev: Ov | undefined, partial: Partial<Ov>): Ov {
   const p = prev ?? {};
@@ -39,6 +47,58 @@ function macroLabel(merged: Record<string, SystemActionDef>, id: string): string
   return (merged[id]?.name || '').trim() || id;
 }
 
+/**
+ * Snapshot of system-macro overrides on an actor, in the shape the form binds to.
+ * Pre-fills `formula_override` / `comment` with the *effective* value (live override or system
+ * default) so a long formula can be edited in place — one digit at a time — instead of being
+ * retyped from a placeholder.
+ */
+function buildBaseDraft(actor: Actor, systemActions: Record<string, SystemActionDef>): BaseDraftMap {
+  const out: BaseDraftMap = {};
+  for (const [key, def] of Object.entries(systemActions)) {
+    const entry = actor.actions?.[key];
+    const liveFormula = (entry?.formula_override ?? '').trim();
+    const liveComment = (entry?.comment ?? '').trim();
+    out[key] = {
+      show_on_panel: entry?.show_on_panel !== false,
+      formula_override: liveFormula || (def?.formula ?? '').trim(),
+      comment: liveComment || (def?.name ?? '').trim(),
+    };
+  }
+  return out;
+}
+
+/**
+ * Field-level diff against the *effective* current value (override falls back to system default).
+ * A draft equal to the default is **not** dirty even if there's no live override — that matches
+ * the pre-fill behaviour: untouched field == "no change".
+ */
+function computeBaseFieldDirty(
+  actor: Actor,
+  draft: BaseDraftMap,
+  systemActions: Record<string, SystemActionDef>,
+): Record<string, { show: boolean; formula: boolean; comment: boolean; any: boolean }> {
+  const out: Record<string, { show: boolean; formula: boolean; comment: boolean; any: boolean }> = {};
+  for (const [key, d] of Object.entries(draft)) {
+    const def = systemActions[key];
+    const defFormula = (def?.formula ?? '').trim();
+    const defName = (def?.name ?? '').trim();
+    const entry = actor.actions?.[key];
+    const liveShow = entry?.show_on_panel !== false;
+    const liveFormulaOv = (entry?.formula_override ?? '').trim();
+    const liveCommentOv = (entry?.comment ?? '').trim();
+    const liveEffectiveFormula = liveFormulaOv || defFormula;
+    const liveEffectiveComment = liveCommentOv || defName;
+    const draftFormula = d.formula_override.trim() || defFormula;
+    const draftComment = d.comment.trim() || defName;
+    const show = d.show_on_panel !== liveShow;
+    const formula = draftFormula !== liveEffectiveFormula;
+    const comment = draftComment !== liveEffectiveComment;
+    out[key] = { show, formula, comment, any: show || formula || comment };
+  }
+  return out;
+}
+
 export function ActorActionEditor({
   actor,
   systemActions,
@@ -53,10 +113,31 @@ export function ActorActionEditor({
   onPatchActor: (updates: Partial<Actor>) => void;
 }) {
   const { t } = useTranslation('core', { useSuspense: false });
-  const [subTab, setSubTab] = useState<'grouping' | 'custom'>('grouping');
+  const [subTab, setSubTab] = useState<SubTab>('grouping');
   const [newKey, setNewKey] = useState('');
   const [newName, setNewName] = useState('');
   const [newFormula, setNewFormula] = useState('');
+
+  // Base-actions tab uses an explicit draft + Apply / Discard pattern (single PATCH on Apply).
+  // Re-seed when the actor identity or the available system-macro list changes; in-flight edits
+  // are intentionally preserved across unrelated remote updates of the same actor.
+  const [baseDraft, setBaseDraft] = useState<BaseDraftMap>(() => buildBaseDraft(actor, systemActions));
+  const systemActionsSig = useMemo(
+    () => Object.keys(systemActions).sort().join('|'),
+    [systemActions],
+  );
+  useEffect(() => {
+    setBaseDraft(buildBaseDraft(actor, systemActions));
+  }, [actor.id, systemActionsSig]);
+
+  const baseFieldDirty = useMemo(
+    () => computeBaseFieldDirty(actor, baseDraft, systemActions),
+    [actor, baseDraft, systemActions],
+  );
+  const baseDirty = useMemo(
+    () => Object.values(baseFieldDirty).some((d) => d.any),
+    [baseFieldDirty],
+  );
 
   const hasOverride = actor.actions_panel_override != null;
 
@@ -113,6 +194,40 @@ export function ActorActionEditor({
     });
   };
 
+  const setBaseField = (key: string, partial: Partial<BaseDraftEntry>) => {
+    setBaseDraft((prev) => {
+      const cur = prev[key] ?? { show_on_panel: true, formula_override: '', comment: '' };
+      return { ...prev, [key]: { ...cur, ...partial } };
+    });
+  };
+
+  const applyBaseDraft = () => {
+    const patch: Record<string, Ov> = {};
+    for (const key of Object.keys(systemActions)) {
+      if (!baseFieldDirty[key]?.any) continue;
+      const def = systemActions[key];
+      const defFormula = (def?.formula ?? '').trim();
+      const defName = (def?.name ?? '').trim();
+      const draft = baseDraft[key];
+      const draftFormula = draft.formula_override.trim();
+      const draftComment = draft.comment.trim();
+      // Empty OR exactly the system default → "no override" (send null to clear via deep-merge).
+      const formulaToSet = !draftFormula || draftFormula === defFormula ? null : draftFormula;
+      const commentToSet = !draftComment || draftComment === defName ? null : draftComment;
+      patch[key] = {
+        show_on_panel: draft.show_on_panel,
+        formula_override: formulaToSet,
+        comment: commentToSet,
+      };
+    }
+    if (Object.keys(patch).length === 0) return;
+    onPatchActor({ actions: patch });
+  };
+
+  const discardBaseDraft = () => {
+    setBaseDraft(buildBaseDraft(actor, systemActions));
+  };
+
   const addCustomMacro = () => {
     const key = newKey.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_');
     const formula = newFormula.trim();
@@ -132,6 +247,7 @@ export function ActorActionEditor({
 
   const inputClass =
     'w-full py-1.5 px-2 text-xs bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-200 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none';
+  const dirtyInputClass = `${inputClass} border-amber-500/50`;
 
   const subBtn = (active: boolean) =>
     `flex-1 px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
@@ -143,16 +259,41 @@ export function ActorActionEditor({
   return (
     <div className="flex flex-col min-h-0">
       <div className="flex border-b border-zinc-800 bg-zinc-950/40 shrink-0">
-        <button type="button" className={subBtn(subTab === 'grouping')} onClick={() => setSubTab('grouping')}>
+        <button
+          type="button"
+          className={subBtn(subTab === 'grouping')}
+          onClick={() => setSubTab('grouping')}
+        >
           {t('modals.actor_action_subtab_grouping')}
         </button>
-        <button type="button" className={subBtn(subTab === 'custom')} onClick={() => setSubTab('custom')}>
+        <button
+          type="button"
+          className={subBtn(subTab === 'custom')}
+          onClick={() => setSubTab('custom')}
+        >
           {t('modals.actor_action_subtab_custom')}
+        </button>
+        <button
+          type="button"
+          className={subBtn(subTab === 'base')}
+          onClick={() => setSubTab('base')}
+          aria-label={t('modals.actor_action_subtab_base')}
+        >
+          <span className="inline-flex items-center gap-1.5">
+            {t('modals.actor_action_subtab_base')}
+            {baseDirty && (
+              <span
+                className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400"
+                aria-hidden
+                title={t('modals.actor_action_base_dirty')}
+              />
+            )}
+          </span>
         </button>
       </div>
 
       <div className="p-4 space-y-4 overflow-y-auto max-h-[min(70vh,520px)]">
-        {subTab === 'grouping' ? (
+        {subTab === 'grouping' && (
           <>
             <div className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
               {t('modals.action_editor_title')}
@@ -160,7 +301,9 @@ export function ActorActionEditor({
 
             {!hasOverride ? (
               <div className="rounded-lg border border-zinc-800 bg-zinc-950/50 p-3 space-y-2">
-                <p className="text-xs text-zinc-400 leading-relaxed">{t('modals.actor_actions_inherit_template')}</p>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  {t('modals.actor_actions_inherit_template')}
+                </p>
                 <button
                   type="button"
                   onClick={seedOverrideFromTemplate}
@@ -177,80 +320,14 @@ export function ActorActionEditor({
                 onChange={onLayoutChange}
               />
             )}
-
-            <div className="pt-2 border-t border-zinc-800 space-y-2">
-              <div className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">
-                {t('modals.actor_actions_system_macros')}
-              </div>
-              {sortedSystemKeys.length === 0 ? (
-                <p className="text-sm text-zinc-500">{t('modals.mini_sheet_actions_empty')}</p>
-              ) : (
-                <div className="grid gap-3 max-h-64 overflow-y-auto pr-1">
-                  {sortedSystemKeys.map((key) => {
-                    const def = systemActions[key];
-                    const label = def?.name ?? key;
-                    const entry = actor.actions?.[key];
-                    const showOn = entry?.show_on_panel !== false;
-                    const formulaVal = entry?.formula_override ?? '';
-                    const commentVal = entry?.comment ?? '';
-
-                    return (
-                      <div
-                        key={key}
-                        className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-3 space-y-2"
-                      >
-                        <div className="text-sm font-medium text-zinc-200">{label}</div>
-                        <div className="font-mono text-[10px] text-zinc-600 truncate" title={key}>
-                          {key}
-                        </div>
-                        {def?.formula ? (
-                          <div className="text-[11px] text-zinc-500">
-                            <span className="text-zinc-600">{t('modals.action_editor_default_formula')}:</span>{' '}
-                            <span className="font-mono text-zinc-400">{def.formula}</span>
-                          </div>
-                        ) : null}
-
-                        <label className="flex items-center justify-between gap-2 pt-1">
-                          <span className="text-xs text-zinc-400">{t('modals.action_editor_show_on_panel')}</span>
-                          <input
-                            type="checkbox"
-                            checked={showOn}
-                            onChange={(e) => patchActionKey(key, { show_on_panel: e.target.checked })}
-                            className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-zinc-900"
-                          />
-                        </label>
-
-                        <div className="space-y-1">
-                          <label className="text-[11px] text-zinc-500">{t('modals.action_editor_formula_override')}</label>
-                          <input
-                            type="text"
-                            value={formulaVal}
-                            onChange={(e) => patchActionKey(key, { formula_override: e.target.value })}
-                            placeholder={def?.formula ?? ''}
-                            className={inputClass}
-                          />
-                        </div>
-
-                        <div className="space-y-1">
-                          <label className="text-[11px] text-zinc-500">{t('modals.action_editor_comment')}</label>
-                          <input
-                            type="text"
-                            value={commentVal}
-                            onChange={(e) => patchActionKey(key, { comment: e.target.value })}
-                            placeholder={label}
-                            className={inputClass}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
           </>
-        ) : (
+        )}
+
+        {subTab === 'custom' && (
           <>
-            <p className="text-xs text-zinc-500 leading-relaxed">{t('modals.actor_custom_macros_intro')}</p>
+            <p className="text-xs text-zinc-500 leading-relaxed">
+              {t('modals.actor_custom_macros_intro')}
+            </p>
 
             <div className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-3 space-y-2">
               <div className="text-[11px] text-zinc-500">{t('modals.actor_custom_macro_new')}</div>
@@ -312,6 +389,126 @@ export function ActorActionEditor({
                     </button>
                   </div>
                 ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {subTab === 'base' && (
+          <>
+            <div className="sticky -top-4 -mt-4 -mx-4 px-4 pt-3 pb-2 bg-zinc-900/95 backdrop-blur-sm border-b border-zinc-800 z-10 flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs text-zinc-400 leading-relaxed flex-1 min-w-[12rem]">
+                {t('modals.actor_action_base_intro')}
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={discardBaseDraft}
+                  disabled={!baseDirty}
+                  className="px-3 py-1.5 text-xs rounded-lg border border-zinc-700 text-zinc-300 hover:border-zinc-500 hover:text-zinc-100 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                >
+                  {t('modals.actor_action_base_discard')}
+                </button>
+                <button
+                  type="button"
+                  onClick={applyBaseDraft}
+                  disabled={!baseDirty}
+                  className="px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-600/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-600/30 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                >
+                  {t('modals.actor_action_base_apply')}
+                </button>
+              </div>
+            </div>
+
+            {sortedSystemKeys.length === 0 ? (
+              <p className="text-sm text-zinc-500">{t('modals.mini_sheet_actions_empty')}</p>
+            ) : (
+              <div className="grid gap-3">
+                {sortedSystemKeys.map((key) => {
+                  const def = systemActions[key];
+                  const label = def?.name ?? key;
+                  const draft = baseDraft[key] ?? {
+                    show_on_panel: true,
+                    formula_override: '',
+                    comment: '',
+                  };
+                  const dirty = baseFieldDirty[key] ?? {
+                    show: false,
+                    formula: false,
+                    comment: false,
+                    any: false,
+                  };
+
+                  return (
+                    <div
+                      key={key}
+                      className={`rounded-xl border bg-zinc-950/50 p-3 space-y-2 transition-colors ${
+                        dirty.any ? 'border-amber-500/40' : 'border-zinc-800'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="text-sm font-medium text-zinc-200 truncate">{label}</div>
+                          <div className="font-mono text-[10px] text-zinc-600 truncate" title={key}>
+                            {key}
+                          </div>
+                          {def?.formula ? (
+                            <div className="text-[11px] text-zinc-500 mt-0.5">
+                              <span className="text-zinc-600">
+                                {t('modals.action_editor_default_formula')}:
+                              </span>{' '}
+                              <span className="font-mono text-zinc-400">{def.formula}</span>
+                            </div>
+                          ) : null}
+                        </div>
+                        {dirty.any && (
+                          <span className="shrink-0 text-[10px] uppercase tracking-wider text-amber-300/90 font-medium">
+                            {t('modals.actor_action_base_field_changed')}
+                          </span>
+                        )}
+                      </div>
+
+                      <label className="flex items-center justify-between gap-2 pt-1">
+                        <span className="text-xs text-zinc-400">
+                          {t('modals.action_editor_show_on_panel')}
+                        </span>
+                        <input
+                          type="checkbox"
+                          checked={draft.show_on_panel}
+                          onChange={(e) => setBaseField(key, { show_on_panel: e.target.checked })}
+                          className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-zinc-900"
+                        />
+                      </label>
+
+                      <div className="space-y-1">
+                        <label className="text-[11px] text-zinc-500">
+                          {t('modals.action_editor_formula_override')}
+                        </label>
+                        <input
+                          type="text"
+                          value={draft.formula_override}
+                          onChange={(e) => setBaseField(key, { formula_override: e.target.value })}
+                          spellCheck={false}
+                          className={`${
+                            dirty.formula ? dirtyInputClass : inputClass
+                          } font-mono`}
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[11px] text-zinc-500">
+                          {t('modals.action_editor_comment')}
+                        </label>
+                        <input
+                          type="text"
+                          value={draft.comment}
+                          onChange={(e) => setBaseField(key, { comment: e.target.value })}
+                          className={dirty.comment ? dirtyInputClass : inputClass}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </>

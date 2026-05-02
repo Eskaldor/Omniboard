@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronDown, Dices } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Actor } from '../../types';
@@ -41,6 +41,57 @@ function MacroRollButton({
   );
 }
 
+/**
+ * Decorative section heading: lines on both sides + uppercase title.
+ * In `accordion` mode the whole heading is the click target (no second header bar);
+ * in `open` mode it is non-interactive — content always visible below.
+ */
+function SectionHeading({
+  heading,
+  collapsible,
+  open,
+  onToggle,
+}: {
+  heading: string;
+  collapsible: boolean;
+  open: boolean;
+  onToggle?: () => void;
+}) {
+  const inner = (
+    <>
+      <span className="h-px flex-1 bg-zinc-700/70 min-w-[1rem]" aria-hidden />
+      <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 shrink-0 max-w-[70%] truncate">
+        {heading}
+      </span>
+      {collapsible && (
+        <ChevronDown
+          size={12}
+          className={`shrink-0 text-zinc-500 transition-transform ${open ? 'rotate-180' : ''}`}
+          aria-hidden
+        />
+      )}
+      <span className="h-px flex-1 bg-zinc-700/70 min-w-[1rem]" aria-hidden />
+    </>
+  );
+  if (!collapsible) {
+    return (
+      <div className="flex items-center gap-3 px-1 pt-1" aria-hidden={false}>
+        {inner}
+      </div>
+    );
+  }
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={open}
+      className="flex w-full items-center gap-3 px-1 pt-1 text-left rounded-md hover:[&_span:not(.h-px)]:text-zinc-200 transition-colors"
+    >
+      {inner}
+    </button>
+  );
+}
+
 export function ActionsPanel({
   actor,
   mergedActionDefs,
@@ -72,6 +123,20 @@ export function ActionsPanel({
     (a): a is SystemSheetLayoutAccordion =>
       !!a && typeof a === 'object' && typeof (a as SystemSheetLayoutAccordion).name === 'string',
   );
+
+  // Per-section open/closed state for `accordion` display mode (collapsed by default).
+  const [openMap, setOpenMap] = useState<Record<string, boolean>>({});
+  const sectionKeys = useMemo(
+    () =>
+      (accordions ?? []).map(
+        (a, idx) => `${idx}:${(a.name || '').trim()}:${normalizeSheetAccordionDisplay(a.display)}`,
+      ),
+    [accordions],
+  );
+  // Reset open-state when section list signature changes (e.g. profile / override toggled).
+  useEffect(() => {
+    setOpenMap({});
+  }, [sectionKeys.join('|')]);
 
   const renderFlatGrid = (entries: [string, SystemActionDef][]) => (
     <div className="p-4 grid gap-2 sm:grid-cols-2">
@@ -111,6 +176,9 @@ export function ActionsPanel({
 
     const heading = (acc.name || '').trim() || t('modals.mini_sheet_group_other');
     const mode = normalizeSheetAccordionDisplay(acc.display);
+    const sectionKey = sectionKeys[idx];
+    const isCollapsible = mode === 'accordion';
+    const isOpen = isCollapsible ? openMap[sectionKey] === true : true;
 
     const macroGrid = (
       <div className="p-3 grid gap-2 sm:grid-cols-2">
@@ -128,30 +196,20 @@ export function ActionsPanel({
 
     return (
       <div key={`acc-${idx}-${heading}`} className="space-y-2">
-        <div className="flex items-center gap-3 px-1 pt-1">
-          <span className="h-px flex-1 bg-zinc-700/70 min-w-[1rem]" aria-hidden />
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 shrink-0 max-w-[70%] truncate">
-            {heading}
-          </span>
-          <span className="h-px flex-1 bg-zinc-700/70 min-w-[1rem]" aria-hidden />
-        </div>
-
-        {mode === 'open' ? (
-          <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 overflow-hidden">{macroGrid}</div>
-        ) : (
-          <details
-            open
-            className="group rounded-lg border border-zinc-800 bg-zinc-950/40 overflow-hidden"
-          >
-            <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 bg-zinc-800 text-sm text-zinc-200 border-b border-zinc-700/50 [&::-webkit-details-marker]:hidden">
-              <ChevronDown
-                size={14}
-                className="shrink-0 text-zinc-500 transition-transform group-open:rotate-180"
-              />
-              <span className="font-medium truncate">{heading}</span>
-            </summary>
+        <SectionHeading
+          heading={heading}
+          collapsible={isCollapsible}
+          open={isOpen}
+          onToggle={
+            isCollapsible
+              ? () => setOpenMap((prev) => ({ ...prev, [sectionKey]: !isOpen }))
+              : undefined
+          }
+        />
+        {isOpen && (
+          <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 overflow-hidden">
             {macroGrid}
-          </details>
+          </div>
         )}
       </div>
     );
