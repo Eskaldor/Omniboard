@@ -57,12 +57,42 @@ def get_actors_system_dir(system_name: str) -> Path | None:
     return path
 
 
+CAMPAIGNS_DIR = BASE_DIR / "data" / "campaigns"
+
 ENCOUNTERS_DIR = BASE_DIR / "data" / "encounters"
 RENDER_DIR = BASE_DIR / "data" / "render"
 LOCALES_DIR = BASE_DIR / "data" / "locales"
 LOGS_DIR = BASE_DIR / "data" / "logs"
 MINIATURES_PATH = BASE_DIR / "data" / "miniatures.json"
 AUTOSAVE_PATH = BASE_DIR / "data" / "state_autosave.json"
+
+
+def get_campaign_players_dir(system: str, campaign_id: str) -> Path | None:
+    """``data/campaigns/<system>/<campaign_id>/players`` — только если оба сегмента безопасны."""
+    system = (system or "").strip()
+    campaign_id = (campaign_id or "").strip()
+    for segment in (system, campaign_id):
+        if not segment or ".." in segment or "/" in segment or "\\" in segment:
+            return None
+    path = (CAMPAIGNS_DIR / system / campaign_id / "players").resolve()
+    try:
+        path.relative_to(CAMPAIGNS_DIR.resolve())
+    except ValueError:
+        return None
+    return path
+
+
+def get_campaigns_system_dir(system: str) -> Path | None:
+    """``data/campaigns/<system>`` — только если system безопасен."""
+    name = (system or "").strip()
+    if not name or ".." in name or "/" in name or "\\" in name:
+        return None
+    path = (CAMPAIGNS_DIR / name).resolve()
+    try:
+        path.relative_to(CAMPAIGNS_DIR.resolve())
+    except ValueError:
+        return None
+    return path
 
 
 def ensure_dirs() -> None:
@@ -85,6 +115,7 @@ def ensure_dirs() -> None:
     RENDER_DIR.mkdir(parents=True, exist_ok=True)
     LOCALES_DIR.mkdir(parents=True, exist_ok=True)
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
+    CAMPAIGNS_DIR.mkdir(parents=True, exist_ok=True)
     MINIATURES_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 

@@ -26,6 +26,12 @@ state: CombatSession = load_state()
 
 # Connected WebSocket clients
 connected_clients: list = []
+player_clients: list = []
+
+# actor_id -> session_token (in-memory; сбрасывается при перезапуске сервера)
+claimed_players: dict[str, str] = {}
+# token -> actor_id (обратный индекс для быстрого поиска в WS)
+token_to_actor: dict[str, str] = {}
 
 
 def save_state_sync() -> None:

@@ -311,6 +311,8 @@ export interface SessionMeta {
   initiative_reroll_locked?: boolean;
   /** Показывать кубик у ячейки инициативы в трекере. */
   initiative_show_per_actor_dice?: boolean;
+  /** ID активной кампании игроков (Player View лобби). */
+  active_campaign_id?: string | null;
 }
 
 /**

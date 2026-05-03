@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState, useEffect } from 'react';
-import { X, Save, Settings2, Monitor, Columns3, Languages, FileText } from 'lucide-react';
+import { X, Save, Settings2, Monitor, Columns3, Languages, FileText, BookOpen } from 'lucide-react';
 import { ColumnConfig } from '../../types';
 import { useCombatState } from '../../contexts/CombatStateContext';
 import { useTranslation } from 'react-i18next';
@@ -8,8 +8,9 @@ import { ColumnsTab } from './ConfigTabs/ColumnsTab';
 import { TableTab } from './ConfigTabs/TableTab';
 import { LanguageTab } from './ConfigTabs/LanguageTab';
 import { SheetTab } from './ConfigTabs/SheetTab';
+import { CampaignTab } from './ConfigTabs/CampaignTab';
 
-type ConfigSectionId = 'system' | 'display' | 'columns' | 'sheet' | 'language';
+type ConfigSectionId = 'system' | 'display' | 'columns' | 'sheet' | 'language' | 'campaign';
 
 function usePatchCombatSettings(refetchState: () => Promise<void>) {
   return useCallback(
@@ -300,6 +301,20 @@ export function ConfigModal({
   const inputClass =
     'py-1 px-2 text-sm bg-zinc-950 border border-zinc-800 rounded hover:border-zinc-700 focus:border-emerald-500 focus:outline-none text-zinc-200';
 
+  const activeCampaignId = state?.session.active_campaign_id ?? null;
+
+  const handleActivateCampaign = useCallback(
+    async (id: string | null) => {
+      await fetch('/api/player/active-campaign', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ campaign_id: id }),
+      });
+      await refetchState();
+    },
+    [refetchState],
+  );
+
   const engineType = useMemo(() => (state?.core.engine_type ?? 'standard'), [state?.core.engine_type]);
   const stickyFirstColumn = state?.display.sticky_first_column !== false;
   const stickyLastColumn = state?.display.sticky_last_column !== false;
@@ -384,6 +399,7 @@ export function ConfigModal({
         { id: 'columns' as const, label: t('config_modal.section_columns'), icon: Columns3 },
         { id: 'sheet' as const, label: t('config_modal.section_sheet'), icon: FileText },
         { id: 'language' as const, label: t('config_modal.section_language'), icon: Languages },
+        { id: 'campaign' as const, label: 'Кампании', icon: BookOpen },
       ] as const,
     [t],
   );
@@ -499,6 +515,15 @@ export function ConfigModal({
             )}
 
             {activeSection === 'sheet' && <SheetTab />}
+
+            {activeSection === 'campaign' && (
+              <CampaignTab
+                inputClass={inputClass}
+                systemName={systemName}
+                activeCampaignId={activeCampaignId}
+                onActivate={handleActivateCampaign}
+              />
+            )}
 
             {activeSection === 'language' && (
               <LanguageTab

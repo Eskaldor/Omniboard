@@ -1,13 +1,21 @@
 import {createRoot} from 'react-dom/client';
 import { Toaster } from 'react-hot-toast';
 import App from './App.tsx';
+import PlayerApp from './player/PlayerApp.tsx';
 import './index.css';
 import i18n from './i18n';
 import { CombatStateProvider } from './contexts/CombatStateContext';
 import { ColumnsProvider } from './contexts/ColumnsContext';
 import { GMConsoleProvider } from './contexts/GMConsoleContext';
 
+const isPlayerRoute = window.location.pathname.startsWith('/player');
+
 function renderApp() {
+  if (isPlayerRoute) {
+    createRoot(document.getElementById('root')!).render(<PlayerApp />);
+    return;
+  }
+
   createRoot(document.getElementById('root')!).render(
     <CombatStateProvider>
       <ColumnsProvider>

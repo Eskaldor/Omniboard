@@ -482,6 +482,39 @@ class SessionMeta(BaseModel):
     # True: после перехода на новый раунд (round++) автоматически перебросить инициативу
     initiative_reroll_locked: bool = False
     initiative_show_per_actor_dice: bool = True
+    # ID активной кампании; None = лобби игрока пустое
+    active_campaign_id: Optional[str] = None
+
+
+class PlayerCharacterSummary(BaseModel):
+    """Карточка персонажа для лобби игрока (без секретных данных GM)."""
+
+    id: str
+    name: str
+    portrait: str = ""
+    role: Literal["character", "enemy", "ally", "neutral"] = "character"
+    system: str = ""
+    is_claimed: bool = False
+
+
+class PlayerClaimResponse(BaseModel):
+    token: str
+    actor_id: str
+
+
+class CampaignInfo(BaseModel):
+    id: str
+    system: str
+    player_count: int = 0
+
+
+class CampaignCreateRequest(BaseModel):
+    id: str
+    system: str
+
+
+class ActiveCampaignRequest(BaseModel):
+    campaign_id: Optional[str] = None
 
 
 class CombatSession(BaseModel):
@@ -719,6 +752,7 @@ def combat_session_merged_with_combat_state(
             initiative_include_neutral=session.session.initiative_include_neutral,
             initiative_reroll_locked=session.session.initiative_reroll_locked,
             initiative_show_per_actor_dice=session.session.initiative_show_per_actor_dice,
+            active_campaign_id=session.session.active_campaign_id,
         ),
     )
 

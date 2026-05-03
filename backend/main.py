@@ -9,7 +9,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from backend.paths import ASSETS_DIR, LOCALES_DIR, RENDER_DIR, ensure_dirs
-from backend.routers import actors, assets, combat, encounters, hardware, locales, logs, render, systems, ws
+from backend.routers import actors, assets, combat, encounters, hardware, locales, logs, player, render, systems, ws
 
 
 ensure_dirs()
@@ -49,6 +49,7 @@ app.include_router(render.router)
 app.include_router(logs.router)
 app.include_router(locales.router)
 app.include_router(hardware.router)
+app.include_router(player.router)
 
 # Serve Vite frontend in production (only when SERVE_DIST=1 to avoid catch-all in dev)
 if os.path.isdir("dist") and os.environ.get("SERVE_DIST") == "1":
