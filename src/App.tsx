@@ -370,6 +370,7 @@ export default function App() {
             onCombatRefetch={refetchState}
             showMatrixColumn={showMatrixColumn}
             matrixPrerolls={matrixPrerolls}
+            showMacrosColumn={effectiveState?.display.show_macros_column === true}
           />
         </div>
       </main>

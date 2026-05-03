@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
 import type { Actor, ColumnConfig, Effect, MatrixRuleGroup } from '../../types';
+import { useSystemActions } from '../../hooks/useSystemActions';
 import { ActorRow } from './ActorRow';
 
 export interface InitiativeTableProps {
@@ -33,6 +34,7 @@ export interface InitiativeTableProps {
   onCombatRefetch?: () => void | Promise<void>;
   showMatrixColumn?: boolean;
   matrixPrerolls?: Record<string, MatrixRuleGroup[]>;
+  showMacrosColumn?: boolean;
 }
 
 export function InitiativeTable({
@@ -63,7 +65,9 @@ export function InitiativeTable({
   onCombatRefetch,
   showMatrixColumn = false,
   matrixPrerolls = {},
+  showMacrosColumn = false,
 }: InitiativeTableProps) {
+  const { actions: systemActions } = useSystemActions(systemName);
   const engineKey = engineType.toLowerCase();
   const clickToActEngine = isManualMode || engineKey === 'popcorn' || engineKey === 'phase';
   const showInitColumn = engineKey !== 'popcorn';
@@ -79,7 +83,7 @@ export function InitiativeTable({
   );
   const groupNames = [...new Set(grouped.map((c) => String(c.group).trim()))];
   const showPortraitColumn = actors.some((a) => a.show_portrait === true);
-  /** Portrait + optional initiative + name + stats + effects + actions */
+  /** Portrait + optional initiative + name + stats + matrix + macros + effects + delete */
   const effectiveColumnCount =
     (showPortraitColumn ? 1 : 0) +
     (showInitColumn ? 1 : 0) +
@@ -87,6 +91,7 @@ export function InitiativeTable({
     standalone.length +
     groupNames.length +
     (showMatrixColumn ? 1 : 0) +
+    (showMacrosColumn ? 1 : 0) +
     1 +
     1;
 
@@ -142,6 +147,7 @@ export function InitiativeTable({
               <col key={grp} style={{ width: 112, minWidth: 112 }} />
             ))}
             {showMatrixColumn && <col style={{ width: 120, minWidth: 120 }} />}
+            {showMacrosColumn && <col style={{ width: 180, minWidth: 140 }} />}
             <col style={{ width: 224, minWidth: 224 }} />
             <col style={{ width: 48 }} />
           </colgroup>
@@ -190,6 +196,11 @@ export function InitiativeTable({
             {showMatrixColumn && (
               <th className="px-1 py-1 text-left align-middle font-medium text-zinc-400 bg-zinc-900 max-w-[12rem] w-[7.5rem] text-[11px]">
                 {t('table_header.matrix')}
+              </th>
+            )}
+            {showMacrosColumn && (
+              <th className="px-2 py-1 text-left align-middle font-medium text-zinc-400 bg-zinc-900 max-w-[14rem] w-[11rem] text-[11px]">
+                {t('table_header.macros')}
               </th>
             )}
             {/* Effects */}
@@ -270,6 +281,8 @@ export function InitiativeTable({
                 stickyLastColumn={stickyLastColumn}
                 showMatrixColumn={showMatrixColumn}
                 matrixRules={matrixPrerolls[actor.id]}
+                showMacrosColumn={showMacrosColumn}
+                systemActions={systemActions}
               />
             );
           })}

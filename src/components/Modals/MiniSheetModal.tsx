@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { BookOpen, List, Swords, X } from 'lucide-react';
-import toast from 'react-hot-toast';
 import { Actor, ColumnConfig } from '../../types';
 import { useCombatState } from '../../contexts/CombatStateContext';
 import { useTranslation } from 'react-i18next';
@@ -14,6 +13,11 @@ import {
 } from '../../hooks/useSystemSheetProfiles';
 import { useSystemActions } from '../../hooks/useSystemActions';
 import { mergeActorActionDefs } from '../../utils/mergeActorActionDefs';
+import {
+  parseRollHttpResponse,
+  showRollErrorToast,
+  showRollResultToast,
+} from '../../utils/rollToast';
 
 export function MiniSheetModal({
   actor,
@@ -87,10 +91,18 @@ export function MiniSheetModal({
             ...(comment.trim() ? { comment: comment.trim() } : {}),
           }),
         });
-        if (!res.ok) throw new Error(await res.text());
-        toast.success(t('modals.mini_sheet_action_roll_ok'));
+        const parsed = await parseRollHttpResponse(res);
+        if (!parsed.ok) {
+          showRollErrorToast(parsed.message);
+          return;
+        }
+        showRollResultToast({
+          result: parsed.result,
+          actorName: liveActor.name,
+          comment: comment.trim() || undefined,
+        });
       } catch {
-        toast.error(t('modals.mini_sheet_action_roll_fail'));
+        showRollErrorToast(t('stat_editor.roll_network_error'));
       }
     },
     [liveActor.id, t],

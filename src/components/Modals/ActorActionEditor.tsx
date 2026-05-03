@@ -11,6 +11,7 @@ type SubTab = 'grouping' | 'custom' | 'base';
 
 type BaseDraftEntry = {
   show_on_panel: boolean;
+  show_in_tracker: boolean;
   formula_override: string;
   comment: string;
 };
@@ -24,8 +25,15 @@ function mergeEntry(prev: Ov | undefined, partial: Partial<Ov>): Ov {
       : p.show_on_panel !== undefined
         ? Boolean(p.show_on_panel)
         : true;
+  const nextTracker =
+    partial.show_in_tracker !== undefined
+      ? Boolean(partial.show_in_tracker)
+      : p.show_in_tracker !== undefined
+        ? Boolean(p.show_in_tracker)
+        : false;
   return {
     show_on_panel: nextShow,
+    show_in_tracker: nextTracker,
     formula_override:
       partial.formula_override !== undefined
         ? String(partial.formula_override).trim() || undefined
@@ -61,6 +69,7 @@ function buildBaseDraft(actor: Actor, systemActions: Record<string, SystemAction
     const liveComment = (entry?.comment ?? '').trim();
     out[key] = {
       show_on_panel: entry?.show_on_panel !== false,
+      show_in_tracker: entry?.show_in_tracker === true,
       formula_override: liveFormula || (def?.formula ?? '').trim(),
       comment: liveComment || (def?.name ?? '').trim(),
     };
@@ -77,14 +86,21 @@ function computeBaseFieldDirty(
   actor: Actor,
   draft: BaseDraftMap,
   systemActions: Record<string, SystemActionDef>,
-): Record<string, { show: boolean; formula: boolean; comment: boolean; any: boolean }> {
-  const out: Record<string, { show: boolean; formula: boolean; comment: boolean; any: boolean }> = {};
+): Record<
+  string,
+  { show: boolean; tracker: boolean; formula: boolean; comment: boolean; any: boolean }
+> {
+  const out: Record<
+    string,
+    { show: boolean; tracker: boolean; formula: boolean; comment: boolean; any: boolean }
+  > = {};
   for (const [key, d] of Object.entries(draft)) {
     const def = systemActions[key];
     const defFormula = (def?.formula ?? '').trim();
     const defName = (def?.name ?? '').trim();
     const entry = actor.actions?.[key];
     const liveShow = entry?.show_on_panel !== false;
+    const liveTracker = entry?.show_in_tracker === true;
     const liveFormulaOv = (entry?.formula_override ?? '').trim();
     const liveCommentOv = (entry?.comment ?? '').trim();
     const liveEffectiveFormula = liveFormulaOv || defFormula;
@@ -92,9 +108,10 @@ function computeBaseFieldDirty(
     const draftFormula = d.formula_override.trim() || defFormula;
     const draftComment = d.comment.trim() || defName;
     const show = d.show_on_panel !== liveShow;
+    const tracker = d.show_in_tracker !== liveTracker;
     const formula = draftFormula !== liveEffectiveFormula;
     const comment = draftComment !== liveEffectiveComment;
-    out[key] = { show, formula, comment, any: show || formula || comment };
+    out[key] = { show, tracker, formula, comment, any: show || tracker || formula || comment };
   }
   return out;
 }
@@ -196,7 +213,13 @@ export function ActorActionEditor({
 
   const setBaseField = (key: string, partial: Partial<BaseDraftEntry>) => {
     setBaseDraft((prev) => {
-      const cur = prev[key] ?? { show_on_panel: true, formula_override: '', comment: '' };
+      const cur =
+        prev[key] ?? {
+          show_on_panel: true,
+          show_in_tracker: false,
+          formula_override: '',
+          comment: '',
+        };
       return { ...prev, [key]: { ...cur, ...partial } };
     });
   };
@@ -216,6 +239,7 @@ export function ActorActionEditor({
       const commentToSet = !draftComment || draftComment === defName ? null : draftComment;
       patch[key] = {
         show_on_panel: draft.show_on_panel,
+        show_in_tracker: draft.show_in_tracker,
         formula_override: formulaToSet,
         comment: commentToSet,
       };
@@ -239,6 +263,7 @@ export function ActorActionEditor({
       custom_name: newName.trim() || key,
       custom_formula: formula,
       show_on_panel: true,
+      show_in_tracker: false,
     });
     setNewKey('');
     setNewName('');
@@ -248,6 +273,8 @@ export function ActorActionEditor({
   const inputClass =
     'w-full py-1.5 px-2 text-xs bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-200 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none';
   const dirtyInputClass = `${inputClass} border-amber-500/50`;
+  const visibilityCheckboxClass =
+    'w-4 h-4 shrink-0 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-zinc-900';
 
   const subBtn = (active: boolean) =>
     `flex-1 px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
@@ -371,7 +398,7 @@ export function ActorActionEditor({
                     key={key}
                     className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-2"
                   >
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="text-sm font-medium text-zinc-200 truncate">
                         {(ov?.custom_name || '').trim() || key}
                       </div>
@@ -379,11 +406,31 @@ export function ActorActionEditor({
                       <div className="font-mono text-[11px] text-zinc-500 truncate mt-0.5">
                         {ov?.custom_formula}
                       </div>
+                      <div className="flex flex-wrap items-center gap-4 mt-2 pt-2 border-t border-zinc-800/80">
+                        <label className="flex items-center gap-2 text-xs text-zinc-400 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={ov?.show_on_panel !== false}
+                            onChange={(e) => patchActionKey(key, { show_on_panel: e.target.checked })}
+                            className={visibilityCheckboxClass}
+                          />
+                          <span>{t('modals.action_visibility_mini_sheet')}</span>
+                        </label>
+                        <label className="flex items-center gap-2 text-xs text-zinc-400 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={ov?.show_in_tracker === true}
+                            onChange={(e) => patchActionKey(key, { show_in_tracker: e.target.checked })}
+                            className={visibilityCheckboxClass}
+                          />
+                          <span>{t('modals.action_visibility_tracker')}</span>
+                        </label>
+                      </div>
                     </div>
                     <button
                       type="button"
                       onClick={() => deleteCustomMacro(key)}
-                      className="shrink-0 px-2 py-1 text-xs rounded border border-rose-500/40 text-rose-300 hover:bg-rose-500/10"
+                      className="shrink-0 px-2 py-1 text-xs rounded border border-rose-500/40 text-rose-300 hover:bg-rose-500/10 self-start"
                     >
                       {t('common.delete')}
                     </button>
@@ -429,11 +476,13 @@ export function ActorActionEditor({
                   const label = def?.name ?? key;
                   const draft = baseDraft[key] ?? {
                     show_on_panel: true,
+                    show_in_tracker: false,
                     formula_override: '',
                     comment: '',
                   };
                   const dirty = baseFieldDirty[key] ?? {
                     show: false,
+                    tracker: false,
                     formula: false,
                     comment: false,
                     any: false,
@@ -468,17 +517,26 @@ export function ActorActionEditor({
                         )}
                       </div>
 
-                      <label className="flex items-center justify-between gap-2 pt-1">
-                        <span className="text-xs text-zinc-400">
-                          {t('modals.action_editor_show_on_panel')}
-                        </span>
-                        <input
-                          type="checkbox"
-                          checked={draft.show_on_panel}
-                          onChange={(e) => setBaseField(key, { show_on_panel: e.target.checked })}
-                          className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-zinc-900"
-                        />
-                      </label>
+                      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 pt-1">
+                        <label className="flex items-center gap-2 text-xs text-zinc-400 cursor-pointer shrink-0">
+                          <input
+                            type="checkbox"
+                            checked={draft.show_on_panel}
+                            onChange={(e) => setBaseField(key, { show_on_panel: e.target.checked })}
+                            className={visibilityCheckboxClass}
+                          />
+                          <span>{t('modals.action_visibility_mini_sheet')}</span>
+                        </label>
+                        <label className="flex items-center gap-2 text-xs text-zinc-400 cursor-pointer shrink-0">
+                          <input
+                            type="checkbox"
+                            checked={draft.show_in_tracker}
+                            onChange={(e) => setBaseField(key, { show_in_tracker: e.target.checked })}
+                            className={visibilityCheckboxClass}
+                          />
+                          <span>{t('modals.action_visibility_tracker')}</span>
+                        </label>
+                      </div>
 
                       <div className="space-y-1">
                         <label className="text-[11px] text-zinc-500">

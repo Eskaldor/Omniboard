@@ -13,7 +13,15 @@ function renderApp() {
       <ColumnsProvider>
         <GMConsoleProvider>
           <App />
-          <Toaster position="bottom-center" toastOptions={{ className: 'bg-zinc-900 text-zinc-100 border border-zinc-700' }} />
+          <Toaster
+            position="bottom-center"
+            toastOptions={{
+              duration: 3800,
+              className:
+                '!bg-zinc-900 !text-zinc-100 !border !border-zinc-700/90 !rounded-xl !shadow-lg !shadow-black/40 !px-4 !py-3',
+              style: { maxWidth: 'min(26rem, calc(100vw - 2rem))' },
+            }}
+          />
         </GMConsoleProvider>
       </ColumnsProvider>
     </CombatStateProvider>

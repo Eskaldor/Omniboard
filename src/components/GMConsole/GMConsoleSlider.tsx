@@ -19,6 +19,12 @@ import {
   type ResolveContext,
   type SegmentPlan,
 } from '../../utils/rollTerminal';
+import {
+  parseRollHttpResponse,
+  showRollBatchToast,
+  showRollErrorToast,
+  type RollBatchRow,
+} from '../../utils/rollToast';
 import { NoteCard } from './NoteCard';
 import {
   RollTokenPopup,
@@ -468,7 +474,8 @@ export function GMConsoleSlider() {
 
     try {
       if (distinctActors.length > 0) {
-        const allRequests: Array<Promise<Response>> = [];
+        type Pending = { promise: Promise<Response>; prefix: string; comment?: string };
+        const pending: Pending[] = [];
         let anyMissing = false;
         for (const actor of distinctActors) {
           const ctx: ResolveContext = {
@@ -485,21 +492,37 @@ export function GMConsoleSlider() {
             }
             if (!seg.expression) continue;
             const finalComment = joinComments(seg.autoComment, comment);
-            allRequests.push(
-              fetch(`/api/combat/actors/${encodeURIComponent(actor.id)}/roll`, {
+            pending.push({
+              promise: fetch(`/api/combat/actors/${encodeURIComponent(actor.id)}/roll`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: buildRollRequestPayload(seg.expression, finalComment),
               }),
-            );
+              prefix: actor.name,
+              comment: finalComment ?? undefined,
+            });
           }
         }
-        if (allRequests.length === 0 || anyMissing) {
+        if (pending.length === 0 || anyMissing) {
           flashActionStatus('error');
           return;
         }
-        const responses = await Promise.all(allRequests);
-        if (responses.some((r) => !r.ok)) throw new Error('roll failed');
+        const responses = await Promise.all(pending.map((p) => p.promise));
+        const rows: RollBatchRow[] = [];
+        for (let i = 0; i < responses.length; i++) {
+          const parsed = await parseRollHttpResponse(responses[i]);
+          if (!parsed.ok) {
+            showRollErrorToast(parsed.message);
+            flashActionStatus('error');
+            return;
+          }
+          rows.push({
+            prefix: pending[i].prefix,
+            comment: pending[i].comment,
+            result: parsed.result,
+          });
+        }
+        showRollBatchToast(rows);
       } else {
         const segments = working
           .split(';')
@@ -509,24 +532,40 @@ export function GMConsoleSlider() {
           flashActionStatus('error');
           return;
         }
-        const responses = await Promise.all(
-          segments.map((seg) =>
-            fetch('/api/combat/roll', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: buildRollRequestPayload(seg, comment),
-            }),
-          ),
-        );
-        if (responses.some((r) => !r.ok)) throw new Error('roll failed');
+        type Pending = { promise: Promise<Response>; prefix: string; comment?: string };
+        const pending: Pending[] = segments.map((seg) => ({
+          promise: fetch('/api/combat/roll', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: buildRollRequestPayload(seg, comment),
+          }),
+          prefix: t('roll_toast.gm_prefix'),
+          comment: joinComments(seg, comment) ?? undefined,
+        }));
+        const responses = await Promise.all(pending.map((p) => p.promise));
+        const rows: RollBatchRow[] = [];
+        for (let i = 0; i < responses.length; i++) {
+          const parsed = await parseRollHttpResponse(responses[i]);
+          if (!parsed.ok) {
+            showRollErrorToast(parsed.message);
+            flashActionStatus('error');
+            return;
+          }
+          rows.push({
+            prefix: pending[i].prefix,
+            comment: pending[i].comment,
+            result: parsed.result,
+          });
+        }
+        showRollBatchToast(rows);
       }
       setCommand('');
       setPopupToken(null);
-      flashActionStatus('success');
     } catch {
+      showRollErrorToast(t('stat_editor.roll_network_error'));
       flashActionStatus('error');
     }
-  }, [actors, columnsByKey, flashActionStatus, systemActions, systemDice]);
+  }, [actors, columnsByKey, flashActionStatus, systemActions, systemDice, t]);
 
   const handleCommandKeyDown = useCallback(
     async (e: React.KeyboardEvent<HTMLInputElement>) => {

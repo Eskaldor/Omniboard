@@ -1,6 +1,6 @@
 # Nevrar's Omniboard — ТЗ v2.0
 
-> Обновлено: 03.05.2026 (+ **§2.6** — терминал бросков, `rollTerminal.ts`, **ADR-24**); ранее: GM Console / ESP / `led_triggers`; §4–§4.1 — маршруты vs `backend/routers/`; **§2.1.3** — мини-лист, `sheet_profiles`, override на актёре
+> Обновлено: 03.05.2026 (+ **§2.1.4** — колонка макросов в трекере, `show_in_tracker`, **`display.show_macros_column`**; **§2.7** — обратная связь по броскам, `rollToast.tsx`, themed `toast.custom`; ранее в этот же день: **§2.6** — терминал бросков, `rollTerminal.ts`, **ADR-24**); ранее: GM Console / ESP / `led_triggers`; §4–§4.1 — маршруты vs `backend/routers/`; **§2.1.3** — мини-лист, `sheet_profiles`, override на актёре
 > Стек сменился с Vue 3 на React 19 (сгенерировано в Google AI Studio).
 
 ## 📌 Суть проекта
@@ -22,7 +22,7 @@ Omniboard — это **локальный аппаратно-программн�
 - **Хранение:** Локальные JSON-файлы.
 - **Генерация картинок (для ESP32):** `Pillow` (композитинг слоев в PNG).
 - **Запуск:** `uvicorn --reload` для dev-режима.
-- **Frontend:** React 19, TypeScript, Vite 6, Tailwind CSS v4, `lucide-react`, `motion`, `i18next`.
+- **Frontend:** React 19, TypeScript, Vite 6, Tailwind CSS v4, `lucide-react`, `motion`, `i18next`, `react-hot-toast` (в т.ч. кастомные тосты результатов броска — §2.7).
 - **Архитектура:** Монорепо (`backend/` и `src/` в одном репозитории, запуск через `concurrently`).
 
 ---
@@ -126,16 +126,24 @@ data/
 **Актёр поверх шаблона:**
 
 - **`sheet_profile_id`** — выбранный профиль листа для мини-карточки.
-- **`actions`** — переопределения макросов: видимость, подстановка формулы, комментарий к броску; **`custom_name` / `custom_formula`** — макрос только у этого персонажа.
+- **`actions`** — переопределения макросов: **`show_on_panel`** (вкладка «Действия» мини-листа; по умолчанию трактуется как видимый, если ключ не задан), **`show_in_tracker`** (чип в **колонке макросов** таблицы инициативы; по умолчанию **`false`**), подстановка формулы, комментарий к броску; **`custom_name` / `custom_formula`** — макрос только у этого персонажа.
 - **`actions_panel_override`** — если задано (`{ accordions: [...] }`), **полностью подменяет** группировку вкладки «Действия» из профиля. PATCH: на сервере и клиенте — **глубокий merge** объекта; **`null`** в PATCH снимает override. Удаление кастомного макроса: в **`actions`** передать **`null`** по ключу (отдельный merge с удалением по `null`).
 
 **Редактор действий актёра (`ActorActionEditor.tsx`):** три подвкладки.
 
 - **«Группировка»** — только редактор `actions_panel_override` (и кнопка «Своя разметка для этого персонажа», если override ещё не создан).
-- **«Свои макросы»** — кастомные макросы актёра (`custom_name` / `custom_formula`), создание и удаление.
-- **«Базовые действия»** — изолированный редактор переопределений системных макросов (поля `show_on_panel`, `formula_override`, `comment`). Использует **draft-паттерн**: правки накапливаются в локальном `BaseDraftMap`, поля «грязного» состояния помечаются amber-рамкой и тегом «Изменено», в шапке — sticky-панель с кнопками **«Применить изменения»** / **«Отменить»**. Apply отправляет один объединённый `PATCH /api/actors/{id}` с `actions: { ...merged }`; Discard ресетит draft до текущего серверного снимка. На вкладке также отображается dot-индикатор «грязно», если есть неприменённые правки. Драфт пересеивается по смене `actor.id` или списка системных макросов; внешние WebSocket-обновления для того же актора **не** затирают активный draft.
+- **«Свои макросы»** — кастомные макросы актёра (`custom_name` / `custom_formula`), создание и удаление; те же две галочки видимости (**«Лист»** / **«Стол»**) применяются **сразу** через `patchActionKey` (без draft / Apply), чтобы не смешивать паттерны сохранения.
+- **«Базовые действия»** — изолированный редактор переопределений системных макросов (поля `show_on_panel`, **`show_in_tracker`**, `formula_override`, `comment`). Две компактные галочки в одной строке карточки макроса: **«Лист»** / **«Стол»** (локали `modals.action_visibility_mini_sheet` / `action_visibility_tracker`). Использует **draft-паттерн**: правки накапливаются в локальном `BaseDraftMap`, поля «грязного» состояния помечаются amber-рамкой и тегом «Изменено», в шапке — sticky-панель с кнопками **«Применить изменения»** / **«Отменить»**. Apply отправляет один объединённый `PATCH /api/actors/{id}` с `actions: { ...merged }`; Discard ресетит draft до текущего серверного снимка. На вкладке также отображается dot-индикатор «грязно», если есть неприменённые правки. Драфт пересеивается по смене `actor.id` или списка системных макросов; внешние WebSocket-обновления для того же актора **не** затирают активный draft.
 
 **Клиент:** `DefaultSystemSheet.tsx` (сводка), `ActionsPanel.tsx` (действия), `ActorActionEditor.tsx` (редактор с тремя подвкладками), `mergeActorActionDefs`, `actorPatchMerge.ts`.
+
+### 2.1.4. Таблица инициативы: колонка «Макросы»
+
+**Назначение:** быстрый бросок выбранных макросов актёра прямо из строки трекера, без открытия мини-карточки.
+
+- **Флаг отображения:** `**CombatSession.display.show_macros_column**` (`bool`, по умолчанию **`false`**). Включается в **Настройки → раздел отображения стола** (`PATCH /api/combat/settings`, ключ **`show_macros_column`** наряду со sticky-колонками и центрированием).
+- **Фильтр по актёру:** в колонке показываются только макросы с **`actor.actions[key].show_in_tracker === true`** (явное включение). Объединение определений — **`mergeActorActionDefs(systemActions, actor)`** (системный `actions.json` + кастомные `custom_formula`).
+- **Рендер:** `InitiativeTable.tsx` подгружает системные действия через **`useSystemActions`**; `ActorRow.tsx` (`TrackerMacroButtons`) — чипы по **отображаемому имени** макроса, полная формула в **`title`**, до **четырёх** видимых кнопок и кнопка **`+N`** для разворота остальных; порядок — сортировка по имени. Клик вызывает **`POST /api/combat/actors/{id}/roll`** с тем же телом, что и мини-лист (`expression`, опционально `comment`, `is_preroll: false`).
 
 ### 2.2. Движки и автосброс ресурсов (Action Economy)
 
@@ -203,6 +211,18 @@ Markdown-экспорт лога (`backend/services/logger.py`) и UI лога �
 - **Гейтинг:** для `!` и `$`, если в строке ещё нет ни одного `@Актёр`, попап всё равно может отображаться, но показывает **пустое состояние** с подсказкой локали (`gm_console.popup_need_actor`) — выбрать вставку из списка нельзя, пока не задан контекст актёра.
 
 **Затронутые файлы:** `src/utils/rollTerminal.ts` (`findCaretToken`, `replaceTokenInText`, `parseRollInput`, `uniqActors`, `planSegmentsForActor`, `previewSegmentsForActor`), `src/components/GMConsole/{GMConsoleSlider,RollTokenPopup}.tsx`, `src/utils/mergeActorActionDefs.ts`, `data/locales/{ru,en,je,ger}/core.json`.
+
+### 2.7. Обратная связь по броскам в UI (toast)
+
+**Назначение:** сразу после ответа HTTP по маршрутам **`POST /api/combat/roll`** и **`POST /api/combat/actors/{id}/roll`** мастер видит **итог броска** (`RollResult`: `total`, `formula`, `details`, опционально флаги глитча), а не абстрактное «успешно». Полная история по-прежнему в **нарративном логе боя**.
+
+- **Общая утилита:** `src/utils/rollToast.tsx` — **`parseRollHttpResponse`**, разбор ошибок FastAPI (`detail`), **`showRollResultToast`** / **`showRollErrorToast`** / **`showRollBatchToast`** на базе **`toast.custom`** из **`react-hot-toast`** (тёмная палитра zinc/emerald, скругления и рамки в духе основного UI). Строки заголовков и пакетного режима — группа локалей **`roll_toast.*`** в `data/locales/*/core.json`; тексты глитча переиспользуют **`stat_editor.roll_glitch`** / **`roll_critical_glitch`**.
+- **Глобальный контейнер:** `<Toaster>` в `src/main.tsx` задаёт **`toastOptions`** (длительность по умолчанию, классы для «обычных» тостов библиотеки — сохранение шаблонов листа и т.п.).
+- **Одиночный результат:** мини-карточка (**`MiniSheetModal`** → действия), колонка макросов (**`TrackerMacroButtons`** в `ActorRow.tsx`), быстрый 🎲 у числовой колонки (**`StatNumericCell`** в `StatEditPopover.tsx`), бросок из сводки мини-листа (**`DefaultSystemSheet.tsx`** → `StatRow.handleRoll`).
+- **Консоль мастера (режим Roll):** после серии запросов один агрегированный тост (**`showRollBatchToast`**, прокручиваемый список, верхняя граница числа строк + счётчик «ещё N» в локали); при **`!ok`** у любого ответа — **`showRollErrorToast`**. Успешный **`flashActionStatus('success')`** у FAB для чистого броска **не** используется (ошибки валидации до сети по-прежнему могут подсвечивать FAB через **`flashActionStatus('error')`**). Режимы **Note** / **AI** не затрагиваются.
+- **Исключение:** развернутая панель редактора стата (**`StatEditPanel.handleRoll`**) показывает результат только во внутреннем **`rollFlash`** — второй тост не дублируется.
+
+**Затронутые файлы (сводка):** `src/utils/rollToast.tsx`, `src/main.tsx`, `MiniSheetModal.tsx`, `ActorRow.tsx` (`TrackerMacroButtons`), `GMConsoleSlider.tsx`, `StatEditPopover.tsx` (`StatNumericCell`), `DefaultSystemSheet.tsx`, группы **`roll_toast.*`** в `data/locales/*/core.json`.
 
 ---
 
@@ -278,6 +298,7 @@ Markdown-экспорт лога (`backend/services/logger.py`) и UI лога �
 - `selected_layout_id: str` — выбранный профиль по умолчанию в UI (список профилей — только из API системы, не из стейта боя)
 - `legend`, `show_group_colors`, `show_faction_colors`, `table_centered`
 - `sticky_first_column`, `sticky_last_column` — закрепление первой/последней колонки таблицы при горизонтальной прокрутке
+- `show_macros_column` — показывать ли в таблице инициативы колонку быстрых макросов (см. §2.1.4); по умолчанию **`false`**
 
 #### `hardware` — `HardwareState`
 
@@ -314,7 +335,7 @@ Markdown-экспорт лога (`backend/services/logger.py`) и UI лога �
 - `POST /load` (загружает encounter)
 - `POST /log/note` — GM-заметка в нарративный лог; `DELETE /log` — очистить лог на диске (`latest_combat.*`)
 - `PATCH /system` (меняет активную систему)
-- `PATCH /legend`, `PATCH /settings` (в т.ч. `selected_layout_id`, `table_centered`, `sticky_first_column`, `sticky_last_column`, `engine_type`, `screen_brightness`, логирование)
+- `PATCH /legend`, `PATCH /settings` (в т.ч. `selected_layout_id`, `table_centered`, `sticky_first_column`, `sticky_last_column`, **`show_macros_column`**, `engine_type`, `screen_brightness`, логирование)
 - `POST /roll` — системный бросок без контекста актора (консоль мастера); результат может писаться в лог как generic roll
 - `POST /actors/{actor_id}/roll` — быстрый бросок по формуле; результат пишется в лог, если `is_preroll` не выставлен.
 - `POST /matrix/generate` — генерация Roll Matrix для всех акторов по `matrix.json`; сохраняет `session.prerolls`.
@@ -405,6 +426,8 @@ Markdown-экспорт лога (`backend/services/logger.py`) и UI лога �
 
 
 Полный перечень декораторов: поиск по шаблону `@router.(get|post|put|patch|delete|websocket)` в каталоге `**backend/routers/**`.
+
+**Дополнение:** отображение **`RollResult`** во всплывающих уведомлениях не добавляет новых HTTP-маршрутов — см. §2.7 и вызовы из `MiniSheetModal`, `ActorRow` (`TrackerMacroButtons`), `GMConsoleSlider`, `StatEditPopover`, `DefaultSystemSheet`.
 
 ---
 

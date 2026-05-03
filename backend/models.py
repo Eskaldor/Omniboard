@@ -224,6 +224,7 @@ def _actor_stats_migrate_before(raw: Any) -> Dict[str, Any]:
 
 class ActorActionOverride(BaseModel):
     show_on_panel: bool = True
+    show_in_tracker: bool = False
     formula_override: Optional[str] = None
     comment: Optional[str] = None
     custom_name: Optional[str] = None
@@ -425,6 +426,7 @@ class DisplayState(BaseModel):
     table_centered: bool = True
     sticky_first_column: bool = True
     sticky_last_column: bool = True
+    show_macros_column: bool = False
     sheet_mode: Literal["raw", "universal", "system"] = "raw"
 
     @model_validator(mode="before")

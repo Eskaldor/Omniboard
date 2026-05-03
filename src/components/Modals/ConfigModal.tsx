@@ -303,6 +303,7 @@ export function ConfigModal({
   const engineType = useMemo(() => (state?.core.engine_type ?? 'standard'), [state?.core.engine_type]);
   const stickyFirstColumn = state?.display.sticky_first_column !== false;
   const stickyLastColumn = state?.display.sticky_last_column !== false;
+  const showMacrosColumn = state?.display.show_macros_column === true;
   const showGroupColors = state?.display.show_group_colors !== false;
   const showFactionColors = state?.display.show_faction_colors !== false;
 
@@ -337,6 +338,17 @@ export function ConfigModal({
         await patchCombatSettings({ sticky_last_column: next });
       } catch (err) {
         console.error('Failed to set sticky last column', err);
+      }
+    },
+    [patchCombatSettings],
+  );
+
+  const onToggleShowMacrosColumn = useCallback(
+    async (next: boolean) => {
+      try {
+        await patchCombatSettings({ show_macros_column: next });
+      } catch (err) {
+        console.error('Failed to toggle macros column', err);
       }
     },
     [patchCombatSettings],
@@ -477,6 +489,8 @@ export function ConfigModal({
                 onToggleStickyFirstColumn={onToggleStickyFirstColumn}
                 stickyLastColumn={stickyLastColumn}
                 onToggleStickyLastColumn={onToggleStickyLastColumn}
+                showMacrosColumn={showMacrosColumn}
+                onToggleShowMacrosColumn={onToggleShowMacrosColumn}
                 showGroupColors={showGroupColors}
                 onToggleShowGroupColors={onToggleShowGroupColors}
                 showFactionColors={showFactionColors}

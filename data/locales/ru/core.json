@@ -93,6 +93,9 @@
     "phase": "Фаза",
     "name": "Имя",
     "matrix": "Матрица",
+    "macros": "Макросы",
+    "macros_more_title": "Показать ещё макросы",
+    "macros_collapse": "Свернуть",
     "effects": "Эффекты"
   },
   "stat_editor": {
@@ -112,6 +115,13 @@
     "roll_critical_glitch": "Критический глитч",
     "roll_glitch": "Глитч",
     "unknown_total": "?"
+  },
+  "roll_toast": {
+    "result_headline": "Бросок",
+    "error_headline": "Ошибка броска",
+    "batch_headline": "Броски",
+    "batch_overflow": "ещё {{count}}…",
+    "gm_prefix": "Мастер"
   },
   "config_modal": {
     "table": "Таблица",
@@ -249,6 +259,7 @@
     "languages_unavailable": "Список языков недоступен.",
     "sticky_first_column": "Закрепить первую колонку",
     "sticky_last_column": "Закрепить последнюю колонку",
+    "show_macros_column": "Колонка макросов в таблице инициативы",
     "show_group_colors": "Цвета групп",
     "show_faction_colors": "Цвета фракций"
   },
@@ -323,6 +334,8 @@
     "mini_sheet_action_roll_fail": "Не удалось выполнить бросок",
     "action_editor_title": "Настройки действий",
     "action_editor_show_on_panel": "Показывать во вкладке «Действия»",
+    "action_visibility_mini_sheet": "Лист",
+    "action_visibility_tracker": "Стол",
     "action_editor_formula_override": "Подстановка формулы",
     "action_editor_comment": "Подпись к броску",
     "action_editor_default_formula": "По умолчанию",

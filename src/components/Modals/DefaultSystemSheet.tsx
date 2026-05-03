@@ -32,6 +32,11 @@ import {
   normalizeSheetAccordionDisplay,
   type SystemSheetProfile,
 } from '../../hooks/useSystemSheetProfiles';
+import {
+  parseRollHttpResponse,
+  showRollErrorToast,
+  showRollResultToast,
+} from '../../utils/rollToast';
 
 type DeviceInfo = { name?: string; ip?: string; status?: string };
 
@@ -179,11 +184,23 @@ function StatRow({
       const expr = rawExpr
         ? rawExpr.replace(/\[value\]/g, `[${column.key}]`)
         : `1d20 + [${column.key}]`;
-      await fetch(`/api/combat/actors/${encodeURIComponent(actor.id)}/roll`, {
+      const res = await fetch(`/api/combat/actors/${encodeURIComponent(actor.id)}/roll`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ expression: expr, is_preroll: false }),
       });
+      const parsed = await parseRollHttpResponse(res);
+      if (!parsed.ok) {
+        showRollErrorToast(parsed.message);
+        return;
+      }
+      showRollResultToast({
+        result: parsed.result,
+        actorName: actor.name,
+        comment: label,
+      });
+    } catch {
+      showRollErrorToast(t('stat_editor.roll_network_error'));
     } finally {
       setRolling(false);
     }

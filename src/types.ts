@@ -63,6 +63,8 @@ export interface Actor {
     string,
     {
       show_on_panel?: boolean;
+      /** When true, macro chip appears in initiative tracker column. */
+      show_in_tracker?: boolean;
       formula_override?: string | null;
       comment?: string | null;
       /** Display name for an actor-only macro (when `custom_formula` is set). */
@@ -235,6 +237,8 @@ export interface DisplayState {
   sticky_first_column?: boolean;
   /** Sticky last column in initiative table (UI). */
   sticky_last_column?: boolean;
+  /** Initiative table column for actor macro rolls (GM toggle). */
+  show_macros_column?: boolean;
   /** Mini-sheet layout mode (config only; rendering uses this in later phases). */
   sheet_mode?: 'raw' | 'universal' | 'system';
 }

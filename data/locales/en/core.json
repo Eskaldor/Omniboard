@@ -91,6 +91,9 @@
     "phase": "Phase",
     "name": "Name",
     "matrix": "Matrix",
+    "macros": "Macros",
+    "macros_more_title": "Show more macros",
+    "macros_collapse": "Show fewer",
     "effects": "Effects"
   },
   "stat_editor": {
@@ -110,6 +113,13 @@
     "roll_critical_glitch": "Critical Glitch",
     "roll_glitch": "Glitch",
     "unknown_total": "?"
+  },
+  "roll_toast": {
+    "result_headline": "Roll",
+    "error_headline": "Roll failed",
+    "batch_headline": "Rolls",
+    "batch_overflow": "+{{count}} more",
+    "gm_prefix": "GM"
   },
   "config_modal": {
     "table": "Table",
@@ -247,6 +257,7 @@
     "languages_unavailable": "Language list is unavailable.",
     "sticky_first_column": "Sticky first column",
     "sticky_last_column": "Sticky last column",
+    "show_macros_column": "Macros column (initiative table)",
     "show_group_colors": "Show group colors",
     "show_faction_colors": "Show faction colors"
   },
@@ -321,6 +332,8 @@
     "mini_sheet_action_roll_fail": "Roll failed",
     "action_editor_title": "Action overrides",
     "action_editor_show_on_panel": "Show on Actions tab",
+    "action_visibility_mini_sheet": "Sheet",
+    "action_visibility_tracker": "Table",
     "action_editor_formula_override": "Formula override",
     "action_editor_comment": "Roll comment label",
     "action_editor_default_formula": "Default",

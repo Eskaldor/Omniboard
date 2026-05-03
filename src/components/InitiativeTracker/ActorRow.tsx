@@ -3,6 +3,13 @@ import { Plus, Trash } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
 import type { Actor, ColumnConfig, Effect, MatrixRuleGroup } from '../../types';
+import type { SystemActionDef } from '../../hooks/useSystemActions';
+import { mergeActorActionDefs } from '../../utils/mergeActorActionDefs';
+import {
+  parseRollHttpResponse,
+  showRollErrorToast,
+  showRollResultToast,
+} from '../../utils/rollToast';
 import { getMaxKey, getStatNumeric, isStatValuePayload } from '../../utils/stats';
 import { InlineInput } from './InlineInput';
 import { StatNumericCell } from './StatEditPopover';
@@ -87,6 +94,115 @@ function MatrixPrerollButtons({
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+const TRACKER_MACRO_VISIBLE_CAP = 4;
+
+function TrackerMacroButtons({
+  actor,
+  systemActions,
+  onCombatRefetch,
+}: {
+  actor: Actor;
+  systemActions: Record<string, SystemActionDef>;
+  onCombatRefetch?: () => void | Promise<void>;
+}) {
+  const { t } = useTranslation('core', { useSuspense: false });
+  const emptyDash = t('common.empty_dash');
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    setExpanded(false);
+  }, [actor.id]);
+
+  const merged = useMemo(() => mergeActorActionDefs(systemActions, actor), [systemActions, actor]);
+
+  const entries = useMemo(() => {
+    return Object.entries(merged)
+      .filter(([key]) => actor.actions?.[key]?.show_in_tracker === true)
+      .sort((a, b) => {
+        const na = (a[1].name || '').trim() || a[0];
+        const nb = (b[1].name || '').trim() || b[0];
+        return na.localeCompare(nb, undefined, { sensitivity: 'base' });
+      });
+  }, [merged, actor.actions]);
+
+  const overflowCount =
+    entries.length > TRACKER_MACRO_VISIBLE_CAP ? entries.length - TRACKER_MACRO_VISIBLE_CAP : 0;
+  const shownEntries =
+    expanded || overflowCount === 0 ? entries : entries.slice(0, TRACKER_MACRO_VISIBLE_CAP);
+
+  const rollMacro = async (e: React.MouseEvent, key: string, def: SystemActionDef) => {
+    e.stopPropagation();
+    const ov = actor.actions?.[key];
+    const expr = (ov?.formula_override?.trim() || def.formula).trim();
+    if (!expr) return;
+    const comment = (ov?.comment?.trim() || def.name).trim() || key;
+    try {
+      const res = await fetch(`/api/combat/actors/${encodeURIComponent(actor.id)}/roll`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          expression: expr,
+          is_preroll: false,
+          ...(comment ? { comment } : {}),
+        }),
+      });
+      const parsed = await parseRollHttpResponse(res);
+      if (!parsed.ok) {
+        showRollErrorToast(parsed.message);
+        return;
+      }
+      showRollResultToast({
+        result: parsed.result,
+        actorName: actor.name,
+        comment: comment.trim() || undefined,
+      });
+      await onCombatRefetch?.();
+    } catch {
+      showRollErrorToast(t('stat_editor.roll_network_error'));
+    }
+  };
+
+  if (entries.length === 0) {
+    return <span className="text-zinc-600 text-[11px]">{emptyDash}</span>;
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-1 min-w-0 py-1">
+      {shownEntries.map(([key, def]) => {
+        const ov = actor.actions?.[key];
+        const displayName = (def.name || '').trim() || key;
+        const formulaTip = (ov?.formula_override?.trim() || def.formula).trim();
+        return (
+          <button
+            key={key}
+            type="button"
+            title={formulaTip}
+            onClick={(e) => void rollMacro(e, key, def)}
+            className="text-xs px-2 py-0.5 max-w-[10rem] truncate bg-teal-500/15 text-teal-200 rounded-full border border-teal-500/35 hover:bg-teal-500/25 hover:border-teal-400/45 transition-colors cursor-pointer"
+          >
+            {displayName}
+          </button>
+        );
+      })}
+      {overflowCount > 0 ? (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setExpanded((v) => !v);
+          }}
+          className="text-xs px-2 py-0.5 rounded-full border border-zinc-600 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 transition-colors shrink-0"
+          title={
+            expanded ? t('table_header.macros_collapse') : t('table_header.macros_more_title')
+          }
+        >
+          {expanded ? '−' : `+${overflowCount}`}
+        </button>
+      ) : null}
     </div>
   );
 }
@@ -338,6 +454,8 @@ export interface ActorRowProps {
   onCombatRefetch?: () => void | Promise<void>;
   showMatrixColumn?: boolean;
   matrixRules?: MatrixRuleGroup[];
+  showMacrosColumn?: boolean;
+  systemActions?: Record<string, SystemActionDef>;
 }
 
 function ActorRowComponent({
@@ -373,6 +491,8 @@ function ActorRowComponent({
   onCombatRefetch,
   showMatrixColumn = false,
   matrixRules,
+  showMacrosColumn = false,
+  systemActions = {},
 }: ActorRowProps) {
   const { t } = useTranslation('core', { useSuspense: false });
   const emptyDash = t('common.empty_dash');
@@ -809,6 +929,16 @@ function ActorRowComponent({
         </td>
       )}
 
+      {showMacrosColumn && (
+        <td className="px-2 py-1 align-middle max-w-[14rem] whitespace-normal border-b border-zinc-800/50 bg-zinc-900/25">
+          <TrackerMacroButtons
+            actor={actor}
+            systemActions={systemActions}
+            onCombatRefetch={onCombatRefetch}
+          />
+        </td>
+      )}
+
       {/* Effects */}
       <td className="px-2 py-1 align-middle max-w-[14rem] whitespace-normal">
         <div className="flex flex-wrap items-center gap-1 min-w-0 py-1">
@@ -899,6 +1029,8 @@ export const ActorRow = React.memo(ActorRowComponent, (prev, next) => {
   if ((prev.phaseRowInactive ?? false) !== (next.phaseRowInactive ?? false)) return false;
   if ((prev.isActiveCombat ?? false) !== (next.isActiveCombat ?? false)) return false;
   if ((prev.showMatrixColumn ?? false) !== (next.showMatrixColumn ?? false)) return false;
+  if ((prev.showMacrosColumn ?? false) !== (next.showMacrosColumn ?? false)) return false;
+  if (prev.systemActions !== next.systemActions) return false;
   if (prev.columns !== next.columns) return false;
   if (prev.matrixRules !== next.matrixRules) return false;
 

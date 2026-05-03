@@ -9,6 +9,8 @@ export function TableTab({
   onToggleStickyFirstColumn,
   stickyLastColumn,
   onToggleStickyLastColumn,
+  showMacrosColumn,
+  onToggleShowMacrosColumn,
   showGroupColors,
   onToggleShowGroupColors,
   showFactionColors,
@@ -20,6 +22,8 @@ export function TableTab({
   onToggleStickyFirstColumn: (next: boolean) => Promise<void>;
   stickyLastColumn: boolean;
   onToggleStickyLastColumn: (next: boolean) => Promise<void>;
+  showMacrosColumn: boolean;
+  onToggleShowMacrosColumn: (next: boolean) => Promise<void>;
   showGroupColors: boolean;
   onToggleShowGroupColors: (next: boolean) => Promise<void>;
   showFactionColors: boolean;
@@ -77,6 +81,16 @@ export function TableTab({
             type="checkbox"
             checked={stickyLastColumn}
             onChange={(e) => void onToggleStickyLastColumn(e.target.checked)}
+            className={checkboxClass}
+          />
+        </div>
+
+        <div className={itemClass}>
+          <span className="text-sm text-zinc-300">{t('config_modal.show_macros_column')}</span>
+          <input
+            type="checkbox"
+            checked={showMacrosColumn}
+            onChange={(e) => void onToggleShowMacrosColumn(e.target.checked)}
             className={checkboxClass}
           />
         </div>
