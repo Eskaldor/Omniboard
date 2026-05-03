@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Body, HTTPException
+from pydantic import BaseModel, ConfigDict, Field
 
 from backend import combat_engine
 from backend import state as app_state
@@ -30,6 +31,11 @@ from backend.routers.hardware import get_esp_manager
 from backend.routers.ws import broadcast_state
 from backend.services import led_interceptor
 from backend.services.dice import DiceManager, RollResult
+from backend.services.initiative_roll import (
+    apply_initiative_rolls_to_actor_list,
+    initiative_roll_available,
+    resolve_initiative_expression,
+)
 from backend.services.logger import (
     add_log,
     combat_history_archive_json,
@@ -64,6 +70,74 @@ async def _refresh_initiative_line_safe(session: CombatSession) -> None:
 
 def _queue_initiative_line_refresh(background_tasks: BackgroundTasks) -> None:
     background_tasks.add_task(_refresh_initiative_line_safe, app_state.state)
+
+
+class InitiativeSettingsPatch(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    initiative_include_character: bool | None = None
+    initiative_include_enemy: bool | None = None
+    initiative_include_ally: bool | None = None
+    initiative_include_neutral: bool | None = None
+    initiative_reroll_locked: bool | None = None
+    initiative_show_per_actor_dice: bool | None = None
+
+
+class InitiativeRollBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    actor_ids: list[str] | None = Field(default=None)
+
+
+def _initiative_roll_log_details(result: RollResult) -> dict[str, Any]:
+    return {
+        "expression": str(result.formula),
+        "formula": str(result.formula),
+        "total": int(result.total),
+        "details": str(result.details),
+        "is_glitch": bool(result.is_glitch),
+        "is_crit_glitch": bool(result.is_crit_glitch),
+        "is_initiative_roll": True,
+    }
+
+
+def _maybe_reroll_locked_initiative_on_new_round(prev_round: int) -> None:
+    """Переброс инициативы в начале нового раунда (round вырос), если включён замок."""
+    st = app_state.state
+    if st.core.round <= prev_round:
+        return
+    if not st.session.initiative_reroll_locked:
+        return
+    if not st.core.is_active or not st.core.turn_queue:
+        return
+    if (st.core.engine_type or "").lower() == "popcorn":
+        return
+    system_name = (st.core.system or "").strip()
+    if not initiative_roll_available(system_name):
+        return
+    expr = resolve_initiative_expression(system_name)
+    if expr is None:
+        return
+    sess = st.session
+    new_actors, rolls = apply_initiative_rolls_to_actor_list(
+        list(st.core.actors),
+        expr,
+        only_actor_ids=None,
+        include_character=sess.initiative_include_character,
+        include_enemy=sess.initiative_include_enemy,
+        include_ally=sess.initiative_include_ally,
+        include_neutral=sess.initiative_include_neutral,
+    )
+    st.core.actors = new_actors
+    if st.core.is_active and st.core.turn_queue:
+        combat_engine.rebuild_turn_queue_after_initiative_reroll()
+    for aid, aname, res in rolls:
+        add_log(
+            "roll",
+            actor_id=aid,
+            actor_name=aname,
+            details=_initiative_roll_log_details(res),
+        )
 
 
 def _log_turn_progression(
@@ -159,6 +233,79 @@ async def roll_for_actor(actor_id: str, body: RollRequest):
     await save_snapshot()
     await broadcast_state()
     return result.model_dump()
+
+
+@router.patch("/initiative/settings")
+async def patch_initiative_settings(body: InitiativeSettingsPatch):
+    st = app_state.state
+    patch = body.model_dump(exclude_unset=True)
+    for key, val in patch.items():
+        setattr(st.session, key, val)
+    await save_snapshot()
+    await broadcast_state()
+    return combat_session_public_payload(
+        app_state.state,
+        initiative_engine_locked=system_has_custom_logic_file(app_state.state.core.system),
+    )
+
+
+@router.post("/initiative/roll")
+async def roll_initiative(background_tasks: BackgroundTasks, body: InitiativeRollBody = Body(default_factory=InitiativeRollBody)):
+    st = app_state.state
+    system_name = (st.core.system or "").strip()
+    if not initiative_roll_available(system_name):
+        raise HTTPException(
+            status_code=400,
+            detail="initiative_roll is disabled for this system (none)",
+        )
+    expr = resolve_initiative_expression(system_name)
+    if expr is None:
+        raise HTTPException(status_code=400, detail="initiative_roll unavailable")
+
+    raw_ids = body.actor_ids
+    only: set[str] | None = None
+    if raw_ids is not None:
+        only = {str(x).strip() for x in raw_ids if str(x).strip()}
+        known = {a.id for a in st.core.actors}
+        unknown = only - known
+        if unknown:
+            raise HTTPException(status_code=400, detail="unknown actor_ids")
+
+    sess = st.session
+    new_actors, rolls = apply_initiative_rolls_to_actor_list(
+        list(st.core.actors),
+        expr,
+        only_actor_ids=only,
+        include_character=sess.initiative_include_character,
+        include_enemy=sess.initiative_include_enemy,
+        include_ally=sess.initiative_include_ally,
+        include_neutral=sess.initiative_include_neutral,
+    )
+    st.core.actors = new_actors
+    if st.core.is_active and st.core.turn_queue:
+        combat_engine.reorder_turn_queue()
+
+    for aid, aname, res in rolls:
+        add_log(
+            "roll",
+            actor_id=aid,
+            actor_name=aname,
+            details=_initiative_roll_log_details(res),
+        )
+
+    await save_snapshot()
+    await broadcast_state()
+    _queue_initiative_line_refresh(background_tasks)
+
+    payload = combat_session_public_payload(
+        app_state.state,
+        initiative_engine_locked=system_has_custom_logic_file(app_state.state.core.system),
+    )
+    payload["initiative_roll_results"] = [
+        {"actor_id": aid, "actor_name": aname, **res.model_dump(mode="json")}
+        for aid, aname, res in rolls
+    ]
+    return payload
 
 
 @router.post("/matrix/generate")
@@ -295,6 +442,7 @@ async def next_turn(background_tasks: BackgroundTasks, payload: dict = Body(defa
     }
     app_state.state = next_turn_for_session(st, target_actor_id)
     _log_turn_progression(prev_round, prev_effects_by_actor)
+    _maybe_reroll_locked_initiative_on_new_round(prev_round)
 
     # Second snapshot captures the new state (still RAM-only and fast).
     await save_snapshot()

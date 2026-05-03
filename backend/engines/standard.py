@@ -4,6 +4,7 @@ from typing import Any, Literal, Optional
 
 from backend.engines.base import BaseInitiativeEngine
 from backend.models import Actor, CombatState, Effect
+from backend.services.initiative_roll import normalize_simultaneous_actor_initiatives
 
 
 def _get_actor(state: CombatState, aid: str) -> Actor | None:
@@ -34,26 +35,6 @@ def _slot_size_at(state: CombatState, idx: int) -> int:
     return slot_size
 
 
-def _normalize_simultaneous_initiatives(actors: list[Actor]) -> list[Actor]:
-    """Set each simultaneous-group member's initiative to the group's max (same as start_combat)."""
-    groups: dict[str, list[tuple[str, int]]] = {}
-    for a in actors:
-        if getattr(a, "group_id", None) and getattr(a, "group_mode", None) == "simultaneous":
-            groups.setdefault(a.group_id, []).append((a.id, a.initiative))
-    max_by_gid: dict[str, int] = {}
-    for gid, id_init_list in groups.items():
-        if id_init_list:
-            max_by_gid[gid] = max(init for _, init in id_init_list)
-    out: list[Actor] = []
-    for a in actors:
-        gid = getattr(a, "group_id", None)
-        if gid and getattr(a, "group_mode", None) == "simultaneous" and gid in max_by_gid:
-            out.append(a.model_copy(update={"initiative": max_by_gid[gid]}))
-        else:
-            out.append(a)
-    return out
-
-
 def _sort_key_actor(a: Actor) -> tuple[int, str]:
     gid = getattr(a, "group_id", None) or ""
     return (-a.initiative, gid)
@@ -63,7 +44,7 @@ class StandardInitiativeEngine(BaseInitiativeEngine):
     """Classic descending initiative (D&D-style), including simultaneous groups as one slot."""
 
     def build_queue(self, state: CombatState) -> list[str]:
-        normalized = _normalize_simultaneous_initiatives(list(state.actors))
+        normalized = normalize_simultaneous_actor_initiatives(list(state.actors))
         state.actors = normalized
         sorted_actors = sorted(normalized, key=_sort_key_actor)
         return [a.id for a in sorted_actors]

@@ -684,6 +684,17 @@
     "roll_placeholder": "Roll (coming soon):",
     "mention_no_results": "No matching actors",
     "roll_mention_required": "Select an actor via @",
-    "ai_placeholder": "AI assistant (coming soon)"
+    "ai_placeholder": "AI assistant (coming soon)",
+    "initiative_roll_button": "Roll initiative",
+    "initiative_roles_label": "Roles (bulk roll)",
+    "initiative_role_character": "Players",
+    "initiative_role_enemy": "Enemies",
+    "initiative_role_ally": "Allies",
+    "initiative_role_neutral": "Neutral",
+    "initiative_lock_reroll": "Every round",
+    "initiative_lock_hint": "At the start of each new round, reroll initiative for the same role filters",
+    "initiative_show_row_dice": "Row dice button",
+    "initiative_disabled_hint": "Initiative rolling is disabled for this system (mechanics.json: initiative_roll set to none).",
+    "initiative_settings_error": "Could not save initiative settings."
   }
 }

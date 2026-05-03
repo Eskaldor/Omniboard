@@ -1,6 +1,6 @@
 # Omniboard — Progress & Backlog
 
-> Обновлено: 03.05.2026 (**toast результатов броска** / §2.7 ТЗ, **ADR-25**; колонка макросов в трекере §2.1.4); ранее 02.05.2026 (ESP timeout, линия инициативы / `initiative_shift`)
+> Обновлено: 03.05.2026 (**§2.1.5** — `initiative_roll`, `PATCH/POST /api/combat/initiative/*`, `SessionMeta`, GM Console, кубик в строке; автопереброс по раунду + `rebuild_turn_queue_after_initiative_reroll`); ранее: toast броска §2.7 / **ADR-25**; колонка макросов §2.1.4; 02.05.2026 — ESP, `initiative_shift`
 
 ---
 
@@ -13,6 +13,7 @@
 
 ## ✅ Фаза 2 — Боевой движок
 - [x] Трекер инициативы: сортировка, ход боя, смена раундов
+- [x] Бросок инициативы по **`mechanics.json` → `initiative_roll`** (`backend/services/initiative_roll.py`, только **D20Engine** для суммы); **`PATCH /api/combat/initiative/settings`**, **`POST /api/combat/initiative/roll`**; настройки в **`SessionMeta`**; полоска **GM Console**; при замке «каждый раунд» после роста **`round`** — пересборка очереди через **`rebuild_turn_queue_after_initiative_reroll`** (не путать с **`reorder_turn_queue`**)
 - [x] Группы акторов (`group_id` + `group_mode: sequential / simultaneous`)
 - [x] Simultaneous groups: ходят как единый слот в `next_turn`
 - [x] Автовыравнивание initiative внутри `simultaneous`-группы при старте

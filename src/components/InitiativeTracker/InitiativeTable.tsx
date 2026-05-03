@@ -12,6 +12,10 @@ export interface InitiativeTableProps {
   isActive: boolean;
   columns: ColumnConfig[];
   systemName: string;
+  /** mechanics.json initiative_roll не «none» */
+  initiativeRollAvailable?: boolean;
+  /** SessionMeta: показывать кубик у ячейки инициативы */
+  initiativeShowPerActorDice?: boolean;
   showGroupColorsInTable: boolean;
   showFactionColorsInTable: boolean;
   getLegendColor: (role: Actor['role']) => string;
@@ -44,6 +48,8 @@ export function InitiativeTable({
   isActive,
   columns,
   systemName,
+  initiativeRollAvailable = true,
+  initiativeShowPerActorDice = true,
   showGroupColorsInTable,
   showFactionColorsInTable,
   getLegendColor,
@@ -70,7 +76,7 @@ export function InitiativeTable({
   const { actions: systemActions } = useSystemActions(systemName);
   const engineKey = engineType.toLowerCase();
   const clickToActEngine = isManualMode || engineKey === 'popcorn' || engineKey === 'phase';
-  const showInitColumn = engineKey !== 'popcorn';
+  const showInitColumn = engineKey !== 'popcorn' && initiativeRollAvailable;
   const { t } = useTranslation('core', { useSuspense: false });
   const colLabel = (col: ColumnConfig) =>
     i18n.t(`${col.key}.name`, { ns: `systems/${systemName}`, defaultValue: col.key });
@@ -260,6 +266,8 @@ export function InitiativeTable({
                 showPortraitColumn={showPortraitColumn}
                 stickyFirstColumn={stickyFirstColumn}
                 showInitColumn={showInitColumn}
+                initiativeRollAvailable={initiativeRollAvailable}
+                initiativeShowPerActorDice={initiativeShowPerActorDice}
                 clickToActEngine={clickToActEngine}
                 rowClickEnabled={rowClickEnabled}
                 phaseRowInactive={

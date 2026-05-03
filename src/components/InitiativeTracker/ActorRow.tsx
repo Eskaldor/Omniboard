@@ -6,9 +6,11 @@ import type { Actor, ColumnConfig, Effect, MatrixRuleGroup } from '../../types';
 import type { SystemActionDef } from '../../hooks/useSystemActions';
 import { mergeActorActionDefs } from '../../utils/mergeActorActionDefs';
 import {
+  formatFastApiDetail,
   parseRollHttpResponse,
   showRollErrorToast,
   showRollResultToast,
+  toastInitiativeRollOutcome,
 } from '../../utils/rollToast';
 import { getMaxKey, getStatNumeric, isStatValuePayload } from '../../utils/stats';
 import { InlineInput } from './InlineInput';
@@ -440,8 +442,10 @@ export interface ActorRowProps {
   showPortraitColumn: boolean;
   stickyFirstColumn?: boolean;
   stickyLastColumn?: boolean;
-  /** Hide initiative column (e.g. Popcorn engine) */
+  /** Hide initiative column (e.g. Popcorn engine или mechanics initiative_roll: none) */
   showInitColumn?: boolean;
+  initiativeRollAvailable?: boolean;
+  initiativeShowPerActorDice?: boolean;
   /** Manual / Popcorn / Phase: table uses has_acted for past-turn styling */
   clickToActEngine?: boolean;
   /** Whether this row accepts a click to assign turn (manual: always true; phase: current phase only) */
@@ -483,6 +487,8 @@ function ActorRowComponent({
   stickyFirstColumn = true,
   stickyLastColumn = true,
   showInitColumn = true,
+  initiativeRollAvailable = true,
+  initiativeShowPerActorDice = true,
   clickToActEngine = false,
   rowClickEnabled = false,
   phaseRowInactive = false,
@@ -515,6 +521,48 @@ function ActorRowComponent({
 
   const manualRowActive = rowClickEnabled && isActiveCombat && !!onManualRowActivate;
   const hasActedDim = clickToActEngine && !!actor.has_acted;
+
+  const [rollingInitiative, setRollingInitiative] = useState(false);
+
+  const handleInitiativeRoll = useCallback(
+    async (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+      if (!initiativeRollAvailable || !showInitColumn || rollingInitiative) return;
+      setRollingInitiative(true);
+      try {
+        const res = await fetch('/api/combat/initiative/roll', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ actor_ids: [actor.id] }),
+        });
+        const raw = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          showRollErrorToast(formatFastApiDetail(raw) || t('stat_editor.roll_failed'));
+          return;
+        }
+        toastInitiativeRollOutcome(raw, t('combat.initiative'));
+        await onCombatRefetch?.();
+      } catch {
+        showRollErrorToast(t('stat_editor.roll_network_error'));
+      } finally {
+        setRollingInitiative(false);
+      }
+    },
+    [actor.id, initiativeRollAvailable, onCombatRefetch, rollingInitiative, showInitColumn, t],
+  );
+
+  const initiativeDice =
+    initiativeRollAvailable && initiativeShowPerActorDice ? (
+      <button
+        type="button"
+        disabled={rollingInitiative}
+        onClick={(e) => void handleInitiativeRoll(e)}
+        className="ml-0.5 hidden rounded text-zinc-500 hover:text-amber-300 disabled:opacity-50 group-hover/stat:inline-flex"
+        title={t('stat_editor.roll')}
+      >
+        🎲
+      </button>
+    ) : null;
 
   const [textEditor, setTextEditor] = useState<{
     isOpen: boolean;
@@ -670,15 +718,18 @@ function ActorRowComponent({
               />
             )}
             <div
-              className="w-[54px] mx-auto font-mono font-bold text-lg"
+              className="group/stat w-[54px] mx-auto font-mono font-bold text-lg"
               style={{ color: showFactionColorsInTable ? legendColor : '#a1a1aa' }}
             >
-              <InlineInput
-                type="number"
-                value={actor.initiative}
-                onChange={(val) => onUpdate({ initiative: parseInt(val) || 0 })}
-                className="w-10 bg-transparent border border-transparent hover:border-zinc-700 focus:border-emerald-500 rounded px-1 py-0.5 font-mono text-sm focus:outline-none transition-colors"
-              />
+              <span className="inline-flex items-center justify-center gap-1">
+                <InlineInput
+                  type="number"
+                  value={actor.initiative}
+                  onChange={(val) => onUpdate({ initiative: parseInt(val) || 0 })}
+                  className="w-10 bg-transparent border border-transparent hover:border-zinc-700 focus:border-emerald-500 rounded px-1 py-0.5 font-mono text-sm focus:outline-none transition-colors"
+                />
+                {initiativeDice}
+              </span>
             </div>
           </div>
         </td>
@@ -1024,6 +1075,8 @@ export const ActorRow = React.memo(ActorRowComponent, (prev, next) => {
   if ((prev.stickyFirstColumn ?? true) !== (next.stickyFirstColumn ?? true)) return false;
   if ((prev.stickyLastColumn ?? true) !== (next.stickyLastColumn ?? true)) return false;
   if ((prev.showInitColumn ?? true) !== (next.showInitColumn ?? true)) return false;
+  if ((prev.initiativeRollAvailable ?? true) !== (next.initiativeRollAvailable ?? true)) return false;
+  if ((prev.initiativeShowPerActorDice ?? true) !== (next.initiativeShowPerActorDice ?? true)) return false;
   if ((prev.clickToActEngine ?? false) !== (next.clickToActEngine ?? false)) return false;
   if ((prev.rowClickEnabled ?? false) !== (next.rowClickEnabled ?? false)) return false;
   if ((prev.phaseRowInactive ?? false) !== (next.phaseRowInactive ?? false)) return false;

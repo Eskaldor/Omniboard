@@ -3,7 +3,8 @@ from __future__ import annotations
 from typing import Any, Literal, Optional
 
 from backend.engines.base import BaseInitiativeEngine
-from backend.engines.standard import _normalize_simultaneous_initiatives, _sort_key_actor
+from backend.engines.standard import _sort_key_actor
+from backend.services.initiative_roll import normalize_simultaneous_actor_initiatives
 from backend.models import Actor, CombatState, Effect
 
 
@@ -15,7 +16,7 @@ class PhaseInitiativeEngine(BaseInitiativeEngine):
     """Phase initiative: queue sorted by initiative (desc); only the current phase row is clickable."""
 
     def build_queue(self, state: CombatState) -> list[str]:
-        normalized = _normalize_simultaneous_initiatives(list(state.actors))
+        normalized = normalize_simultaneous_actor_initiatives(list(state.actors))
         state.actors = normalized
         sorted_actors = sorted(normalized, key=_sort_key_actor)
         return [a.id for a in sorted_actors]

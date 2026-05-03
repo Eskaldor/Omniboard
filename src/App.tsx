@@ -332,6 +332,10 @@ export default function App() {
             isActive={effectiveState.core.is_active}
             columns={columns}
             systemName={systemName}
+            initiativeRollAvailable={effectiveState.initiative_roll_available ?? true}
+            initiativeShowPerActorDice={
+              effectiveState.session?.initiative_show_per_actor_dice !== false
+            }
             showGroupColorsInTable={showGroupColorsInTable}
             showFactionColorsInTable={showFactionColorsInTable}
             getLegendColor={getLegendColor}

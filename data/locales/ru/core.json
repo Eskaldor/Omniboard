@@ -700,6 +700,17 @@
     "roll_placeholder": "Бросок (скоро):",
     "mention_no_results": "Нет подходящих актёров",
     "roll_mention_required": "Укажите актёра через @",
-    "ai_placeholder": "ИИ-ассистент (скоро)"
+    "ai_placeholder": "ИИ-ассистент (скоро)",
+    "initiative_roll_button": "Бросить инициативу",
+    "initiative_roles_label": "Роли для массового броска",
+    "initiative_role_character": "Игрок",
+    "initiative_role_enemy": "Противник",
+    "initiative_role_ally": "Союзник",
+    "initiative_role_neutral": "Нейтрал",
+    "initiative_lock_reroll": "Каждый раунд",
+    "initiative_lock_hint": "В начале каждого нового раунда автоматически перебрасывать инициативу по тем же фильтрам ролей",
+    "initiative_show_row_dice": "Кубик в строках",
+    "initiative_disabled_hint": "Для этой системы бросок инициативы отключён (mechanics.json: initiative_roll — none).",
+    "initiative_settings_error": "Не удалось сохранить настройки инициативы."
   }
 }

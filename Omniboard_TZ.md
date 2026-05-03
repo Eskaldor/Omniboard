@@ -1,6 +1,6 @@
 # Nevrar's Omniboard — ТЗ v2.0
 
-> Обновлено: 03.05.2026 (+ **§2.1.4** — колонка макросов в трекере, `show_in_tracker`, **`display.show_macros_column`**; **§2.7** — обратная связь по броскам, `rollToast.tsx`, themed `toast.custom`; ранее в этот же день: **§2.6** — терминал бросков, `rollTerminal.ts`, **ADR-24**); ранее: GM Console / ESP / `led_triggers`; §4–§4.1 — маршруты vs `backend/routers/`; **§2.1.3** — мини-лист, `sheet_profiles`, override на актёре
+> Обновлено: 03.05.2026 (**§2.1.5** — шаблон броска инициативы `initiative_roll` в `mechanics.json`, API, `SessionMeta`, GM Console, кубик в строке трекера; **ADR-26** — `reorder_turn_queue` vs `rebuild_turn_queue_after_initiative_reroll`; **§2.1.2** / **§2.5** / **§4** синхронизированы); ранее: **§2.1.4** — колонка макросов в трекере; **§2.7** — обратная связь по броскам; **§2.6** — терминал бросков, **ADR-24**; GM Console / ESP / `led_triggers`; **§2.1.3** — мини-лист, `sheet_profiles`
 > Стек сменился с Vue 3 на React 19 (сгенерировано в Google AI Studio).
 
 ## 📌 Суть проекта
@@ -17,7 +17,7 @@ Omniboard — это **локальный аппаратно-программн�
 
 - **Backend:** FastAPI (Python 3.11), Pydantic v2.
 - **Боевой слой:** логика инициативы инкапсулирована в `backend/engines/` (`BaseInitiativeEngine` и реализации); выбор движка — по полю `**CombatSession.core.engine_type`** (см. §3).
-- **Боевая математика:** `backend/services/mechanics.py` (`MechanicsManager`) считает `StatValue` по `mechanics.json`; `backend/services/dice.py` (`DiceManager`) выбирает движок бросков (`D20Engine`, `ShadowrunEngine`).
+- **Боевая математика:** `backend/services/mechanics.py` (`MechanicsManager`) считает `StatValue` по `mechanics.json`; `backend/services/dice.py` (`DiceManager`) выбирает движок бросков (`D20Engine`, `ShadowrunEngine`). Отдельно: **`backend/services/initiative_roll.py`** — шаблон **`initiative_roll`** и бросок инициативы **только через `D20Engine`** (арифметическая сумма / d20-notation, не пул успехов Shadowrun).
 - **Связь:** WebSocket только для UI мастера (`/ws/master`, см. §4). Оmnimini (ESP32) не используют WebSocket: доставка команд и PNG — **HTTP** поверх **mDNS** (`zeroconf`), см. ADR-15 и §5.
 - **Хранение:** Локальные JSON-файлы.
 - **Генерация картинок (для ESP32):** `Pillow` (композитинг слоев в PNG).
@@ -101,9 +101,11 @@ data/
 
 ### 2.1.2. `mechanics.json` и `matrix.json`
 
-- `**mechanics.json**` загружается через `load_config_with_override(system, "mechanics.json")`; дефолт лежит в `data/assets/default/config/mechanics.json` и содержит `system_dice` + `formulas`.
+- `**mechanics.json**` загружается через `load_config_with_override(system, "mechanics.json")`; дефолт лежит в `data/assets/default/config/mechanics.json` и содержит `system_dice` + `formulas` + опционально **`initiative_roll`** (см. **§2.1.5**).
 - `**matrix.json**` загружается тем же Asset Override-путём; `generation_rules[]` задаёт выражение, количество слотов и режим отображения (`single` / `pair`) для пред-бросков.
 - Правило проекта: игровой куб, формулы и матрицы не хардкодятся в TS/Python; системные отличия живут в JSON-конфигах.
+
+**Ключ `initiative_roll` (кратко, полное описание — §2.1.5):** отсутствие ключа или пустая строка → эффективный шаблон **`1d20`**; строка **`none`** (без учёта регистра) → броска нет: в публичном стейте **`initiative_roll_available: false`**, числовая колонка Init в трекере скрыта (у **popcorn** эта колонка всегда скрыта отдельно от ключа); иначе — выражение с подстановкой **`[stat_key]`** как у `BaseDiceEngine.interpolate_stats` в `dice.py`.
 
 ### 2.1.3. Мини-лист персонажа: `sheet_profiles`, группировка, действия
 
@@ -145,6 +147,27 @@ data/
 - **Фильтр по актёру:** в колонке показываются только макросы с **`actor.actions[key].show_in_tracker === true`** (явное включение). Объединение определений — **`mergeActorActionDefs(systemActions, actor)`** (системный `actions.json` + кастомные `custom_formula`).
 - **Рендер:** `InitiativeTable.tsx` подгружает системные действия через **`useSystemActions`**; `ActorRow.tsx` (`TrackerMacroButtons`) — чипы по **отображаемому имени** макроса, полная формула в **`title`**, до **четырёх** видимых кнопок и кнопка **`+N`** для разворота остальных; порядок — сортировка по имени. Клик вызывает **`POST /api/combat/actors/{id}/roll`** с тем же телом, что и мини-лист (`expression`, опционально `comment`, `is_preroll: false`).
 
+### 2.1.5. Бросок инициативы: `mechanics.json`, API, GM Console, трекер
+
+**Назначение:** системный шаблон броска инициативы задаётся в **`mechanics.json`** ключом **`initiative_roll`**; результат записывается в **`CombatSession.core.actors[].initiative`** (число по-прежнему можно править вручную). Подстановка статов — **`[stat_key]`**; движок броска — **`D20Engine`** (`backend/services/initiative_roll.py`), чтобы суммы вида `[pool]d6 + [mod]` не проходили через `ShadowrunEngine` (успехи по 5–6).
+
+**Семантика `initiative_roll`:**
+
+| Значение в JSON | Поведение |
+| ----------------- | ---------- |
+| нет ключа / `""` | эффективно **`1d20`** |
+| **`"none"`** | броска нет; **`initiative_roll_available: false`** на корне payload; числовая колонка Init в трекере скрыта (и **не** popcorn) |
+| непустая строка | выражение для `d20.roll` после подстановки `[stat]` |
+
+**API (`/api/combat`):**
+
+- **`PATCH /initiative/settings`** — частичное обновление полей **`SessionMeta`**: `initiative_include_character|enemy|ally|neutral`, `initiative_reroll_locked`, `initiative_show_per_actor_dice` (дефолты на бэкенде: персонажи выключены для массового броска, остальные роли включены; замок и кубик в строках — см. ниже).
+- **`POST /initiative/roll`** — тело `{ "actor_ids": ["…"] }` или **без** `actor_ids` / `null` → массовый бросок по отмеченным ролям из сессии. После броска: нормализация simultaneous-групп (max initiative в группе), затем **`combat_engine.reorder_turn_queue()`** — очередь пересортирована, **текущий** актёр сохранён (ручной переброс в середине раунда). Ответ включает полный стейт + **`initiative_roll_results[]`** для тостов на клиенте.
+
+**Автопереброс по «замку»:** при **`initiative_reroll_locked === true`** и росте **`core.round`** после **`POST /next-turn`** выполняется тот же массовый бросок, но очередь пересобирается через **`combat_engine.rebuild_turn_queue_after_initiative_reroll()`** (как при старте боя: сортировка всех актёров по новой инициативе, **`current_index = 0`**), а не через **`reorder_turn_queue()`** — иначе после нового раунда «текущим» оставался бы старый лидер очереди, уже не максимальный по новым броскам. Для движка **popcorn** автопереброс не выполняется.
+
+**Клиент:** в **`GMConsoleSlider`** кнопка «Инициатива» раскрывает полоску над тулбаром (взаимоисключение с блоком заметок): массовый бросок, чипы ролей, замок «каждый раунд», переключатель «кубик в строках». В **`ActorRow`** у колонки инициативы — кнопка 🎲 (видимость из **`session.initiative_show_per_actor_dice`**). Тосты: **`toastInitiativeRollOutcome`** / `extractInitiativeRollResults` в `src/utils/rollToast.tsx`.
+
 ### 2.2. Движки и автосброс ресурсов (Action Economy)
 
 Базовый класс `**BaseInitiativeEngine**` (`backend/engines/base.py`) реализует `**_reset_actor_resources(state, actor_id, trigger)**`: читается `columns.json` активной системы (`get_system_columns_path`), для колонок с `type == "checkbox_group"` и `reset_policy == trigger` во вложенном словаре `actor.stats[column_key]` всем перечисленным в `**items**` `id` выставляется `**true**`.
@@ -178,6 +201,7 @@ Markdown-экспорт лога (`backend/services/logger.py`) и UI лога �
 
 - `**MechanicsManager**` (`backend/services/mechanics.py`): читает `mechanics.json`, собирает формулы, определяет computed-колонки по `columns.json`, безопасно считает выражения через `simpleeval`, пересобирает `Actor.stats` без падения на битых формулах (warning + fallback).
 - `**DiceManager**` (`backend/services/dice.py`): единая точка бросков. Выбирает `D20Engine` для d20-notation и `ShadowrunEngine` для пулов d6; подставляет `[stat_key]` из актора, возвращает `RollResult(total, formula, details, is_glitch, is_crit_glitch)`.
+- **`initiative_roll`** (`backend/services/initiative_roll.py`): разбор **`initiative_roll`** из `mechanics.json`, нормализация simultaneous-инициативы, массовый/точечный бросок через **`D20Engine`**; см. **§2.1.5**.
 - `**MatrixManager**` (`backend/services/matrix.py`): строит `SessionMeta.prerolls` по `matrix.json`, вызывает `DiceManager.execute_roll`, поддерживает paired slots и отметку `used`.
 
 ### 2.6. Консоль Мастера: терминал бросков и язык токенов
@@ -327,9 +351,9 @@ Markdown-экспорт лога (`backend/services/logger.py`) и UI лога �
 
 ### Боевка (`/api/combat`)
 
-- `GET /state`
+- `GET /state` — вложенный **`CombatSession`**; на корне дополнительно **`initiative_roll_available`**, **`initiative_engine_locked`**, **`can_undo`** / **`can_redo`** (стек undo не уходит в JSON целиком).
 - `POST /start`, `POST /end`, `POST /reset`, `POST /clear`
-- `POST /next-turn` — тело JSON: опционально `{ "target_actor_id": "<uuid>" }`. Без поля — «следующий ход» / принудительная смена раунда в зависимости от движка; с `target_actor_id` — ручная передача хода (Manual Mode), попкорн или фазовая механика (клик по строке в UI). Побочные эффекты: тик `duration` эффектов, simultaneous-группы — по правилам активного `BaseInitiativeEngine`.
+- `POST /next-turn` — тело JSON: опционально `{ "target_actor_id": "<uuid>" }`. Без поля — «следующий ход» / принудительная смена раунда в зависимости от движка; с `target_actor_id` — ручная передача хода (Manual Mode), попкорн или фазовая механика (клик по строке в UI). Побочные эффекты: тик `duration` эффектов, simultaneous-группы — по правилам активного `BaseInitiativeEngine`. При росте **`round`** и включённом **`session.initiative_reroll_locked`** (не popcorn, доступен бросок) — автоматический переброс инициативы и **`rebuild_turn_queue_after_initiative_reroll`** (см. **§2.1.5**).
 - `POST /prev-turn` — предыдущий слот очереди (с теми же правилами side effects линии инициативы, что и у `next-turn`, где применимо).
 - `POST /undo`, `POST /redo`
 - `POST /load` (загружает encounter)
@@ -338,6 +362,8 @@ Markdown-экспорт лога (`backend/services/logger.py`) и UI лога �
 - `PATCH /legend`, `PATCH /settings` (в т.ч. `selected_layout_id`, `table_centered`, `sticky_first_column`, `sticky_last_column`, **`show_macros_column`**, `engine_type`, `screen_brightness`, логирование)
 - `POST /roll` — системный бросок без контекста актора (консоль мастера); результат может писаться в лог как generic roll
 - `POST /actors/{actor_id}/roll` — быстрый бросок по формуле; результат пишется в лог, если `is_preroll` не выставлен.
+- `PATCH /initiative/settings` — настройки массового броска и замка (поля **`SessionMeta`**, см. **§2.1.5**).
+- `POST /initiative/roll` — бросок инициативы по шаблону системы; опционально **`actor_ids`**; ответ дополняется **`initiative_roll_results`** для UI-тостов.
 - `POST /matrix/generate` — генерация Roll Matrix для всех акторов по `matrix.json`; сохраняет `session.prerolls`.
 - `POST /actors/{actor_id}/matrix/use` — отметить слот матрицы использованным и записать событие в лог.
 - Раскладки мини-экрана: `**GET/POST /api/systems/{name}/layouts`** — merge с `data/assets/default/config/layout_profiles.json`, запись оверрайда в `data/systems/{name}/layout_profiles.json` (отдельно от стейта боя)

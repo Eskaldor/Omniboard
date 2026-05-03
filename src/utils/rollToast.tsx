@@ -185,6 +185,51 @@ export type RollBatchRow = {
 };
 
 /** Single stacked toast for GM console multi-segment rolls. */
+export type InitiativeRollResultRow = RollResultPayload & {
+  actor_id: string;
+  actor_name?: string;
+};
+
+/** Ответ POST `/api/combat/initiative/roll` содержит полный combat payload + `initiative_roll_results`. */
+export function extractInitiativeRollResults(raw: unknown): InitiativeRollResultRow[] {
+  if (raw == null || typeof raw !== 'object') return [];
+  const list = (raw as Record<string, unknown>).initiative_roll_results;
+  if (!Array.isArray(list)) return [];
+  const out: InitiativeRollResultRow[] = [];
+  for (const item of list) {
+    if (item == null || typeof item !== 'object') continue;
+    const o = item as Record<string, unknown>;
+    const aid = typeof o.actor_id === 'string' ? o.actor_id : '';
+    if (!aid) continue;
+    const nr = normalizeRollResult(o);
+    if (!nr) continue;
+    const name = typeof o.actor_name === 'string' ? o.actor_name : undefined;
+    out.push({ actor_id: aid, actor_name: name, ...nr });
+  }
+  return out;
+}
+
+export function toastInitiativeRollOutcome(raw: unknown, initiativeLabel: string) {
+  const rows = extractInitiativeRollResults(raw);
+  if (rows.length === 0) return;
+  if (rows.length === 1) {
+    const r = rows[0];
+    showRollResultToast({
+      result: r,
+      actorName: r.actor_name,
+      comment: initiativeLabel,
+    });
+    return;
+  }
+  showRollBatchToast(
+    rows.map((r) => ({
+      prefix: (r.actor_name ?? r.actor_id).trim(),
+      comment: initiativeLabel,
+      result: r,
+    })),
+  );
+}
+
 export function showRollBatchToast(rows: RollBatchRow[], durationMs = 5600) {
   if (rows.length === 0) return;
   const visible = rows.slice(0, BATCH_MAX_ROWS);

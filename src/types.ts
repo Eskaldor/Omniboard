@@ -302,6 +302,15 @@ export interface SessionMeta {
   history_index?: number;
   /** Предброски матрицы: actor_id → группы правил (POST /api/combat/matrix/generate). */
   prerolls?: Record<string, MatrixRuleGroup[]>;
+  /** Массовый бросок инициативы (фильтры ролей). */
+  initiative_include_character?: boolean;
+  initiative_include_enemy?: boolean;
+  initiative_include_ally?: boolean;
+  initiative_include_neutral?: boolean;
+  /** Переброс инициативы в начале нового раунда (не popcorn). */
+  initiative_reroll_locked?: boolean;
+  /** Показывать кубик у ячейки инициативы в трекере. */
+  initiative_show_per_actor_dice?: boolean;
 }
 
 /**
@@ -317,6 +326,8 @@ export interface CombatSession {
   can_undo?: boolean;
   can_redo?: boolean;
   initiative_engine_locked?: boolean;
+  /** mechanics.json initiative_roll не «none» */
+  initiative_roll_available?: boolean;
 }
 
 /** @deprecated Имя оставлено для постепенной миграции импортов — это `CombatSession`. */

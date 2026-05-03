@@ -4,6 +4,7 @@ from typing import Callable
 
 from backend import state as app_state
 from backend.models import Actor, CombatSession
+from backend.services.initiative_roll import normalize_simultaneous_actor_initiatives
 
 
 LogFn = Callable[..., None]
@@ -61,6 +62,26 @@ def reorder_turn_queue() -> None:
     st.core.current_index = st.core.turn_queue.index(active_id)
 
 
+def rebuild_turn_queue_after_initiative_reroll() -> None:
+    """
+    Полная пересборка очереди по новой инициативе; ход с индекса 0 (лидер после броска).
+    Используется в начале нового раунда при автоперебросе инициативы — не путать с
+    reorder_turn_queue(), который сохраняет текущего актёра (ломает старт раунда).
+    """
+    st = app_state.state
+    if not st.core.is_active or not st.core.turn_queue:
+        return
+    st.core.actors = normalize_simultaneous_actor_initiatives(list(st.core.actors))
+
+    def sort_key(a: Actor):
+        gid = getattr(a, "group_id", None) or ""
+        return (-a.initiative, gid)
+
+    sorted_actors = sorted(st.core.actors, key=sort_key)
+    st.core.turn_queue = [a.id for a in sorted_actors]
+    st.core.current_index = 0
+
+
 def undo() -> bool:
     """Step one snapshot back in state.session.history_stack if possible."""
     sess = app_state.state.session
@@ -97,20 +118,7 @@ def start_combat(log: LogFn) -> None:
     st.core.is_active = True
     st.core.round = 1
 
-    # For each simultaneous group, set all members' initiative to the max in the group
-    groups: dict[str, list[tuple[str, int]]] = {}
-    for a in st.core.actors:
-        if getattr(a, "group_id", None) and getattr(a, "group_mode", None) == "simultaneous":
-            groups.setdefault(a.group_id, []).append((a.id, a.initiative))
-    for gid, id_init_list in groups.items():
-        if not id_init_list:
-            continue
-        max_init = max(init for _, init in id_init_list)
-        for i, actor in enumerate(st.core.actors):
-            if getattr(actor, "group_id", None) == gid:
-                ad = actor.model_dump()
-                ad["initiative"] = max_init
-                st.core.actors[i] = Actor(**ad)
+    st.core.actors = normalize_simultaneous_actor_initiatives(list(st.core.actors))
 
     # Sort by initiative desc, then by group_id so simultaneous groups stay consecutive
     def sort_key(a: Actor):

@@ -474,6 +474,14 @@ class SessionMeta(BaseModel):
     history_index: int = -1
     # actor_id -> список групп правил матрицы (см. MatrixManager.build_prerolls)
     prerolls: Dict[str, List[Dict[str, Any]]] = Field(default_factory=dict)
+    # Настройки GM: массовый бросок инициативы (mechanics.json initiative_roll)
+    initiative_include_character: bool = False
+    initiative_include_enemy: bool = True
+    initiative_include_ally: bool = True
+    initiative_include_neutral: bool = True
+    # True: после перехода на новый раунд (round++) автоматически перебросить инициативу
+    initiative_reroll_locked: bool = False
+    initiative_show_per_actor_dice: bool = True
 
 
 class CombatSession(BaseModel):
@@ -522,6 +530,12 @@ class CombatSession(BaseModel):
             "history_stack",
             "history_index",
             "prerolls",
+            "initiative_include_character",
+            "initiative_include_enemy",
+            "initiative_include_ally",
+            "initiative_include_neutral",
+            "initiative_reroll_locked",
+            "initiative_show_per_actor_dice",
         }
     )
 
@@ -699,6 +713,12 @@ def combat_session_merged_with_combat_state(
             history_stack=stack,
             history_index=idx,
             prerolls=dict(session.session.prerolls),
+            initiative_include_character=session.session.initiative_include_character,
+            initiative_include_enemy=session.session.initiative_include_enemy,
+            initiative_include_ally=session.session.initiative_include_ally,
+            initiative_include_neutral=session.session.initiative_include_neutral,
+            initiative_reroll_locked=session.session.initiative_reroll_locked,
+            initiative_show_per_actor_dice=session.session.initiative_show_per_actor_dice,
         ),
     )
 
@@ -716,6 +736,14 @@ def combat_session_public_payload(
     data["can_undo"] = sess.history_index > 0
     data["can_redo"] = sess.history_index < len(sess.history_stack) - 1
     data["initiative_engine_locked"] = initiative_engine_locked
+    try:
+        from backend.services.initiative_roll import initiative_roll_available
+
+        data["initiative_roll_available"] = initiative_roll_available(
+            (session.core.system or "").strip(),
+        )
+    except Exception:
+        data["initiative_roll_available"] = True
     try:
         from backend.routers.hardware import get_esp_manager
         from backend.storage.miniatures_store import load_all as load_miniatures

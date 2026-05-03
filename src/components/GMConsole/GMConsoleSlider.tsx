@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AnimatePresence, motion } from 'motion/react';
-import { BookOpen, Bot, ChevronDown, Dices, Plus } from 'lucide-react';
+import { BookOpen, Bot, ChevronDown, Dices, Lock, Plus } from 'lucide-react';
 import { useCombatState } from '../../contexts/CombatStateContext';
 import { useColumns } from '../../contexts/ColumnsContext';
 import { useGMConsole } from '../../contexts/GMConsoleContext';
@@ -20,9 +20,11 @@ import {
   type SegmentPlan,
 } from '../../utils/rollTerminal';
 import {
+  formatFastApiDetail,
   parseRollHttpResponse,
   showRollBatchToast,
   showRollErrorToast,
+  toastInitiativeRollOutcome,
   type RollBatchRow,
 } from '../../utils/rollToast';
 import { NoteCard } from './NoteCard';
@@ -100,13 +102,15 @@ function isAtStartOfSegment(text: string, pos: number): boolean {
 
 export function GMConsoleSlider() {
   const { t } = useTranslation('core', { useSuspense: false });
-  const { state: combatState } = useCombatState();
+  const { state: combatState, refetchState } = useCombatState();
   const { systemName, columns } = useColumns();
   const combatSystem = ((combatState?.core.system ?? systemName) || '').trim();
   const { actions: systemActions } = useSystemActions(combatSystem);
   const { isFabSummoned, setIsFabSummoned } = useGMConsole();
   const [panelOpen, setPanelOpen] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
+  const [initiativeStripOpen, setInitiativeStripOpen] = useState(false);
+  const [bulkInitiativeRolling, setBulkInitiativeRolling] = useState(false);
   const [noteColumns, setNoteColumns] = useState<NoteColumn[]>(() => [newColumn()]);
   const [noteFiles, setNoteFiles] = useState<string[]>([]);
   const [command, setCommand] = useState('');
@@ -627,6 +631,68 @@ export function GMConsoleSlider() {
     [setIsFabSummoned],
   );
 
+  const engineKeyCombat = (combatState?.core?.engine_type ?? 'standard').toLowerCase();
+  const hideInitiativeConsole = engineKeyCombat === 'popcorn';
+  const initiativeRollAvailable = combatState?.initiative_roll_available ?? true;
+  const iniSess = combatState?.session;
+  const inclCharacter = iniSess?.initiative_include_character ?? false;
+  const inclEnemy = iniSess?.initiative_include_enemy ?? true;
+  const inclAlly = iniSess?.initiative_include_ally ?? true;
+  const inclNeutral = iniSess?.initiative_include_neutral ?? true;
+  const iniLocked = iniSess?.initiative_reroll_locked ?? false;
+  const iniShowRowDice = iniSess?.initiative_show_per_actor_dice !== false;
+
+  useEffect(() => {
+    if (!panelOpen) {
+      setNotesOpen(false);
+      setInitiativeStripOpen(false);
+    }
+  }, [panelOpen]);
+
+  const patchInitiativeSettings = useCallback(
+    async (patch: Record<string, boolean>) => {
+      try {
+        const res = await fetch('/api/combat/initiative/settings', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(patch),
+        });
+        const raw = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          showRollErrorToast(formatFastApiDetail(raw) || t('gm_console.initiative_settings_error'));
+          return;
+        }
+        await refetchState();
+      } catch {
+        showRollErrorToast(t('stat_editor.roll_network_error'));
+      }
+    },
+    [refetchState, t],
+  );
+
+  const rollBulkInitiative = useCallback(async () => {
+    if (!initiativeRollAvailable || bulkInitiativeRolling || hideInitiativeConsole) return;
+    setBulkInitiativeRolling(true);
+    try {
+      const res = await fetch('/api/combat/initiative/roll', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      const raw = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showRollErrorToast(formatFastApiDetail(raw));
+        return;
+      }
+      toastInitiativeRollOutcome(raw, t('combat.initiative'));
+      await refetchState();
+    } catch {
+      showRollErrorToast(t('stat_editor.roll_network_error'));
+    } finally {
+      setBulkInitiativeRolling(false);
+    }
+  }, [bulkInitiativeRolling, hideInitiativeConsole, initiativeRollAvailable, refetchState, t]);
+
   const toolBtnClass =
     'rounded-lg border border-zinc-700/60 bg-zinc-800/60 px-3 py-2 text-xs font-medium text-zinc-500 cursor-not-allowed';
 
@@ -671,6 +737,116 @@ export function GMConsoleSlider() {
               className="pointer-events-none flex w-full flex-col justify-end origin-bottom overflow-hidden"
             >
               <AnimatePresence initial={false}>
+                {initiativeStripOpen && !hideInitiativeConsole ? (
+                  <motion.div
+                    key="gm-console-initiative-layer"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={springNotes}
+                    className="pointer-events-none w-full origin-bottom overflow-hidden bg-transparent"
+                  >
+                    <div className="pointer-events-auto flex flex-col gap-2 border-b border-zinc-800 bg-zinc-900/95 px-4 py-3">
+                      {!initiativeRollAvailable ? (
+                        <p className="text-xs text-zinc-500">{t('gm_console.initiative_disabled_hint')}</p>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={bulkInitiativeRolling}
+                          onClick={() => void rollBulkInitiative()}
+                          className="self-start rounded-lg bg-emerald-600/25 px-3 py-1.5 text-xs font-medium text-emerald-200 ring-1 ring-emerald-500/40 hover:bg-emerald-600/35 disabled:opacity-50"
+                        >
+                          {t('gm_console.initiative_roll_button')}
+                        </button>
+                      )}
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="text-[10px] uppercase tracking-wide text-zinc-500 w-full sm:w-auto">
+                          {t('gm_console.initiative_roles_label')}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => void patchInitiativeSettings({ initiative_include_character: !inclCharacter })}
+                          className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
+                            inclCharacter
+                              ? 'bg-emerald-600/25 text-emerald-300 ring-1 ring-emerald-500/45'
+                              : 'bg-zinc-800 text-zinc-500 hover:bg-zinc-700'
+                          }`}
+                        >
+                          {t('gm_console.initiative_role_character')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void patchInitiativeSettings({ initiative_include_enemy: !inclEnemy })}
+                          className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
+                            inclEnemy
+                              ? 'bg-emerald-600/25 text-emerald-300 ring-1 ring-emerald-500/45'
+                              : 'bg-zinc-800 text-zinc-500 hover:bg-zinc-700'
+                          }`}
+                        >
+                          {t('gm_console.initiative_role_enemy')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void patchInitiativeSettings({ initiative_include_ally: !inclAlly })}
+                          className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
+                            inclAlly
+                              ? 'bg-emerald-600/25 text-emerald-300 ring-1 ring-emerald-500/45'
+                              : 'bg-zinc-800 text-zinc-500 hover:bg-zinc-700'
+                          }`}
+                        >
+                          {t('gm_console.initiative_role_ally')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            void patchInitiativeSettings({ initiative_include_neutral: !inclNeutral })
+                          }
+                          className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
+                            inclNeutral
+                              ? 'bg-emerald-600/25 text-emerald-300 ring-1 ring-emerald-500/45'
+                              : 'bg-zinc-800 text-zinc-500 hover:bg-zinc-700'
+                          }`}
+                        >
+                          {t('gm_console.initiative_role_neutral')}
+                        </button>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => void patchInitiativeSettings({ initiative_reroll_locked: !iniLocked })}
+                          className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                            iniLocked
+                              ? 'bg-emerald-600/20 text-emerald-300 ring-1 ring-emerald-500/45'
+                              : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                          }`}
+                          title={t('gm_console.initiative_lock_hint')}
+                        >
+                          <Lock size={14} strokeWidth={2} aria-hidden />
+                          {t('gm_console.initiative_lock_reroll')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            void patchInitiativeSettings({
+                              initiative_show_per_actor_dice: !iniShowRowDice,
+                            })
+                          }
+                          className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                            iniShowRowDice
+                              ? 'bg-emerald-600/20 text-emerald-300 ring-1 ring-emerald-500/45'
+                              : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                          }`}
+                        >
+                          <Dices size={14} strokeWidth={2} aria-hidden />
+                          {t('gm_console.initiative_show_row_dice')}
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+
+              <AnimatePresence initial={false}>
                 {notesOpen ? (
                   <motion.div
                     key="gm-console-notes-layer"
@@ -713,7 +889,10 @@ export function GMConsoleSlider() {
                 <div className="flex flex-wrap items-center gap-2 border-b border-zinc-800 bg-zinc-900/80 px-3 py-2">
                   <button
                     type="button"
-                    onClick={() => setNotesOpen((v) => !v)}
+                    onClick={() => {
+                      setNotesOpen((v) => !v);
+                      setInitiativeStripOpen(false);
+                    }}
                     aria-expanded={notesOpen}
                     title={t('gm_console.toggle_notes')}
                     className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
@@ -733,8 +912,35 @@ export function GMConsoleSlider() {
                     <span className="hidden sm:inline">{t('gm_console.toggle_notes')}</span>
                   </button>
                   <span className="h-5 w-px shrink-0 bg-zinc-700/60" aria-hidden />
-                  <button type="button" disabled className={toolBtnClass}>
-                    {t('gm_console.placeholder_initiative')}
+                  <button
+                    type="button"
+                    disabled={hideInitiativeConsole}
+                    onClick={() => {
+                      if (hideInitiativeConsole) return;
+                      setInitiativeStripOpen((v) => !v);
+                      setNotesOpen(false);
+                    }}
+                    aria-expanded={initiativeStripOpen}
+                    title={t('gm_console.placeholder_initiative')}
+                    className={
+                      hideInitiativeConsole
+                        ? toolBtnClass
+                        : `flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                            initiativeStripOpen
+                              ? 'bg-emerald-600/20 text-emerald-400 ring-1 ring-emerald-500/50'
+                              : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-zinc-100'
+                          }`
+                    }
+                  >
+                    <Dices size={15} aria-hidden />
+                    <motion.span
+                      animate={{ rotate: initiativeStripOpen ? 180 : 0 }}
+                      transition={springNotes}
+                      className="inline-flex"
+                    >
+                      <ChevronDown size={15} aria-hidden />
+                    </motion.span>
+                    <span className="hidden sm:inline">{t('gm_console.placeholder_initiative')}</span>
                   </button>
                   <button type="button" disabled className={toolBtnClass}>
                     {t('gm_console.roll_matrix')}
