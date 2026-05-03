@@ -1,15 +1,31 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { AnimatePresence, motion } from 'motion/react';
 import { BookOpen, Bot, ChevronDown, Dices, Plus } from 'lucide-react';
 import { useCombatState } from '../../contexts/CombatStateContext';
 import { useColumns } from '../../contexts/ColumnsContext';
 import { useGMConsole } from '../../contexts/GMConsoleContext';
-import type { Actor } from '../../types';
-import type { SystemActionDef } from '../../hooks/useSystemActions';
+import type { Actor, ColumnConfig } from '../../types';
 import { useSystemActions } from '../../hooks/useSystemActions';
+import { mergeActorActionDefs } from '../../utils/mergeActorActionDefs';
+import { getStatNumeric, getSystemDice } from '../../utils/stats';
+import {
+  findCaretToken,
+  parseRollInput,
+  planSegmentsForActor,
+  replaceTokenInText,
+  uniqActors,
+  type CaretToken,
+  type ResolveContext,
+  type SegmentPlan,
+} from '../../utils/rollTerminal';
 import { NoteCard } from './NoteCard';
+import {
+  RollTokenPopup,
+  type RollTokenItem,
+  type RollTokenJoiner,
+  type RollTokenKind,
+} from './RollTokenPopup';
 
 const MODE_CONFIG = {
   note: {
@@ -50,80 +66,6 @@ function newColumn(): NoteColumn {
   return { id: crypto.randomUUID(), selected: '' };
 }
 
-function escapeRegExp(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-/** Split optional `#` trailing comment (same convention as ``parseRollTerminalInput``). */
-function splitHashCommentRoll(text: string): { working: string; hashComment: string | null } {
-  const hashIdx = text.indexOf('#');
-  if (hashIdx === -1) return { working: text.trim(), hashComment: null };
-  const after = text.slice(hashIdx + 1).trim();
-  return {
-    working: text.slice(0, hashIdx).trimEnd().trim(),
-    hashComment: after.length > 0 ? after : null,
-  };
-}
-
-/**
- * Roll mode: ``@ActorName !macro_key`` uses merged ``actions.json`` for the current system
- * (with per-actor ``formula_override`` / ``comment`` when present).
- */
-function tryResolveActorMacroRoll(
-  working: string,
-  hashComment: string | null,
-  actorList: Actor[],
-  actions: Record<string, SystemActionDef>,
-): { actor: Actor; expression: string; comment: string } | null {
-  const m = /^\s*@(.+?)\s+!([\w-]+)\s*$/i.exec(working);
-  if (!m) return null;
-  const actorName = m[1].trim();
-  const macroKey = m[2].trim();
-  if (!macroKey) return null;
-  const actor = actorList.find((a) => (a.name ?? '').trim().toLowerCase() === actorName.toLowerCase());
-  if (!actor) return null;
-  const def = actions[macroKey];
-  if (!def?.formula?.trim()) return null;
-  const ov = actor.actions?.[macroKey];
-  const expression = (ov?.formula_override?.trim() || def.formula).trim();
-  if (!expression) return null;
-  const baseComment = (ov?.comment?.trim() || def.name).trim() || macroKey;
-  const comment = [baseComment, hashComment?.trim()].filter(Boolean).join(' · ');
-  return { actor, expression, comment };
-}
-
-/** Parse roll terminal: `#` comment, all `@Actor` mentions (case-insensitive), then sanitize leftover `@` tokens. */
-function parseRollTerminalInput(
-  text: string,
-  actorList: Actor[],
-): { expression: string; comment: string | null; matchedActors: Actor[] } {
-  const hashIdx = text.indexOf('#');
-  let comment: string | null = null;
-  let working: string;
-  if (hashIdx === -1) {
-    working = text;
-  } else {
-    const afterHash = text.slice(hashIdx + 1).trim();
-    comment = afterHash.length > 0 ? afterHash : null;
-    working = text.slice(0, hashIdx).trimEnd();
-  }
-  const namedActors = actorList.filter((a) => (a.name ?? '').trim().length > 0);
-  const sorted = [...namedActors].sort((a, b) => b.name.length - a.name.length);
-  const matchedActors: Actor[] = [];
-  for (const a of sorted) {
-    const name = (a.name ?? '').trim();
-    if (!name) continue;
-    const needleRe = new RegExp(`@${escapeRegExp(name)}`, 'gi');
-    const occ = (working.match(needleRe) ?? []).length;
-    for (let i = 0; i < occ; i += 1) {
-      matchedActors.push(a);
-    }
-    working = working.replace(needleRe, '');
-  }
-  working = working.replace(/@[^\s#]+/g, '').trim();
-  return { expression: working.trim(), comment, matchedActors };
-}
-
 function buildRollRequestPayload(expression: string, comment: string | null): string {
   const body: { expression: string; is_preroll: false; comment?: string } = {
     expression,
@@ -134,10 +76,26 @@ function buildRollRequestPayload(expression: string, comment: string | null): st
   return JSON.stringify(body);
 }
 
+function joinComments(...parts: Array<string | null | undefined>): string | null {
+  const cleaned = parts
+    .map((p) => (p ?? '').trim())
+    .filter((p) => p.length > 0);
+  return cleaned.length > 0 ? cleaned.join(' · ') : null;
+}
+
+/** True when the segment between the last `;` and `pos` has no dice expression yet. */
+function isAtStartOfSegment(text: string, pos: number): boolean {
+  const head = text.slice(0, pos);
+  const lastSemi = head.lastIndexOf(';');
+  const segment = lastSemi >= 0 ? head.slice(lastSemi + 1) : head;
+  const stripped = segment.replace(/@[^\s#]+/g, '').trim();
+  return stripped.length === 0;
+}
+
 export function GMConsoleSlider() {
   const { t } = useTranslation('core', { useSuspense: false });
   const { state: combatState } = useCombatState();
-  const { systemName } = useColumns();
+  const { systemName, columns } = useColumns();
   const combatSystem = ((combatState?.core.system ?? systemName) || '').trim();
   const { actions: systemActions } = useSystemActions(combatSystem);
   const { isFabSummoned, setIsFabSummoned } = useGMConsole();
@@ -148,10 +106,11 @@ export function GMConsoleSlider() {
   const [command, setCommand] = useState('');
   const [inputMode, setInputMode] = useState<'note' | 'roll' | 'ai'>('note');
   const [actionStatus, setActionStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
-  const [mentionFixedBottom, setMentionFixedBottom] = useState(0);
+  const [popupToken, setPopupToken] = useState<CaretToken | null>(null);
+  const [popupBottom, setPopupBottom] = useState(0);
   const [showRollHelp, setShowRollHelp] = useState(false);
   const [logoTier, setLogoTier] = useState(0);
+  const [systemDice, setSystemDice] = useState<string>('1d20');
   const fabClickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const actionStatusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const rollHelpTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -160,6 +119,12 @@ export function GMConsoleSlider() {
   commandRef.current = command;
 
   const actors = combatState?.core?.actors ?? [];
+
+  const columnsByKey = useMemo<Record<string, ColumnConfig>>(() => {
+    const out: Record<string, ColumnConfig> = {};
+    for (const c of columns) out[c.key] = c;
+    return out;
+  }, [columns]);
 
   const systemLogoSrc = useMemo(
     () => `/api/assets/systems/${encodeURIComponent(systemName)}/ui/logo.png`,
@@ -172,6 +137,21 @@ export function GMConsoleSlider() {
   useEffect(() => {
     setLogoTier(0);
   }, [systemLogoSrc]);
+
+  // Preload system dice for column-template fallback.
+  useEffect(() => {
+    let cancelled = false;
+    getSystemDice(combatSystem)
+      .then((dice) => {
+        if (!cancelled) setSystemDice(dice);
+      })
+      .catch(() => {
+        if (!cancelled) setSystemDice('1d20');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [combatSystem]);
 
   useEffect(() => {
     if (!panelOpen || !notesOpen) return;
@@ -210,56 +190,216 @@ export function GMConsoleSlider() {
     }, 1500);
   }, []);
 
-  const updateMentionFromValue = useCallback(
-    (value: string, mode: 'note' | 'roll' | 'ai') => {
+  /** Recompute popup token from caret position; called on input/click/key events. */
+  const refreshPopupToken = useCallback(
+    (value: string, caret: number, mode: 'note' | 'roll' | 'ai') => {
       if (mode !== 'roll') {
-        setMentionQuery(null);
+        setPopupToken(null);
         return;
       }
-      const m = /@([^\s]*)$/.exec(value);
-      setMentionQuery(m ? m[1] : null);
+      const tok = findCaretToken(value, caret);
+      setPopupToken(tok);
     },
     [],
   );
 
   useEffect(() => {
     if (inputMode !== 'roll') {
-      setMentionQuery(null);
+      setPopupToken(null);
       return;
     }
-    updateMentionFromValue(commandRef.current, 'roll');
-  }, [inputMode, updateMentionFromValue]);
+    const el = terminalInputRef.current;
+    const caret = el?.selectionStart ?? commandRef.current.length;
+    refreshPopupToken(commandRef.current, caret, 'roll');
+  }, [inputMode, refreshPopupToken]);
 
   useEffect(() => {
-    if (mentionQuery === null || !terminalInputRef.current) return;
+    if (popupToken === null || !terminalInputRef.current) return;
     const rect = terminalInputRef.current.getBoundingClientRect();
-    setMentionFixedBottom(window.innerHeight - rect.top + 8);
-  }, [mentionQuery]);
+    setPopupBottom(window.innerHeight - rect.top + 8);
+  }, [popupToken]);
 
-  const mentionFilteredActors = useMemo(() => {
-    if (mentionQuery === null) return [];
-    const q = mentionQuery.toLowerCase();
-    return actors.filter((a) => a.name.toLowerCase().includes(q));
-  }, [actors, mentionQuery]);
+  /* ----------------------------- popup data ----------------------------- */
+
+  /** Actors mentioned anywhere in the current input — drive popup scope. */
+  const scopeActors = useMemo(() => {
+    if (inputMode !== 'roll') return [];
+    const parsed = parseRollInput(command, actors);
+    return uniqActors(parsed.matchedActors);
+  }, [actors, inputMode, command]);
+
+  const popupItems = useMemo<RollTokenItem[]>(() => {
+    if (popupToken === null) return [];
+    if (popupToken.kind === 'at') {
+      return actors
+        .filter((a) => (a.name ?? '').trim().length > 0)
+        .map<RollTokenItem>((a) => ({ key: a.name, label: a.name }));
+    }
+    if (popupToken.kind === 'bang') {
+      // Only columns explicitly marked `is_rollable: true` in the system's
+      // columns.json appear here. Custom actor-only stats and non-rollable
+      // columns are intentionally hidden — typing `!stat` still resolves them
+      // at submit time, but the popup stays focused on intended-to-roll stats.
+      const out: RollTokenItem[] = [];
+      for (const col of columns) {
+        if (col.is_rollable !== true) continue;
+        const key = col.key;
+        const label = col.label?.trim() || key;
+        const preview: Record<string, string> = {};
+        const presentIn: string[] = [];
+        for (const a of scopeActors) {
+          const has = a.stats && Object.prototype.hasOwnProperty.call(a.stats, key);
+          preview[a.id] = String(has ? getStatNumeric(a.stats[key], 0) : 0);
+          presentIn.push(a.id);
+        }
+        out.push({ key, label, preview, presentIn });
+      }
+      return out;
+    }
+    // dollar — union of merged action defs across scope actors.
+    const seen = new Set<string>();
+    const out: RollTokenItem[] = [];
+    const allEntries = scopeActors.map((a) => ({
+      actor: a,
+      merged: mergeActorActionDefs(systemActions, a),
+    }));
+    const addKey = (key: string) => {
+      if (seen.has(key)) return;
+      seen.add(key);
+      let label = key;
+      const preview: Record<string, string> = {};
+      const presentIn: string[] = [];
+      for (const { actor, merged } of allEntries) {
+        const def = merged[key];
+        if (!def) continue;
+        const ovr = actor.actions?.[key]?.formula_override?.trim();
+        const formula = (ovr || def.formula || '').trim();
+        if (label === key && def.name?.trim()) label = def.name.trim();
+        preview[actor.id] = formula;
+        presentIn.push(actor.id);
+      }
+      if (presentIn.length > 0) out.push({ key, label, preview, presentIn });
+    };
+    for (const { merged } of allEntries) {
+      for (const k of Object.keys(merged)) addKey(k);
+    }
+    return out;
+  }, [actors, columns, columnsByKey, popupToken, scopeActors, systemActions]);
+
+  const popupEmptyMessage = useMemo<string | undefined>(() => {
+    if (popupToken === null) return undefined;
+    if (popupToken.kind !== 'at' && scopeActors.length === 0) {
+      return t('gm_console.popup_need_actor');
+    }
+    return undefined;
+  }, [popupToken, scopeActors.length, t]);
+
+  /* ----------------------------- popup callbacks ----------------------------- */
+
+  const insertText = useCallback(
+    (start: number, end: number, insert: string, caretAdjust = 0) => {
+      const v = commandRef.current;
+      const { text, caret } = replaceTokenInText(v, start, end, insert);
+      setCommand(text);
+      queueMicrotask(() => {
+        const el = terminalInputRef.current;
+        if (!el) return;
+        el.focus();
+        const pos = caret + caretAdjust;
+        el.setSelectionRange(pos, pos);
+        refreshPopupToken(text, pos, 'roll');
+      });
+    },
+    [refreshPopupToken],
+  );
+
+  const onPopupSingleSelect = useCallback(
+    (key: string) => {
+      if (popupToken === null) return;
+      const prefix = popupToken.kind === 'at' ? '@' : popupToken.kind === 'bang' ? '!' : '$';
+      insertText(popupToken.start, popupToken.end, `${prefix}${key} `);
+      setPopupToken(null);
+    },
+    [insertText, popupToken],
+  );
+
+  /** Build the column-template form of a single `!key` (used for `+` aggregation). */
+  const expandBangTemplate = useCallback(
+    (key: string): string => {
+      const col = columnsByKey[key];
+      const tmpl = col?.roll_formula?.trim()
+        ? col.roll_formula.replace(/\[value\]/g, `!${key}`)
+        : `${systemDice} + !${key}`;
+      return `(${tmpl})`;
+    },
+    [columnsByKey, systemDice],
+  );
+
+  const onPopupMultiSelect = useCallback(
+    (keys: string[], joiner: RollTokenJoiner) => {
+      if (popupToken === null || popupToken.kind === 'at') return;
+      const isBang = popupToken.kind === 'bang';
+      let inserted: string;
+
+      if (joiner === '+') {
+        // Sum of ROLLS, not values:
+        //   `!`  → each token expands to its column-template `(1d20 + !key)`,
+        //          all joined with ` + ` so the dice engine rolls each separately.
+        //   `$`  → each macro is itself a formula; resolver wraps in `(...)`,
+        //          so plain `$a + $b` already produces a sum of macro rolls.
+        const parts = isBang
+          ? keys.map(expandBangTemplate)
+          : keys.map((k) => `$${k}`);
+        inserted = parts.join(' + ');
+      } else {
+        // Series — each token becomes its own segment via `;`. Bang-alone and
+        // dollar-alone segments expand at submit time, no popup-side templating.
+        const prefix = isBang ? '!' : '$';
+        const body = keys.map((k) => `${prefix}${k}`).join('; ');
+        const atStart = isAtStartOfSegment(commandRef.current, popupToken.start);
+        inserted = atStart ? body : `; ${body}`;
+      }
+
+      insertText(popupToken.start, popupToken.end, `${inserted} `);
+      setPopupToken(null);
+    },
+    [expandBangTemplate, insertText, popupToken],
+  );
+
+  /* ----------------------------- input handlers ----------------------------- */
 
   const handleCommandChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
       setCommand(value);
-      updateMentionFromValue(value, inputMode);
+      const caret = e.target.selectionStart ?? value.length;
+      refreshPopupToken(value, caret, inputMode);
     },
-    [inputMode, updateMentionFromValue],
+    [inputMode, refreshPopupToken],
   );
 
-  const selectMentionActor = useCallback(
-    (actor: Actor) => {
-      const v = commandRef.current;
-      const next = v.replace(/@[^\s]*$/, `@${actor.name} `);
-      setCommand(next);
-      setMentionQuery(null);
-      queueMicrotask(() => terminalInputRef.current?.focus());
+  const handleCommandClick = useCallback(
+    (e: React.MouseEvent<HTMLInputElement>) => {
+      const el = e.currentTarget;
+      const caret = el.selectionStart ?? el.value.length;
+      refreshPopupToken(el.value, caret, inputMode);
     },
-    [],
+    [inputMode, refreshPopupToken],
+  );
+
+  const handleCommandKeyUp = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (
+        e.key === 'ArrowLeft' ||
+        e.key === 'ArrowRight' ||
+        e.key === 'Home' ||
+        e.key === 'End'
+      ) {
+        const el = e.currentTarget;
+        refreshPopupToken(el.value, el.selectionStart ?? el.value.length, inputMode);
+      }
+    },
+    [inputMode, refreshPopupToken],
   );
 
   const setColumnSelected = useCallback((id: string, selected: string) => {
@@ -274,13 +414,19 @@ export function GMConsoleSlider() {
     setNoteColumns((cols) => cols.filter((c) => c.id !== id));
   }, []);
 
-  const handleNoteSelectFile = useCallback((columnId: string, file: string) => {
-    setColumnSelected(columnId, file);
-  }, [setColumnSelected]);
+  const handleNoteSelectFile = useCallback(
+    (columnId: string, file: string) => {
+      setColumnSelected(columnId, file);
+    },
+    [setColumnSelected],
+  );
 
-  const handleNoteRemove = useCallback((columnId: string) => {
-    removeColumn(columnId);
-  }, [removeColumn]);
+  const handleNoteRemove = useCallback(
+    (columnId: string) => {
+      removeColumn(columnId);
+    },
+    [removeColumn],
+  );
 
   const handleFabSingleClick = useCallback(() => {
     if (fabClickTimerRef.current) clearTimeout(fabClickTimerRef.current);
@@ -290,17 +436,110 @@ export function GMConsoleSlider() {
     }, FAB_CLICK_DELAY_MS);
   }, []);
 
+  /** Roll-mode submit: parse @mentions/comment, plan per-actor segments, fire requests. */
+  const submitRoll = useCallback(async () => {
+    const raw = commandRef.current;
+    if (raw.trim() === '?') {
+      setShowRollHelp(true);
+      setCommand('');
+      flashActionStatus('success');
+      if (rollHelpTimerRef.current) clearTimeout(rollHelpTimerRef.current);
+      rollHelpTimerRef.current = setTimeout(() => {
+        setShowRollHelp(false);
+        rollHelpTimerRef.current = null;
+      }, 5000);
+      return;
+    }
+
+    const { working, comment, matchedActors } = parseRollInput(raw, actors);
+    const distinctActors = uniqActors(matchedActors);
+
+    const hasBang = /(^|[\s+\-*/(),;])![\p{L}_]/u.test(working);
+    const hasDollar = /(^|[\s+\-*/(),;])\$[\w-]/.test(working);
+
+    if ((hasBang || hasDollar) && distinctActors.length === 0) {
+      flashActionStatus('error');
+      return;
+    }
+    if (!working) {
+      flashActionStatus('error');
+      return;
+    }
+
+    try {
+      if (distinctActors.length > 0) {
+        const allRequests: Array<Promise<Response>> = [];
+        let anyMissing = false;
+        for (const actor of distinctActors) {
+          const ctx: ResolveContext = {
+            actor,
+            columnsByKey,
+            mergedActions: mergeActorActionDefs(systemActions, actor),
+            systemDice,
+          };
+          const segments: SegmentPlan[] = planSegmentsForActor(working, ctx);
+          for (const seg of segments) {
+            if (seg.missing.length > 0) {
+              anyMissing = true;
+              continue;
+            }
+            if (!seg.expression) continue;
+            const finalComment = joinComments(seg.autoComment, comment);
+            allRequests.push(
+              fetch(`/api/combat/actors/${encodeURIComponent(actor.id)}/roll`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: buildRollRequestPayload(seg.expression, finalComment),
+              }),
+            );
+          }
+        }
+        if (allRequests.length === 0 || anyMissing) {
+          flashActionStatus('error');
+          return;
+        }
+        const responses = await Promise.all(allRequests);
+        if (responses.some((r) => !r.ok)) throw new Error('roll failed');
+      } else {
+        const segments = working
+          .split(';')
+          .map((s) => s.trim())
+          .filter(Boolean);
+        if (segments.length === 0) {
+          flashActionStatus('error');
+          return;
+        }
+        const responses = await Promise.all(
+          segments.map((seg) =>
+            fetch('/api/combat/roll', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: buildRollRequestPayload(seg, comment),
+            }),
+          ),
+        );
+        if (responses.some((r) => !r.ok)) throw new Error('roll failed');
+      }
+      setCommand('');
+      setPopupToken(null);
+      flashActionStatus('success');
+    } catch {
+      flashActionStatus('error');
+    }
+  }, [actors, columnsByKey, flashActionStatus, systemActions, systemDice]);
+
   const handleCommandKeyDown = useCallback(
     async (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Escape' && mentionQuery !== null) {
+      if (e.key === 'Escape' && popupToken !== null) {
         e.preventDefault();
-        setMentionQuery(null);
+        setPopupToken(null);
         return;
       }
 
       if (e.key === 'Tab' && commandRef.current.trim() === '') {
         e.preventDefault();
         setInputMode((m) => cycleInputMode(m));
+        setPopupToken(null);
         return;
       }
 
@@ -326,81 +565,14 @@ export function GMConsoleSlider() {
       }
 
       if (inputMode === 'roll') {
-        const trimmedRoll = commandRef.current.trim();
-        if (trimmedRoll === '?') {
-          setShowRollHelp(true);
-          setCommand('');
-          flashActionStatus('success');
-          if (rollHelpTimerRef.current) clearTimeout(rollHelpTimerRef.current);
-          rollHelpTimerRef.current = setTimeout(() => {
-            setShowRollHelp(false);
-            rollHelpTimerRef.current = null;
-          }, 5000);
-          return;
-        }
-        const raw = commandRef.current;
-        const { working, hashComment } = splitHashCommentRoll(raw);
-        const macroRoll = tryResolveActorMacroRoll(working, hashComment, actors, systemActions);
-        if (macroRoll) {
-          const payloadJson = buildRollRequestPayload(macroRoll.expression, macroRoll.comment || null);
-          try {
-            const res = await fetch(
-              `/api/combat/actors/${encodeURIComponent(macroRoll.actor.id)}/roll`,
-              {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: payloadJson,
-              },
-            );
-            if (!res.ok) throw new Error(String(res.status));
-            setCommand('');
-            setMentionQuery(null);
-            flashActionStatus('success');
-          } catch {
-            flashActionStatus('error');
-          }
-          return;
-        }
-
-        const { expression, comment, matchedActors } = parseRollTerminalInput(raw, actors);
-        if (!expression) {
-          flashActionStatus('error');
-          return;
-        }
-        const payloadJson = buildRollRequestPayload(expression, comment);
-        try {
-          if (matchedActors.length > 0) {
-            const responses = await Promise.all(
-              matchedActors.map((actor) =>
-                fetch(`/api/combat/actors/${encodeURIComponent(actor.id)}/roll`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: payloadJson,
-                }),
-              ),
-            );
-            if (responses.some((r) => !r.ok)) throw new Error('roll failed');
-          } else {
-            const res = await fetch('/api/combat/roll', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: payloadJson,
-            });
-            if (!res.ok) throw new Error(String(res.status));
-          }
-          setCommand('');
-          setMentionQuery(null);
-          flashActionStatus('success');
-        } catch {
-          flashActionStatus('error');
-        }
+        await submitRoll();
         return;
       }
 
       setCommand('');
       flashActionStatus('success');
     },
-    [actors, flashActionStatus, inputMode, mentionQuery, systemActions],
+    [flashActionStatus, inputMode, popupToken, submitRoll],
   );
 
   const handleFabDoubleClick = useCallback(
@@ -436,6 +608,12 @@ export function GMConsoleSlider() {
       : actionStatus === 'error'
         ? '!border-red-500 !ring-2 !ring-red-500 focus:!border-red-500 focus:!ring-red-500'
         : '';
+
+  const popupKind: RollTokenKind | null = popupToken?.kind ?? null;
+  const popupVisible =
+    popupToken !== null &&
+    inputMode === 'roll' &&
+    (popupToken.kind === 'at' || scopeActors.length > 0);
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[35] flex flex-col justify-end">
@@ -530,7 +708,7 @@ export function GMConsoleSlider() {
                 <div className="relative bg-zinc-950 px-3 py-2.5">
                   {inputMode === 'roll' && showRollHelp ? (
                     <div
-                      className="pointer-events-none absolute bottom-full right-0 z-50 mb-2 max-w-[min(100%,20rem)] rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-xs text-zinc-300 shadow-xl"
+                      className="pointer-events-none absolute bottom-full right-0 z-50 mb-2 max-w-[min(100%,22rem)] rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-xs text-zinc-300 shadow-xl"
                       role="status"
                     >
                       {t('gm_console.roll_help_tooltip')}
@@ -551,12 +729,14 @@ export function GMConsoleSlider() {
                       type="text"
                       value={command}
                       onChange={handleCommandChange}
+                      onClick={handleCommandClick}
                       onKeyDown={handleCommandKeyDown}
+                      onKeyUp={handleCommandKeyUp}
                       className={`min-w-0 flex-1 rounded-md border border-zinc-700/60 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 outline-none transition-colors duration-300 ${actionStatus !== 'idle' ? statusChrome : `focus:ring-2 ${modeRing}`}`}
                       placeholder={t(placeholderKey)}
                       aria-label={t('gm_console.command_aria')}
-                      aria-expanded={inputMode === 'roll' && mentionQuery !== null}
-                      aria-controls="gm-console-mention-list"
+                      aria-expanded={popupVisible}
+                      aria-controls="gm-console-roll-popup"
                       autoComplete="off"
                     />
                   </div>
@@ -603,34 +783,18 @@ export function GMConsoleSlider() {
         </motion.div>
       ) : null}
 
-      {inputMode === 'roll' && mentionQuery !== null && createPortal(
-        <ul
-          id="gm-console-mention-list"
-          role="listbox"
-          style={{ bottom: mentionFixedBottom }}
-          className="fixed left-3 right-3 z-[9999] max-h-48 overflow-y-auto rounded-xl border border-zinc-700/80 bg-zinc-900/95 shadow-2xl backdrop-blur-sm"
-        >
-          {mentionFilteredActors.length === 0 ? (
-            <li className="px-3 py-2 text-xs text-zinc-500">{t('gm_console.mention_no_results')}</li>
-          ) : (
-            mentionFilteredActors.map((a) => (
-              <li key={a.id} role="option">
-                <button
-                  type="button"
-                  className="w-full cursor-pointer px-3 py-2 text-left text-sm text-zinc-200 transition-colors hover:bg-zinc-800"
-                  onMouseDown={(ev) => {
-                    ev.preventDefault();
-                    selectMentionActor(a);
-                  }}
-                >
-                  {a.name}
-                </button>
-              </li>
-            ))
-          )}
-        </ul>,
-        document.body,
-      )}
+      {popupVisible && popupKind && popupToken ? (
+        <RollTokenPopup
+          kind={popupKind}
+          items={popupItems}
+          scopeActors={scopeActors}
+          partial={popupToken.partial}
+          bottomPx={popupBottom}
+          onSingleSelect={onPopupSingleSelect}
+          onMultiSelect={onPopupMultiSelect}
+          emptyMessage={popupEmptyMessage}
+        />
+      ) : null}
     </div>
   );
 }

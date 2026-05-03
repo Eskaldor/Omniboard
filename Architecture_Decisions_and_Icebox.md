@@ -1,6 +1,6 @@
 # Omniboard — Архитектурные решения и Ледник
 
-> Обновлено: 02.05.2026 (ADR-12 уточнение `logic.py`; ADR-22 — переход слота из `led_triggers`)
+> Обновлено: 03.05.2026 (**ADR-24** — терминал бросков GM Console; ADR-12 уточнение `logic.py`; ADR-22 — переход слота из `led_triggers`)
 
 ---
 
@@ -19,7 +19,7 @@
 **Решение:** В проекте существуют две независимые системы истории:  
 
 1. `**CombatSession.session.history: List[LogEntry]`** — нарративный лог.
-2. `**CombatSession.session.history_stack`** + `**history_index**` — технические снэпшоты для Undo/Redo (см. ADR-18); живут в домене `session`, не уходят в публичный WS-payload целиком (на корне ответа — `can_undo` / `can_redo`).
+2. `**CombatSession.session.history_stack`** + `**history_index`** — технические снэпшоты для Undo/Redo (см. ADR-18); живут в домене `session`, не уходят в публичный WS-payload целиком (на корне ответа — `can_undo` / `can_redo`).
 
 ### ADR-4: Asset Override Pattern (+ JSON-config merge)
 
@@ -41,7 +41,7 @@
 
 ### ADR-6: Encounter Save Format (полный стейт)
 
-**Решение:** `POST /api/encounters/save` сохраняет полный снимок `**CombatSession`** (вложенные `**core`**, `**display**`, `**hardware**`, `**session**`) — эквивалент автосейва боя для воспроизводимости сцены.
+**Решение:** `POST /api/encounters/save` сохраняет полный снимок `**CombatSession`** (вложенные `**core`**, `**display`**, `**hardware**`, `**session**`) — эквивалент автосейва боя для воспроизводимости сцены.
 
 ### ADR-7: Background Thread для записи логов
 
@@ -120,9 +120,9 @@
 **Решение:** Корневой тип `**CombatSession`** вместо плоского монолита:
 
 - `**core: CombatCore`** — `actors`, `turn_queue`, `current_index`, `current_pass`, `round`, `engine_type`, `is_manual_mode`, `system`, `is_active`, `active_reaction_actor_id`;
-- `**display: DisplayState**` — `selected_layout_id`, `legend`, `show_group_colors`, `show_faction_colors`, `table_centered` (списки `**LayoutProfile**` в стейте боя **не** хранятся; профили — файлы + merge, см. ADR-4);
+- `**display: DisplayState`** — `selected_layout_id`, `legend`, `show_group_colors`, `show_faction_colors`, `table_centered` (списки `**LayoutProfile**` в стейте боя **не** хранятся; профили — файлы + merge, см. ADR-4);
 - `**hardware: HardwareState`** — `sync_led_to_ui`;
-- `**session: SessionMeta`** — `history`, `history_cursor`, `enable_logging`, `autosave_enabled`, `**history_stack**`, `**history_index**` (undo/redo изолированы в домене сессии; плоский снимок для стека не смешивается с публичным JSON без лишних полей).
+- `**session: SessionMeta`** — `history`, `history_cursor`, `enable_logging`, `autosave_enabled`, `**history_stack`**, `**history_index**` (undo/redo изолированы в домене сессии; плоский снимок для стека не смешивается с публичным JSON без лишних полей).
 
 **Совместимость:** `CombatSession.model_validate` принимает вложенный JSON и **плоский legacy**-словарь (раскладка по `LEGACY_*_KEYS`). Движки инициативы по-прежнему оперируют плоским `**CombatState`** через адаптеры `combat_session_to_combat_state` / `combat_session_merged_with_combat_state` (`backend/models.py`).
 
@@ -177,7 +177,7 @@
 **Решение:** Глобальная запись `**MiniatureEntry`** получила аппаратный режим привязки:
 
 - `**binding_mode: "actor" | "slot"`** — классическая привязка к актору или позиция в очереди.
-- `**slot_index: int**` — внутренний 0-based offset от `**CombatSession.core.current_index**`. Во фронтенде показывается человеческая нумерация: **1 = текущий ход**, 2 = следующий.
+- `**slot_index: int`** — внутренний 0-based offset от `**CombatSession.core.current_index**`. Во фронтенде показывается человеческая нумерация: **1 = текущий ход**, 2 = следующий.
 - `**slot_led_mode: "actor" | "custom"`** и `**slot_led_profile_id`** — опциональное LED-переопределение именно для слотовой миниатюры.
 
 **Алгоритм:** `ESPManager.refresh_initiative_line(combat_session)` выбирает все `MiniatureEntry` с `binding_mode == "slot"`, проверяет `turn_queue`, считает:
@@ -202,6 +202,23 @@ actor_id = turn_queue[target_index]
 **Статус:** Реализовано.
 
 **Решение:** Архивация файлов лога перенесена на момент остановки боя (`POST /api/combat/end`) и выполняется асинхронно напрямую из памяти (`session.history`), исключая конфликты `shutil.move` с фоновым потоком записи. При очистке стола (`POST /api/combat/clear`) добавлена опция сохранения закрепленных акторов (с фильтрацией их эффектов: оставляем только бесконечные) и точечный `sleep` аппаратных миниатюр. Очистка стола фиксируется в истории для поддержки Undo/Redo.
+
+### ADR-24: Терминал бросков GM Console — клиентский резолв `!` / `$`
+
+**Статус:** Реализовано (май 2026).
+
+**Решение:** Ввод режима **Roll** нижней консоли мастера (`src/components/GMConsole/`) парсится и **разворачивается на клиенте** в готовые арифметические выражения **до** `POST /api/combat/roll` или `POST /api/combat/actors/{id}/roll`. Префиксы `!stat` и `$macro` на бэкенд **не передаются**: подстановка значений статов и формул действий выполняется во фронтенде (`src/utils/rollTerminal.ts`), с учётом `columns.json`, `mechanics.json` (`system_dice`), `mergeActorActionDefs` и пер-актёрных `formula_override` / `custom_formula`.
+
+**Поведение:**
+
+- Строка разбивается на сегменты по `;`; для **каждого** упомянутого через `@` актёра строится свой план (`planSegmentsForActor`) — мульти-актёр порождает несколько последовательных запросов.
+- Одиночный сегмент, состоящий только из `!key` (в т.ч. `!{подпись с пробелами}` при полном совпадении ключа), разворачивается в шаблон колонки (`roll_formula` / `system_dice + !key`) до числового резолва.
+- `$macro` сначала подставляется как обёрнутая `(formula)`, затем внутри выражения резолвятся вложенные `!stat`.
+- Триггер `!` игнорируется сразу после кубической нотации без break-char (например `1d6!`, `4d6!>5`), чтобы не ломать explode в `d20`.
+
+**Обоснование:** `DiceManager` остаётся системно-агностичным и получает уже «плоские» формулы; не нужно тащить Unicode-ключи статов и длинные подписи через бэкендский regex `[stat_key]`. Параллельный путь подстановки `[stat_key]` в `DiceManager` сохраняется для других вызывающих сторон.
+
+**UX:** автодополнение — `RollTokenPopup.tsx`; контракт токенов и попапа — `Omniboard_TZ.md` §2.6.
 
 ---
 
@@ -229,13 +246,13 @@ actor_id = turn_queue[target_index]
 
 ### 🧊 GM Console (Ширма Мастера)
 
-Выдвижная боковая/нижняя панель и отдельная страница `**/gm-console`** для многоэкранного сетапа: терминал бросков (Ctrl+K), AI-помощник, Roll Matrix, быстрые заметки и история последних действий. Консоль не должна перекрывать трекер боя модалками; цель — второй монитор / планшет мастера.
+Выдвижная боковая/нижняя панель и отдельная страница `**/gm-console`** для многоэкранного сетапа: терминал бросков, AI-помощник, Roll Matrix, быстрые заметки и история последних действий. Консоль не должна перекрывать трекер боя модалками; цель — второй монитор / планшет мастера.
 
-*Частично закрыто (май 2026):* нижняя плавающая консоль в основном UI уже даёт режимы Note/Roll/AI, парсер бросков с `@`, комментарии `#`, массовые броски, `POST /api/combat/roll` и Smart Notes — без отдельного маршрута `/gm-console`.
+*Частично закрыто (май 2026):* нижняя плавающая консоль в основном UI даёт режимы Note/Roll/AI, язык токенов броска (`@`, `!`, `$`, сегменты `;`, комментарий `#`, см. **ADR-24** и `Omniboard_TZ.md` §2.6), попап автодополнения, `POST /api/combat/roll` и Smart Notes — **без** отдельного маршрута `/gm-console`.
 
-### 🧊 Data-driven макросы бросков (`!stat`)
+### ~~🧊 Data-driven макросы бросков (`!stat`)~~ → **закрыто на клиенте (ADR-24)**
 
-Идея: не зашивать игровую математику в React. Клиент отправляет на бэкенд **макросы** вида `!str`, `!dex` (или согласованный префикс) вместе с контекстом `**@Актор*`*. Серверный слой (условно **SystemEngine** / разрешение в `DiceManager` или смежном сервисе) читает определение макроса из **JSON конфигурации системы** (например, `dnd5e.json`, `mechanics.json` или отдельный реестр макросов), подставляет **фактические значения статов** из JSON-листа актёра и **раскрывает** макрос в **сырое арифметическое выражение** (`1d20+2` и т.п.) **до** вызова библиотеки `**d20`**. Так фронтенд остаётся **системно-агностичным**: одни и те же компоненты консоли работают для любой TTRPG, а различия живут только в данных.
+Первоначальная формулировка предполагала резолв `!stat` на сервере. **Фактическая реализация:** развёртка `!` и `$` в терминале Roll выполняется **на клиенте** до API; источник правды по формулам и статам по-прежнему data-driven (`columns.json`, `mechanics.json`, `actions.json`, пер-актёрные overrides). См. **ADR-24** и §2.6 ТЗ.
 
 ### 🧊 Три лица Мини-чарника
 
@@ -247,14 +264,14 @@ actor_id = turn_queue[target_index]
 
 **Дополнение (реализовано в коде, май 2026 — см. также `Omniboard_TZ.md` §2.1.3):**
 
-- **Глобальные шаблоны листа** (`sheet_profiles.json`, API `GET/POST …/config/sheet_profiles`): вкладки профиля включают **`stats`** и **`actions`**. Обе используют массив **`accordions[]`**: у блока есть **`name`**, **`columns`** (для stats — ключи колонок с `show_in_mini_sheet`; для actions — id макросов из `actions.json`), опционально **`display`**: **`open`** или **`accordion`**.
+- **Глобальные шаблоны листа** (`sheet_profiles.json`, API `GET/POST …/config/sheet_profiles`): вкладки профиля включают `**stats`** и `**actions**`. Обе используют массив `**accordions[]**`: у блока есть `**name**`, `**columns**` (для stats — ключи колонок с `show_in_mini_sheet`; для actions — id макросов из `actions.json`), опционально `**display**`: `**open**` или `**accordion**`.
 - **Декоративный заголовок секции** — горизонтальные линии и название; единый паттерн для сводки и действий на мини-листе. Для `accordion` сам заголовок является клик-таргетом (chevron справа), вторичная плашка с тем же названием не рисуется.
-- **UX-контракт `display`:** в режиме **`open`** контент всегда виден под заголовком; в режиме **`accordion`** секция **свёрнута по умолчанию** (раньше использовался `<details open>`, что давало визуально «всегда открыт + дубль заголовка» — паттерн удалён). Состояние раскрытия — локальный React-state мини-карточки.
-- **Legacy:** старый **`panel_action_keys`** на вкладке `actions` мигрирует в `accordions` при парсинге (`migrateLegacySheetTab` в `src/hooks/useSystemSheetProfiles.ts`); в payload сохранения поле вычищается (`normalizeSheetProfilesForSave`).
-- **Пер-персонажное переопределение вкладки «Действия»:** у актёра **`actions_panel_override`** той же формы, что и секции шаблона; если задано — **полностью заменяет** группировку из профиля на мини-листе. PATCH на бэкенде **глубоко мержит** объект с существующим; **`null`** снимает override. На клиенте то же в `actorPatchMerge.ts`.
+- **UX-контракт `display`:** в режиме `**open`** контент всегда виден под заголовком; в режиме `**accordion**` секция **свёрнута по умолчанию** (раньше использовался `<details open>`, что давало визуально «всегда открыт + дубль заголовка» — паттерн удалён). Состояние раскрытия — локальный React-state мини-карточки.
+- **Legacy:** старый `**panel_action_keys`** на вкладке `actions` мигрирует в `accordions` при парсинге (`migrateLegacySheetTab` в `src/hooks/useSystemSheetProfiles.ts`); в payload сохранения поле вычищается (`normalizeSheetProfilesForSave`).
+- **Пер-персонажное переопределение вкладки «Действия»:** у актёра `**actions_panel_override`** той же формы, что и секции шаблона; если задано — **полностью заменяет** группировку из профиля на мини-листе. PATCH на бэкенде **глубоко мержит** объект с существующим; `**null`** снимает override. На клиенте то же в `actorPatchMerge.ts`.
 - **Редактор действий (`ActorActionEditor.tsx`) — три подвкладки:** «Группировка» (только редактор `actions_panel_override`), «Свои макросы» (кастомные макросы через `custom_formula` / `custom_name` в `actor.actions`), «Базовые действия» (переопределения системных макросов: `show_on_panel`, `formula_override`, `comment`). Базовая вкладка использует **draft + Apply / Discard**: правки локальны, по «Применить» уходит один сводный `PATCH` с `actions: { ...merged }`, по «Отменить» draft ресетится до текущего снимка актёра. Поля с расхождением подсвечиваются amber-рамкой и тегом «Изменено»; на ярлыке вкладки — dot-индикатор «грязно».
 - **Слияние макросов:** `mergeActorActionDefs` объединяет системный `actions.json` и актёрские кастомные определения для рендера и редактора.
-- **Модели Pydantic:** у `ActorActionsPanelOverride` / `ActorActionsPanelAccordion` — **before**-валидаторы, чтобы битые снимки сессии не роняли разбор `CombatSession` (в т.ч. **`columns`** как список строк).
+- **Модели Pydantic:** у `ActorActionsPanelOverride` / `ActorActionsPanelAccordion` — **before**-валидаторы, чтобы битые снимки сессии не роняли разбор `CombatSession` (в т.ч. `**columns`** как список строк).
 
 ### ~~🧊 Checkbox Groups (Action Economy)~~ → **в продукте**
 
