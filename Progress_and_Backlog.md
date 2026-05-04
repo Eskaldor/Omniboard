@@ -1,6 +1,6 @@
 # Omniboard — Progress & Backlog
 
-> Обновлено: 03.05.2026 (**§2.1.5** — `initiative_roll`, `PATCH/POST /api/combat/initiative/*`, `SessionMeta`, GM Console, кубик в строке; автопереброс по раунду + `rebuild_turn_queue_after_initiative_reroll`); ранее: toast броска §2.7 / **ADR-25**; колонка макросов §2.1.4; 02.05.2026 — ESP, `initiative_shift`
+> Обновлено: 04.05.2026 (**Фаза 15** — Player View: кампании, лобби, `/ws/player`, мобильный клиент, вкладка Персонажи в Компендиуме); ранее: **§2.1.5** — `initiative_roll`, автопереброс; toast броска **ADR-25**; ESP, `initiative_shift`
 
 ---
 
@@ -314,6 +314,136 @@ UX-ревизия `ConfigModal`: горизонтальные табы плох�
 - [x] **Справка и i18n:** `?` / тултип и плейсхолдер строки броска; ключи `gm_console.*` в **ru / en / je / ger** (`placeholder_roll`, `roll_help_tooltip` и др.).
 - [x] **Журнал боя:** вывод `comment` под строкой броска; разбор `**…**` из строки результата d20 через `react-markdown` (выделение критов).
 - [ ] *Хвост (по желанию):* клавиатурная навигация в попапе (↑↓ / Space / Enter); live-превью резолва под инпутом; частичная отправка при `anyMissing` вместо полного отказа; unit-тесты на `rollTerminal.ts`.
+
+---
+
+## ✅ Фаза 14 — Компендиум (Rostrum & Bestiary) — Data-Driven UI для актёров (04.05.2026)
+
+Создана модульная система поиска, фильтрации и добавления НПС/монстров в трекер инициативы через компонент **Compendium** с полностью data-driven фильтрацией и сортировкой.
+
+- [x] **Архитектура Compendium:**
+  - Основной компонент `src/components/Compendium/Compendium.tsx` с подкомпонентами в одном файле: `DynamicFilterBar`, `ActorList`, `RosterRow`, `DefaultSystemSheetPlaceholder`, `CharactersTab`.
+  - Модальная обёртка `CompendiumModal` с фетчингом акторов НПС из `/api/systems/{name}/actors`.
+  - Две вкладки: **НПС** (фильтрация, сортировка, мини-лист) и **Персонажи** (управление персонажами кампании — см. Фаза 15).
+
+- [x] **Типизация и расширение ColumnConfig:**
+  - Новый interface `CompendiumColumnConfig extends ColumnConfig` с опциональным полем `roster_filter?: { enabled, filter_type, label }`.
+  - Filter types: `'select'` (dropdown с уникальными значениями), `'text'` (free text), `'number'` (range input min/max).
+  - Без hardcoda: фильтры генерируются 100% из конфига колонок системы.
+
+- [x] **Фильтрация и сортировка:**
+  - `FilterState`: Record<string, value | [min, max]> для хранения активных фильтров.
+  - **Name search:** инкрементальный поиск по `actor.name` (case-insensitive).
+  - **Column filters:** итерирование `systemColumns.roster_filter.enabled` → рендер контролов и применение фильтров (select ≈ contains, text ≈ contains, number ≈ range).
+  - **Sort:** dropdown выбора колонки для сортировки или имени (default), toggle button для направления (asc/desc).
+  - Сортировка с поддержкой числовых и текстовых значений (`localeCompare` с опцией `numeric: true`).
+
+- [x] **Компактный список-таблица:**
+  - Строка: [chevron] [role-dot] [name] [динамические stat-колонки] | [count input] [+ button].
+  - Role-индикатор цветом (red/enemy, emerald/ally, blue/character, zinc/neutral).
+  - Динамические колонки фильтруются из `systemColumns` (только `showInTable`, не checkbox_group).
+  - Поддержка дроби-значений через `display_as_fraction` + `max_key`.
+
+- [x] **Accordion / Mini-sheet:**
+  - Клик на строку → плавное раскрытие вниз с `transition-[max-height]` и `max-h-0 → max-h-96`.
+  - Раскрытая область показывает `DefaultSystemSheetPlaceholder` с:
+    - Role badge + Initiative (монотекст).
+    - Сетка-сводка характеристик (4–6 колонок, `grid-cols-4 sm:grid-cols-6`).
+    - Список активных эффектов с иконками и длительностью.
+    - Placeholder для будущего полного статблока.
+
+- [x] **UI Фильтров (DynamicFilterBar):**
+  - Для каждого `roster_filter.enabled` → соответствующий контрол (select/text/number).
+  - **Select:** выпадающий список с опцией "Все" + отсортированные по буквам уникальные значения из полного набора акторов.
+  - **Text:** инпут с плейсхолдером.
+  - **Number:** пара инпутов (от/до) с разделителем «–».
+  - **Sort panel:** справа в фильтр-баре — select для колонки + кнопка направления (стилизация активного состояния emerald при ascending).
+  - Все инпуты/селекты — тёмная тема (`bg-zinc-900`, `border-zinc-700`, focus `border-emerald-500`).
+
+- [x] **Интеграция с App.tsx:**
+  - Добавлена кнопка "Компендиум" в шапку рядом с кнопкой "Ростер" (icon: `BookOpen` из lucide-react).
+  - State `showCompendium` → открывает `CompendiumModal` с фетчингом акторов и передачей `systemColumns` из контекста.
+  - `onAdd` callback вызывает `addFromRoster` в цикле по `count` (количество копий актора).
+  - После добавления модал закрывается.
+
+- [x] **Стилизация и UX:**
+  - Тёмная тема: `bg-zinc-950`, `zinc-200/600` текст, `emerald-*` акценты.
+  - Left sidebar (148px): system badge, tab navigation, count indicator.
+  - Search bar с иконкой поиска, фокус → background shift.
+  - Sticky filter bar при скролле (min-height 42px).
+  - Flex-list с дозированным spacing (`space-y-1`), overflow-y-auto.
+  - Hover-эффекты на строках, smooth transitions (150ms).
+  - Responsive breakpoints: инпуты сжимаются, скрытые лейблы на мобильных (hidden xl:block).
+
+- [x] **Typescript & Type Safety:**
+  - Полная типизация React.memo компонентов с `useCallback` для оптимизации.
+  - Сигнатура `onAdd(actor, count, keepId?)`: `keepId=true` из вкладки Персонажи сохраняет UUID актора; НПС-вкладка не передаёт флаг — всегда новый UUID (см. ADR-27).
+  - Интерфейсы для пропсов: `CompendiumProps`, `CompendiumModalProps`, `RosterRowProps` и т.д.
+
+- [x] **Файлы:**
+  - `src/components/Compendium/Compendium.tsx` (основной компонент).
+  - `src/components/Compendium/CompendiumModal.tsx` (модальная обёртка).
+  - `src/components/Compendium/index.ts` (barrel export).
+  - Интеграция в `src/App.tsx`; старый `ActorRosterModal` удалён.
+
+**Связь с другими системами:**
+- Использует существующий `useColumns()` для получения `systemColumns`.
+- Интегрируется с `addFromRoster` для добавления акторов в боевой стейт.
+- Zero dependencies на сторонние библиотеки компонентов (чистый Tailwind + React).
+- Готов к расширению: поле `roster_filter` в `ColumnConfig` можно добавить в любую систему через `columns.json`.
+
+---
+
+## ✅ Фаза 15 — Player View: Вид Игрока (04.05.2026)
+
+Полноценный «второй экран» для игроков — мобильная страница `/player`, изолированная от GM-интерфейса. Персонажи управляются через кампании; бой и лист персонажа доступны без права редактировать чужих акторов.
+
+### Бэкенд
+
+- [x] **`backend/paths.py`:** `CAMPAIGNS_DIR`, `get_campaign_players_dir(system, campaign_id)`, `get_campaigns_system_dir(system)` — защита от path traversal по образцу существующих helpers.
+- [x] **`backend/models.py`:** `SessionMeta.active_campaign_id: Optional[str]` (поле добавлено в `combat_session_merged_with_combat_state` чтобы не сбрасывалось при смене хода). Новые модели: `CampaignInfo`, `CampaignCreateRequest`, `ActiveCampaignRequest`, `PlayerCharacterSummary`, `PlayerCharacterCreateRequest`, `PlayerCharacterImportRequest`, `PlayerClaimResponse`.
+- [x] **`backend/state.py`:** глобальные `claimed_players: dict[str, str]` (actor_id → token) и `token_to_actor: dict[str, str]` (обратный индекс); `player_clients` для `/ws/player`.
+- [x] **`backend/services/player_state.py`** (новый): `get_player_public_state(session)` — фильтрует `is_revealed=False` акторов, применяет маски `Visibility`, убирает GM-поля (`hotbar`, `miniature_id`, `layout_profile_id`), стрипует `hardware`, `prerolls`, `history_stack/index`. **`actions` и `actions_panel_override` не стрипуются** — нужны игроку для панели действий.
+- [x] **`backend/routers/ws.py`:** `/ws/player` (новый канал), `broadcast_player_state()` — вызывается после каждого `broadcast_state()`; отправляет отфильтрованный payload.
+- [x] **`backend/routers/player.py`** (новый роутер `/api/player`):
+  - `GET /session` — система, active_campaign_id, is_combat_active, round
+  - `GET /campaigns` — список кампаний для текущей системы
+  - `POST /campaigns` — создать папку кампании
+  - `PATCH /active-campaign` — установить/сбросить активную кампанию (broadcast)
+  - `GET /lobby` — список персонажей кампании с флагом `is_claimed`
+  - `POST /claim/{actor_id}` — забронировать персонажа, получить сессионный токен
+  - `DELETE /claim/{actor_id}` — освободить персонажа
+  - `GET /actor/{actor_id}` — полные данные персонажа (только владельцу по токену `X-Player-Token`)
+  - `GET /characters` — GM: все персонажи активной кампании
+  - `POST /characters` — GM: создать нового персонажа в кампанию
+  - `POST /characters/import` — GM: скопировать актора из ростера или боя в кампанию
+
+### Фронтенд
+
+- [x] **`src/main.tsx`:** pathname-роутинг — `window.location.pathname.startsWith('/player')` → `PlayerApp`; без добавления react-router-dom.
+- [x] **`src/types.ts`:** `SessionMeta.active_campaign_id?: string | null`.
+- [x] **`src/player/types.ts`:** `PlayerAuth`, `PlayerCharacterSummary`, `PlayerSessionInfo`, `PlayerTab`, `PublicCombatState`.
+- [x] **`src/player/hooks/usePlayerAuth.ts`:** хранение `{ token, actorId }` в `localStorage`; `claim(actorId)`, `unclaim()`; idempotent re-claim.
+- [x] **`src/player/hooks/usePlayerSocket.ts`:** WebSocket `/ws/player` с авто-реконнектом и HTTP-fallback на `/api/player/session`.
+- [x] **`src/player/components/BottomNavBar.tsx`:** 4 вкладки (sheet / actions / initiative / log), amber-подсветка активной.
+- [x] **`src/player/components/CharacterCard.tsx`:** карточка лобби с портретом, ролевым бейджем, иконкой замка.
+- [x] **`src/player/views/LobbyView.tsx`:** состояния loading / error / no-campaign / empty / ready; фетч `/api/player/session` + `/api/player/lobby`.
+- [x] **`src/player/views/SheetView.tsx`:** фетч `/api/player/actor/{id}` (с токеном) + `/api/systems/{system}/columns` + рендер через `ActionsPanel`.
+- [x] **`src/player/views/ActionsView.tsx`:** данные актора из защищённого `/api/player/actor/{id}`; системные действия через `useSystemActions`; merge через `mergeActorActionDefs`; рендер через `ActionsPanel`; `isMyTurn = turn_queue[current_index] === auth.actorId`; панель всегда видна, кнопки активны только в ход.
+- [x] **`src/player/views/InitiativeView.tsx`:** read-only отсортированный список, amber = текущий ход, emerald+«вы» = свой актор.
+- [x] **`src/player/views/LogView.tsx`:** реверсная история, иконки по типу события.
+- [x] **`src/player/PlayerApp.tsx`:** auth gate (нет auth → LobbyView), статусбар (система, WS-индикатор, «Сменить»), 4-tab layout с `h-dvh`.
+
+### ConfigModal — вкладка «Кампании»
+
+- [x] `src/components/Modals/ConfigTabs/CampaignTab.tsx` — три SectionCard: статус активной кампании, список кампаний с кнопками «Активировать», форма создания (slug-валидация `[a-zA-Z0-9_-]`).
+- [x] `src/components/Modals/ConfigModal.tsx` — добавлена секция `'campaign'` с иконкой `BookOpen`; `handleActivateCampaign` делает `PATCH /api/player/active-campaign` и перефетчивает стейт.
+
+### Компендиум — вкладка «Персонажи»
+
+- [x] `CharactersTab` в `Compendium.tsx`: создание персонажа (`POST /api/player/characters`), импорт из ростера/боя (`POST /api/player/characters/import`), список с кнопкой «В бой».
+- [x] Флаг `keepId=true` явно передаётся через цепочку `onAdd(actor, count, keepId?)` — UUID персонажа кампании сохраняется при добавлении в бой независимо от роли; НПС-вкладка не передаёт флаг.
+- [x] Удалён устаревший `ActorRosterModal.tsx`; кнопка «Ростер» убрана из App.tsx.
 
 ---
 

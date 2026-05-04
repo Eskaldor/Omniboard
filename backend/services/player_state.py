@@ -5,8 +5,9 @@ from typing import Any
 
 from backend.models import CombatSession
 
-# Поля актора, которые GM не должен показывать игрокам других персонажей
-_ACTOR_GM_FIELDS = ("hotbar", "actions", "actions_panel_override", "miniature_id", "layout_profile_id")
+# Поля актора, скрытые от игроков (GM-only или устройство-специфичные).
+# actions и actions_panel_override НЕ скрываются — игрок должен видеть свои макросы.
+_ACTOR_GM_FIELDS = ("hotbar", "miniature_id", "layout_profile_id")
 
 
 def _apply_actor_visibility(actor: dict[str, Any]) -> dict[str, Any] | None:

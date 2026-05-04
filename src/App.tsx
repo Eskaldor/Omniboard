@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Users, Trash, Swords } from 'lucide-react';
+import { Plus, Users, Trash, Swords, BookOpen } from 'lucide-react';
 import { CombatState, Actor, Effect, LegendConfig } from './types';
+import { CompendiumModal } from './components/Compendium';
 import i18n from './i18n';
 import {
   MiniSheetModal,
@@ -9,7 +10,6 @@ import {
   LibraryModal,
   AddEffectModal,
   MiniaturesModal,
-  ActorRosterModal,
   EncountersModal,
   HardwareModal,
   LedEffectsModal,
@@ -64,7 +64,7 @@ export default function App() {
   const [showConfig, setShowConfig] = useState(false);
   const [showLibrary, setShowLibrary] = useState(false);
   const [showMiniatures, setShowMiniatures] = useState(false);
-  const [showRoster, setShowRoster] = useState(false);
+  const [showCompendium, setShowCompendium] = useState(false);
   const [showEncounters, setShowEncounters] = useState(false);
   const [showHardware, setShowHardware] = useState(false);
   const [showLedEffects, setShowLedEffects] = useState(false);
@@ -163,15 +163,15 @@ export default function App() {
     refetchState();
   };
 
-  const addFromRoster = async (template: Actor) => {
-    const newActor = { ...template, id: crypto.randomUUID(), initiative: 0 };
+  const addFromRoster = async (template: Actor, keepId = false) => {
+    // keepId=true сохраняет UUID актора (персонажи кампании), false — новый UUID (НПС-шаблоны).
+    const newActor = { ...template, id: keepId ? template.id : crypto.randomUUID(), initiative: 0 };
     try {
       await fetch('/api/actors', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newActor)
       });
-      setShowRoster(false);
       refetchState();
     } catch (err) {
       console.error("Failed to add actor from roster", err);
@@ -254,8 +254,8 @@ export default function App() {
               <button onClick={() => setShowEncounters(true)} className="flex items-center gap-1 text-sm text-zinc-400 hover:text-zinc-300">
                 <Swords size={16} /> {t('main.encounters')}
               </button>
-              <button onClick={() => setShowRoster(true)} className="flex items-center gap-1 text-sm text-zinc-400 hover:text-zinc-300">
-                <Users size={16} /> {t('main.roster')}
+              <button onClick={() => setShowCompendium(true)} className="flex items-center gap-1 text-sm text-zinc-400 hover:text-zinc-300">
+                <BookOpen size={16} /> Компендиум
               </button>
               <ManualModeToggle
                 isManualMode={effectiveState.core.is_manual_mode ?? false}
@@ -504,7 +504,19 @@ export default function App() {
         onSaved={refetchState}
       />
       <HardwareTriggersModal isOpen={showHardwareTriggers} onClose={() => setShowHardwareTriggers(false)} />
-      {showRoster && <ActorRosterModal systemName={systemName} onClose={() => setShowRoster(false)} onAdd={addFromRoster} />}
+      {showCompendium && (
+        <CompendiumModal
+          systemName={systemName}
+          systemColumns={columns}
+          onClose={() => setShowCompendium(false)}
+          onAdd={(actor, count, keepId) => {
+            // keepId=true приходит из вкладки Персонажи кампании — сохраняем UUID.
+            // keepId=false/undefined — НПС из ростера, всегда новый UUID.
+            for (let i = 0; i < count; i++) addFromRoster(actor, i === 0 && !!keepId);
+            setShowCompendium(false);
+          }}
+        />
+      )}
       {showEncounters && (
         <EncountersModal
           systemName={systemName}

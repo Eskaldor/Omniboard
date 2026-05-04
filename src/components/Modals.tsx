@@ -4,7 +4,6 @@ export { MiniSheetModal } from './Modals/MiniSheetModal';
 export { ConfigModal } from './Modals/ConfigModal';
 export { AddEffectModal } from './Modals/AddEffectModal';
 export { LibraryModal } from './Modals/LibraryModal';
-export { ActorRosterModal } from './Modals/ActorRosterModal';
 export { EncountersModal } from './Modals/EncountersModal';
 export { HardwareModal } from './Modals/HardwareModal';
 export { LedEffectsModal } from './Modals/LedEffectsModal';

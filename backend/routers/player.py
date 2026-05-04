@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import secrets
+import uuid
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Header
@@ -13,10 +14,12 @@ from backend.models import (
     ActiveCampaignRequest,
     CampaignCreateRequest,
     CampaignInfo,
+    PlayerCharacterCreateRequest,
+    PlayerCharacterImportRequest,
     PlayerCharacterSummary,
     PlayerClaimResponse,
 )
-from backend.paths import get_campaign_players_dir, get_campaigns_system_dir
+from backend.paths import get_actors_system_dir, get_campaign_players_dir, get_campaigns_system_dir
 from backend.routers.ws import broadcast_state
 
 router = APIRouter(prefix="/api/player", tags=["player"])
@@ -237,3 +240,86 @@ async def unclaim_actor(
     del app_state.claimed_players[actor_id]
     app_state.token_to_actor.pop(existing_token, None)
     return {"ok": True}
+
+
+# ---------------------------------------------------------------------------
+# Управление персонажами кампании (GM)
+# ---------------------------------------------------------------------------
+
+def _campaign_players_dir_or_404(system: str, campaign_id: str | None):
+    if not campaign_id:
+        raise HTTPException(status_code=404, detail="No active campaign")
+    players_dir = get_campaign_players_dir(system, campaign_id)
+    if players_dir is None:
+        raise HTTPException(status_code=400, detail="Invalid campaign path")
+    return players_dir
+
+
+@router.get("/characters")
+async def list_campaign_characters() -> list[dict]:
+    """GM: полный список персонажей активной кампании."""
+    system = app_state.state.core.system
+    campaign_id = app_state.state.session.active_campaign_id
+    players_dir = _campaign_players_dir_or_404(system, campaign_id)
+    return [a.model_dump(mode="json") for a in _load_actors_from_dir(players_dir)]
+
+
+@router.post("/characters", status_code=201)
+async def create_campaign_character(body: PlayerCharacterCreateRequest) -> dict:
+    """GM: создать нового персонажа и сохранить в активную кампанию."""
+    name = (body.name or "").strip()
+    if not name:
+        raise HTTPException(status_code=422, detail="name is required")
+
+    system = app_state.state.core.system
+    campaign_id = app_state.state.session.active_campaign_id
+    players_dir = _campaign_players_dir_or_404(system, campaign_id)
+    players_dir.mkdir(parents=True, exist_ok=True)
+
+    actor = Actor(
+        id=str(uuid.uuid4()),
+        name=name,
+        role=body.role,
+        portrait=body.portrait,
+        is_revealed=True,
+    )
+    (players_dir / f"{actor.id}.json").write_text(
+        actor.model_dump_json(indent=2), encoding="utf-8"
+    )
+    return actor.model_dump(mode="json")
+
+
+@router.post("/characters/import")
+async def import_campaign_character(body: PlayerCharacterImportRequest) -> dict:
+    """GM: скопировать актора из ростера или боя в активную кампанию."""
+    system = app_state.state.core.system
+    campaign_id = app_state.state.session.active_campaign_id
+    players_dir = _campaign_players_dir_or_404(system, campaign_id)
+
+    actor: Actor | None = None
+
+    if body.source == "combat":
+        actor = next(
+            (a for a in app_state.state.core.actors if a.id == body.actor_id), None
+        )
+    else:
+        # Ищем в системном ростере
+        actors_dir = get_actors_system_dir(system)
+        if actors_dir and actors_dir.exists():
+            for f in actors_dir.glob("*.json"):
+                try:
+                    data = json.loads(f.read_text(encoding="utf-8"))
+                    if data.get("id") == body.actor_id:
+                        actor = Actor.model_validate(data)
+                        break
+                except Exception:
+                    continue
+
+    if actor is None:
+        raise HTTPException(status_code=404, detail="Actor not found")
+
+    players_dir.mkdir(parents=True, exist_ok=True)
+    (players_dir / f"{actor.id}.json").write_text(
+        actor.model_dump_json(indent=2), encoding="utf-8"
+    )
+    return actor.model_dump(mode="json")

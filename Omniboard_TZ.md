@@ -1,6 +1,6 @@
 # Nevrar's Omniboard — ТЗ v2.0
 
-> Обновлено: 03.05.2026 (**§2.1.5** — шаблон броска инициативы `initiative_roll` в `mechanics.json`, API, `SessionMeta`, GM Console, кубик в строке трекера; **ADR-26** — `reorder_turn_queue` vs `rebuild_turn_queue_after_initiative_reroll`; **§2.1.2** / **§2.5** / **§4** синхронизированы); ранее: **§2.1.4** — колонка макросов в трекере; **§2.7** — обратная связь по броскам; **§2.6** — терминал бросков, **ADR-24**; GM Console / ESP / `led_triggers`; **§2.1.3** — мини-лист, `sheet_profiles`
+> Обновлено: 04.05.2026 (**§2.8** — Player View: кампании, клейм персонажа, `/ws/player`, `/api/player`; **ADR-27**; §1, §2, §3, §4, §4.1 синхронизированы); ранее: 03.05.2026 (**§2.1.5** — шаблон броска инициативы `initiative_roll` в `mechanics.json`, API, `SessionMeta`, GM Console, кубик в строке трекера; **ADR-26** — `reorder_turn_queue` vs `rebuild_turn_queue_after_initiative_reroll`; **§2.1.2** / **§2.5** / **§4** синхронизированы); **§2.1.4** — колонка макросов в трекере; **§2.7** — обратная связь по броскам; **§2.6** — терминал бросков, **ADR-24**; GM Console / ESP / `led_triggers`; **§2.1.3** — мини-лист, `sheet_profiles`
 > Стек сменился с Vue 3 на React 19 (сгенерировано в Google AI Studio).
 
 ## 📌 Суть проекта
@@ -18,7 +18,7 @@ Omniboard — это **локальный аппаратно-программн�
 - **Backend:** FastAPI (Python 3.11), Pydantic v2.
 - **Боевой слой:** логика инициативы инкапсулирована в `backend/engines/` (`BaseInitiativeEngine` и реализации); выбор движка — по полю `**CombatSession.core.engine_type`** (см. §3).
 - **Боевая математика:** `backend/services/mechanics.py` (`MechanicsManager`) считает `StatValue` по `mechanics.json`; `backend/services/dice.py` (`DiceManager`) выбирает движок бросков (`D20Engine`, `ShadowrunEngine`). Отдельно: **`backend/services/initiative_roll.py`** — шаблон **`initiative_roll`** и бросок инициативы **только через `D20Engine`** (арифметическая сумма / d20-notation, не пул успехов Shadowrun).
-- **Связь:** WebSocket только для UI мастера (`/ws/master`, см. §4). Оmnimini (ESP32) не используют WebSocket: доставка команд и PNG — **HTTP** поверх **mDNS** (`zeroconf`), см. ADR-15 и §5.
+- **Связь:** два WebSocket-канала: **`/ws/master`** — полный GM-стейт для UI мастера; **`/ws/player`** — отфильтрованный публичный стейт для вида игрока (см. §4 и §2.8). Оmnimini (ESP32) не используют WebSocket: доставка команд и PNG — **HTTP** поверх **mDNS** (`zeroconf`), см. ADR-15 и §5.
 - **Хранение:** Локальные JSON-файлы.
 - **Генерация картинок (для ESP32):** `Pillow` (композитинг слоев в PNG).
 - **Запуск:** `uvicorn --reload` для dev-режима.
@@ -60,6 +60,12 @@ data/
         ├── led_profiles.json      # Оверрайд LED-пресетов (merge с default/config)
         └── led_triggers.json      # Правила железа (напр. initiative_shift: переход экрана при смене слота линии инициативы)
 ├── actors/                   # Roster по системе: data/actors/<system_name>/*.json (API `GET/POST /api/systems/{name}/actors`, безопасный сегмент пути)
+├── campaigns/                # Кампании игроков (см. §2.8)
+│   └── <system_name>/
+│       └── <campaign_id>/
+│           ├── meta.json     # CampaignMeta: id, name, system, created_at
+│           └── players/
+│               └── <actor_id>.json   # Файл персонажа игрока (полный Actor JSON)
 ├── state_autosave.json       # Автосейв сессии боя (вложенный CombatSession)
 └── miniatures.json           # Глобальный реестр Omnimini: MiniatureEntry[] (не часть боя)
 ```
@@ -248,6 +254,48 @@ Markdown-экспорт лога (`backend/services/logger.py`) и UI лога �
 
 **Затронутые файлы (сводка):** `src/utils/rollToast.tsx`, `src/main.tsx`, `MiniSheetModal.tsx`, `ActorRow.tsx` (`TrackerMacroButtons`), `GMConsoleSlider.tsx`, `StatEditPopover.tsx` (`StatNumericCell`), `DefaultSystemSheet.tsx`, группы **`roll_toast.*`** в `data/locales/*/core.json`.
 
+### 2.8. Player View: Вид Игрока
+
+**Назначение:** страница `http://<ip>:3000/player` позволяет каждому участнику видеть публичное состояние боя и управлять действиями своего персонажа. Это не VTT-окно игрока — нет карты и кубиков; цель — статус персонажа и быстрые макросы во время его хода.
+
+**Архитектура (ADR-27):** два независимых WebSocket-канала (`/ws/master` и `/ws/player`), файловое хранилище кампаний (`data/campaigns/`), in-memory клейм-реестр.
+
+#### Флоу игрока
+
+1. Игрок открывает `/player` в браузере.
+2. ГМ создаёт кампанию и устанавливает её активной (`POST /api/combat/set_active_campaign`).
+3. Игрок выбирает или создаёт персонажа через `GET /api/player/characters` и нажимает «Подключиться» → `POST /api/player/claim` → получает `{ token, actor_id }`, который сохраняется в `localStorage`.
+4. Приложение подключается к `/ws/player`, отображает статус боя в реальном времени.
+5. Когда `turn_queue[current_index] === auth.actorId` — вкладка «Действия» становится активной.
+
+#### keepId — сохранение UUID при добавлении в бой
+
+Персонажи кампании добавляются в бой через Компендиум (вкладка «Персонажи»). Кнопка «В бой» вызывает `onAdd(actor, 1, keepId=true)`, что сохраняет оригинальный `actor.id` из файла кампании. Это гарантирует, что `turn_queue[index]` совпадёт с `auth.actorId` токена игрока. НПС (вкладка «НПС») добавляются с `keepId=false` — каждый получает новый UUID.
+
+#### Публичный стейт `/ws/player`
+
+Обрабатывается `get_player_public_state()` (`backend/services/player_state.py`):
+- Акторы с `is_revealed = False` — **исключены**
+- Поля `visibility` (`hp`, `stats`, `effects`, `name`) — применяются маски
+- GM-поля (`hotbar`, `miniature_id`, `layout_profile_id`) — **удалены**
+- `actions`, `actions_panel_override` — **сохранены** (нужны для панели макросов игрока)
+- `turn_queue` — **не фильтруется** (нужен для `isMyTurn`-проверки)
+
+#### Клиентские компоненты (`src/player/`)
+
+| Файл | Назначение |
+|---|---|
+| `PlayerApp.tsx` | Корневой компонент; получает `auth` и `state`; роутинг по вкладкам |
+| `views/StatusView.tsx` | Публичный статус боя: список акторов, раунд, текущий ход |
+| `views/ActionsView.tsx` | Панель макросов персонажа; всегда отображается, активна только в ход |
+| `views/CharacterView.tsx` | Статы персонажа (заглушка для расширения) |
+| `PlayerConfigModal.tsx` | Модалка первого запуска: выбор кампании → выбор/создание персонажа → клейм |
+| `hooks/usePlayerState.ts` | WebSocket `/ws/player` + `localStorage` авторизации |
+
+**`ActionsView` детали:** персонаж загружается через `GET /api/player/actor/{id}` с `X-Player-Token` — независимо от состояния `/ws/player` и фильтрации `is_revealed`. Системные действия — через `useSystemActions(systemName)`. Мёрж: `mergeActorActionDefs(systemActions, actor)`. Рендер: `ActionsPanel` (переиспользован из `MiniSheetModal`). При `!isMyTurn` панель показана с `opacity-60 pointer-events-none`.
+
+**Затронутые файлы:** `backend/routers/player.py`, `backend/services/player_state.py`, `backend/routers/ws.py`, `src/player/`, `src/components/Compendium/Compendium.tsx` (CharactersTab + keepId), `src/App.tsx` (addFromRoster keepId), `data/campaigns/`.
+
 ---
 
 ## 3. Pydantic Models (`backend/models.py`)
@@ -335,10 +383,25 @@ Markdown-экспорт лога (`backend/services/logger.py`) и UI лога �
 - `history`, `history_cursor`, `enable_logging`, `autosave_enabled`
 - `**history_stack**`, `**history_index**` — технический стек Undo/Redo (снимки сериализуются в автосейв; в публичном API/WebSocket поля стека не отдаются, на корне — только `can_undo` / `can_redo`)
 - `**prerolls**` — Roll Matrix: `actor_id -> группы правил -> slots[]` с результатами бросков и флагом `used`.
+- `**active_campaign_id`**: `Optional[str] = None` — UUID активной кампании; используется Компендиумом (вкладка «Персонажи») и Player View для привязки персонажей к бою (см. §2.8).
 
 ### CombatState (совместимость)
 
 В коде тип `**CombatState**` в TypeScript — алиас на `**CombatSession**`. На бэкенде плоский `**CombatState**` в `models.py` сохраняется для слоя совместимости с движками инициативы (`combat_session_to_combat_state` / merge обратно); новый функционал описывается в терминах `**CombatSession**`.
+
+### Player View — Модели (§2.8, см. `backend/routers/player.py`)
+
+| Модель | Поля | Назначение |
+|---|---|---|
+| `CampaignInfo` | `id`, `name`, `system`, `created_at` | Метаданные кампании в списке |
+| `PlayerCharacterSummary` | `id`, `name`, `portrait`, `system` | Краткая карточка персонажа для списка |
+| `PlayerClaimResponse` | `token`, `actor_id` | Ответ на `POST /claim`; токен хранится в `localStorage` игрока |
+| `PlayerCharacterCreateRequest` | `name`, `role?`, `portrait?` | Тело создания нового персонажа кампании |
+| `PlayerCharacterImportRequest` | `actor` (Actor JSON) | Импорт полного JSON актора в кампанию |
+| `ActiveCampaignRequest` | `campaign_id` | Тело `POST /api/combat/set_active_campaign` |
+| `CampaignCreateRequest` | `name`, `system` | Тело создания кампании |
+
+**Токены и клейм:** реестр `claimed_players: dict[str, str]` (actor_id → token) хранится **in-memory** в `backend/services/player_state.py`; персисты нет — при перезапуске сервера игрок заново нажимает «Подключиться». Каждый токен — `uuid4` + суффикс актора; используется в заголовке `X-Player-Token` для personalized-эндпоинтов.
 
 ---
 
@@ -348,6 +411,15 @@ Markdown-экспорт лога (`backend/services/logger.py`) и UI лога �
 
 - Рассылает `{ "type": "state_update", "payload": CombatSession }` (вложенные `core` / `display` / `hardware` / `session`) при любых изменениях. На клиенте payload проходит через слой **pending-патчей** (см. §2.3), чтобы не терять optimistic-правки статов.
 - Рассылает `{ "can_undo": bool, "can_redo": bool }` при изменении стека истории.
+
+### WebSocket (`ws://127.0.0.1/ws/player`)
+
+Публичный канал для вида игрока (реализован в `backend/routers/ws.py`):
+
+- Рассылает `{ "type": "state_update", "payload": <PublicCombatSession> }` — отфильтрованный снимок, прошедший через `get_player_public_state()` в `backend/services/player_state.py`.
+- Фильтрация: акторы с `is_revealed = False` исключены; поля `visibility` маскируют `hp` / `stats` / `effects` / `name` по правилам `Visibility`; GM-поля (`hotbar`, `miniature_id`, `layout_profile_id`) удалены из каждого актора. Поля **`actions`** и **`actions_panel_override`** намеренно **не** удаляются — игрок должен видеть свои макросы.
+- `turn_queue` **не** фильтруется — клиент использует `turn_queue[current_index] === auth.actorId` для надёжного определения хода без доп. запросов.
+- Стек истории (`history_stack`, `history_index`), GM-заметки и hardware-детали не включаются в публичный payload.
 
 ### Боевка (`/api/combat`)
 
@@ -434,12 +506,49 @@ Markdown-экспорт лога (`backend/services/logger.py`) и UI лога �
 - `GET /api/render/{actor_id}` — динамический PNG 172×320 (композитор Pillow); query — см. `backend/routers/render.py`
 - `**GET /api/render/output/{filename}.png`** — статический mount (имя файла на диске; для UI обычно `{actor_id}.png` после санитизации)
 
+### Player View (`/api/player`, `backend/routers/player.py`)
+
+Роутер обеспечивает кампании персонажей, клейм актора и personalized-эндпоинты. Аутентификация — заголовок `X-Player-Token`; публичные эндпоинты не требуют токена.
+
+#### Кампании
+
+| Метод | Путь | Описание |
+|---|---|---|
+| `GET` | `/api/player/campaigns` | Список кампаний для активной системы боя (`CampaignInfo[]`) |
+| `POST` | `/api/player/campaigns` | Создать кампанию (`CampaignCreateRequest`); возвращает `CampaignInfo` |
+| `DELETE` | `/api/player/campaigns/{campaign_id}` | Удалить кампанию и все персонажи |
+
+#### Персонажи кампании
+
+| Метод | Путь | Описание |
+|---|---|---|
+| `GET` | `/api/player/characters` | Список персонажей активной кампании (`PlayerCharacterSummary[]`) |
+| `POST` | `/api/player/characters` | Создать персонажа (`PlayerCharacterCreateRequest`); возвращает `Actor` |
+| `POST` | `/api/player/characters/import` | Импортировать Actor JSON (`PlayerCharacterImportRequest`); возвращает `Actor` |
+| `GET` | `/api/player/characters/{actor_id}` | Полный Actor JSON персонажа кампании |
+| `DELETE` | `/api/player/characters/{actor_id}` | Удалить персонажа из кампании |
+
+#### Клейм и активная кампания
+
+| Метод | Путь | Описание |
+|---|---|---|
+| `POST` | `/api/player/claim` | Привязать `actor_id` к токену игрока; тело `{ "actor_id": "..." }`; возвращает `PlayerClaimResponse` (`token`, `actor_id`) |
+| `POST` | `/api/combat/set_active_campaign` | Установить `session.active_campaign_id` (`ActiveCampaignRequest`); рассылает `state_update` по `/ws/master` |
+
+#### Персонализированный эндпоинт (требует `X-Player-Token`)
+
+| Метод | Путь | Описание |
+|---|---|---|
+| `GET` | `/api/player/actor/{actor_id}` | Полные данные актора для его игрока: ищет токен в `claimed_players`, возвращает Actor из кампании или из текущего боя (`404` при несоответствии токена) |
+
+**Примечание о `keepId`:** персонажи из вкладки «Персонажи» Компендиума добавляются в бой через `onAdd(actor, 1, keepId=true)`, сохраняя оригинальный UUID кампании. Это критично для корректной работы клейма: токен игрока привязан к `actor_id` кампании, и `turn_queue` должен содержать тот же UUID.
+
 ### 4.1 Чеклист «ТЗ ↔ код»
 
 
 | Область    | В `backend/routers/`                     | Примечание                                                                  |
 | ---------- | ---------------------------------------- | --------------------------------------------------------------------------- |
-| WebSocket  | `ws.py` → `/ws/master`                   | Совпадает с §4                                                              |
+| WebSocket  | `ws.py` → `/ws/master`, `/ws/player`     | Dual-channel: GM (полный стейт) + Player (публичный, см. §2.8)             |
 | Боевка     | `combat.py`                              | В ТЗ добавлены `prev-turn`, лог (`log/note`, `DELETE log`)                  |
 | Акторы     | `actors.py`                              | `POST ""` ≡ `POST /api/actors`                                              |
 | Системы    | `systems.py`                             | Совпадает с §4                                                              |
@@ -449,6 +558,7 @@ Markdown-экспорт лога (`backend/services/logger.py`) и UI лога �
 | Логи ОС    | `logs.py`                                | `POST /api/logs/open_folder`                                                |
 | Ассеты     | `assets.py`                              | Детальный CRUD см. файл; ТЗ даёт обзор                                      |
 | Рендер     | `render.py` + mount `/api/render/output` | Динамика + статический output                                               |
+| Player     | `player.py` → `/api/player`              | Кампании, персонажи, клейм, personalized-эндпоинт; ADR-27                  |
 
 
 Полный перечень декораторов: поиск по шаблону `@router.(get|post|put|patch|delete|websocket)` в каталоге `**backend/routers/**`.

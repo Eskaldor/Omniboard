@@ -517,6 +517,17 @@ class ActiveCampaignRequest(BaseModel):
     campaign_id: Optional[str] = None
 
 
+class PlayerCharacterCreateRequest(BaseModel):
+    name: str
+    role: Literal["character", "ally", "neutral"] = "character"
+    portrait: str = ""
+
+
+class PlayerCharacterImportRequest(BaseModel):
+    actor_id: str
+    source: Literal["roster", "combat"] = "roster"
+
+
 class CombatSession(BaseModel):
     """Корневой агрегат сессии боя (доменная декомпозиция ADR-18)."""
 

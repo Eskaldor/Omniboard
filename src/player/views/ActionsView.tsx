@@ -1,47 +1,100 @@
-import React, { useState } from 'react';
-import { Zap, Loader2 } from 'lucide-react';
-import type { PlayerAuth } from '../types';
-import type { PublicCombatState } from '../types';
-
-interface RollResult {
-  total: number;
-  formula: string;
-  details: string;
-}
+import React, { useCallback, useEffect, useState } from 'react';
+import { Loader2, Swords } from 'lucide-react';
+import type { Actor } from '../../types';
+import type { PlayerAuth, PublicCombatState } from '../types';
+import { useSystemActions } from '../../hooks/useSystemActions';
+import { mergeActorActionDefs } from '../../utils/mergeActorActionDefs';
+import { ActionsPanel } from '../../components/Modals/ActionsPanel';
+import {
+  parseRollHttpResponse,
+  showRollErrorToast,
+  showRollResultToast,
+} from '../../utils/rollToast';
 
 interface Props {
   auth: PlayerAuth;
   state: PublicCombatState | null;
 }
 
-/**
- * Phase 4: полная реализация с макросами из actions.json.
- * Сейчас: кнопки системных действий для актора из WS-стейта.
- */
 export function ActionsView({ auth, state }: Props) {
-  const [rolling, setRolling] = useState<string | null>(null);
-  const [lastResult, setLastResult] = useState<RollResult | null>(null);
+  const [actor, setActor] = useState<Actor | null>(null);
+  const [actorLoading, setActorLoading] = useState(true);
+  const [rolling, setRolling] = useState(false);
 
-  const myActor = state?.core.actors.find((a) => a.id === auth.actorId);
+  const systemName = (state?.core?.system ?? '').trim();
 
-  const roll = async (actionId: string, formula: string) => {
-    setRolling(actionId);
-    setLastResult(null);
-    try {
-      const res = await fetch(`/api/combat/actors/${auth.actorId}/roll`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ expression: formula }),
+  // Определяем: наш ход?
+  const isMyTurn =
+    (state?.core?.is_active ?? false) &&
+    state?.core?.turn_queue != null &&
+    state.core.turn_queue[state.core.current_index ?? 0] === auth.actorId;
+
+  // Полные данные актора (с actions) берём из защищённого эндпоинта,
+  // не из публичного WS-стейта — там actions могут быть неполными.
+  useEffect(() => {
+    let cancelled = false;
+    setActorLoading(true);
+
+    fetch(`/api/player/actor/${encodeURIComponent(auth.actorId)}`, {
+      headers: { 'X-Player-Token': auth.token },
+    })
+      .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+      .then((data: Actor) => {
+        if (!cancelled) setActor(data);
+      })
+      .catch(() => {
+        if (!cancelled) setActor(null);
+      })
+      .finally(() => {
+        if (!cancelled) setActorLoading(false);
       });
-      if (res.ok) {
-        const data = (await res.json()) as RollResult;
-        setLastResult(data);
-      }
-    } catch {}
-    setRolling(null);
-  };
 
-  if (!state) {
+    return () => { cancelled = true; };
+  }, [auth.actorId, auth.token]);
+
+  const { actions: systemActions, loading: actionsLoading } = useSystemActions(systemName);
+
+  const mergedActionDefs = React.useMemo(
+    () => (actor ? mergeActorActionDefs(systemActions, actor) : {}),
+    [systemActions, actor],
+  );
+
+  const handleRollAction = useCallback(
+    async (formula: string, comment: string) => {
+      const expr = formula.trim();
+      if (!expr || !actor) return;
+      setRolling(true);
+      try {
+        const res = await fetch(`/api/combat/actors/${encodeURIComponent(auth.actorId)}/roll`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            expression: expr,
+            ...(comment.trim() ? { comment: comment.trim() } : {}),
+          }),
+        });
+        const parsed = await parseRollHttpResponse(res);
+        if (parsed.ok) {
+          showRollResultToast({
+            result: parsed.result,
+            actorName: actor.name,
+            comment: comment.trim() || undefined,
+          });
+        } else {
+          showRollErrorToast((parsed as { ok: false; message: string }).message);
+        }
+      } catch {
+        showRollErrorToast('Ошибка сети');
+      } finally {
+        setRolling(false);
+      }
+    },
+    [auth.actorId, actor],
+  );
+
+  const isLoading = actorLoading || actionsLoading;
+
+  if (isLoading) {
     return (
       <div className="flex justify-center py-16">
         <Loader2 size={28} className="animate-spin text-zinc-600" />
@@ -49,69 +102,42 @@ export function ActionsView({ auth, state }: Props) {
     );
   }
 
-  if (!myActor) {
+  if (!actor) {
     return (
       <div className="flex flex-col items-center gap-2 py-16 text-center px-6">
-        <Zap size={32} className="text-zinc-700" />
-        <p className="text-zinc-500 text-sm">Твой персонаж не в инициативе</p>
-        <p className="text-zinc-600 text-xs">GM добавит тебя в бой при необходимости</p>
+        <Swords size={32} className="text-zinc-700" />
+        <p className="text-zinc-500 text-sm">Персонаж не найден</p>
+        <p className="text-zinc-600 text-xs">Попробуйте выйти из лобби и зайти снова</p>
       </div>
     );
   }
 
-  // Собираем доступные действия из override актора
-  const actionEntries = Object.entries(myActor.actions ?? {}).filter(
-    ([, v]) => v?.show_on_panel !== false
-  );
-
   return (
-    <div className="px-4 py-5">
-      {/* Last roll result */}
-      {lastResult && (
-        <div className="mb-5 rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-center">
-          <div className="text-3xl font-bold text-amber-400 tabular-nums">{lastResult.total}</div>
-          <div className="text-xs text-zinc-400 mt-0.5">{lastResult.formula}</div>
-          {lastResult.details && (
-            <div className="text-[11px] text-zinc-500 mt-1">{lastResult.details}</div>
-          )}
-        </div>
-      )}
+    <div className="flex flex-col">
+      {/* Turn status bar */}
+      <div
+        className={`mx-4 mt-4 mb-1 rounded-xl px-4 py-2.5 text-center text-sm font-medium border transition-colors ${
+          isMyTurn
+            ? 'bg-amber-500/15 border-amber-500/40 text-amber-300'
+            : 'bg-zinc-900/60 border-zinc-800 text-zinc-500'
+        }`}
+      >
+        {isMyTurn ? '⚔️ Твой ход!' : 'Ожидание хода…'}
+      </div>
 
-      {actionEntries.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 py-10 text-center">
-          <Zap size={28} className="text-zinc-700" />
-          <p className="text-zinc-500 text-sm">Нет доступных действий</p>
-          <p className="text-zinc-600 text-xs">
-            Действия настраиваются GM в чарнике персонажа
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-3">
-          {actionEntries.map(([id, override]) => {
-            const label = override?.custom_name ?? id;
-            const formula = override?.custom_formula ?? override?.formula_override ?? `1d20`;
-            const isRolling = rolling === id;
-            return (
-              <button
-                key={id}
-                onClick={() => void roll(id, formula)}
-                disabled={isRolling || rolling !== null}
-                className="flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-zinc-700 bg-zinc-900 px-3 py-4 active:bg-zinc-800 disabled:opacity-50 transition-colors"
-              >
-                {isRolling ? (
-                  <Loader2 size={20} className="animate-spin text-amber-400" />
-                ) : (
-                  <Zap size={20} className="text-amber-400" />
-                )}
-                <span className="text-xs font-medium text-zinc-200 text-center leading-tight">
-                  {label}
-                </span>
-                <span className="text-[10px] text-zinc-600">{formula}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
+      {/* Actions panel — always rendered, disabled when not our turn */}
+      <div
+        className={`transition-opacity duration-200 ${
+          rolling ? 'opacity-50 pointer-events-none' : ''
+        } ${!isMyTurn ? 'opacity-60 pointer-events-none' : ''}`}
+      >
+        <ActionsPanel
+          actor={actor}
+          mergedActionDefs={mergedActionDefs}
+          onRollAction={handleRollAction}
+          actionsTab={undefined}
+        />
+      </div>
     </div>
   );
 }

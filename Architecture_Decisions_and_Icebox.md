@@ -1,6 +1,6 @@
 # Omniboard — Архитектурные решения и Ледник
 
-> Обновлено: 03.05.2026 (**ADR-26** — инициатива по `initiative_roll` и пересборка очереди; **ADR-25** — toast броска / `rollToast.tsx`; **ADR-24** — терминал GM Console; ADR-12 уточнение `logic.py`; ADR-22 — `led_triggers`)
+> Обновлено: 04.05.2026 (**ADR-27** — Player View: публичный WS-канал, кампании, вид игрока); ранее: **ADR-26** — инициатива по `initiative_roll` и пересборка очереди; **ADR-25** — toast броска / `rollToast.tsx`; **ADR-24** — терминал GM Console; ADR-22 — `led_triggers`)
 
 ---
 
@@ -243,6 +243,30 @@ actor_id = turn_queue[target_index]
 
 **ТЗ:** `Omniboard_TZ.md` §2.1.5, §4.
 
+### ADR-27: Player View — публичный WS-канал, кампании, персонажи
+
+**Статус:** Реализовано (май 2026).
+
+**Контекст:** Нужен «второй экран» для игроков — мобильная страница `/player` с инициативой, листом персонажа и действиями. Данные должны быть частично скрыты (скрытые акторы, GM-поля не видны).
+
+**Решения:**
+
+1. **Два раздельных WS-канала.** `/ws/master` — полный стейт для GM. `/ws/player` — публичный отфильтрованный стейт через `backend/services/player_state.py::get_player_public_state()`. Функция: удаляет акторов с `is_revealed=False`, применяет маски `Visibility`, убирает `hotbar`, `miniature_id`, `layout_profile_id`, стрипует `session.prerolls`, `history_stack`, `history_index`, `hardware`. **Поля `actions` и `actions_panel_override` намеренно не стрипуются** — игрок должен видеть свои макросы.
+
+2. **Файловое хранилище кампаний.** `data/campaigns/<system>/<campaign_id>/players/*.json` — каждый файл есть полный `Actor`-снимок персонажа кампании. Путь валидируется через `get_campaign_players_dir()` в `backend/paths.py` (защита от path traversal, аналогично существующим `get_actors_system_dir`).
+
+3. **Сессионные токены в памяти.** `app_state.claimed_players: dict[str, str]` (actor_id → token) + `token_to_actor` (обратный индекс). Перезапуск сервера сбрасывает токены — игрокам нужно перебронировать персонажей через лобби. Принято как допустимо для локального сетапа за живым столом.
+
+4. **Данные макросов — через персональный эндпоинт, не через WS.** `GET /api/player/actor/{id}` (с токеном) возвращает полный Actor из файла кампании. `ActionsView` использует именно этот эндпоинт, а не `state.core.actors.find(...)` — потому что в публичном WS-стейте актора может ещё не быть (не в бою) или он отфильтрован по `is_revealed`. Это делает панель действий независимой от боевого стейта.
+
+5. **Сохранение ID при добавлении персонажа в бой (`keepId`).** Игрок бронирует персонажа по его UUID из кампании. Когда GM нажимает «В бой» из вкладки **Персонажи** Компендиума, флаг `keepId=true` передаётся явно через цепочку `onAdd(actor, count, keepId?)`. `addFromRoster(template, keepId=true)` использует `template.id` вместо `crypto.randomUUID()`. Проверка больше не завязана на `actor.role` — campaign character может иметь любую роль. Чипы NPC (вкладка НПС) всегда передают `keepId=false`.
+
+6. **Определение «мой ход» на клиенте.** `isMyTurn = state.core.is_active && state.core.turn_queue[current_index] === auth.actorId`. `turn_queue` в публичном стейте не фильтруется (в отличие от `actors`), поэтому ID всегда присутствует корректно.
+
+7. **Роутинг без react-router-dom.** `src/main.tsx` проверяет `window.location.pathname.startsWith('/player')` и рендерит `PlayerApp` вместо основного `App`. Избегаем добавления зависимости ради одного маршрута.
+
+**Файлы:** `backend/routers/player.py` (новый роутер `/api/player`), `backend/routers/ws.py` (`/ws/player`, `broadcast_player_state`), `backend/services/player_state.py`, `backend/paths.py`, `backend/state.py`, `src/player/` (весь модуль).
+
 ---
 
 ## Отклонённые идеи
@@ -341,6 +365,6 @@ actor_id = turn_queue[target_index]
 
 Добавление на Хотбар быстрых действий, которые имеют `initiative_cost` и автоматически пересортировывают очередь ходов.
 
-### 🧊 Player View (Второй экран)
+### ~~🧊 Player View (Второй экран)~~ → **закрыто (ADR-27, май 2026)**
 
-Отдельная страница `/player` — только публичные данные.
+Реализовано: страница `/player`, лобби с бронированием персонажей, `/ws/player` с фильтрацией стейта, вкладки Лист / Действия / Инициатива / Лог, ConfigModal → Кампании, Компендиум → Персонажи. Оставшийся icebox — полноэкранный «второй монитор» и синхронизация HP/эффектов актора обратно в файл кампании.
