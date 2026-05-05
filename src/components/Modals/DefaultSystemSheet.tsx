@@ -35,6 +35,10 @@ import {
   type SystemSheetProfile,
 } from '../../hooks/useSystemSheetProfiles';
 import {
+  resolveActiveSheetProfile,
+  useSystemSheetProfiles,
+} from '../../hooks/useSystemSheetProfiles';
+import {
   parseRollHttpResponse,
   showRollErrorToast,
   showRollResultToast,
@@ -324,6 +328,19 @@ function StatRow({
           {label}
         </span>
         <span className="flex items-center gap-1 shrink-0">
+          {canRoll && (
+            <button
+              type="button"
+              onClick={handleRoll}
+              disabled={rolling}
+              className={`shrink-0 grid place-items-center rounded text-zinc-500 hover:text-emerald-300 hover:bg-emerald-600/20 disabled:opacity-40 transition-colors ${
+                isPlayer ? 'w-8 h-8' : 'w-5 h-5'
+              }`}
+              title={t('stat_editor.roll')}
+            >
+              <Dices size={isPlayer ? 16 : 12} />
+            </button>
+          )}
           {renderControl(column, !pairColumn)}
           {pairColumn && (
             <>
@@ -355,19 +372,6 @@ function StatRow({
               title={t('stat_editor.overrides')}
             >
               <ChevronDown size={isPlayer ? 14 : 12} className={open ? 'rotate-180' : ''} />
-            </button>
-          )}
-          {canRoll && (
-            <button
-              type="button"
-              onClick={handleRoll}
-              disabled={rolling}
-              className={`shrink-0 grid place-items-center rounded text-zinc-500 hover:text-emerald-300 hover:bg-emerald-600/20 disabled:opacity-40 transition-colors ${
-                isPlayer ? 'w-8 h-8' : 'w-5 h-5'
-              }`}
-              title={t('stat_editor.roll')}
-            >
-              <Dices size={isPlayer ? 16 : 12} />
             </button>
           )}
         </span>
@@ -510,8 +514,10 @@ function TextStatRow({
         } ${editable ? 'cursor-text hover:border-zinc-700' : ''}`}
       >
         {text.trim() ? (
-          <div className={proseClass}>
-            <ReactMarkdown>{text}</ReactMarkdown>
+          <div className="max-h-[10rem] overflow-y-auto pr-1">
+            <div className={proseClass}>
+              <ReactMarkdown>{text}</ReactMarkdown>
+            </div>
           </div>
         ) : (
           <span className="text-xs italic text-zinc-600 select-none">
@@ -809,17 +815,21 @@ export function DefaultSystemSheet({
   columns,
   systemName,
   onUpdate,
+  onPatchActor,
   onOpenPortraitPicker,
-  activeProfile = null,
-  sheetProfilesLoading = false,
+  sheetProfiles,
+  sheetProfilesLoading,
   variant = 'gm',
 }: {
   actor: Actor;
   columns: ColumnConfig[];
   systemName: string;
   onUpdate?: (id: string, field: string, value: unknown) => void;
+  /** Debounced PATCH merge (preferred over raw fetch). */
+  onPatchActor?: (updates: Partial<Actor>) => void;
   onOpenPortraitPicker?: () => void;
-  activeProfile?: SystemSheetProfile | null;
+  /** Optional injected profiles (avoid double-fetch inside parents like MiniSheetModal). */
+  sheetProfiles?: SystemSheetProfile[];
   sheetProfilesLoading?: boolean;
   /** `gm` (default) — compact modal; `player` — roomy mobile with hero header. */
   variant?: SheetVariant;
@@ -839,6 +849,17 @@ export function DefaultSystemSheet({
   const isPlayer = variant === 'player';
   const isGM = variant === 'gm';
   const tokens = densityFor(variant);
+
+  const resolvedSystemName = (systemName || '').trim();
+  const injectedProfiles = sheetProfiles;
+  const injectedLoading = sheetProfilesLoading;
+  const hook = useSystemSheetProfiles(resolvedSystemName);
+  const profiles = injectedProfiles ?? hook.profiles;
+  const profilesLoading = injectedLoading ?? hook.loading;
+  const activeProfile = useMemo(
+    () => resolveActiveSheetProfile(profiles, actor.sheet_profile_id),
+    [profiles, actor.sheet_profile_id],
+  );
 
   const portraitSrc = useMemo(() => {
     const url = actor.portrait ?? '';
@@ -983,19 +1004,21 @@ export function DefaultSystemSheet({
     { value: 'none', label: t('modals.none') },
   ];
 
-  const statsLayoutTab = useMemo(() => {
-    const tabs = activeProfile?.tabs;
-    if (!tabs?.length) return null;
-    return tabs.find((tab) => tab.id === 'stats') ?? null;
-  }, [activeProfile]);
+  const sheetProfileOptions = useMemo(() => {
+    if (!profiles?.length) return [];
+    return [
+      { value: '', label: t('config_modal.sheet_profiles_default_name') },
+      ...profiles.map((p) => ({ value: p.id, label: p.name })),
+    ];
+  }, [profiles, t]);
 
   // Per-section open/closed state for `accordion` display mode (collapsed by default).
   const statsSectionKeys = useMemo(
     () =>
-      (statsLayoutTab?.accordions ?? []).map(
+      (activeProfile?.stats?.accordions ?? []).map(
         (a, idx) => `${idx}:${(a.name || '').trim()}:${normalizeSheetAccordionDisplay(a.display)}`,
       ),
-    [statsLayoutTab],
+    [activeProfile?.stats?.accordions],
   );
   const [statsOpenMap, setStatsOpenMap] = useState<Record<string, boolean>>({});
   useEffect(() => {
@@ -1007,7 +1030,7 @@ export function DefaultSystemSheet({
       return <div className="text-xs text-zinc-600 italic px-1">{t('modals.stats')}: —</div>;
     }
 
-    if (sheetProfilesLoading && !activeProfile) {
+    if (profilesLoading && !activeProfile) {
       return <div className="text-xs text-zinc-500 px-1 py-2">{t('modals.mini_sheet_layout_loading')}</div>;
     }
 
@@ -1019,24 +1042,16 @@ export function DefaultSystemSheet({
       </div>
     );
 
-    const accordions = statsLayoutTab?.accordions;
+    const accordions = activeProfile?.stats?.accordions;
     if (!accordions?.length) {
       return gridFor(columns);
     }
-
-    /**
-     * Track which column keys ended up in any accordion. Anything left over —
-     * including `checkbox_group` slots that the user forgot to assign — gets a
-     * fallback "Прочее" section at the end so it never silently disappears.
-     */
-    const claimedKeys = new Set<string>();
 
     const sections = accordions.map((acc, idx) => {
       const ordered = acc.columns
         .map((key) => columns.find((c) => c.key === key))
         .filter((c): c is ColumnConfig => !!c);
       if (ordered.length === 0) return null;
-      ordered.forEach((c) => claimedKeys.add(c.key));
 
       const heading = (acc.name || '').trim() || t('modals.mini_sheet_group_other');
       const mode = normalizeSheetAccordionDisplay(acc.display);
@@ -1063,34 +1078,13 @@ export function DefaultSystemSheet({
       );
     });
 
-    // No accordion produced any matched column → fall back to a flat grid.
     if (sections.every((s) => s == null)) {
-      return gridFor(columns);
-    }
-
-    // Append "Прочее" with all columns not claimed by any accordion. Critical:
-    // checkbox_group / text columns that the user didn't assign explicitly
-    // would otherwise disappear. The "leftover" section is always-open.
-    const leftover = columns.filter((c) => !claimedKeys.has(c.key));
-    let leftoverSection: React.ReactNode = null;
-    if (leftover.length > 0) {
-      leftoverSection = (
-        <SheetSection
-          key="__leftover__"
-          heading={t('modals.mini_sheet_group_other')}
-          collapsible={false}
-          isOpen
-          tokens={tokens}
-        >
-          {gridFor(leftover)}
-        </SheetSection>
-      );
+      return <div className="text-xs text-zinc-600 italic px-1">—</div>;
     }
 
     return (
       <div className={isPlayer ? 'space-y-5' : 'space-y-4'}>
         {sections}
-        {leftoverSection}
       </div>
     );
   };
@@ -1254,6 +1248,16 @@ export function DefaultSystemSheet({
             <Cpu size={13} />
           </div>
           <div className="flex flex-wrap items-center gap-1.5 min-w-0 border-t border-zinc-800/60 pt-1.5">
+            {onPatchActor && sheetProfileOptions.length > 1 && (
+              <BadgeSelect
+                icon={Pencil}
+                title={t('config_modal.sheet_profiles_select_aria')}
+                value={(actor.sheet_profile_id ?? '').trim()}
+                onChange={(v) => onPatchActor({ sheet_profile_id: v.trim() || null })}
+                options={sheetProfileOptions}
+                maxWidth="10rem"
+              />
+            )}
             <BadgeSelect
               icon={Tv}
               title={t('actor.layout_profile')}

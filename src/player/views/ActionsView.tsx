@@ -43,10 +43,10 @@ export function ActionsView({ auth, state }: Props) {
 
   // Inherit MiniSheetModal grouping/accordions from the active sheet profile.
   // ActionsPanel additionally honours `actor.actions_panel_override` internally.
-  const actionsTab = useMemo(() => {
+  const actionsAccordions = useMemo(() => {
     if (!actor) return null;
     const profile = resolveActiveSheetProfile(sheetProfiles, actor.sheet_profile_id);
-    return profile?.tabs?.find((tab) => tab.id === 'actions') ?? null;
+    return profile?.actions?.accordions ?? null;
   }, [sheetProfiles, actor]);
 
   const handleRollAction = useCallback(
@@ -123,7 +123,7 @@ export function ActionsView({ auth, state }: Props) {
           actor={actor}
           mergedActionDefs={mergedActionDefs}
           onRollAction={handleRollAction}
-          actionsTab={actionsTab}
+          actionsAccordions={actionsAccordions}
           variant="player"
         />
       </div>

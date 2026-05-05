@@ -1,37 +1,9 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Plus, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useCombatState } from '../../../contexts/CombatStateContext';
-import {
-  saveSystemSheetProfiles,
-  useSystemSheetProfiles,
-  type SystemSheetProfile,
-} from '../../../hooks/useSystemSheetProfiles';
+import { type SystemSheetProfile } from '../../../hooks/useSystemSheetProfiles';
 import { useSystemColumns } from '../../../hooks/useSystemColumns';
 import type { ColumnConfig } from '../../../types';
-import {
-  cloneSheetProfiles,
-  normalizeSheetProfilesForSave,
-} from '../../../utils/sheetProfilesPersistence';
-
-function slugifyProfileId(input: string): string {
-  const s = input
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, '_')
-    .replace(/[^a-z0-9_-]/g, '');
-  return s || 'profile';
-}
-
-function uniqueProfileId(base: string, existing: SystemSheetProfile[]): string {
-  let id = base;
-  let n = 2;
-  while (existing.some((p) => p.id === id)) {
-    id = `${base}_${n}`;
-    n += 1;
-  }
-  return id;
-}
 
 function columnLabel(columns: ColumnConfig[], key: string): string {
   const col = columns.find((c) => c.key === key);
@@ -39,34 +11,27 @@ function columnLabel(columns: ColumnConfig[], key: string): string {
 }
 
 /** Editor for `hero_columns` — stat keys shown as chips in PlayerHeroHeader. */
-export function SheetHeroEditor() {
+export function SheetHeroEditor({
+  system,
+  localProfiles,
+  setLocalProfiles,
+  selectedProfileId,
+  profilesLoading,
+  saving,
+  canSave,
+  onSave,
+}: {
+  system: string;
+  localProfiles: SystemSheetProfile[];
+  setLocalProfiles: React.Dispatch<React.SetStateAction<SystemSheetProfile[]>>;
+  selectedProfileId: string;
+  profilesLoading: boolean;
+  saving: boolean;
+  canSave: boolean;
+  onSave: () => void | Promise<void>;
+}) {
   const { t } = useTranslation('core', { useSuspense: false });
-  const { state } = useCombatState();
-  const system = ((state?.core.system ?? '') || '').trim();
-
-  const { profiles: serverProfiles, loading: profilesLoading, refetchProfiles } = useSystemSheetProfiles(system);
   const { columns, loading: columnsLoading } = useSystemColumns(system);
-
-  const [localProfiles, setLocalProfiles] = useState<SystemSheetProfile[]>([]);
-  const [selectedProfileId, setSelectedProfileId] = useState('default');
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (profilesLoading) return;
-    setLocalProfiles(cloneSheetProfiles(serverProfiles));
-  }, [serverProfiles, profilesLoading]);
-
-  useEffect(() => {
-    setSelectedProfileId((cur) => {
-      if (localProfiles.length === 0) return cur;
-      if (localProfiles.some((p) => p.id === cur)) return cur;
-      return (
-        localProfiles.find((p) => p.is_default)?.id ??
-        localProfiles.find((p) => p.id === 'default')?.id ??
-        localProfiles[0].id
-      );
-    });
-  }, [localProfiles]);
 
   const selectedProfile = localProfiles.find((p) => p.id === selectedProfileId);
   const heroColumns: string[] = useMemo(
@@ -95,47 +60,6 @@ export function SheetHeroEditor() {
     patchHeroColumns((prev) => prev.filter((k) => k !== key));
   };
 
-  const createProfile = () => {
-    const raw = window.prompt(t('config_modal.sheet_profiles_prompt_name'), '');
-    if (raw === null) return;
-    const trimmed = raw.trim();
-    if (!trimmed) return;
-    let createdId = '';
-    setLocalProfiles((prev) => {
-      createdId = uniqueProfileId(slugifyProfileId(trimmed), prev);
-      const nextProfile: SystemSheetProfile = {
-        id: createdId,
-        name: trimmed,
-        tabs: [
-          { id: 'stats', name: t('modals.mini_sheet_tab_stats'), accordions: [] },
-          {
-            id: 'actions',
-            name: t('modals.mini_sheet_tab_actions'),
-            content: 'actions_panel',
-            accordions: [],
-          },
-        ],
-        hero_columns: [],
-      };
-      return [...prev, nextProfile];
-    });
-    if (createdId) setSelectedProfileId(createdId);
-  };
-
-  const handleSave = useCallback(async () => {
-    if (!system || localProfiles.length === 0) return;
-    setSaving(true);
-    try {
-      const payload = normalizeSheetProfilesForSave(localProfiles);
-      const ok = await saveSystemSheetProfiles(system, payload);
-      if (ok) refetchProfiles();
-    } finally {
-      setSaving(false);
-    }
-  }, [system, localProfiles, refetchProfiles]);
-
-  const canSave = Boolean(system) && localProfiles.length > 0 && !profilesLoading;
-
   const sortedAvailable = useMemo(() => {
     const usedSet = new Set(heroColumns);
     return [...columns]
@@ -147,8 +71,6 @@ export function SheetHeroEditor() {
 
   const inputClass =
     'w-full py-1.5 px-2 text-sm bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-200 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none';
-  const selectClass =
-    'flex-1 min-w-[160px] py-2 px-2 text-sm bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-200 focus:border-emerald-500 focus:outline-none';
 
   if (!system) {
     return <div className="text-sm text-zinc-500">{t('config_modal.sheet_template_need_system')}</div>;
@@ -156,31 +78,6 @@ export function SheetHeroEditor() {
 
   return (
     <div className="space-y-4">
-      {/* Profile selector */}
-      <div className="flex flex-wrap gap-2 items-stretch sm:items-center">
-        <select
-          value={localProfiles.some((p) => p.id === selectedProfileId) ? selectedProfileId : ''}
-          onChange={(e) => setSelectedProfileId(e.target.value)}
-          disabled={profilesLoading || localProfiles.length === 0}
-          className={selectClass}
-          aria-label={t('config_modal.sheet_profiles_select_aria')}
-        >
-          {localProfiles.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-        <button
-          type="button"
-          onClick={createProfile}
-          disabled={profilesLoading}
-          className="shrink-0 px-3 py-2 text-xs font-medium rounded-lg border border-emerald-500/40 bg-emerald-600/15 text-emerald-200 hover:bg-emerald-600/25 disabled:opacity-50 disabled:pointer-events-none transition-colors"
-        >
-          {t('config_modal.sheet_profiles_create')}
-        </button>
-      </div>
-
       <p className="text-xs text-zinc-500 leading-relaxed">
         {t('config_modal.sheet_hero_intro')}
       </p>
@@ -249,7 +146,7 @@ export function SheetHeroEditor() {
         <button
           type="button"
           disabled={saving || !canSave || profilesLoading || localProfiles.length === 0}
-          onClick={() => void handleSave()}
+          onClick={() => void onSave()}
           className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-600/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-600/30 disabled:opacity-50 disabled:pointer-events-none transition-colors"
         >
           {saving ? t('gm_console.saving') : t('config_modal.sheet_template_save')}

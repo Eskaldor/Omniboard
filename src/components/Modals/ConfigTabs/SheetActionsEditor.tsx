@@ -1,58 +1,42 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { ChevronDown, ChevronUp, Plus, Trash2, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useCombatState } from '../../../contexts/CombatStateContext';
 import {
   normalizeSheetAccordionDisplay,
-  saveSystemSheetProfiles,
-  useSystemSheetProfiles,
   type SheetAccordionSectionDisplay,
   type SystemSheetProfile,
 } from '../../../hooks/useSystemSheetProfiles';
 import type { SystemActionDef } from '../../../hooks/useSystemActions';
 import { useSystemActions } from '../../../hooks/useSystemActions';
-import {
-  cloneSheetProfiles,
-  normalizeSheetProfilesForSave,
-} from '../../../utils/sheetProfilesPersistence';
 
 type AccordionDraft = { name: string; columns: string[]; display: SheetAccordionSectionDisplay };
-
-function slugifyProfileId(input: string): string {
-  const s = input
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, '_')
-    .replace(/[^a-z0-9_-]/g, '');
-  return s || 'profile';
-}
-
-function uniqueProfileId(base: string, existing: SystemSheetProfile[]): string {
-  let id = base;
-  let n = 2;
-  while (existing.some((p) => p.id === id)) {
-    id = `${base}_${n}`;
-    n += 1;
-  }
-  return id;
-}
 
 function macroLabel(actions: Record<string, SystemActionDef>, key: string): string {
   const def = actions[key];
   return (def?.name || '').trim() || key;
 }
 
-export function SheetActionsEditor() {
+export function SheetActionsEditor({
+  system,
+  localProfiles,
+  setLocalProfiles,
+  selectedProfileId,
+  profilesLoading,
+  saving,
+  canSave,
+  onSave,
+}: {
+  system: string;
+  localProfiles: SystemSheetProfile[];
+  setLocalProfiles: React.Dispatch<React.SetStateAction<SystemSheetProfile[]>>;
+  selectedProfileId: string;
+  profilesLoading: boolean;
+  saving: boolean;
+  canSave: boolean;
+  onSave: () => void | Promise<void>;
+}) {
   const { t } = useTranslation('core', { useSuspense: false });
-  const { state } = useCombatState();
-  const system = ((state?.core.system ?? '') || '').trim();
-
-  const { profiles: serverProfiles, loading: profilesLoading, refetchProfiles } = useSystemSheetProfiles(system);
   const { actions, loading: actionsLoading } = useSystemActions(system);
-
-  const [localProfiles, setLocalProfiles] = useState<SystemSheetProfile[]>([]);
-  const [selectedProfileId, setSelectedProfileId] = useState('default');
-  const [saving, setSaving] = useState(false);
 
   const sortedSystemActionIds = useMemo(
     () =>
@@ -63,23 +47,6 @@ export function SheetActionsEditor() {
         .map(([k]) => k),
     [actions],
   );
-
-  useEffect(() => {
-    if (profilesLoading) return;
-    setLocalProfiles(cloneSheetProfiles(serverProfiles));
-  }, [serverProfiles, profilesLoading]);
-
-  useEffect(() => {
-    setSelectedProfileId((cur) => {
-      if (localProfiles.length === 0) return cur;
-      if (localProfiles.some((p) => p.id === cur)) return cur;
-      return (
-        localProfiles.find((p) => p.is_default)?.id ??
-        localProfiles.find((p) => p.id === 'default')?.id ??
-        localProfiles[0].id
-      );
-    });
-  }, [localProfiles]);
 
   const setProfileIsDefault = (profileId: string, checked: boolean) => {
     setLocalProfiles((prev) =>
@@ -95,8 +62,8 @@ export function SheetActionsEditor() {
   const validMacroIds = useMemo(() => new Set(sortedSystemActionIds), [sortedSystemActionIds]);
 
   const accordions: AccordionDraft[] = useMemo(() => {
-    const actionsTab = selectedProfile?.tabs?.find((tab) => tab.id === 'actions');
-    return (actionsTab?.accordions ?? []).map((a) => ({
+    const acc = selectedProfile?.actions?.accordions ?? [];
+    return acc.map((a) => ({
       name: typeof a.name === 'string' ? a.name : '',
       columns: Array.isArray(a.columns)
         ? a.columns.filter((k) => typeof k === 'string' && validMacroIds.has(k))
@@ -110,8 +77,7 @@ export function SheetActionsEditor() {
       setLocalProfiles((prev) => {
         const prof = prev.find((x) => x.id === selectedProfileId);
         if (!prof) return prev;
-        const actionsTab = prof.tabs?.find((tab) => tab.id === 'actions');
-        const current: AccordionDraft[] = (actionsTab?.accordions ?? []).map((a) => ({
+        const current: AccordionDraft[] = (prof.actions?.accordions ?? []).map((a) => ({
           name: typeof a.name === 'string' ? a.name : '',
           columns: Array.isArray(a.columns)
             ? a.columns.filter((k) => typeof k === 'string' && validMacroIds.has(k))
@@ -126,34 +92,15 @@ export function SheetActionsEditor() {
         }));
         return prev.map((p) => {
           if (p.id !== selectedProfileId) return p;
-          const tabs = [...(p.tabs ?? [])];
-          const ai = tabs.findIndex((tab) => tab.id === 'actions');
-          if (ai >= 0) {
-            tabs[ai] = {
-              ...tabs[ai],
-              id: 'actions',
-              content: tabs[ai].content ?? 'actions_panel',
-              accordions: payload,
-            };
-          } else {
-            tabs.push({
-              id: 'actions',
-              name: t('modals.mini_sheet_tab_actions'),
-              content: 'actions_panel',
-              accordions: payload,
-            });
-          }
-          return { ...p, tabs };
+          return { ...p, actions: { accordions: payload } };
         });
       });
     },
-    [selectedProfileId, validMacroIds, t],
+    [selectedProfileId, validMacroIds],
   );
 
   const inputClass =
     'w-full py-1.5 px-2 text-sm bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-200 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none';
-  const selectClass =
-    'flex-1 min-w-[160px] py-2 px-2 text-sm bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-200 focus:border-emerald-500 focus:outline-none';
 
   const sortedMacros = useMemo(
     () =>
@@ -208,81 +155,12 @@ export function SheetActionsEditor() {
     );
   };
 
-  const createProfile = () => {
-    const raw = window.prompt(t('config_modal.sheet_profiles_prompt_name'), '');
-    if (raw === null) return;
-    const trimmed = raw.trim();
-    if (!trimmed) return;
-
-    let createdId = '';
-    setLocalProfiles((prev) => {
-      createdId = uniqueProfileId(slugifyProfileId(trimmed), prev);
-      const nextProfile: SystemSheetProfile = {
-        id: createdId,
-        name: trimmed,
-        tabs: [
-          {
-            id: 'stats',
-            name: t('modals.mini_sheet_tab_stats'),
-            accordions: [],
-          },
-          {
-            id: 'actions',
-            name: t('modals.mini_sheet_tab_actions'),
-            content: 'actions_panel',
-            accordions: [],
-          },
-        ],
-      };
-      return [...prev, nextProfile];
-    });
-    if (createdId) setSelectedProfileId(createdId);
-  };
-
-  const handleSave = useCallback(async () => {
-    if (!system || localProfiles.length === 0) return;
-    setSaving(true);
-    try {
-      const payload = normalizeSheetProfilesForSave(localProfiles);
-      const ok = await saveSystemSheetProfiles(system, payload);
-      if (ok) refetchProfiles();
-    } finally {
-      setSaving(false);
-    }
-  }, [system, localProfiles, refetchProfiles]);
-
-  const canSave = Boolean(system) && localProfiles.length > 0 && !profilesLoading;
-
   if (!system) {
     return <div className="text-sm text-zinc-500">{t('config_modal.sheet_template_need_system')}</div>;
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2 items-stretch sm:items-center">
-        <select
-          value={localProfiles.some((p) => p.id === selectedProfileId) ? selectedProfileId : ''}
-          onChange={(e) => setSelectedProfileId(e.target.value)}
-          disabled={profilesLoading || localProfiles.length === 0}
-          className={selectClass}
-          aria-label={t('config_modal.sheet_profiles_select_aria')}
-        >
-          {localProfiles.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-        <button
-          type="button"
-          onClick={createProfile}
-          disabled={profilesLoading}
-          className="shrink-0 px-3 py-2 text-xs font-medium rounded-lg border border-emerald-500/40 bg-emerald-600/15 text-emerald-200 hover:bg-emerald-600/25 disabled:opacity-50 disabled:pointer-events-none transition-colors"
-        >
-          {t('config_modal.sheet_profiles_create')}
-        </button>
-      </div>
-
       {selectedProfile && (
         <label className="flex items-center gap-2 text-xs text-zinc-400 cursor-pointer select-none">
           <input
@@ -445,7 +323,7 @@ export function SheetActionsEditor() {
         <button
           type="button"
           disabled={saving || !canSave || profilesLoading || localProfiles.length === 0}
-          onClick={() => void handleSave()}
+          onClick={() => void onSave()}
           className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-600/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-600/30 disabled:opacity-50 disabled:pointer-events-none transition-colors"
         >
           {saving ? t('gm_console.saving') : t('config_modal.sheet_template_save')}

@@ -160,8 +160,7 @@ interface RosterRowProps {
   isExpanded: boolean;
   onToggle: () => void;
   systemName: string;
-  /** Pre-resolved sheet profile for this actor (or null when system has none). */
-  activeProfile: ReturnType<typeof resolveActiveSheetProfile>;
+  sheetProfiles: import('../../hooks/useSystemSheetProfiles').SystemSheetProfile[];
   sheetProfilesLoading: boolean;
 }
 
@@ -172,7 +171,7 @@ const RosterRow = React.memo(function RosterRow({
   isExpanded,
   onToggle,
   systemName,
-  activeProfile,
+  sheetProfiles,
   sheetProfilesLoading,
 }: RosterRowProps) {
   const [count, setCount] = useState(1);
@@ -284,7 +283,7 @@ const RosterRow = React.memo(function RosterRow({
               columns={columns.filter((c) => c.show_in_mini_sheet !== false)}
               systemName={systemName}
               variant="player"
-              activeProfile={activeProfile}
+              sheetProfiles={sheetProfiles}
               sheetProfilesLoading={sheetProfilesLoading}
             />
           ) : (
@@ -343,7 +342,7 @@ function ActorList({
           isExpanded={expandedId === actor.id}
           onToggle={() => handleToggle(actor.id)}
           systemName={systemName}
-          activeProfile={resolveActiveSheetProfile(sheetProfiles, actor.sheet_profile_id)}
+          sheetProfiles={sheetProfiles}
           sheetProfilesLoading={sheetProfilesLoading}
         />
       ))}

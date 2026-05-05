@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Actor, ActorActionsMergePatch, ActorActionsPanelOverride } from '../../types';
 import type { SystemActionDef } from '../../hooks/useSystemActions';
-import type { SystemSheetLayoutTab } from '../../hooks/useSystemSheetProfiles';
+import type { SystemSheetLayoutAccordion } from '../../hooks/useSystemSheetProfiles';
 import { normalizeSheetAccordionDisplay } from '../../hooks/useSystemSheetProfiles';
 import { ActorActionsLayoutEditor } from './ActorActionsLayoutEditor';
 
@@ -120,13 +120,13 @@ export function ActorActionEditor({
   actor,
   systemActions,
   mergedActionDefs,
-  profileActionsTab,
+  profileActionsAccordions,
   onPatchActor,
 }: {
   actor: Actor;
   systemActions: Record<string, SystemActionDef>;
   mergedActionDefs: Record<string, SystemActionDef>;
-  profileActionsTab?: SystemSheetLayoutTab | null;
+  profileActionsAccordions?: SystemSheetLayoutAccordion[] | null;
   onPatchActor: (updates: Partial<Actor>) => void;
 }) {
   const { t } = useTranslation('core', { useSuspense: false });
@@ -190,8 +190,8 @@ export function ActorActionEditor({
   };
 
   const seedOverrideFromTemplate = () => {
-    const src = profileActionsTab?.accordions;
-    const accordions: ActorActionsPanelOverride['accordions'] = (src ?? []).map((a) => ({
+    const src = profileActionsAccordions ?? [];
+    const accordions: ActorActionsPanelOverride['accordions'] = src.map((a) => ({
       name: typeof a.name === 'string' ? a.name : '',
       columns: Array.isArray(a.columns) ? [...a.columns] : [],
       display: normalizeSheetAccordionDisplay(a.display),

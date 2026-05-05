@@ -1,12 +1,8 @@
 import React from 'react';
 import { Loader2, RefreshCw } from 'lucide-react';
 import type { PlayerAuth, PublicCombatState } from '../types';
-import { DefaultSystemSheet } from '../../components/Modals/DefaultSystemSheet';
+import { ActorFullSheet } from '../../components/Sheets/ActorFullSheet';
 import { useSystemColumns } from '../../hooks/useSystemColumns';
-import {
-  useSystemSheetProfiles,
-  resolveActiveSheetProfile,
-} from '../../hooks/useSystemSheetProfiles';
 import { usePlayerActor } from '../hooks/usePlayerActor';
 
 interface Props {
@@ -20,7 +16,6 @@ export function SheetView({ auth, system, state = null }: Props) {
   const { actor, loading, error, refetch } = usePlayerActor(auth, state);
 
   const { columns } = useSystemColumns(system);
-  const { profiles, loading: profilesLoading } = useSystemSheetProfiles(system);
 
   if (loading) {
     return (
@@ -45,18 +40,14 @@ export function SheetView({ auth, system, state = null }: Props) {
     );
   }
 
-  const activeProfile = resolveActiveSheetProfile(profiles, actor.sheet_profile_id);
   // Same filter as MiniSheetModal: show only columns flagged for the mini-sheet.
   const sheetCols = columns.filter((c) => c.show_in_mini_sheet);
 
   return (
-    <DefaultSystemSheet
+    <ActorFullSheet
       actor={actor}
       columns={sheetCols}
       systemName={system}
-      variant="player"
-      activeProfile={activeProfile}
-      sheetProfilesLoading={profilesLoading}
     />
   );
 }

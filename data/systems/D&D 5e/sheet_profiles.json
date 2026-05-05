@@ -2,59 +2,57 @@
   {
     "id": "default",
     "name": "Стандартный шаблон",
-    "tabs": [
-      {
-        "id": "stats",
-        "name": "Характеристики",
-        "accordions": []
-      },
-      {
-        "id": "actions",
-        "name": "Действия",
-        "content": "actions_panel"
-      }
+    "stats": {
+      "accordions": []
+    },
+    "hero_columns": [
+      "speed"
     ]
   },
   {
     "id": "profile",
     "name": "Мой",
-    "tabs": [
-      {
-        "id": "stats",
-        "name": "Характеристики",
-        "accordions": [
-          {
-            "name": "Здоровье",
-            "columns": [
-              "com1",
-              "speed"
-            ],
-            "display": "open"
-          }
-        ]
-      },
-      {
-        "id": "actions",
-        "name": "Действия",
-        "content": "actions_panel",
-        "accordions": [
-          {
-            "name": "Действия боя",
-            "columns": [
-              "hit_greatsword",
-              "hit_slashing"
-            ],
-            "display": "accordion"
-          },
-          {
-            "name": "Спасброски",
-            "columns": [
-              "initiative"
-            ],
-            "display": "accordion"
-          }
-        ]
-      }
+    "stats": {
+      "accordions": [
+        {
+          "name": "Здоровье",
+          "columns": [
+            "ac",
+            "hp"
+          ],
+          "display": "open"
+        },
+        {
+          "name": "Инфо",
+          "columns": [
+            "Note"
+          ],
+          "display": "accordion"
+        }
+      ]
+    },
+    "actions": {
+      "accordions": [
+        {
+          "name": "Действия боя",
+          "columns": [
+            "hit_greatsword",
+            "hit_slashing"
+          ],
+          "display": "accordion"
+        },
+        {
+          "name": "Спасброски",
+          "columns": [
+            "initiative"
+          ],
+          "display": "accordion"
+        }
+      ]
+    },
+    "is_default": true,
+    "hero_columns": [
+      "speed"
     ]
   }
 ]

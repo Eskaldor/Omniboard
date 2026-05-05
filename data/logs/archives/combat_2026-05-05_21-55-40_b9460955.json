@@ -1,0 +1,198 @@
+[
+  {
+    "type": "stat_change",
+    "round": 1,
+    "actor_id": "6a38b2b6-7269-4b23-ba18-cf021f4003ee",
+    "actor_name": "Винланд",
+    "details": {
+      "stat_key": "Note",
+      "stat_name": "Note",
+      "message": "Note: None -> ---\nname: Sheet profiles cleanup\noverview: Перевести `sheet_profiles` на единую схему `stats` / `actions` (без раздельных «профилей сводки и действий» через `tabs`), строить UI листа из `profile.stats` / `profile.actions` с полной заменой действий при `actions_panel_override`, вынести загрузку/выбор единого профиля в `DefaultSystemSheet` для актёра и один общий селектор профиля в `SheetTab` для конфиг-редакторов.\ntodos:\n  - id: types-parse-save\n    content: Расширить SystemSheetProfile (stats/actions), миграция в parseSheetProfiles, normalizeSheetProfilesForSave и default sheet_profiles.json\n    status: completed\n  - id: default-system-sheet\n    content: \"DefaultSystemSheet: единый профиль, stats из stats.accordions, убрать leftover/tabs, селект sheet_profile_id + onPatchActor, опциональные пропы resolvedProfile\"\n    status: in_progress\n  - id: actions-integrations\n    content: \"ActionsPanel + ActionsView + MiniSheetModal + ActorActionEditor: profile.actions / override, без tabs.find\"\n    status: pending\n  - id: sheet-tab-unify\n    content: \"SheetTab: один селектор профиля; SheetSummary/Actions/Hero — пропсы, правка stats/actions/hero_columns\"\n    status: pending\n  - id: template-builder\n    content: SheetTemplateBuilder (и при необходимости системные JSON) согласовать с stats/actions\n    status: pending\n  - id: call-sites\n    content: \"SheetView, Compendium: убрать activeProfile; проверить линтер и сценарии GM/player\"\n    status: pending\nisProject: false\n---\n\n# Очистка sheet_profiles и единый профиль\n\n## Текущее состояние\n\n- JSON и тип [`SystemSheetProfile`](src/hooks/useSystemSheetProfiles.ts): вложенные секции через **`tabs`** с `id === 'stats' | 'actions'`; парсер уже умеет мигрировать legacy `panel_action_keys` только для вкладки `actions`.\n- [`DefaultSystemSheet.tsx`](src/components/Modals/DefaultSystemSheet.tsx): сводка берёт `activeProfile.tabs.find(id === 'stats')`; чипы героя — `hero_columns` на корне профиля.\n- [`ActionsPanel.tsx`](src/components/Modals/ActionsPanel.tsx): уже подменяет секции на `actor.actions_panel_override.accordions` целиком, если override задан; иначе использует вкладку `actions` из профиля.\n- Актёр: одно поле [`sheet_profile_id`](src/types.ts); выбор шаблона в UI сейчас в шапке [`MiniSheetModal.tsx`](src/components/Modals/MiniSheetModal.tsx) (`onPatchActor({ sheet_profile_id })`).\n- Конфиг Sheet: три сабтаба в [`SheetTab.tsx`](src/components/Modals/ConfigTabs/SheetTab.tsx), у каждого [`SheetSummaryEditor`](src/components/Modals/ConfigTabs/SheetSummaryEditor.tsx) / [`SheetActionsEditor`](src/components/Modals/ConfigTabs/SheetActionsEditor.tsx) / [`SheetHeroEditor`](src/components/Modals/ConfigTabs/SheetHeroEditor.tsx) — **свой** `<select>` профиля и свой `localProfiles` (дублирование UX и риск рассинхрона при переключении сабтабов).\n\n## Целевая модель данных\n\nВ [`useSystemSheetProfiles.ts`](src/hooks/useSystemSheetProfiles.ts) и сохранении [`sheetProfilesPersistence.ts`](src/utils/sheetProfilesPersistence.ts):\n\n- Расширить `SystemSheetProfile` явными блоками:\n  - `stats?: { accordions?: SystemSheetLayoutAccordion[] }`\n  - `actions?: { accordions?: SystemSheetLayoutAccordion[] }`\n  - Сохранить **`hero_columns`** на корне профиля (как сейчас), если не переносите его в `stats` — в ТЗ не трогали чипы героя.\n- В **`parseSheetProfiles`**: при отсутствии `stats`/`actions` **мигрировать** из `tabs` (найти вкладки `stats` / `actions`, перенести `accordions`); после миграции не использовать `tabs` для рендера мини-листа.\n- В **`normalizeSheetProfilesForSave`**: писать канонический JSON с `stats` / `actions` (и `hero_columns`, `is_default`); при необходимости для обратной совместимости можно не писать `tabs` вовсе или писать пустой/минимальный массив — по согласованию с существующим [`SheetTemplateBuilder`](src/components/Modals/ConfigTabs/SheetTemplateBuilder.tsx) (см. ниже).\n\n## Рендеринг листа\n\n### [`DefaultSystemSheet.tsx`](src/components/Modals/DefaultSystemSheet.tsx)\n\n- Загрузка профиля: внутри компонента вызывать `useSystemSheetProfiles(systemName)` и `resolveActiveSheetProfile(profiles, actor.sheet_profile_id)` — **один** резолв для вариантов `gm` и `player` (убрать проп `activeProfile` и дублирующую логику у родителей).\n- **Сводка (характеристики)**: строить только из `resolvedProfile.stats?.accordions`. Убрать чтение `tabs`. По «строго»: не использовать `tabs.find('stats')`; блок «остаток колонок не из аккордеонов» — **удалить**, чтобы разметка соответствовала только списку секций в профиле (колонки вне секций не показываются; настройка полного покрытия — в редакторе шаблона). Если `accordions` пустой или отсутствует — оставить текущий запасной вариант **одной** плоской сетки по всем колонкам (как для пустого дефолтного JSON).\n- **Чипы героя (player)**: по-прежнему из `resolvedProfile.hero_columns`.\n- **Один `<select>` шаблона для актёра**: перенести из шапки `MiniSheetModal` в `DefaultSystemSheet`, показывать только при наличии `onPatchActor` (и при необходимости только в GM-режиме / в блоке настроек — чтобы не плодить UI у игрока). `onChange` → строго `onPatchActor({ sheet_profile_id: value })` (как сейчас в модалке, строка id).\n\n### Родители `DefaultSystemSheet`\n\n- [`MiniSheetModal.tsx`](src/components/Modals/MiniSheetModal.tsx): убрать `useSystemSheetProfiles` / `resolveActiveSheetProfile` и селект из шапки; передать `onPatchActor` в `DefaultSystemSheet`; для вкладки «Действия» и [`ActorActionEditor`](src/components/Modals/ActorActionEditor.tsx) по-прежнему нужны аккордеоны профиля — либо дублировать лёгкий вызов `useSystemSheetProfiles` + resolve **только** для этих блоков (два запроса при открытии модалки), либо вынести хук `useResolvedActorSheetProfile(systemName, sheetProfileId)` в [`useSystemSheetProfiles.ts`](src/hooks/useSystemSheetProfiles.ts) и вызывать его **один раз** в `MiniSheetModal`, передавая в `ActionsPanel` / `ActorActionEditor` уже `profile.actions` и сиды (предпочтительно: один хук в модалке, в `DefaultSystemSheet` — опционально принимать `profiles`/`resolvedProfile` извне чтобы не дергать fetch дважды; если не передано — грузить внутри как в [`SheetView`](src/player/views/SheetView.tsx) / Compendium). Минимизировать дублирование сети: **рекомендуемый вариант** — `MiniSheetModal` один раз `useSystemSheetProfiles` + resolve, прокидывает `resolvedProfile` (и `loading`) в `DefaultSystemSheet` опциональными пропами; если пропы не заданы, `DefaultSystemSheet` сам грузит (Compendium / player sheet).\n\n- [`SheetView.tsx`](src/player/views/SheetView.tsx), [`Compendium.tsx`](src/components/Compendium/Compendium.tsx): убрать передачу `activeProfile` / `sheetProfilesLoading`; при необходимости оставить только `systemName` и `actor`.\n\n### Действия\n\n- [`ActionsPanel.tsx`](src/components/Modals/ActionsPanel.tsx): заменить проп `actionsTab?: SystemSheetLayoutTab` на что-то вроде `actionsAccordions?: SystemSheetLayoutAccordion[] | null` (или передавать `profile.actions` целиком). Логика: при `actor.actions_panel_override` — **только** override; иначе — `profile.actions?.accordions`.\n- [`ActionsView.tsx`](src/player/views/ActionsView.tsx), [`MiniSheetModal.tsx`](src/components/Modals/MiniSheetModal.tsx): передавать аккордеоны из единого `resolvedProfile.actions`, без `tabs.find('actions')`.\n- [`ActorActionEditor.tsx`](src/components/Modals/ActorActionEditor.tsx): `seedOverrideFromTemplate` брать из `resolvedProfile.actions?.accordions` (переименовать проп с `profileActionsTab` на передачу массива аккордеонов или `actions`-блока).\n\n## Редакторы шаблонов и конфиг Sheet (один селектор)\n\n- [`SheetTab.tsx`](src/components/Modals/ConfigTabs/SheetTab.tsx): поднять состояние **`selectedProfileId`** и **`localProfiles`** (клон с сервера + общий `refetch` / сохранение по согласованию с детьми). Один общий `<select>` профиля + кнопка «создать шаблон» при необходимости — на уровне `SheetTab`.\n- Рефакторинг [`SheetSummaryEditor`](src/components/Modals/ConfigTabs/SheetSummaryEditor.tsx) / [`SheetActionsEditor`](src/components/Modals/ConfigTabs/SheetActionsEditor.tsx) / [`SheetHeroEditor`](src/components/Modals/ConfigTabs/SheetHeroEditor.tsx): убрать внутренний селектор профиля и дублирующую загрузку `selectedProfileId`; принимать с пропов `selectedProfileId`, `localProfiles`, `setLocalProfiles`, флаги loading/saving, `refetchProfiles` — патчить только соответствующую часть профиля (`stats.accordions`, `actions.accordions`, `hero_columns`).\n- Чтение/запись в редакторах: вместо `tabs.find('stats'|'actions')` — **`profile.stats` / `profile.actions`**; при создании нового профиля инициализировать `{ stats: { accordions: [] }, actions: { accordions: [] } }` (+ `hero_columns`).\n\n## Прочие потребители `tabs`\n\n- [`SheetTemplateBuilder.tsx`](src/components/Modals/ConfigTabs/SheetTemplateBuilder.tsx): либо перевести на чтение/запись `stats`/`actions` вместо произвольных `tabs`, либо временно оставить работу только с legacy-файлами и явно задокументировать в коде ограничение; предпочтительно **обновить билдер** под ту же каноническую схему, чтобы не было двух истин.\n- Обновить дефолтный [`data/assets/default/config/sheet_profiles.json`](data/assets/default/config/sheet_profiles.json) и при наличии системных оверрайдов под `data/systems/*/sheet_profiles.json` — миграция вручную или одноразово через парсер при сохранении.\n\n## Что удалить / не использовать\n\n- Любой поиск «отдельного профиля сводки» и «отдельного профиля действий» (два id на актёре, два resolve и т.д.) — в коде такого поля нет; гарантировать, что нигде не остаётся логики вида «разные профили для stats и actions».\n- Проп `activeProfile` у `DefaultSystemSheet` после перехода на внутренний/прокинутый единый профиль.\n- Комментарии и типы, ссылающиеся на «вкладку actions в tabs» как на источник истины для мини-листа.\n\n## Порядок работ (кратко)\n\n1. Типы + `parseSheetProfiles` + `normalizeSheetProfilesForSave` + дефолтный JSON.\n2. `DefaultSystemSheet` (stats из `stats.accordions`, герой, селект `sheet_profile_id`, опциональные пропы для уже загруженного профиля из модалки).\n3. `ActionsPanel` + все вызовы (`MiniSheetModal`, `ActionsView`, тесты при наличии).\n4. `ActorActionEditor` (сиды из `actions.accordions`).\n5. `MiniSheetModal` / `SheetView` / `Compendium`.\n6. `SheetTab` + три редактора + при необходимости `SheetTemplateBuilder`.\n7. Прогнать ручную проверку: мини-лист stats/actions, override действий, сохранение шаблона из конфига.\n\n```mermaid\nflowchart LR\n  subgraph actor [Actor]\n    sid[sheet_profile_id]\n    apo[actions_panel_override]\n  end\n  subgraph profile [SystemSheetProfile]\n    stats[stats.accordions]\n    actions[actions.accordions]\n    hero[hero_columns]\n  end\n  sid --> resolve[resolveActiveSheetProfile]\n  resolve --> profile\n  stats --> DefaultSystemSheet\n  hero --> DefaultSystemSheet\n  actions --> ActionsPanel\n  apo -->|if set replaces| ActionsPanel\n```\n",
+      "color": "#a1a1aa",
+      "amount": 0
+    }
+  },
+  {
+    "type": "combat_start",
+    "round": 1,
+    "actor_id": null,
+    "actor_name": null,
+    "details": {}
+  },
+  {
+    "type": "turn_start",
+    "round": 1,
+    "actor_id": "0cbec3e4-9083-472a-ab29-157699ea6853",
+    "actor_name": "Новый участник",
+    "details": {}
+  },
+  {
+    "type": "round_start",
+    "round": 2,
+    "actor_id": null,
+    "actor_name": null,
+    "details": {}
+  },
+  {
+    "type": "turn_start",
+    "round": 2,
+    "actor_id": "6a38b2b6-7269-4b23-ba18-cf021f4003ee",
+    "actor_name": "Винланд",
+    "details": {}
+  },
+  {
+    "type": "turn_start",
+    "round": 2,
+    "actor_id": "0cbec3e4-9083-472a-ab29-157699ea6853",
+    "actor_name": "Новый участник",
+    "details": {}
+  },
+  {
+    "type": "round_start",
+    "round": 3,
+    "actor_id": null,
+    "actor_name": null,
+    "details": {}
+  },
+  {
+    "type": "turn_start",
+    "round": 3,
+    "actor_id": "6a38b2b6-7269-4b23-ba18-cf021f4003ee",
+    "actor_name": "Винланд",
+    "details": {}
+  },
+  {
+    "type": "turn_start",
+    "round": 3,
+    "actor_id": "0cbec3e4-9083-472a-ab29-157699ea6853",
+    "actor_name": "Новый участник",
+    "details": {}
+  },
+  {
+    "type": "round_start",
+    "round": 4,
+    "actor_id": null,
+    "actor_name": null,
+    "details": {}
+  },
+  {
+    "type": "turn_start",
+    "round": 4,
+    "actor_id": "6a38b2b6-7269-4b23-ba18-cf021f4003ee",
+    "actor_name": "Винланд",
+    "details": {}
+  },
+  {
+    "type": "stat_change",
+    "round": 4,
+    "actor_id": "6a38b2b6-7269-4b23-ba18-cf021f4003ee",
+    "actor_name": "Винланд",
+    "details": {
+      "stat_key": "hp",
+      "stat_name": "ХП",
+      "amount": -3,
+      "color": "#e70808"
+    }
+  },
+  {
+    "type": "turn_start",
+    "round": 4,
+    "actor_id": "0cbec3e4-9083-472a-ab29-157699ea6853",
+    "actor_name": "Новый участник",
+    "details": {}
+  },
+  {
+    "type": "stat_change",
+    "round": 4,
+    "actor_id": "0cbec3e4-9083-472a-ab29-157699ea6853",
+    "actor_name": "Новый участник",
+    "details": {
+      "stat_key": "hp",
+      "stat_name": "ХП",
+      "amount": -5,
+      "color": "#e70808"
+    }
+  },
+  {
+    "type": "stat_change",
+    "round": 4,
+    "actor_id": "0cbec3e4-9083-472a-ab29-157699ea6853",
+    "actor_name": "Новый участник",
+    "details": {
+      "stat_key": "hp",
+      "stat_name": "ХП",
+      "amount": -5,
+      "color": "#e70808"
+    }
+  },
+  {
+    "type": "round_start",
+    "round": 5,
+    "actor_id": null,
+    "actor_name": null,
+    "details": {}
+  },
+  {
+    "type": "turn_start",
+    "round": 5,
+    "actor_id": "6a38b2b6-7269-4b23-ba18-cf021f4003ee",
+    "actor_name": "Винланд",
+    "details": {}
+  },
+  {
+    "type": "turn_start",
+    "round": 5,
+    "actor_id": "0cbec3e4-9083-472a-ab29-157699ea6853",
+    "actor_name": "Новый участник",
+    "details": {}
+  },
+  {
+    "type": "round_start",
+    "round": 6,
+    "actor_id": null,
+    "actor_name": null,
+    "details": {}
+  },
+  {
+    "type": "turn_start",
+    "round": 6,
+    "actor_id": "6a38b2b6-7269-4b23-ba18-cf021f4003ee",
+    "actor_name": "Винланд",
+    "details": {}
+  },
+  {
+    "type": "turn_start",
+    "round": 6,
+    "actor_id": "0cbec3e4-9083-472a-ab29-157699ea6853",
+    "actor_name": "Новый участник",
+    "details": {}
+  },
+  {
+    "type": "round_start",
+    "round": 7,
+    "actor_id": null,
+    "actor_name": null,
+    "details": {}
+  },
+  {
+    "type": "turn_start",
+    "round": 7,
+    "actor_id": "6a38b2b6-7269-4b23-ba18-cf021f4003ee",
+    "actor_name": "Винланд",
+    "details": {}
+  },
+  {
+    "type": "turn_start",
+    "round": 7,
+    "actor_id": "0cbec3e4-9083-472a-ab29-157699ea6853",
+    "actor_name": "Новый участник",
+    "details": {}
+  },
+  {
+    "type": "combat_end",
+    "round": 7,
+    "actor_id": null,
+    "actor_name": null,
+    "details": {}
+  }
+]

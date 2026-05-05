@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, BookOpen, Loader2, Download } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 interface Props {
   isOpen: boolean;
@@ -107,9 +108,13 @@ export function CombatReportModal({ isOpen, onClose }: Props) {
                 <span>Сохранено: <span className="text-zinc-300">{result.filename}</span></span>
                 <span>Персонажей обновлено: <span className="text-emerald-400">{result.actors_written}</span></span>
               </div>
-              <pre className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-xs text-zinc-300 overflow-x-auto whitespace-pre-wrap leading-relaxed font-mono">
-                {result.markdown}
-              </pre>
+              <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 max-h-[60vh] overflow-y-auto">
+                <div className="overflow-x-auto pr-1">
+                  <div className="prose prose-invert prose-sm max-w-none prose-p:my-1.5 prose-headings:text-zinc-200 prose-strong:text-zinc-100 prose-li:my-0.5 prose-table:text-xs prose-th:text-zinc-200 prose-td:text-zinc-300">
+                    <ReactMarkdown>{result.markdown}</ReactMarkdown>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>

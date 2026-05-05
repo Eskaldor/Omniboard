@@ -82,6 +82,7 @@ export default function App() {
   const [showGroupCreateModal, setShowGroupCreateModal] = useState(false);
   const [showClearCombatModal, setShowClearCombatModal] = useState(false);
   const [showCombatReport, setShowCombatReport] = useState(false);
+  const [combatReportAvailable, setCombatReportAvailable] = useState(false);
   const { t } = useTranslation('core', { useSuspense: false });
   const { isFabSummoned, summonConsole, dismissConsole } = useGMConsole();
 
@@ -122,11 +123,16 @@ export default function App() {
 
   const startCombat = async () => {
     await fetch('/api/combat/start', { method: 'POST' });
+    // New combat started → post-combat report no longer relevant.
+    setCombatReportAvailable(false);
+    setShowCombatReport(false);
     // State is pushed via WebSocket broadcast; no refetch to avoid UI freeze
   };
 
   const endCombat = async () => {
     await fetch('/api/combat/end', { method: 'POST' });
+    // Combat ended → allow generating a post-combat report until the table is cleared / next combat starts.
+    setCombatReportAvailable(true);
     // State is pushed via WebSocket broadcast; no refetch to avoid UI freeze
   };
 
@@ -398,9 +404,11 @@ export default function App() {
         onToggleConsole={isFabSummoned ? dismissConsole : summonConsole}
         // Matrix generation is hidden while base roll UX is being refactored.
         onGenerateMatrix={undefined}
-        // Report button: show only when a campaign is active (actor data can be reconciled)
+        // Report button: show only after "Stop combat", until the table is cleared or a new combat starts.
         onOpenCombatReport={
-          effectiveState?.session?.active_campaign_id
+          effectiveState?.session?.active_campaign_id &&
+          combatReportAvailable === true &&
+          effectiveState.core.is_active !== true
             ? () => setShowCombatReport(true)
             : undefined
         }
@@ -409,13 +417,16 @@ export default function App() {
       <ClearCombatModal
         isOpen={showClearCombatModal}
         onClose={() => setShowClearCombatModal(false)}
-        onSettled={refetchState}
+        onSettled={async () => {
+          setCombatReportAvailable(false);
+          setShowCombatReport(false);
+          await refetchState();
+        }}
       />
 
-      <CombatReportModal
-        isOpen={showCombatReport}
-        onClose={() => setShowCombatReport(false)}
-      />
+      {showCombatReport && (
+        <CombatReportModal isOpen={true} onClose={() => setShowCombatReport(false)} />
+      )}
 
       {/* Modals */}
       {selectedActor && (

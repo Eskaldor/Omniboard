@@ -3,18 +3,11 @@
     "id": "default",
     "name": "Стандартный шаблон",
     "is_default": true,
-    "tabs": [
-      {
-        "id": "stats",
-        "name": "Характеристики",
-        "accordions": []
-      },
-      {
-        "id": "actions",
-        "name": "Действия",
-        "content": "actions_panel",
-        "accordions": []
-      }
-    ]
+    "stats": {
+      "accordions": []
+    },
+    "actions": {
+      "accordions": []
+    }
   }
 ]

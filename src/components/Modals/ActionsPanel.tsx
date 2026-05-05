@@ -5,7 +5,6 @@ import type { Actor } from '../../types';
 import {
   normalizeSheetAccordionDisplay,
   type SystemSheetLayoutAccordion,
-  type SystemSheetLayoutTab,
 } from '../../hooks/useSystemSheetProfiles';
 import type { SystemActionDef } from '../../hooks/useSystemActions';
 
@@ -140,7 +139,7 @@ export function ActionsPanel({
   actor,
   mergedActionDefs,
   onRollAction,
-  actionsTab,
+  actionsAccordions,
   variant = 'gm',
 }: {
   actor: Actor;
@@ -148,10 +147,10 @@ export function ActionsPanel({
   mergedActionDefs: Record<string, SystemActionDef>;
   onRollAction: (formula: string, comment: string) => void | Promise<void>;
   /**
-   * Profile actions tab (`sheet_profiles`). Ignored when `actor.actions_panel_override` is set —
-   * then per-actor grouping replaces the template.
+   * Profile actions accordions (`sheet_profiles`). Ignored when `actor.actions_panel_override` is set —
+   * then per-actor grouping fully replaces the template.
    */
-  actionsTab?: SystemSheetLayoutTab | null;
+  actionsAccordions?: SystemSheetLayoutAccordion[] | null;
   /** `gm` (default) — compact modal; `player` — roomy mobile with bigger touch targets. */
   variant?: ActionsPanelVariant;
 }) {
@@ -162,12 +161,10 @@ export function ActionsPanel({
     ([actionKey]) => actor.actions?.[actionKey]?.show_on_panel !== false,
   );
 
-  const effectiveActionsTab: SystemSheetLayoutTab | null | undefined =
-    actor.actions_panel_override != null
-      ? { id: 'actions', accordions: actor.actions_panel_override.accordions }
-      : actionsTab ?? undefined;
+  const accordionsRaw =
+    actor.actions_panel_override != null ? actor.actions_panel_override.accordions : actionsAccordions ?? undefined;
 
-  const accordions = effectiveActionsTab?.accordions?.filter(
+  const accordions = accordionsRaw?.filter(
     (a): a is SystemSheetLayoutAccordion =>
       !!a && typeof a === 'object' && typeof (a as SystemSheetLayoutAccordion).name === 'string',
   );

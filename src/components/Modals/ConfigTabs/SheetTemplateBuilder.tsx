@@ -22,7 +22,23 @@ type DraftTab = {
 
 function tabsFromDefaultProfile(profiles: SystemSheetProfile[]): SystemSheetLayoutTab[] {
   const p = profiles.find((x) => x.id === 'default') ?? profiles[0];
-  return p?.tabs ?? [];
+  if (!p) return [];
+  const tabs = p.tabs ?? [];
+  if (tabs.length > 0) return tabs;
+  // Canonical shape (stats/actions) fallback.
+  return [
+    {
+      id: 'stats',
+      name: 'Характеристики',
+      accordions: p.stats?.accordions ?? [],
+    },
+    {
+      id: 'actions',
+      name: 'Действия',
+      content: 'actions_panel',
+      accordions: p.actions?.accordions ?? [],
+    },
+  ];
 }
 
 function mergeSerializedTabsIntoDefaultProfile(
@@ -32,12 +48,25 @@ function mergeSerializedTabsIntoDefaultProfile(
 ): SystemSheetProfile[] {
   const next = [...profiles];
   const idx = next.findIndex((p) => p.id === 'default');
+  const statsTab = tabs.find((t) => t.id === 'stats') ?? null;
+  const actionsTab = tabs.find((t) => t.id === 'actions') ?? null;
+  const statsAccordions = statsTab?.accordions ?? [];
+  const actionsAccordions = actionsTab?.accordions ?? [];
+
   if (idx >= 0) {
-    next[idx] = { ...next[idx], tabs };
+    next[idx] = {
+      ...next[idx],
+      stats: { accordions: statsAccordions },
+      actions: { accordions: actionsAccordions },
+      // Keep legacy tabs for backward compatibility (they will be ignored by renderers).
+      tabs,
+    };
   } else {
     next.unshift({
       id: 'default',
       name: defaultDisplayName,
+      stats: { accordions: statsAccordions },
+      actions: { accordions: actionsAccordions },
       tabs,
     });
   }

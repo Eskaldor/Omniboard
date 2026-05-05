@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { DefaultSystemSheet } from './DefaultSystemSheet';
 import { ActionsPanel } from './ActionsPanel';
 import { ActorActionEditor } from './ActorActionEditor';
-import { getSystemSheet } from '../Systems/SheetRegistry';
+import { ActorFullSheet } from '../Sheets/ActorFullSheet';
 import {
   resolveActiveSheetProfile,
   useSystemSheetProfiles,
@@ -60,22 +60,9 @@ export function MiniSheetModal({
     [sheetProfiles, liveActor.sheet_profile_id],
   );
 
-  const resolvedFallbackId = useMemo(
-    () => resolveActiveSheetProfile(sheetProfiles, null)?.id ?? '',
-    [sheetProfiles],
-  );
-
-  const explicitProfileId = (liveActor.sheet_profile_id ?? '').trim();
-  const profileSelectValue =
-    explicitProfileId && sheetProfiles.some((p) => p.id === explicitProfileId)
-      ? explicitProfileId
-      : resolvedFallbackId;
-
   useEffect(() => {
     setLocalName(liveActor.name);
   }, [liveActor.name]);
-
-  const LoreSheet = getSystemSheet(systemName);
 
   const handleRollAction = useCallback(
     async (formula: string, comment: string) => {
@@ -151,22 +138,6 @@ export function MiniSheetModal({
             />
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            {sheetProfiles.length > 0 && (
-              <select
-                value={profileSelectValue}
-                onChange={(e) => onPatchActor({ sheet_profile_id: e.target.value })}
-                disabled={sheetProfilesLoading}
-                className="text-sm bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-zinc-300 max-w-[11rem] truncate disabled:opacity-50"
-                title={t('config_modal.sheet_profiles_select_aria')}
-                aria-label={t('config_modal.sheet_profiles_select_aria')}
-              >
-                {sheetProfiles.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-            )}
             <button
               onClick={onClose}
               className="p-1 rounded-md text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 transition-colors"
@@ -245,12 +216,21 @@ export function MiniSheetModal({
                   actor={liveActor}
                   systemActions={systemActions}
                   mergedActionDefs={mergedActionDefs}
-                  profileActionsTab={activeProfile?.tabs?.find((tab) => tab.id === 'actions')}
+                  profileActionsAccordions={activeProfile?.actions?.accordions}
                   onPatchActor={onPatchActor}
                 />
               )
             ) : sheetSidebar === 'lore' ? (
-              <LoreSheet actor={liveActor} columns={miniSheetCols} systemName={systemName} />
+              <ActorFullSheet
+                actor={liveActor}
+                columns={miniSheetCols}
+                systemName={systemName}
+                onUpdate={onUpdate}
+                onPatchActor={onPatchActor}
+                onOpenPortraitPicker={onPortraitClick}
+                sheetProfiles={sheetProfiles}
+                sheetProfilesLoading={sheetProfilesLoading}
+              />
             ) : activeTab === 'actions' ? (
               actionsLoading ? (
                 <div className="p-4 text-sm text-zinc-500">{t('modals.mini_sheet_layout_loading')}</div>
@@ -259,7 +239,7 @@ export function MiniSheetModal({
                   actor={liveActor}
                   mergedActionDefs={mergedActionDefs}
                   onRollAction={handleRollAction}
-                  actionsTab={activeProfile?.tabs?.find((tab) => tab.id === 'actions')}
+                  actionsAccordions={activeProfile?.actions?.accordions}
                 />
               )
             ) : (
@@ -269,7 +249,8 @@ export function MiniSheetModal({
                 systemName={systemName}
                 onUpdate={onUpdate}
                 onOpenPortraitPicker={onPortraitClick}
-                activeProfile={activeProfile}
+                onPatchActor={onPatchActor}
+                sheetProfiles={sheetProfiles}
                 sheetProfilesLoading={sheetProfilesLoading}
               />
             )}

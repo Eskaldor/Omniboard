@@ -1,6 +1,6 @@
 # Omniboard — Progress & Backlog
 
-> Обновлено: 05.05.2026 (**Фаза 15.1** — персонализированный `/ws/player`, отчёт о бое + синхронизация кампании, хук `usePlayerActor`, `DefaultSystemSheet variant="player"`); ранее: **Фаза 15** — Player View: кампании, лобби, `/ws/player`, мобильный клиент, вкладка Персонажи в Компендиуме; **§2.1.5** — `initiative_roll`; toast броска **ADR-25**
+> Обновлено: 05.05.2026 (**Фаза 15.1** — персонализированный `/ws/player`, отчёт о бое + синхронизация кампании, хук `usePlayerActor`, универсальный лист `DefaultSystemSheet variant="player"`, Foundry-style реестр кастомных листов); ранее: **Фаза 15** — Player View: кампании, лобби, `/ws/player`, мобильный клиент, вкладка Персонажи в Компендиуме; **§2.1.5** — `initiative_roll`; toast броска **ADR-25**
 
 ---
 
@@ -485,9 +485,15 @@ UX-ревизия `ConfigModal`: горизонтальные табы плох�
   - Сохраняет `data/logs/combat_report_<timestamp>.md`.
   - Перезаписывает `data/campaigns/<sys>/<id>/players/<id>.json` актуальными данными акторов из боя.
   - Возвращает `{ filename, markdown, actors_written }`.
-- [x] **`src/components/Modals/CombatReportModal.tsx`** (новый): кнопка «Сформировать», загрузка, вывод отчёта в `<pre>`, счётчик обновлённых персонажей, кнопка «Скачать .md».
+- [x] **`src/components/Modals/CombatReportModal.tsx`** (новый): кнопка «Сформировать», загрузка, рендер отчёта как markdown (`ReactMarkdown`) с прокруткой, счётчик обновлённых персонажей, кнопка «Скачать .md`.
 - [x] **`src/components/CombatToolbar.tsx`:** янтарная кнопка 📖 «Отчёт о бое» (пропс `onOpenCombatReport?`) — видна только при `!isActive && onOpenCombatReport !== undefined`.
-- [x] **`src/App.tsx`:** `onOpenCombatReport` передаётся только когда `session.active_campaign_id` задан; рендерит `<CombatReportModal>`.
+- [x] **`src/App.tsx`:** кнопка доступна **только после** «Стоп бой» и скрывается после «Стол очищен» / старта нового боя; модалка размонтируется при закрытии (сброс результата).
+
+### Листы персонажа (универсальный + кастомные компоненты)
+
+- [x] **Единая модель `sheet_profiles`:** группировка характеристик и действий живёт в `profile.stats.accordions` и `profile.actions.accordions` (без раздельных профилей/табов); `actions_panel_override` у актора полностью заменяет секции действий.
+- [x] **Foundry-style SheetRegistry:** `SystemSheetProfile.custom_component_id` позволяет назначить профилю кастомный React-компонент из реестра (`src/components/Sheets/SheetRegistry.tsx`).
+- [x] **Единая точка рендера:** `src/components/Sheets/ActorFullSheet.tsx` выбирает кастомный лист (если зарегистрирован) или универсальный `DefaultSystemSheet variant="player"`. Используется и для GM-модалки, и для Player View.
 
 ---
 

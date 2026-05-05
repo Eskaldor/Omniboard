@@ -32,6 +32,10 @@ export interface SystemSheetLayoutTab {
   content?: string;
 }
 
+export interface SystemSheetProfileSection {
+  accordions?: SystemSheetLayoutAccordion[];
+}
+
 function migrateLegacySheetTab(tab: unknown): SystemSheetLayoutTab {
   if (tab == null || typeof tab !== 'object' || Array.isArray(tab)) {
     return { id: '' };
@@ -71,6 +75,19 @@ export interface SystemSheetProfile {
   name: string;
   /** When true, actors without `sheet_profile_id` use this profile. Only one should be true per save. */
   is_default?: boolean;
+  /**
+   * Optional custom React component id (registered in `src/components/Sheets/SheetRegistry.tsx`).
+   * When set and found in registry, the universal sheet UI is replaced with that component.
+   */
+  custom_component_id?: string | null;
+  /**
+   * Canonical layout sections.
+   * - `stats`: initiative columns grouping for the mini-sheet summary.
+   * - `actions`: macro grouping for the actions tab.
+   */
+  stats?: SystemSheetProfileSection;
+  actions?: SystemSheetProfileSection;
+  /** Legacy shape (tabs-only). Kept for backwards compatibility while migrating. */
   tabs?: SystemSheetLayoutTab[];
   /**
    * Column keys whose values appear as stat chips inside `PlayerHeroHeader` (the gray hero block).
@@ -94,10 +111,51 @@ export function parseSheetProfiles(data: unknown): SystemSheetProfile[] {
     const name = rec.name;
     if (typeof id !== 'string' || !id.trim()) continue;
     const rawTabs = Array.isArray(rec.tabs) ? (rec.tabs as SystemSheetLayoutTab[]) : undefined;
+    const migratedTabs = rawTabs?.map((tab) => migrateLegacySheetTab(tab));
+
+    const statsFromTabs = migratedTabs?.find((t) => t.id === 'stats')?.accordions;
+    const actionsFromTabs = migratedTabs?.find((t) => t.id === 'actions')?.accordions;
+
+    const recStats = rec.stats;
+    const recActions = rec.actions;
+    const stats =
+      recStats && typeof recStats === 'object' && !Array.isArray(recStats)
+        ? ({
+            accordions: Array.isArray((recStats as Record<string, unknown>).accordions)
+              ? ((recStats as { accordions: unknown }).accordions as SystemSheetLayoutAccordion[])
+              : undefined,
+          } satisfies SystemSheetProfileSection)
+        : undefined;
+    const actions =
+      recActions && typeof recActions === 'object' && !Array.isArray(recActions)
+        ? ({
+            accordions: Array.isArray((recActions as Record<string, unknown>).accordions)
+              ? ((recActions as { accordions: unknown }).accordions as SystemSheetLayoutAccordion[])
+              : undefined,
+          } satisfies SystemSheetProfileSection)
+        : undefined;
+
+    const hero_columns = Array.isArray(rec.hero_columns)
+      ? rec.hero_columns.filter((x): x is string => typeof x === 'string' && x.trim().length > 0)
+      : undefined;
+    const custom_component_id =
+      typeof rec.custom_component_id === 'string' ? rec.custom_component_id.trim() : '';
+
     const profile: SystemSheetProfile = {
       id: id.trim(),
       name: typeof name === 'string' ? name : id.trim(),
-      tabs: rawTabs?.map((tab) => migrateLegacySheetTab(tab)),
+      ...(custom_component_id ? { custom_component_id } : {}),
+      ...(stats?.accordions != null || actions?.accordions != null
+        ? {
+            stats: stats?.accordions ? { accordions: stats.accordions } : undefined,
+            actions: actions?.accordions ? { accordions: actions.accordions } : undefined,
+          }
+        : {
+            stats: statsFromTabs ? { accordions: statsFromTabs } : undefined,
+            actions: actionsFromTabs ? { accordions: actionsFromTabs } : undefined,
+          }),
+      ...(hero_columns && hero_columns.length > 0 ? { hero_columns } : {}),
+      tabs: migratedTabs,
     };
     if (rec.is_default === true) profile.is_default = true;
     out.push(profile);
