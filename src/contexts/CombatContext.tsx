@@ -88,3 +88,8 @@ export function useCombat(): CombatContextValue {
   if (!ctx) throw new Error('useCombat must be used within CombatProvider');
   return ctx;
 }
+
+/** Variant of {@link useCombat} that returns null instead of throwing when there is no provider. */
+export function useCombatOptional(): CombatContextValue | null {
+  return useContext(CombatContext);
+}

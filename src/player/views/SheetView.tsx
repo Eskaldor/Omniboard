@@ -1,47 +1,26 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Loader2, RefreshCw } from 'lucide-react';
-import type { Actor, ColumnConfig } from '../../types';
-import { SystemSheetRenderer } from '../components/sheets/SystemSheetRenderer';
-import type { PlayerAuth } from '../types';
+import type { PlayerAuth, PublicCombatState } from '../types';
+import { DefaultSystemSheet } from '../../components/Modals/DefaultSystemSheet';
+import { useSystemColumns } from '../../hooks/useSystemColumns';
+import {
+  useSystemSheetProfiles,
+  resolveActiveSheetProfile,
+} from '../../hooks/useSystemSheetProfiles';
+import { usePlayerActor } from '../hooks/usePlayerActor';
 
 interface Props {
   auth: PlayerAuth;
   system: string;
+  /** Live public WS state — when present, the actor is read from it directly so GM edits flow without a refetch. */
+  state?: PublicCombatState | null;
 }
 
-export function SheetView({ auth, system }: Props) {
-  const [actor, setActor] = useState<Actor | null>(null);
-  const [columns, setColumns] = useState<ColumnConfig[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export function SheetView({ auth, system, state = null }: Props) {
+  const { actor, loading, error, refetch } = usePlayerActor(auth, state);
 
-  const fetchData = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [actorRes, colsRes] = await Promise.all([
-        fetch(`/api/player/actor/${auth.actorId}`, {
-          headers: { 'X-Player-Token': auth.token },
-        }),
-        fetch(`/api/systems/${encodeURIComponent(system)}/columns`),
-      ]);
-      if (!actorRes.ok) throw new Error(actorRes.status === 403 ? 'Токен устарел' : 'Персонаж не найден');
-      setActor((await actorRes.json()) as Actor);
-      if (colsRes.ok) {
-        const colData = (await colsRes.json()) as { columns?: ColumnConfig[] };
-        setColumns(colData.columns ?? []);
-      }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Ошибка загрузки');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    void fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth.actorId, auth.token]);
+  const { columns } = useSystemColumns(system);
+  const { profiles, loading: profilesLoading } = useSystemSheetProfiles(system);
 
   if (loading) {
     return (
@@ -51,12 +30,12 @@ export function SheetView({ auth, system }: Props) {
     );
   }
 
-  if (error || !actor) {
+  if (!actor) {
     return (
       <div className="flex flex-col items-center gap-3 py-16 text-center px-6">
         <p className="text-zinc-400 text-sm">{error ?? 'Персонаж не найден'}</p>
         <button
-          onClick={() => void fetchData()}
+          onClick={refetch}
           className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-zinc-800 text-zinc-200 text-sm active:bg-zinc-700"
         >
           <RefreshCw size={14} />
@@ -66,5 +45,18 @@ export function SheetView({ auth, system }: Props) {
     );
   }
 
-  return <SystemSheetRenderer actor={actor} columns={columns} systemName={system} />;
+  const activeProfile = resolveActiveSheetProfile(profiles, actor.sheet_profile_id);
+  // Same filter as MiniSheetModal: show only columns flagged for the mini-sheet.
+  const sheetCols = columns.filter((c) => c.show_in_mini_sheet);
+
+  return (
+    <DefaultSystemSheet
+      actor={actor}
+      columns={sheetCols}
+      systemName={system}
+      variant="player"
+      activeProfile={activeProfile}
+      sheetProfilesLoading={profilesLoading}
+    />
+  );
 }

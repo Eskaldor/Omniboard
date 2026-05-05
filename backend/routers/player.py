@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import secrets
 import uuid
+from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Header
@@ -18,8 +19,14 @@ from backend.models import (
     PlayerCharacterImportRequest,
     PlayerCharacterSummary,
     PlayerClaimResponse,
+    stat_cell_effective_scalar,
 )
-from backend.paths import get_actors_system_dir, get_campaign_players_dir, get_campaigns_system_dir
+from backend.paths import (
+    LOGS_DIR,
+    get_actors_system_dir,
+    get_campaign_players_dir,
+    get_campaigns_system_dir,
+)
 from backend.routers.ws import broadcast_state
 
 router = APIRouter(prefix="/api/player", tags=["player"])
@@ -197,13 +204,28 @@ async def get_player_actor(
     actor_id: str,
     x_player_token: Optional[str] = Header(None),
 ) -> dict:
-    """Вернуть полные данные персонажа (только владельцу по токену)."""
+    """Вернуть полные данные персонажа (только владельцу по токену).
+
+    Источник истины — **живой стейт боя** (`app_state.state.core.actors`):
+    GM-овские правки `actions` / `actions_panel_override` / `sheet_profile_id`
+    в мини-карточке во время сессии живут именно там и не пишутся в файл
+    кампании. Если актёра в бою нет (например, бой ещё не начат или GM не
+    добавлял его в очередь) — fallback на файл кампании, чтобы игрок мог
+    открыть лист уже в лобби.
+    """
     token = app_state.claimed_players.get(actor_id)
     if token is None:
         raise HTTPException(status_code=404, detail="No claim for this actor")
     if not x_player_token or token != x_player_token:
         raise HTTPException(status_code=403, detail="Invalid token")
 
+    # 1) Live combat state — приоритет. Включает GM-правки макросов и группировки.
+    actors = getattr(app_state.state.core, "actors", None) or []
+    for a in actors:
+        if getattr(a, "id", None) == actor_id:
+            return a.model_dump(mode="json")
+
+    # 2) Fallback — файл кампании (актёр ещё не добавлен в бой).
     system = app_state.state.core.system
     campaign_id = app_state.state.session.active_campaign_id
     if not campaign_id:
@@ -323,3 +345,191 @@ async def import_campaign_character(body: PlayerCharacterImportRequest) -> dict:
         actor.model_dump_json(indent=2), encoding="utf-8"
     )
     return actor.model_dump(mode="json")
+
+
+# ---------------------------------------------------------------------------
+# Отчёт о бое + синхронизация данных кампании (GM)
+# ---------------------------------------------------------------------------
+
+def _stat_effective_value(cell) -> float | None:
+    """Извлечь эффективное числовое значение стата (StatValue или plain number)."""
+    try:
+        v = stat_cell_effective_scalar(cell)
+        if v is None:
+            return None
+        return float(v)
+    except (TypeError, ValueError):
+        return None
+
+
+_ROLE_EMOJI: dict[str, str] = {
+    "character": "🛡️",
+    "ally": "🤝",
+    "enemy": "⚔️",
+    "neutral": "◆",
+}
+
+
+def _build_combat_report_md(
+    *,
+    system: str,
+    campaign_id: str,
+    rounds: int,
+    actor_diffs: list[dict],
+) -> str:
+    """Сформировать Markdown-отчёт о завершённом бое."""
+    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+    total_actors = len(actor_diffs)
+    actors_changed = sum(1 for d in actor_diffs if d.get("changes"))
+    total_changes = sum(len(d.get("changes", [])) for d in actor_diffs)
+
+    lines: list[str] = [
+        f"# ⚔️ Отчёт о бое",
+        "",
+        f"> 🕐 **{now}**  ",
+        f"> 📚 **Система:** {system}  ",
+        f"> 🗺️ **Кампания:** {campaign_id}  ",
+        f"> 🔄 **Раундов:** {rounds}",
+        "",
+        "---",
+        "",
+        "## 📊 Итоги боя",
+        "",
+        "| | |",
+        "|:---|---:|",
+        f"| Участников | **{total_actors}** |",
+        f"| С изменениями | **{actors_changed}** |",
+        f"| Всего изменений | **{total_changes}** |",
+        "",
+        "---",
+        "",
+        "## 📋 Изменения персонажей",
+        "",
+    ]
+
+    for diff in actor_diffs:
+        name = diff["name"]
+        role = diff.get("role", "")
+        changes = diff.get("changes", [])
+        emoji = _ROLE_EMOJI.get(role, "◆")
+
+        lines.append(f"### {emoji} {name}")
+        if role:
+            lines.append(f"*{role}*")
+        lines.append("")
+
+        if changes:
+            lines.append("| Характеристика | До | После | Δ |")
+            lines.append("|:---|---:|---:|:---:|")
+            for ch in changes:
+                stat_name = ch["stat_name"]
+                old_v = ch["old"]
+                new_v = ch["new"]
+                delta = ch["delta"]
+                if delta > 0:
+                    delta_str = f"**▲ +{delta:.0f}**"
+                    new_fmt = f"**{new_v}**"
+                elif delta < 0:
+                    delta_str = f"**▼ {delta:.0f}**"
+                    new_fmt = f"**{new_v}**"
+                else:
+                    delta_str = "—"
+                    new_fmt = str(new_v)
+                lines.append(f"| {stat_name} | {old_v} | {new_fmt} | {delta_str} |")
+        else:
+            lines.append("*нет изменений в отслеживаемых статах*")
+
+        lines.append("")
+
+    return "\n".join(lines)
+
+
+@router.post("/combat-report")
+async def generate_combat_report() -> dict:
+    """GM: сформировать отчёт о бое, сохранить .md и обновить файлы кампании.
+
+    1. Считает diff живых акторов vs сохранённых файлов кампании.
+    2. Генерирует Markdown-отчёт.
+    3. Сохраняет report в data/logs/combat_report_<timestamp>.md.
+    4. Перезаписывает файлы campaign/players/<id>.json актуальными данными.
+    """
+    system = app_state.state.core.system
+    campaign_id = app_state.state.session.active_campaign_id
+    if not campaign_id:
+        raise HTTPException(status_code=404, detail="No active campaign")
+
+    players_dir = get_campaign_players_dir(system, campaign_id)
+    if players_dir is None or not players_dir.exists():
+        raise HTTPException(status_code=404, detail="Campaign players dir not found")
+
+    # Индекс файлов кампании: actor_id -> Actor (до боя)
+    campaign_actors: dict[str, Actor] = {
+        a.id: a for a in _load_actors_from_dir(players_dir)
+    }
+
+    # Живые акторы из боя (источник истины для перезаписи)
+    live_actors: dict[str, Actor] = {a.id: a for a in app_state.state.core.actors}
+
+    # Строим дифф
+    actor_diffs: list[dict] = []
+    for actor_id, before in campaign_actors.items():
+        after = live_actors.get(actor_id)
+        if after is None:
+            # Актор не участвовал в бою — изменений нет
+            actor_diffs.append({"name": before.name, "role": before.role, "changes": []})
+            continue
+
+        before_stats = before.model_dump(mode="json").get("stats") or {}
+        after_stats = after.model_dump(mode="json").get("stats") or {}
+        all_keys = set(before_stats.keys()) | set(after_stats.keys())
+
+        changes: list[dict] = []
+        for key in sorted(all_keys):
+            old_v = _stat_effective_value(before_stats.get(key))
+            new_v = _stat_effective_value(after_stats.get(key))
+            if old_v is None and new_v is None:
+                continue
+            if old_v == new_v:
+                continue
+            delta = (new_v or 0) - (old_v or 0)
+            changes.append({
+                "stat_name": key,
+                "old": int(old_v) if old_v is not None and old_v == int(old_v) else old_v,
+                "new": int(new_v) if new_v is not None and new_v == int(new_v) else new_v,
+                "delta": delta,
+            })
+
+        actor_diffs.append({"name": after.name, "role": after.role, "changes": changes})
+
+    # Генерируем Markdown
+    rounds = app_state.state.core.round
+    md = _build_combat_report_md(
+        system=system,
+        campaign_id=campaign_id,
+        rounds=rounds,
+        actor_diffs=actor_diffs,
+    )
+
+    # Сохраняем отчёт на диск
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"combat_report_{timestamp}.md"
+    LOGS_DIR.mkdir(parents=True, exist_ok=True)
+    report_path = LOGS_DIR / filename
+    report_path.write_text(md, encoding="utf-8")
+
+    # Перезаписываем файлы кампании актуальными данными
+    actors_written = 0
+    for actor_id, after in live_actors.items():
+        if actor_id not in campaign_actors:
+            # Актора не было в кампании — пропускаем
+            continue
+        out_path = players_dir / f"{actor_id}.json"
+        out_path.write_text(after.model_dump_json(indent=2), encoding="utf-8")
+        actors_written += 1
+
+    return {
+        "filename": filename,
+        "markdown": md,
+        "actors_written": actors_written,
+    }

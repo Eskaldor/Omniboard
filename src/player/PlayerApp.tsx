@@ -11,7 +11,7 @@ import type { PlayerTab } from './types';
 
 export default function PlayerApp() {
   const { auth, claim, unclaim } = usePlayerAuth();
-  const { state, isConnected } = usePlayerSocket();
+  const { state, isConnected } = usePlayerSocket(auth?.token);
   const [tab, setTab] = useState<PlayerTab>('sheet');
 
   // Не прошли аутентификацию — показываем лобби
@@ -43,7 +43,7 @@ export default function PlayerApp() {
 
       {/* Main content */}
       <main className="flex-1 overflow-y-auto overscroll-contain pb-16">
-        {tab === 'sheet' && <SheetView auth={auth} system={system} />}
+        {tab === 'sheet' && <SheetView auth={auth} system={system} state={state} />}
         {tab === 'actions' && <ActionsView auth={auth} state={state} />}
         {tab === 'initiative' && <InitiativeView state={state} myActorId={auth.actorId} />}
         {tab === 'log' && <LogView state={state} />}

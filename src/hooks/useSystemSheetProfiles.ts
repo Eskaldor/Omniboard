@@ -72,6 +72,11 @@ export interface SystemSheetProfile {
   /** When true, actors without `sheet_profile_id` use this profile. Only one should be true per save. */
   is_default?: boolean;
   tabs?: SystemSheetLayoutTab[];
+  /**
+   * Column keys whose values appear as stat chips inside `PlayerHeroHeader` (the gray hero block).
+   * Empty / omitted = no extra chips shown.
+   */
+  hero_columns?: string[];
 }
 
 /** Legacy shape consumed by mini-sheet rendering (tabs only). */

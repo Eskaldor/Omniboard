@@ -1,6 +1,6 @@
 # Omniboard — Архитектурные решения и Ледник
 
-> Обновлено: 04.05.2026 (**ADR-27** — Player View: публичный WS-канал, кампании, вид игрока); ранее: **ADR-26** — инициатива по `initiative_roll` и пересборка очереди; **ADR-25** — toast броска / `rollToast.tsx`; **ADR-24** — терминал GM Console; ADR-22 — `led_triggers`)
+> Обновлено: 05.05.2026 (**ADR-28** — персонализированный `/ws/player` и отчёт о бое); ранее: **ADR-27** — Player View; **ADR-26** — `initiative_roll`; **ADR-25** — toast броска; **ADR-24** — терминал GM Console
 
 ---
 
@@ -267,6 +267,37 @@ actor_id = turn_queue[target_index]
 
 **Файлы:** `backend/routers/player.py` (новый роутер `/api/player`), `backend/routers/ws.py` (`/ws/player`, `broadcast_player_state`), `backend/services/player_state.py`, `backend/paths.py`, `backend/state.py`, `src/player/` (весь модуль).
 
+### ADR-28: Персонализированный `/ws/player` и отчёт о бое
+
+**Статус:** Реализовано (май 2026).
+
+**Контекст:** ADR-27 ввёл общий отфильтрованный WS-канал `/ws/player`. Все игроки получали одинаковый «публичный» стейт: собственный актор игрока маскировался так же, как чужие. Это ломало панель действий (скрытые хп нельзя показать игроку для его же персонажа) и мешало отображению полных данных листа. Также отсутствовал механизм записи изменений боя обратно в файлы кампании.
+
+**Решения:**
+
+1. **Персонализация WS-payload.** Каждый `/ws/player`-клиент передаёт свой токен через query-параметр `?token=<token>` при установке соединения. Бэкенд резолвит `actor_id` через `token_to_actor` и сохраняет связку в модульной таблице `_player_sockets: dict[WebSocket, str | None]`. При каждой рассылке (`broadcast_player_state`) для каждого сокета строится **отдельный** payload через `get_player_public_state(session, current_player_actor_id)`.
+
+2. **Собственный актор без маскировки.** В `get_player_public_state(session, current_player_actor_id)` для актора с совпадающим `id` применяется `_build_own_actor()` вместо `_apply_actor_visibility()`: удаляются только аппаратные поля (`hotbar`, `miniature_id`, `layout_profile_id`), но `is_revealed = False` не скрывает, а маски `Visibility` не применяются. Игрок всегда видит своего персонажа целиком.
+
+3. **Хук `usePlayerActor` — единый источник истины.** `src/player/hooks/usePlayerActor.ts` реализует приоритетный паттерн:
+   - WS-стейт: `state.core.actors.find(id)` — мгновенные обновления от GM.
+   - HTTP `/api/player/actor/{id}` — bootstrap/fallback для лобби и первого рендера.
+   `SheetView` и `ActionsView` ранее дублировали этот паттерн (~30 строк каждый); после рефакторинга оба вызывают только `usePlayerActor(auth, state)`.
+
+4. **Переподключение WS после клейма.** В `usePlayerSocket(token?)` токен добавлен в deps `useEffect` — при клейме персонажа сокет закрывается и переоткрывается с новым `?token=`, гарантируя персонализированный payload с первого сообщения.
+
+5. **Отчёт о бое + синхронизация кампании.** `POST /api/player/combat-report` закрывает «петлю» жизненного цикла кампании:
+   - Загружает снимок «до боя» из `data/campaigns/<sys>/<id>/players/` (через `_load_actors_from_dir`).
+   - Сравнивает с текущим живым стейтом через `stat_cell_effective_scalar`.
+   - Генерирует Markdown-отчёт (дата, система, кампания, раунды; таблицы изменений по каждому персонажу).
+   - Сохраняет `data/logs/combat_report_<timestamp>.md`.
+   - Перезаписывает файлы персонажей кампании актуальными данными из боя.
+   - Возвращает `{ filename, markdown, actors_written }` для отображения в `CombatReportModal`.
+
+**Обоснование paттерна «live-first»:** HTTP-эндпоинт `/api/player/actor/{id}` уже после ADR-27 был исправлен возвращать живой стейт (`app_state.state.core.actors`) в приоритете над файлом. WS-персонализация делает то же самое для push-канала: игрок всегда видит данные GM-правок без задержки polling'а.
+
+**Файлы:** `backend/services/player_state.py`, `backend/routers/ws.py`, `backend/routers/player.py`, `src/player/hooks/usePlayerActor.ts`, `src/player/hooks/usePlayerSocket.ts`, `src/player/PlayerApp.tsx`, `src/player/views/SheetView.tsx`, `src/player/views/ActionsView.tsx`, `src/components/Modals/CombatReportModal.tsx`, `src/components/CombatToolbar.tsx`.
+
 ---
 
 ## Отклонённые идеи
@@ -365,6 +396,6 @@ actor_id = turn_queue[target_index]
 
 Добавление на Хотбар быстрых действий, которые имеют `initiative_cost` и автоматически пересортировывают очередь ходов.
 
-### ~~🧊 Player View (Второй экран)~~ → **закрыто (ADR-27, май 2026)**
+### ~~🧊 Player View (Второй экран)~~ → **закрыто (ADR-27 + ADR-28, май 2026)**
 
-Реализовано: страница `/player`, лобби с бронированием персонажей, `/ws/player` с фильтрацией стейта, вкладки Лист / Действия / Инициатива / Лог, ConfigModal → Кампании, Компендиум → Персонажи. Оставшийся icebox — полноэкранный «второй монитор» и синхронизация HP/эффектов актора обратно в файл кампании.
+Реализовано: страница `/player`, лобби с бронированием, персонализированный `/ws/player` (каждый игрок видит своего актора без маскировки), `DefaultSystemSheet variant="player"` с hero-header, `usePlayerActor` hook, панель действий с GroupBy/аккордеонами, `POST /api/player/combat-report` (отчёт о бое + перезапись файлов кампании). Оставшийся icebox — полноэкранный «второй монитор» и PATCH-правка своих статов игроком.

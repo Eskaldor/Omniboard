@@ -11,12 +11,17 @@ type CombatStateContextValue = {
   reconnect: () => void;
 };
 
-const CombatStateContext = createContext<CombatStateContextValue | null>(null);
+export const CombatStateContext = createContext<CombatStateContextValue | null>(null);
 
 export function useCombatState(): CombatStateContextValue {
   const ctx = useContext(CombatStateContext);
   if (!ctx) throw new Error('useCombatState must be used within CombatStateProvider');
   return ctx;
+}
+
+/** Variant of {@link useCombatState} that returns null instead of throwing when there is no provider. */
+export function useCombatStateOptional(): CombatStateContextValue | null {
+  return useContext(CombatStateContext);
 }
 
 export function CombatStateProvider({ children }: { children: React.ReactNode }) {

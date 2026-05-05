@@ -39,12 +39,26 @@ def _apply_actor_visibility(actor: dict[str, Any]) -> dict[str, Any] | None:
     return actor
 
 
-def get_player_public_state(session: CombatSession) -> dict[str, Any]:
+def _build_own_actor(actor: dict[str, Any]) -> dict[str, Any]:
+    """Подготовить данные собственного актора игрока: только хардварные GM-поля удаляются,
+    маскировка видимости не применяется — игрок всегда видит своего персонажа полностью."""
+    for field in _ACTOR_GM_FIELDS:
+        actor.pop(field, None)
+    return actor
+
+
+def get_player_public_state(
+    session: CombatSession,
+    current_player_actor_id: str | None = None,
+) -> dict[str, Any]:
     """
     Срез CombatSession для клиентов игроков:
     - скрытые акторы (is_revealed=False) удалены
     - поля visibility применены (маскировка имени/хп/статов/эффектов)
     - GM-only данные удалены (hotbar, prerolls, undo-стек, hardware)
+
+    Если передан current_player_actor_id, то собственный актор игрока включается
+    в ответ без маскировки и с полными данными (actions, actions_panel_override и т.д.).
     """
     data = session.model_dump(
         mode="json",
@@ -59,9 +73,13 @@ def get_player_public_state(session: CombatSession) -> dict[str, Any]:
 
     filtered_actors: list[dict[str, Any]] = []
     for actor in data["core"]["actors"]:
-        result = _apply_actor_visibility(actor)
-        if result is not None:
-            filtered_actors.append(result)
+        if current_player_actor_id and actor.get("id") == current_player_actor_id:
+            # Собственный актор: маскировка не применяется, только аппаратные поля убираем
+            filtered_actors.append(_build_own_actor(actor))
+        else:
+            result = _apply_actor_visibility(actor)
+            if result is not None:
+                filtered_actors.append(result)
     data["core"]["actors"] = filtered_actors
 
     # Убираем информацию о железе — не нужна игрокам

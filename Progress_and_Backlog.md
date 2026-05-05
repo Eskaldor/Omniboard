@@ -1,6 +1,6 @@
 # Omniboard — Progress & Backlog
 
-> Обновлено: 04.05.2026 (**Фаза 15** — Player View: кампании, лобби, `/ws/player`, мобильный клиент, вкладка Персонажи в Компендиуме); ранее: **§2.1.5** — `initiative_roll`, автопереброс; toast броска **ADR-25**; ESP, `initiative_shift`
+> Обновлено: 05.05.2026 (**Фаза 15.1** — персонализированный `/ws/player`, отчёт о бое + синхронизация кампании, хук `usePlayerActor`, `DefaultSystemSheet variant="player"`); ранее: **Фаза 15** — Player View: кампании, лобби, `/ws/player`, мобильный клиент, вкладка Персонажи в Компендиуме; **§2.1.5** — `initiative_roll`; toast броска **ADR-25**
 
 ---
 
@@ -444,6 +444,50 @@ UX-ревизия `ConfigModal`: горизонтальные табы плох�
 - [x] `CharactersTab` в `Compendium.tsx`: создание персонажа (`POST /api/player/characters`), импорт из ростера/боя (`POST /api/player/characters/import`), список с кнопкой «В бой».
 - [x] Флаг `keepId=true` явно передаётся через цепочку `onAdd(actor, count, keepId?)` — UUID персонажа кампании сохраняется при добавлении в бой независимо от роли; НПС-вкладка не передаёт флаг.
 - [x] Удалён устаревший `ActorRosterModal.tsx`; кнопка «Ростер» убрана из App.tsx.
+
+---
+
+## ✅ Фаза 15.1 — Персонализированный WebSocket, отчёт о бое и рефакторинг (05.05.2026)
+
+Доработка Player View: собственный актор игрока получает полный снимок без маскировки, бой завершается с формированием Markdown-отчёта и синхронизацией файлов кампании.
+
+### Персонализированный `/ws/player`
+
+- [x] **`backend/services/player_state.py`:** `get_player_public_state(session, current_player_actor_id=None)` — добавлен второй параметр. Новая функция `_build_own_actor()`: у собственного актора удаляются только аппаратные GM-поля (`hotbar`, `miniature_id`, `layout_profile_id`); маскировка `Visibility` и проверка `is_revealed` **не применяются**. Остальные акторы проходят прежний путь через `_apply_actor_visibility`.
+- [x] **`backend/routers/ws.py`:** модульная таблица `_player_sockets: dict[WebSocket, str | None]` — per-socket actor_id. `/ws/player` принимает query-параметр `?token=<token>`, резолвит `actor_id` через `token_to_actor`; при каждой рассылке каждый клиент получает **свой** персонализированный payload.
+- [x] **`src/player/hooks/usePlayerSocket.ts`:** принимает `token?: string`, добавляет `?token=<encoded>` к WS URL; `token` включён в `useEffect`-депы — переподключение при клейме.
+- [x] **`src/player/PlayerApp.tsx`:** передаёт `auth?.token` в `usePlayerSocket`.
+
+### Хук `usePlayerActor` — устранение дублирования
+
+- [x] **`src/player/hooks/usePlayerActor.ts`** (новый): единственный источник истины — WS-стейт (`state.core.actors.find(id)`) с приоритетом, HTTP `/api/player/actor/{id}` как bootstrap/fallback. Возвращает `{ actor, loading, error, refetch }`.
+- [x] **`src/player/views/SheetView.tsx`:** переписан на `usePlayerActor`; убрана дублированная логика ~30 строк.
+- [x] **`src/player/views/ActionsView.tsx`:** то же, плюс убраны неиспользуемые импорты `Actor`. Компонент сократился с 177 до 115 строк.
+
+### Универсальный лист персонажа (`DefaultSystemSheet`) — режим игрока
+
+- [x] **`SheetVariant = 'gm' | 'player'`** в `DefaultSystemSheet.tsx` — адаптивные токены плотности (`densityFor`): крупнее отступы, 1-колоночная сетка, hero-заголовок.
+- [x] **`PlayerHeroHeader`**: размытый backdrop-portrait, портрет 172/320, имя, ролевой бейдж, бейдж инициативы.
+- [x] **`SheetSection`** — вариантный аккордеон (GM: `bg-zinc-900/40`, player: `bg-zinc-900/60`).
+- [x] **Полные текстовые колонки (`text`/`string`)** — рендер через ReactMarkdown в `TextStatRow`, `col-span-full`.
+- [x] **`CheckboxGroupRow`** — `col-span-full`, адаптация сигнатуры `onUpdate` для player-режима.
+- [x] **`claimedKeys`** — «Прочее» fallback-секция для колонок вне аккордеонов.
+- [x] **`useCombatStateOptional` / `useCombatOptional`** — варианты хуков контекста, возвращающие `null` вне Provider (нужны для рендера в `/player`).
+- [x] **`ActionsPanel variant="player"`** — `ActionsPanelVariant`, `ActionsPanelDensity`: крупнее кнопки, увеличенные отступы.
+- [x] Компендиум (`Compendium.tsx`) переключён на `DefaultSystemSheet variant="player"` в раскрытых строках.
+
+### Отчёт о бое + синхронизация кампании
+
+- [x] **`POST /api/player/combat-report`** (`backend/routers/player.py`):
+  - Загружает «до-боевые» файлы персонажей из `data/campaigns/<sys>/<id>/players/` через `_load_actors_from_dir` (без дублирования).
+  - Строит diff `before` (файл) vs `after` (живой стейт боя) по `stat_cell_effective_scalar` для каждого стата.
+  - Генерирует Markdown-отчёт: заголовок с датой/системой/кампанией/раундами, таблица изменений по каждому персонажу.
+  - Сохраняет `data/logs/combat_report_<timestamp>.md`.
+  - Перезаписывает `data/campaigns/<sys>/<id>/players/<id>.json` актуальными данными акторов из боя.
+  - Возвращает `{ filename, markdown, actors_written }`.
+- [x] **`src/components/Modals/CombatReportModal.tsx`** (новый): кнопка «Сформировать», загрузка, вывод отчёта в `<pre>`, счётчик обновлённых персонажей, кнопка «Скачать .md».
+- [x] **`src/components/CombatToolbar.tsx`:** янтарная кнопка 📖 «Отчёт о бое» (пропс `onOpenCombatReport?`) — видна только при `!isActive && onOpenCombatReport !== undefined`.
+- [x] **`src/App.tsx`:** `onOpenCombatReport` передаётся только когда `session.active_campaign_id` задан; рендерит `<CombatReportModal>`.
 
 ---
 

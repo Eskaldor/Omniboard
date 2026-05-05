@@ -3,10 +3,10 @@
     "type": "stat_change",
     "round": 1,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "stat_key": "hp",
-      "stat_name": "\u0425\u041f",
+      "stat_name": "ХП",
       "amount": 5,
       "color": "#e70808"
     }
@@ -17,7 +17,7 @@
     "actor_id": null,
     "actor_name": null,
     "details": {
-      "message": "\u0413\u043e\u0431\u043b\u0438\u043d\u044b \u0431\u0443\u043d\u0442\u0443\u044e\u0442",
+      "message": "Гоблины бунтуют",
       "is_gm_note": true
     }
   },
@@ -27,7 +27,7 @@
     "actor_id": null,
     "actor_name": null,
     "details": {
-      "message": "\u0430",
+      "message": "а",
       "is_gm_note": true
     }
   },
@@ -37,7 +37,7 @@
     "actor_id": null,
     "actor_name": null,
     "details": {
-      "message": "\u0413\u043e\u0431\u043b\u0438\u043d\u044b \u0432\u0441\u0451 \u0435\u0449\u0451 \u0431\u0430\u0441\u0442\u0443\u044e\u0442",
+      "message": "Гоблины всё ещё бастуют",
       "is_gm_note": true
     }
   },
@@ -45,7 +45,7 @@
     "type": "roll",
     "round": 1,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "2d10",
       "formula": "2d10",
@@ -74,7 +74,7 @@
     "type": "roll",
     "round": 1,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "2d6+3",
       "formula": "2d6+3",
@@ -88,7 +88,7 @@
     "type": "roll",
     "round": 1,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "1d6",
       "formula": "1d6",
@@ -96,7 +96,7 @@
       "details": "1d6 (5) = `5`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u041e\u0433\u0435\u043d\u043d\u0430\u044f \u0441\u0442\u0440\u0435\u043b\u0430"
+      "comment": "Огенная стрела"
     }
   },
   {
@@ -111,7 +111,7 @@
       "details": "1d6 (3) = `3`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u041e\u0433\u043d\u0435\u043d\u043d\u0430\u044f \u0441\u0442\u0440\u0435\u043b\u0430",
+      "comment": "Огненная стрела",
       "is_generic_roll": true
     }
   },
@@ -127,7 +127,7 @@
       "details": "1d6 (3) = `3`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u041e\u0433\u043d\u0435\u043d\u043d\u0430\u044f \u0441\u0442\u0440\u0435\u043b\u0430",
+      "comment": "Огненная стрела",
       "is_generic_roll": true
     }
   },
@@ -135,7 +135,7 @@
     "type": "roll",
     "round": 1,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "1d6",
       "formula": "1d6",
@@ -143,17 +143,17 @@
       "details": "1d6 (**1**) = `1`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u041e\u0433\u043d\u0435\u043d\u043d\u0430\u044f \u0441\u0442\u0440\u0435\u043b\u0430"
+      "comment": "Огненная стрела"
     }
   },
   {
     "type": "roll",
     "round": 1,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
-      "expression": "1d6 @\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
-      "formula": "1d6 @\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+      "expression": "1d6 @Гоблин маг",
+      "formula": "1d6 @Гоблин маг",
       "total": 0,
       "details": "(d20 error)",
       "is_glitch": false,
@@ -179,7 +179,7 @@
     "type": "roll",
     "round": 1,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "2d6",
       "formula": "2d6",
@@ -187,20 +187,20 @@
       "details": "2d6 (**6**, **6**) = `12`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0411\u0438\u043f"
+      "comment": "Бип"
     }
   },
   {
     "type": "stat_change",
     "round": 1,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "stat_key": "com1",
-      "stat_name": "\u0414\u0435\u0439\u0441\u0442\u0432\u0438\u044f",
-      "item_key": "\u0411\u043e\u043d\u0443\u0441\u043d\u043e\u0435 ",
-      "item_label": "\u0411",
-      "message": "\u0414\u0435\u0439\u0441\u0442\u0432\u0438\u044f [\u0411]: \u274c",
+      "stat_name": "Действия",
+      "item_key": "Бонусное ",
+      "item_label": "Б",
+      "message": "Действия [Б]: ❌",
       "checkbox_value": false,
       "amount": 0,
       "color": "#a1a1aa"
@@ -210,13 +210,13 @@
     "type": "stat_change",
     "round": 1,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "stat_key": "com1",
-      "stat_name": "\u0414\u0435\u0439\u0441\u0442\u0432\u0438\u044f",
-      "item_key": "\u0420\u0435\u0430\u043a\u0446\u0438\u044f",
-      "item_label": "\u0420",
-      "message": "\u0414\u0435\u0439\u0441\u0442\u0432\u0438\u044f [\u0420]: \u274c",
+      "stat_name": "Действия",
+      "item_key": "Реакция",
+      "item_label": "Р",
+      "message": "Действия [Р]: ❌",
       "checkbox_value": false,
       "amount": 0,
       "color": "#a1a1aa"
@@ -226,13 +226,13 @@
     "type": "stat_change",
     "round": 1,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "stat_key": "com1",
-      "stat_name": "\u0414\u0435\u0439\u0441\u0442\u0432\u0438\u044f",
-      "item_key": "\u041e\u0441\u043d\u043e\u0432\u043d\u043e\u0435",
-      "item_label": "\u041e",
-      "message": "\u0414\u0435\u0439\u0441\u0442\u0432\u0438\u044f [\u041e]: \u274c",
+      "stat_name": "Действия",
+      "item_key": "Основное",
+      "item_label": "О",
+      "message": "Действия [О]: ❌",
       "checkbox_value": false,
       "amount": 0,
       "color": "#a1a1aa"
@@ -249,28 +249,28 @@
     "type": "turn_start",
     "round": 1,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 1,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 1,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 1,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {}
   },
   {
@@ -284,63 +284,63 @@
     "type": "turn_start",
     "round": 2,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 2,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 2,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 2,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 2,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 2,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 2,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 2,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 2,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {}
   },
   {
@@ -354,63 +354,63 @@
     "type": "turn_start",
     "round": 3,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 3,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 3,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 3,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 3,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 3,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 3,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 3,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 3,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {}
   },
   {
@@ -424,14 +424,14 @@
     "type": "turn_start",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -439,14 +439,14 @@
       "details": "1d20 (3) = `3`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0421\u043f\u0430\u0441\u0431\u0440\u043e\u0441\u043e\u043a \u043e\u0442 \u0441\u043c\u0435\u0440\u0442\u0438"
+      "comment": "Спасбросок от смерти"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -454,14 +454,14 @@
       "details": "1d20 (13) = `13`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0421\u043f\u0430\u0441\u0431\u0440\u043e\u0441\u043e\u043a \u043e\u0442 \u0441\u043c\u0435\u0440\u0442\u0438"
+      "comment": "Спасбросок от смерти"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "2d6",
       "formula": "2d6",
@@ -469,7 +469,7 @@
       "details": "2d6 (3, 5) = `8`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0423\u0440\u043e\u043d \u0434\u0432\u0443\u0440\u0443\u0447\u043d\u044b\u0439 \u043c\u0435\u0447"
+      "comment": "Урон двуручный меч"
     }
   },
   {
@@ -484,7 +484,7 @@
       "details": "2d6 (5, 5) = `10`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u041e\u0433\u043d\u0435\u043d\u043d\u044b\u0439 \u0448\u0430\u0440",
+      "comment": "Огненный шар",
       "is_generic_roll": true
     }
   },
@@ -492,7 +492,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "2d6",
       "formula": "2d6",
@@ -500,14 +500,14 @@
       "details": "2d6 (3, 5) = `8`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0423\u0440\u043e\u043d \u0434\u0432\u0443\u0440\u0443\u0447\u043d\u044b\u0439 \u043c\u0435\u0447"
+      "comment": "Урон двуручный меч"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d6+3",
       "formula": "1d6+3",
@@ -515,14 +515,14 @@
       "details": "1d6 (2) + 3 = `5`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0411\u0430\u0440\u0434\u043e\u0432\u0441\u043a\u043e\u0435 \u0432\u0434\u043e\u0445\u043d\u043e\u0432\u0435\u043d\u0438\u0435"
+      "comment": "Бардовское вдохновение"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "2d6",
       "formula": "2d6",
@@ -530,14 +530,14 @@
       "details": "2d6 (2, 4) = `6`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0423\u0440\u043e\u043d \u0434\u0432\u0443\u0440\u0443\u0447\u043d\u044b\u0439 \u043c\u0435\u0447"
+      "comment": "Урон двуручный меч"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "20d6",
       "formula": "20d6",
@@ -545,14 +545,14 @@
       "details": "20d6 (2, **1**, 2, 4, 2, 2, 3, 2, 2, **6**, 5, 2, 5, 2, 3, 4, **6**, 4, **1**, 2) = `60`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0421\u043d\u0438\u043a \u0430\u0442\u0430\u043a\u0430"
+      "comment": "Сник атака"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "(1d20)",
       "formula": "(1d20)",
@@ -560,14 +560,14 @@
       "details": "(1d20 (4)) = `4`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0418\u043d\u0438\u0446\u0438\u0430\u0442\u0438\u0432\u0430 (\u043a\u043e\u0441\u0442\u044c)"
+      "comment": "Инициатива (кость)"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "$",
       "formula": "$",
@@ -581,7 +581,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "(1d10)",
       "formula": "(1d10)",
@@ -589,14 +589,14 @@
       "details": "(1d10 (4)) = `4`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u041e\u0433\u043d\u0435\u043d\u043d\u044b\u0439 \u0441\u043d\u0430\u0440\u044f\u0434 (\u0443\u0440\u043e\u043d)"
+      "comment": "Огненный снаряд (урон)"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "!",
       "formula": "!",
@@ -610,7 +610,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "1d20 + (30)",
       "formula": "1d20 + (30)",
@@ -618,14 +618,14 @@
       "details": "1d20 (12) + (30) = `42`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0421\u043a\u043e\u0440\u043e\u0441\u0442\u044c"
+      "comment": "Скорость"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "(30) + (52)",
       "formula": "(30) + (52)",
@@ -639,7 +639,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "1d20 + (55)",
       "formula": "1d20 + (55)",
@@ -647,14 +647,14 @@
       "details": "1d20 (5) + (55) = `60`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0425\u041f"
+      "comment": "ХП"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "1d20 + (10)",
       "formula": "1d20 + (10)",
@@ -662,14 +662,14 @@
       "details": "1d20 (19) + (10) = `29`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u041a\u0414"
+      "comment": "КД"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d6+3",
       "formula": "1d6+3",
@@ -677,14 +677,14 @@
       "details": "1d6 (**1**) + 3 = `4`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0411\u0430\u0440\u0434\u043e\u0432\u0441\u043a\u043e\u0435 \u0432\u0434\u043e\u0445\u043d\u043e\u0432\u0435\u043d\u0438\u0435"
+      "comment": "Бардовское вдохновение"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "20d6",
       "formula": "20d6",
@@ -692,14 +692,14 @@
       "details": "20d6 (3, 4, **6**, 4, **6**, **6**, 3, 2, 3, 4, 5, **1**, **1**, **6**, 5, **1**, 2, 5, **6**, 4) = `77`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0421\u043d\u0438\u043a \u0430\u0442\u0430\u043a\u0430"
+      "comment": "Сник атака"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "20d6",
       "formula": "20d6",
@@ -707,14 +707,14 @@
       "details": "20d6 (5, **1**, 3, **1**, 5, 4, **6**, **6**, 5, 3, **6**, **1**, 2, 5, 3, 3, 5, 3, **6**, 2) = `75`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0421\u043d\u0438\u043a \u0430\u0442\u0430\u043a\u0430"
+      "comment": "Сник атака"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d6+3",
       "formula": "1d6+3",
@@ -722,7 +722,7 @@
       "details": "1d6 (**6**) + 3 = `9`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0411\u0430\u0440\u0434\u043e\u0432\u0441\u043a\u043e\u0435 \u0432\u0434\u043e\u0445\u043d\u043e\u0432\u0435\u043d\u0438\u0435"
+      "comment": "Бардовское вдохновение"
     }
   },
   {
@@ -744,7 +744,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "20d6",
       "formula": "20d6",
@@ -752,14 +752,14 @@
       "details": "20d6 (**6**, 2, 2, **6**, **1**, **6**, **6**, 2, 2, **6**, 4, **1**, **6**, **6**, 3, 2, 2, 4, 4, 5) = `76`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0421\u043d\u0438\u043a \u0430\u0442\u0430\u043a\u0430"
+      "comment": "Сник атака"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "20d6",
       "formula": "20d6",
@@ -767,14 +767,14 @@
       "details": "20d6 (**6**, 2, 2, 4, 4, **1**, 2, **6**, 2, 2, **1**, 4, 5, 2, 5, 2, 3, 5, 3, 2) = `63`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0421\u043d\u0438\u043a \u0430\u0442\u0430\u043a\u0430"
+      "comment": "Сник атака"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "20d6",
       "formula": "20d6",
@@ -782,14 +782,14 @@
       "details": "20d6 (5, 2, 5, **1**, 3, 4, 5, 4, 2, 2, 4, **6**, 5, 2, 4, 3, **6**, 4, **6**, **6**) = `79`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0421\u043d\u0438\u043a \u0430\u0442\u0430\u043a\u0430"
+      "comment": "Сник атака"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "20d6",
       "formula": "20d6",
@@ -797,14 +797,14 @@
       "details": "20d6 (**6**, **6**, **6**, 4, **1**, 4, **6**, 5, **1**, 4, 2, 3, **6**, 4, 4, **1**, 3, 5, 4, **6**) = `81`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0421\u043d\u0438\u043a \u0430\u0442\u0430\u043a\u0430"
+      "comment": "Сник атака"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "20d6",
       "formula": "20d6",
@@ -812,14 +812,14 @@
       "details": "20d6 (4, 3, 5, **1**, 5, **1**, 5, 4, **1**, 3, **6**, 2, 2, **1**, 2, **6**, 3, 2, 4, **6**) = `66`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0421\u043d\u0438\u043a \u0430\u0442\u0430\u043a\u0430"
+      "comment": "Сник атака"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "20d6",
       "formula": "20d6",
@@ -827,14 +827,14 @@
       "details": "20d6 (5, 5, 2, **6**, 5, **6**, **1**, **6**, **6**, 3, 5, **6**, 3, 4, **6**, 2, 2, **1**, 4, 3) = `81`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0421\u043d\u0438\u043a \u0430\u0442\u0430\u043a\u0430"
+      "comment": "Сник атака"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d6+3",
       "formula": "1d6+3",
@@ -842,14 +842,14 @@
       "details": "1d6 (**1**) + 3 = `4`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0411\u0430\u0440\u0434\u043e\u0432\u0441\u043a\u043e\u0435 \u0432\u0434\u043e\u0445\u043d\u043e\u0432\u0435\u043d\u0438\u0435"
+      "comment": "Бардовское вдохновение"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "20d6",
       "formula": "20d6",
@@ -857,14 +857,14 @@
       "details": "20d6 (3, **6**, **6**, 2, 5, **6**, **1**, 4, 4, 4, **6**, 4, 2, 5, 5, 3, **6**, 4, **6**, 4) = `86`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0421\u043d\u0438\u043a \u0430\u0442\u0430\u043a\u0430"
+      "comment": "Сник атака"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "20d6",
       "formula": "20d6",
@@ -872,14 +872,14 @@
       "details": "20d6 (**1**, **1**, **1**, 5, **6**, 2, 5, **1**, 4, 3, 3, 2, 5, 4, **1**, 4, **1**, **1**, **1**, **6**) = `57`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0421\u043d\u0438\u043a \u0430\u0442\u0430\u043a\u0430"
+      "comment": "Сник атака"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "20d6",
       "formula": "20d6",
@@ -887,14 +887,14 @@
       "details": "20d6 (5, 3, 3, 4, 2, **1**, **1**, 5, 5, 4, 2, 2, 2, 4, 5, 5, 4, 4, 5, **1**) = `67`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0421\u043d\u0438\u043a \u0430\u0442\u0430\u043a\u0430"
+      "comment": "Сник атака"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "20d6",
       "formula": "20d6",
@@ -902,14 +902,14 @@
       "details": "20d6 (**6**, 5, 5, **1**, 2, **1**, 5, 3, **6**, **6**, 3, **1**, 3, 5, 2, 5, 2, 3, 4, 3) = `71`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0421\u043d\u0438\u043a \u0430\u0442\u0430\u043a\u0430"
+      "comment": "Сник атака"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "20d6",
       "formula": "20d6",
@@ -917,14 +917,14 @@
       "details": "20d6 (**1**, **6**, 4, 3, 4, **1**, **6**, 5, 3, 5, 4, 3, 3, 3, 5, 4, **1**, **1**, 4, 2) = `68`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0421\u043d\u0438\u043a \u0430\u0442\u0430\u043a\u0430"
+      "comment": "Сник атака"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "20d6",
       "formula": "20d6",
@@ -932,14 +932,14 @@
       "details": "20d6 (4, 3, 3, 2, **1**, **6**, **1**, 5, **1**, 3, 3, 3, 4, 5, **1**, **1**, 2, 3, **1**, 5) = `57`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0421\u043d\u0438\u043a \u0430\u0442\u0430\u043a\u0430"
+      "comment": "Сник атака"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "20d6",
       "formula": "20d6",
@@ -947,14 +947,14 @@
       "details": "20d6 (4, 2, **1**, **6**, **1**, 2, **6**, **1**, 3, 2, 5, **6**, **1**, 4, **1**, 4, **6**, **6**, 4, 5) = `70`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0421\u043d\u0438\u043a \u0430\u0442\u0430\u043a\u0430"
+      "comment": "Сник атака"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d6+3",
       "formula": "1d6+3",
@@ -962,14 +962,14 @@
       "details": "1d6 (5) + 3 = `8`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0411\u0430\u0440\u0434\u043e\u0432\u0441\u043a\u043e\u0435 \u0432\u0434\u043e\u0445\u043d\u043e\u0432\u0435\u043d\u0438\u0435"
+      "comment": "Бардовское вдохновение"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "20d6",
       "formula": "20d6",
@@ -977,14 +977,14 @@
       "details": "20d6 (4, 5, 2, 3, 2, 3, 2, **1**, 5, **1**, 3, **6**, 4, 2, 4, **6**, 3, 2, **1**, **6**) = `65`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0421\u043d\u0438\u043a \u0430\u0442\u0430\u043a\u0430"
+      "comment": "Сник атака"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "20d6",
       "formula": "20d6",
@@ -992,14 +992,14 @@
       "details": "20d6 (**1**, 3, 4, 2, **1**, 3, 5, 4, **1**, **6**, 3, **1**, **6**, 4, 5, 5, 3, 3, 4, **1**) = `65`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0421\u043d\u0438\u043a \u0430\u0442\u0430\u043a\u0430"
+      "comment": "Сник атака"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "20d6",
       "formula": "20d6",
@@ -1007,14 +1007,14 @@
       "details": "20d6 (**1**, 3, 3, 5, 3, **6**, **1**, **6**, 2, 2, 3, **1**, 5, 4, 3, 3, 2, 5, **1**, **1**) = `60`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0421\u043d\u0438\u043a \u0430\u0442\u0430\u043a\u0430"
+      "comment": "Сник атака"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "20d6",
       "formula": "20d6",
@@ -1022,14 +1022,14 @@
       "details": "20d6 (**1**, **1**, 2, 2, 5, 4, **6**, **6**, **6**, 3, 5, 2, 5, 2, **1**, **1**, **1**, 4, **1**, 2) = `60`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0421\u043d\u0438\u043a \u0430\u0442\u0430\u043a\u0430"
+      "comment": "Сник атака"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "20d6",
       "formula": "20d6",
@@ -1037,14 +1037,14 @@
       "details": "20d6 (**1**, **1**, 2, 2, 2, **1**, **6**, 4, 5, 2, **1**, **1**, 5, **1**, 4, **1**, **6**, 4, 3, 2) = `54`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0421\u043d\u0438\u043a \u0430\u0442\u0430\u043a\u0430"
+      "comment": "Сник атака"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "20d6",
       "formula": "20d6",
@@ -1052,14 +1052,14 @@
       "details": "20d6 (2, **1**, 5, 2, **6**, 3, 3, **1**, **1**, 5, 4, 4, **6**, **6**, 3, **6**, 3, 5, 2, **1**) = `69`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0421\u043d\u0438\u043a \u0430\u0442\u0430\u043a\u0430"
+      "comment": "Сник атака"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "20d6",
       "formula": "20d6",
@@ -1067,14 +1067,14 @@
       "details": "20d6 (4, **1**, 5, 2, 5, **1**, **6**, 2, 4, **6**, 5, **6**, 2, 4, 5, 3, **1**, 2, 2, **1**) = `67`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0421\u043d\u0438\u043a \u0430\u0442\u0430\u043a\u0430"
+      "comment": "Сник атака"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d6+3",
       "formula": "1d6+3",
@@ -1082,14 +1082,14 @@
       "details": "1d6 (2) + 3 = `5`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0411\u0430\u0440\u0434\u043e\u0432\u0441\u043a\u043e\u0435 \u0432\u0434\u043e\u0445\u043d\u043e\u0432\u0435\u043d\u0438\u0435"
+      "comment": "Бардовское вдохновение"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "20d6",
       "formula": "20d6",
@@ -1097,14 +1097,14 @@
       "details": "20d6 (**6**, 2, 5, 3, **1**, 2, 5, 2, **6**, 4, 3, 4, 4, 2, 3, **6**, 4, 2, 4, 5) = `73`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0421\u043d\u0438\u043a \u0430\u0442\u0430\u043a\u0430"
+      "comment": "Сник атака"
     }
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1119,7 +1119,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1134,7 +1134,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1149,7 +1149,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1164,7 +1164,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1179,7 +1179,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1194,7 +1194,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1209,7 +1209,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1224,7 +1224,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1239,14 +1239,14 @@
     "type": "turn_start",
     "round": 4,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1261,7 +1261,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1276,7 +1276,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1291,7 +1291,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1306,7 +1306,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1321,7 +1321,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1336,7 +1336,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1351,7 +1351,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1366,7 +1366,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1381,21 +1381,21 @@
     "type": "turn_start",
     "round": 4,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 4,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1410,7 +1410,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1425,7 +1425,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1440,7 +1440,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1455,7 +1455,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1470,7 +1470,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1485,7 +1485,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1500,7 +1500,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1515,7 +1515,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1530,14 +1530,14 @@
     "type": "turn_start",
     "round": 4,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1552,7 +1552,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1567,7 +1567,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1582,7 +1582,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1597,7 +1597,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1612,7 +1612,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1627,7 +1627,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1642,7 +1642,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1657,7 +1657,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1672,14 +1672,14 @@
     "type": "turn_start",
     "round": 4,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1694,7 +1694,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1709,7 +1709,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1724,7 +1724,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1739,7 +1739,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1754,7 +1754,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1769,7 +1769,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1784,7 +1784,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1799,7 +1799,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1814,21 +1814,21 @@
     "type": "turn_start",
     "round": 4,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 4,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1843,7 +1843,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1858,7 +1858,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1873,7 +1873,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1888,7 +1888,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1903,7 +1903,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1918,7 +1918,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1933,7 +1933,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1948,7 +1948,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1963,14 +1963,14 @@
     "type": "turn_start",
     "round": 4,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -1985,7 +1985,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2000,7 +2000,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2015,7 +2015,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2030,7 +2030,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2045,7 +2045,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2060,7 +2060,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2075,7 +2075,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2090,7 +2090,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2105,14 +2105,14 @@
     "type": "turn_start",
     "round": 4,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2127,7 +2127,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2142,7 +2142,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2157,7 +2157,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2172,7 +2172,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2187,7 +2187,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2202,7 +2202,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2217,7 +2217,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2232,7 +2232,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2247,21 +2247,21 @@
     "type": "turn_start",
     "round": 4,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 4,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2276,7 +2276,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2291,7 +2291,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2306,7 +2306,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2321,7 +2321,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2336,7 +2336,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2351,7 +2351,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2366,7 +2366,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2381,7 +2381,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2396,14 +2396,14 @@
     "type": "turn_start",
     "round": 4,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2418,7 +2418,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2433,7 +2433,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2448,7 +2448,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2463,7 +2463,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2478,7 +2478,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2493,7 +2493,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2508,7 +2508,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2523,7 +2523,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2538,14 +2538,14 @@
     "type": "turn_start",
     "round": 4,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2560,7 +2560,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2575,7 +2575,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2590,7 +2590,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2605,7 +2605,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2620,7 +2620,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2635,7 +2635,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2650,7 +2650,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2665,7 +2665,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2680,14 +2680,14 @@
     "type": "turn_start",
     "round": 4,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "roll",
     "round": 4,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2702,7 +2702,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2717,7 +2717,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2732,7 +2732,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2747,7 +2747,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2762,7 +2762,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2777,7 +2777,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2792,7 +2792,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2807,7 +2807,7 @@
     "type": "roll",
     "round": 4,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2829,14 +2829,14 @@
     "type": "turn_start",
     "round": 5,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "roll",
     "round": 5,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2851,7 +2851,7 @@
     "type": "roll",
     "round": 5,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2866,7 +2866,7 @@
     "type": "roll",
     "round": 5,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2881,7 +2881,7 @@
     "type": "roll",
     "round": 5,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2896,7 +2896,7 @@
     "type": "roll",
     "round": 5,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2911,7 +2911,7 @@
     "type": "roll",
     "round": 5,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2926,7 +2926,7 @@
     "type": "roll",
     "round": 5,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2941,7 +2941,7 @@
     "type": "roll",
     "round": 5,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2956,7 +2956,7 @@
     "type": "roll",
     "round": 5,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -2971,56 +2971,56 @@
     "type": "turn_start",
     "round": 5,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 5,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 5,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 5,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 5,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 5,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 5,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 5,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
@@ -3034,14 +3034,14 @@
     "type": "turn_start",
     "round": 6,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "roll",
     "round": 6,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3056,7 +3056,7 @@
     "type": "roll",
     "round": 6,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3071,7 +3071,7 @@
     "type": "roll",
     "round": 6,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3086,7 +3086,7 @@
     "type": "roll",
     "round": 6,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3101,7 +3101,7 @@
     "type": "roll",
     "round": 6,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3116,7 +3116,7 @@
     "type": "roll",
     "round": 6,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3131,7 +3131,7 @@
     "type": "roll",
     "round": 6,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3146,7 +3146,7 @@
     "type": "roll",
     "round": 6,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3161,7 +3161,7 @@
     "type": "roll",
     "round": 6,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3183,21 +3183,21 @@
     "type": "turn_start",
     "round": 7,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 7,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "roll",
     "round": 7,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3212,7 +3212,7 @@
     "type": "roll",
     "round": 7,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3227,7 +3227,7 @@
     "type": "roll",
     "round": 7,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3242,7 +3242,7 @@
     "type": "roll",
     "round": 7,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3257,7 +3257,7 @@
     "type": "roll",
     "round": 7,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3272,7 +3272,7 @@
     "type": "roll",
     "round": 7,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3287,7 +3287,7 @@
     "type": "roll",
     "round": 7,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3302,7 +3302,7 @@
     "type": "roll",
     "round": 7,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3317,7 +3317,7 @@
     "type": "roll",
     "round": 7,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3332,42 +3332,42 @@
     "type": "turn_start",
     "round": 7,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 7,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 7,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 7,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 7,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 7,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
@@ -3381,14 +3381,14 @@
     "type": "turn_start",
     "round": 8,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "roll",
     "round": 8,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3403,7 +3403,7 @@
     "type": "roll",
     "round": 8,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3418,7 +3418,7 @@
     "type": "roll",
     "round": 8,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3433,7 +3433,7 @@
     "type": "roll",
     "round": 8,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3448,7 +3448,7 @@
     "type": "roll",
     "round": 8,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3463,7 +3463,7 @@
     "type": "roll",
     "round": 8,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3478,7 +3478,7 @@
     "type": "roll",
     "round": 8,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3493,7 +3493,7 @@
     "type": "roll",
     "round": 8,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3508,7 +3508,7 @@
     "type": "roll",
     "round": 8,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3523,35 +3523,35 @@
     "type": "turn_start",
     "round": 8,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 8,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 8,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 8,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 8,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
@@ -3565,14 +3565,14 @@
     "type": "turn_start",
     "round": 9,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "roll",
     "round": 9,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3587,7 +3587,7 @@
     "type": "roll",
     "round": 9,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3602,7 +3602,7 @@
     "type": "roll",
     "round": 9,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3617,7 +3617,7 @@
     "type": "roll",
     "round": 9,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3632,7 +3632,7 @@
     "type": "roll",
     "round": 9,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3647,7 +3647,7 @@
     "type": "roll",
     "round": 9,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3662,7 +3662,7 @@
     "type": "roll",
     "round": 9,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3677,7 +3677,7 @@
     "type": "roll",
     "round": 9,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3692,7 +3692,7 @@
     "type": "roll",
     "round": 9,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3707,56 +3707,56 @@
     "type": "turn_start",
     "round": 9,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 9,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 9,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 9,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 9,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 9,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 9,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 9,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
@@ -3770,14 +3770,14 @@
     "type": "turn_start",
     "round": 10,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "roll",
     "round": 10,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3792,7 +3792,7 @@
     "type": "roll",
     "round": 10,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3807,7 +3807,7 @@
     "type": "roll",
     "round": 10,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3822,7 +3822,7 @@
     "type": "roll",
     "round": 10,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3837,7 +3837,7 @@
     "type": "roll",
     "round": 10,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3852,7 +3852,7 @@
     "type": "roll",
     "round": 10,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3867,7 +3867,7 @@
     "type": "roll",
     "round": 10,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3882,7 +3882,7 @@
     "type": "roll",
     "round": 10,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3897,7 +3897,7 @@
     "type": "roll",
     "round": 10,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3912,7 +3912,7 @@
     "type": "turn_start",
     "round": 10,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
@@ -3926,14 +3926,14 @@
     "type": "turn_start",
     "round": 11,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "roll",
     "round": 11,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3948,7 +3948,7 @@
     "type": "roll",
     "round": 11,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3963,7 +3963,7 @@
     "type": "roll",
     "round": 11,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3978,7 +3978,7 @@
     "type": "roll",
     "round": 11,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -3993,7 +3993,7 @@
     "type": "roll",
     "round": 11,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4008,7 +4008,7 @@
     "type": "roll",
     "round": 11,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4023,7 +4023,7 @@
     "type": "roll",
     "round": 11,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4038,7 +4038,7 @@
     "type": "roll",
     "round": 11,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4053,7 +4053,7 @@
     "type": "roll",
     "round": 11,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4068,49 +4068,49 @@
     "type": "turn_start",
     "round": 11,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 11,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 11,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 11,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 11,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 11,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 11,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
@@ -4124,14 +4124,14 @@
     "type": "turn_start",
     "round": 12,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "roll",
     "round": 12,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4146,7 +4146,7 @@
     "type": "roll",
     "round": 12,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4161,7 +4161,7 @@
     "type": "roll",
     "round": 12,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4176,7 +4176,7 @@
     "type": "roll",
     "round": 12,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4191,7 +4191,7 @@
     "type": "roll",
     "round": 12,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4206,7 +4206,7 @@
     "type": "roll",
     "round": 12,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4221,7 +4221,7 @@
     "type": "roll",
     "round": 12,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4236,7 +4236,7 @@
     "type": "roll",
     "round": 12,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4251,7 +4251,7 @@
     "type": "roll",
     "round": 12,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4266,49 +4266,49 @@
     "type": "turn_start",
     "round": 12,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 12,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 12,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 12,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 12,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 12,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 12,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
@@ -4322,14 +4322,14 @@
     "type": "turn_start",
     "round": 13,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "roll",
     "round": 13,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4344,7 +4344,7 @@
     "type": "roll",
     "round": 13,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4359,7 +4359,7 @@
     "type": "roll",
     "round": 13,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4374,7 +4374,7 @@
     "type": "roll",
     "round": 13,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4389,7 +4389,7 @@
     "type": "roll",
     "round": 13,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4404,7 +4404,7 @@
     "type": "roll",
     "round": 13,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4419,7 +4419,7 @@
     "type": "roll",
     "round": 13,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4434,7 +4434,7 @@
     "type": "roll",
     "round": 13,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4449,7 +4449,7 @@
     "type": "roll",
     "round": 13,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4464,7 +4464,7 @@
     "type": "roll",
     "round": 13,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4479,7 +4479,7 @@
     "type": "roll",
     "round": 13,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4494,7 +4494,7 @@
     "type": "roll",
     "round": 13,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4509,7 +4509,7 @@
     "type": "roll",
     "round": 13,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4524,7 +4524,7 @@
     "type": "roll",
     "round": 13,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4539,7 +4539,7 @@
     "type": "roll",
     "round": 13,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4554,7 +4554,7 @@
     "type": "roll",
     "round": 13,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4569,7 +4569,7 @@
     "type": "roll",
     "round": 13,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4584,7 +4584,7 @@
     "type": "roll",
     "round": 13,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4599,7 +4599,7 @@
     "type": "roll",
     "round": 13,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4614,7 +4614,7 @@
     "type": "roll",
     "round": 13,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4629,7 +4629,7 @@
     "type": "roll",
     "round": 13,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4644,7 +4644,7 @@
     "type": "roll",
     "round": 13,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4659,7 +4659,7 @@
     "type": "roll",
     "round": 13,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4674,7 +4674,7 @@
     "type": "roll",
     "round": 13,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4689,7 +4689,7 @@
     "type": "roll",
     "round": 13,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4704,7 +4704,7 @@
     "type": "roll",
     "round": 13,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4719,7 +4719,7 @@
     "type": "roll",
     "round": 13,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4734,7 +4734,7 @@
     "type": "turn_start",
     "round": 13,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
@@ -4748,63 +4748,63 @@
     "type": "turn_start",
     "round": 14,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 14,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 14,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 14,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 14,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 14,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 14,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 14,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 14,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
@@ -4818,133 +4818,133 @@
     "type": "turn_start",
     "round": 15,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 15,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 15,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 15,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 15,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "actor_joined",
     "round": 15,
     "actor_id": "cd5a5d8d-0ef9-498e-b9af-a168fdb54ba8",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {}
   },
   {
     "type": "actor_left",
     "round": 15,
     "actor_id": "592bc301-8cbb-4110-85a2-2ac4b2cc23fa",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {}
   },
   {
     "type": "actor_left",
     "round": 15,
     "actor_id": "cd5a5d8d-0ef9-498e-b9af-a168fdb54ba8",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {}
   },
   {
     "type": "actor_joined",
     "round": 15,
     "actor_id": "6dc4c740-ccce-487c-a8f6-39342182e0b9",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {}
   },
   {
     "type": "actor_joined",
     "round": 15,
     "actor_id": "50befac4-7ed5-4c41-9e09-ebabbd19843b",
-    "actor_name": "\u0427\u0435\u0440\u043d\u043e\u043a\u043d\u0438\u0436\u043d\u0438\u043a",
+    "actor_name": "Чернокнижник",
     "details": {}
   },
   {
     "type": "actor_left",
     "round": 15,
     "actor_id": "50befac4-7ed5-4c41-9e09-ebabbd19843b",
-    "actor_name": "\u0427\u0435\u0440\u043d\u043e\u043a\u043d\u0438\u0436\u043d\u0438\u043a",
+    "actor_name": "Чернокнижник",
     "details": {}
   },
   {
     "type": "actor_joined",
     "round": 15,
     "actor_id": "f6b15099-028c-46ed-8073-606634931019",
-    "actor_name": "\u0427\u0435\u0440\u043d\u043e\u043a\u043d\u0438\u0436\u043d\u0438\u043a",
+    "actor_name": "Чернокнижник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 15,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 15,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 15,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 15,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 15,
     "actor_id": "6dc4c740-ccce-487c-a8f6-39342182e0b9",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 15,
     "actor_id": "f6b15099-028c-46ed-8073-606634931019",
-    "actor_name": "\u0427\u0435\u0440\u043d\u043e\u043a\u043d\u0438\u0436\u043d\u0438\u043a",
+    "actor_name": "Чернокнижник",
     "details": {}
   },
   {
     "type": "roll",
     "round": 15,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4959,7 +4959,7 @@
     "type": "roll",
     "round": 15,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4974,7 +4974,7 @@
     "type": "roll",
     "round": 15,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -4989,7 +4989,7 @@
     "type": "roll",
     "round": 15,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -5004,7 +5004,7 @@
     "type": "roll",
     "round": 15,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -5019,7 +5019,7 @@
     "type": "roll",
     "round": 15,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -5034,7 +5034,7 @@
     "type": "roll",
     "round": 15,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -5049,7 +5049,7 @@
     "type": "roll",
     "round": 15,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -5064,7 +5064,7 @@
     "type": "roll",
     "round": 15,
     "actor_id": "6dc4c740-ccce-487c-a8f6-39342182e0b9",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -5079,7 +5079,7 @@
     "type": "roll",
     "round": 15,
     "actor_id": "f6b15099-028c-46ed-8073-606634931019",
-    "actor_name": "\u0427\u0435\u0440\u043d\u043e\u043a\u043d\u0438\u0436\u043d\u0438\u043a",
+    "actor_name": "Чернокнижник",
     "details": {
       "expression": "1d20",
       "formula": "1d20",
@@ -5094,28 +5094,28 @@
     "type": "turn_start",
     "round": 15,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 15,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 15,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 15,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
@@ -5129,84 +5129,84 @@
     "type": "turn_start",
     "round": 16,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 16,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 16,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 16,
     "actor_id": "6dc4c740-ccce-487c-a8f6-39342182e0b9",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 16,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 16,
     "actor_id": "f6b15099-028c-46ed-8073-606634931019",
-    "actor_name": "\u0427\u0435\u0440\u043d\u043e\u043a\u043d\u0438\u0436\u043d\u0438\u043a",
+    "actor_name": "Чернокнижник",
     "details": {}
   },
   {
     "type": "actor_left",
     "round": 16,
     "actor_id": "f6b15099-028c-46ed-8073-606634931019",
-    "actor_name": "\u0427\u0435\u0440\u043d\u043e\u043a\u043d\u0438\u0436\u043d\u0438\u043a",
+    "actor_name": "Чернокнижник",
     "details": {}
   },
   {
     "type": "actor_joined",
     "round": 16,
     "actor_id": "3185fd35-ca05-4b72-a8d4-6d08c27d821b",
-    "actor_name": "\u0427\u0435\u0440\u043d\u043e\u043a\u043d\u0438\u0436\u043d\u0438\u043a",
+    "actor_name": "Чернокнижник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 16,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 16,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 16,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 16,
     "actor_id": "3185fd35-ca05-4b72-a8d4-6d08c27d821b",
-    "actor_name": "\u0427\u0435\u0440\u043d\u043e\u043a\u043d\u0438\u0436\u043d\u0438\u043a",
+    "actor_name": "Чернокнижник",
     "details": {}
   },
   {
@@ -5220,126 +5220,126 @@
     "type": "turn_start",
     "round": 17,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 17,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 17,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 17,
     "actor_id": "6dc4c740-ccce-487c-a8f6-39342182e0b9",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 17,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 17,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 17,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 17,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 17,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 17,
     "actor_id": "3185fd35-ca05-4b72-a8d4-6d08c27d821b",
-    "actor_name": "\u0427\u0435\u0440\u043d\u043e\u043a\u043d\u0438\u0436\u043d\u0438\u043a",
+    "actor_name": "Чернокнижник",
     "details": {}
   },
   {
     "type": "actor_left",
     "round": 17,
     "actor_id": "3185fd35-ca05-4b72-a8d4-6d08c27d821b",
-    "actor_name": "\u0427\u0435\u0440\u043d\u043e\u043a\u043d\u0438\u0436\u043d\u0438\u043a",
+    "actor_name": "Чернокнижник",
     "details": {}
   },
   {
     "type": "actor_left",
     "round": 17,
     "actor_id": "6dc4c740-ccce-487c-a8f6-39342182e0b9",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {}
   },
   {
     "type": "actor_joined",
     "round": 17,
     "actor_id": "39e61ddb-e7d2-4d20-9d56-484d260601db",
-    "actor_name": "\u0427\u0435\u0440\u043d\u043e\u043a\u043d\u0438\u0436\u043d\u0438\u043a",
+    "actor_name": "Чернокнижник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 17,
     "actor_id": "39e61ddb-e7d2-4d20-9d56-484d260601db",
-    "actor_name": "\u0427\u0435\u0440\u043d\u043e\u043a\u043d\u0438\u0436\u043d\u0438\u043a",
+    "actor_name": "Чернокнижник",
     "details": {}
   },
   {
     "type": "actor_left",
     "round": 17,
     "actor_id": "39e61ddb-e7d2-4d20-9d56-484d260601db",
-    "actor_name": "\u0427\u0435\u0440\u043d\u043e\u043a\u043d\u0438\u0436\u043d\u0438\u043a",
+    "actor_name": "Чернокнижник",
     "details": {}
   },
   {
     "type": "actor_joined",
     "round": 17,
     "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 17,
     "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {}
   },
   {
     "type": "roll",
     "round": 17,
     "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {
       "expression": "1d8",
       "formula": "1d8",
@@ -5347,7 +5347,7 @@
       "details": "1d8 (**8**) = `8`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0423\u0440\u043e\u043d \u0440\u0443\u0431\u044f\u0449\u0435\u0435 \u043e\u0440\u0443\u0436\u0438\u0435"
+      "comment": "Урон рубящее оружие"
     }
   },
   {
@@ -5361,84 +5361,84 @@
     "type": "turn_start",
     "round": 18,
     "actor_id": "2822dda2-3cb5-4d38-816f-61a035269381",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "actor_joined",
     "round": 18,
     "actor_id": "50befac4-7ed5-4c41-9e09-ebabbd19843b",
-    "actor_name": "\u0427\u0435\u0440\u043d\u043e\u043a\u043d\u0438\u0436\u043d\u0438\u043a",
+    "actor_name": "Чернокнижник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 18,
     "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 18,
     "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 18,
     "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 18,
     "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 18,
     "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 18,
     "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 18,
     "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "actor_name": "Новый участник",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 18,
     "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
+    "actor_name": "Гоблин маг",
     "details": {}
   },
   {
     "type": "turn_start",
     "round": 18,
     "actor_id": "50befac4-7ed5-4c41-9e09-ebabbd19843b",
-    "actor_name": "\u0427\u0435\u0440\u043d\u043e\u043a\u043d\u0438\u0436\u043d\u0438\u043a",
+    "actor_name": "Чернокнижник",
     "details": {}
   },
   {
     "type": "roll",
     "round": 18,
     "actor_id": "50befac4-7ed5-4c41-9e09-ebabbd19843b",
-    "actor_name": "\u0427\u0435\u0440\u043d\u043e\u043a\u043d\u0438\u0436\u043d\u0438\u043a",
+    "actor_name": "Чернокнижник",
     "details": {
       "expression": "2d6",
       "formula": "2d6",
@@ -5446,14 +5446,14 @@
       "details": "2d6 (2, 2) = `4`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0423\u0440\u043e\u043d \u0434\u0432\u0443\u0440\u0443\u0447\u043d\u044b\u0439 \u043c\u0435\u0447"
+      "comment": "Урон двуручный меч"
     }
   },
   {
     "type": "roll",
     "round": 18,
     "actor_id": "50befac4-7ed5-4c41-9e09-ebabbd19843b",
-    "actor_name": "\u0427\u0435\u0440\u043d\u043e\u043a\u043d\u0438\u0436\u043d\u0438\u043a",
+    "actor_name": "Чернокнижник",
     "details": {
       "expression": "1d6",
       "formula": "1d6",
@@ -5461,24 +5461,24 @@
       "details": "1d6 (5) = `5`",
       "is_glitch": false,
       "is_crit_glitch": false,
-      "comment": "\u0411\u0430\u0440\u0434\u043e\u0432\u0441\u043a\u043e\u0435 \u0432\u0434\u043e\u0445\u043d\u043e\u0432\u0435\u043d\u0438\u0435"
+      "comment": "Бардовское вдохновение"
     }
   },
   {
     "type": "actor_joined",
     "round": 18,
     "actor_id": "6a38b2b6-7269-4b23-ba18-cf021f4003ee",
-    "actor_name": "\u0412\u0438\u043d\u043b\u0430\u043d\u0434",
+    "actor_name": "Винланд",
     "details": {}
   },
   {
     "type": "stat_change",
     "round": 18,
     "actor_id": "6a38b2b6-7269-4b23-ba18-cf021f4003ee",
-    "actor_name": "\u0412\u0438\u043d\u043b\u0430\u043d\u0434",
+    "actor_name": "Винланд",
     "details": {
       "stat_key": "hp",
-      "stat_name": "\u0425\u041f",
+      "stat_name": "ХП",
       "amount": 5,
       "color": "#e70808"
     }
@@ -5487,10 +5487,10 @@
     "type": "stat_change",
     "round": 18,
     "actor_id": "6a38b2b6-7269-4b23-ba18-cf021f4003ee",
-    "actor_name": "\u0412\u0438\u043d\u043b\u0430\u043d\u0434",
+    "actor_name": "Винланд",
     "details": {
       "stat_key": "mana",
-      "stat_name": "\u041c\u0430\u043d\u0430",
+      "stat_name": "Мана",
       "amount": 0,
       "color": "#08b0e7"
     }
@@ -5498,104 +5498,6 @@
   {
     "type": "combat_end",
     "round": 18,
-    "actor_id": null,
-    "actor_name": null,
-    "details": {}
-  },
-  {
-    "type": "combat_start",
-    "round": 1,
-    "actor_id": null,
-    "actor_name": null,
-    "details": {}
-  },
-  {
-    "type": "turn_start",
-    "round": 1,
-    "actor_id": "0c204af7-1c4c-4db2-86c5-1c518b0bd91e",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
-    "details": {}
-  },
-  {
-    "type": "turn_start",
-    "round": 1,
-    "actor_id": "d1c4086e-298a-4caa-898e-24c67e4182df",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
-    "details": {}
-  },
-  {
-    "type": "turn_start",
-    "round": 1,
-    "actor_id": "7a6b986d-27f6-4660-b22e-050a04bd830f",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
-    "details": {}
-  },
-  {
-    "type": "turn_start",
-    "round": 1,
-    "actor_id": "9386f883-72cd-42f6-92d9-2bb31ed957f1",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
-    "details": {}
-  },
-  {
-    "type": "turn_start",
-    "round": 1,
-    "actor_id": "b63f77d1-dba9-47b9-8683-77c4546ae9a5",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
-    "details": {}
-  },
-  {
-    "type": "turn_start",
-    "round": 1,
-    "actor_id": "82690bd8-7413-45a1-a3f6-d12461762b02",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
-    "details": {}
-  },
-  {
-    "type": "turn_start",
-    "round": 1,
-    "actor_id": "203c9d4b-a5fe-4c3b-9f88-f71fa4a6cd37",
-    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
-    "details": {}
-  },
-  {
-    "type": "turn_start",
-    "round": 1,
-    "actor_id": "604a78b2-91ec-4958-984e-07ec97a0a308",
-    "actor_name": "\u0413\u043e\u0431\u043b\u0438\u043d \u043c\u0430\u0433",
-    "details": {}
-  },
-  {
-    "type": "turn_start",
-    "round": 1,
-    "actor_id": "50befac4-7ed5-4c41-9e09-ebabbd19843b",
-    "actor_name": "\u0427\u0435\u0440\u043d\u043e\u043a\u043d\u0438\u0436\u043d\u0438\u043a",
-    "details": {}
-  },
-  {
-    "type": "turn_start",
-    "round": 1,
-    "actor_id": "6a38b2b6-7269-4b23-ba18-cf021f4003ee",
-    "actor_name": "\u0412\u0438\u043d\u043b\u0430\u043d\u0434",
-    "details": {}
-  },
-  {
-    "type": "roll",
-    "round": 1,
-    "actor_id": "6a38b2b6-7269-4b23-ba18-cf021f4003ee",
-    "actor_name": "\u0412\u0438\u043d\u043b\u0430\u043d\u0434",
-    "details": {
-      "expression": "1d20 + [hp]",
-      "formula": "1d20 + 5",
-      "total": 21,
-      "details": "1d20 (16) + 5 = `21`",
-      "is_glitch": false,
-      "is_crit_glitch": false
-    }
-  },
-  {
-    "type": "combat_end",
-    "round": 1,
     "actor_id": null,
     "actor_name": null,
     "details": {}

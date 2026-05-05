@@ -1,8 +1,11 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Loader2, Swords } from 'lucide-react';
-import type { Actor } from '../../types';
 import type { PlayerAuth, PublicCombatState } from '../types';
 import { useSystemActions } from '../../hooks/useSystemActions';
+import {
+  useSystemSheetProfiles,
+  resolveActiveSheetProfile,
+} from '../../hooks/useSystemSheetProfiles';
 import { mergeActorActionDefs } from '../../utils/mergeActorActionDefs';
 import { ActionsPanel } from '../../components/Modals/ActionsPanel';
 import {
@@ -10,6 +13,7 @@ import {
   showRollErrorToast,
   showRollResultToast,
 } from '../../utils/rollToast';
+import { usePlayerActor } from '../hooks/usePlayerActor';
 
 interface Props {
   auth: PlayerAuth;
@@ -17,47 +21,33 @@ interface Props {
 }
 
 export function ActionsView({ auth, state }: Props) {
-  const [actor, setActor] = useState<Actor | null>(null);
-  const [actorLoading, setActorLoading] = useState(true);
+  const { actor, loading: actorLoading } = usePlayerActor(auth, state);
+
   const [rolling, setRolling] = useState(false);
 
   const systemName = (state?.core?.system ?? '').trim();
 
-  // Определяем: наш ход?
+  // Determine if it's our turn (turn_queue is NOT filtered in public state).
   const isMyTurn =
     (state?.core?.is_active ?? false) &&
     state?.core?.turn_queue != null &&
     state.core.turn_queue[state.core.current_index ?? 0] === auth.actorId;
 
-  // Полные данные актора (с actions) берём из защищённого эндпоинта,
-  // не из публичного WS-стейта — там actions могут быть неполными.
-  useEffect(() => {
-    let cancelled = false;
-    setActorLoading(true);
-
-    fetch(`/api/player/actor/${encodeURIComponent(auth.actorId)}`, {
-      headers: { 'X-Player-Token': auth.token },
-    })
-      .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
-      .then((data: Actor) => {
-        if (!cancelled) setActor(data);
-      })
-      .catch(() => {
-        if (!cancelled) setActor(null);
-      })
-      .finally(() => {
-        if (!cancelled) setActorLoading(false);
-      });
-
-    return () => { cancelled = true; };
-  }, [auth.actorId, auth.token]);
-
   const { actions: systemActions, loading: actionsLoading } = useSystemActions(systemName);
+  const { profiles: sheetProfiles } = useSystemSheetProfiles(systemName);
 
-  const mergedActionDefs = React.useMemo(
+  const mergedActionDefs = useMemo(
     () => (actor ? mergeActorActionDefs(systemActions, actor) : {}),
     [systemActions, actor],
   );
+
+  // Inherit MiniSheetModal grouping/accordions from the active sheet profile.
+  // ActionsPanel additionally honours `actor.actions_panel_override` internally.
+  const actionsTab = useMemo(() => {
+    if (!actor) return null;
+    const profile = resolveActiveSheetProfile(sheetProfiles, actor.sheet_profile_id);
+    return profile?.tabs?.find((tab) => tab.id === 'actions') ?? null;
+  }, [sheetProfiles, actor]);
 
   const handleRollAction = useCallback(
     async (formula: string, comment: string) => {
@@ -92,9 +82,7 @@ export function ActionsView({ auth, state }: Props) {
     [auth.actorId, actor],
   );
 
-  const isLoading = actorLoading || actionsLoading;
-
-  if (isLoading) {
+  if (actorLoading || actionsLoading) {
     return (
       <div className="flex justify-center py-16">
         <Loader2 size={28} className="animate-spin text-zinc-600" />
@@ -135,7 +123,8 @@ export function ActionsView({ auth, state }: Props) {
           actor={actor}
           mergedActionDefs={mergedActionDefs}
           onRollAction={handleRollAction}
-          actionsTab={undefined}
+          actionsTab={actionsTab}
+          variant="player"
         />
       </div>
     </div>

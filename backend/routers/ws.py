@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import json
+from typing import Optional
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 
 from backend import state as app_state
 from backend.engines.manager import system_has_custom_logic_file
@@ -12,20 +13,25 @@ from backend.services.player_state import get_player_public_state
 
 router = APIRouter(tags=["ws"])
 
+# Таблица socket → actor_id (None если клиент подключён без токена / токен не распознан).
+# Используется для персонализированной рассылки: собственный актор игрока передаётся
+# без фильтрации видимости.
+_player_sockets: dict[WebSocket, str | None] = {}
+
 
 async def broadcast_player_state() -> None:
-    """Отправить урезанный стейт всем подключённым клиентам игроков."""
-    if not app_state.player_clients:
+    """Отправить персонализированный стейт каждому подключённому клиенту игрока."""
+    if not _player_sockets:
         return
-    payload = get_player_public_state(app_state.state)
-    message = json.dumps({"type": "state_update", "payload": payload})
     dead: list[WebSocket] = []
-    for client in app_state.player_clients:
+    for client, actor_id in list(_player_sockets.items()):
         try:
-            await client.send_text(message)
+            payload = get_player_public_state(app_state.state, actor_id)
+            await client.send_text(json.dumps({"type": "state_update", "payload": payload}))
         except Exception:
             dead.append(client)
     for client in dead:
+        _player_sockets.pop(client, None)
         try:
             app_state.player_clients.remove(client)
         except ValueError:
@@ -56,15 +62,23 @@ async def broadcast_state() -> None:
 
 
 @router.websocket("/ws/player")
-async def websocket_player(websocket: WebSocket):
+async def websocket_player(
+    websocket: WebSocket,
+    token: Optional[str] = Query(default=None),
+):
     await websocket.accept()
+    # Персонализация: определяем актора по токену (если передан).
+    actor_id: str | None = app_state.token_to_actor.get(token) if token else None
+    _player_sockets[websocket] = actor_id
     app_state.player_clients.append(websocket)
-    payload = get_player_public_state(app_state.state)
+
+    payload = get_player_public_state(app_state.state, actor_id)
     await websocket.send_text(json.dumps({"type": "state_update", "payload": payload}))
     try:
         while True:
             await websocket.receive_text()
     except WebSocketDisconnect:
+        _player_sockets.pop(websocket, None)
         try:
             app_state.player_clients.remove(websocket)
         except ValueError:

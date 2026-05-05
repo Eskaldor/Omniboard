@@ -15,6 +15,7 @@ import {
   LedEffectsModal,
   HardwareTriggersModal,
   ClearCombatModal,
+  CombatReportModal,
 } from './components/Modals';
 import { GroupCreateModal } from './components/Modals/GroupCreateModal';
 import { CombatLog } from './components/CombatLog';
@@ -80,6 +81,7 @@ export default function App() {
   const [createGroupModal, setCreateGroupModal] = useState<{ name: string; color: string; groupId?: string; layoutProfileId?: string } | null>(null);
   const [showGroupCreateModal, setShowGroupCreateModal] = useState(false);
   const [showClearCombatModal, setShowClearCombatModal] = useState(false);
+  const [showCombatReport, setShowCombatReport] = useState(false);
   const { t } = useTranslation('core', { useSuspense: false });
   const { isFabSummoned, summonConsole, dismissConsole } = useGMConsole();
 
@@ -396,12 +398,23 @@ export default function App() {
         onToggleConsole={isFabSummoned ? dismissConsole : summonConsole}
         // Matrix generation is hidden while base roll UX is being refactored.
         onGenerateMatrix={undefined}
+        // Report button: show only when a campaign is active (actor data can be reconciled)
+        onOpenCombatReport={
+          effectiveState?.session?.active_campaign_id
+            ? () => setShowCombatReport(true)
+            : undefined
+        }
       />
 
       <ClearCombatModal
         isOpen={showClearCombatModal}
         onClose={() => setShowClearCombatModal(false)}
         onSettled={refetchState}
+      />
+
+      <CombatReportModal
+        isOpen={showCombatReport}
+        onClose={() => setShowCombatReport(false)}
       />
 
       {/* Modals */}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SheetSummaryEditor } from './SheetSummaryEditor';
 import { SheetActionsEditor } from './SheetActionsEditor';
+import { SheetHeroEditor } from './SheetHeroEditor';
 
 export type SheetMode = 'raw' | 'universal' | 'system';
 
@@ -41,9 +42,7 @@ export function SheetTab() {
       </div>
 
       <div className="bg-zinc-950/40 border border-zinc-800 rounded-xl p-4 min-h-[140px]">
-        {activeSubTab === 'system_view' && (
-          <div className="text-sm text-zinc-400 leading-relaxed">{t('config_modal.sheet_placeholder_system_view')}</div>
-        )}
+        {activeSubTab === 'system_view' && <SheetHeroEditor />}
         {activeSubTab === 'summary' && <SheetSummaryEditor />}
         {activeSubTab === 'actions' && <SheetActionsEditor />}
       </div>

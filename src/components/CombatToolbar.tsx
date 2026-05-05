@@ -8,6 +8,7 @@ import {
   Hand,
   Dices,
   Trash2,
+  BookOpen,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -57,6 +58,8 @@ export interface CombatToolbarProps {
   onToggleConsole: () => void;
   /** Active combat: generate matrix prerolls (POST /api/combat/matrix/generate). */
   onGenerateMatrix?: () => void | Promise<void>;
+  /** Post-combat: show report + campaign reconciliation (only when campaign is active). */
+  onOpenCombatReport?: () => void;
 }
 
 export function CombatToolbar({
@@ -75,6 +78,7 @@ export function CombatToolbar({
   onRedo,
   onToggleConsole,
   onGenerateMatrix,
+  onOpenCombatReport,
 }: CombatToolbarProps) {
   const { t } = useTranslation('core', { useSuspense: false });
   const et = engineType.toLowerCase();
@@ -119,6 +123,17 @@ export function CombatToolbar({
       <div className="flex gap-3 items-center flex-wrap justify-end">
         {!isActive && (
           <div className="flex flex-wrap items-center gap-2">
+            {onOpenCombatReport && (
+              <button
+                type="button"
+                onClick={onOpenCombatReport}
+                title="Отчёт о бое и обновление кампании"
+                className="flex items-center gap-2 rounded-lg border border-amber-700/50 bg-amber-950/30 px-3 py-2 text-sm font-medium text-amber-400 transition-colors hover:border-amber-600/60 hover:bg-amber-950/50 hover:text-amber-300 sm:px-4"
+              >
+                <BookOpen size={16} aria-hidden className="shrink-0" />
+                <span className="hidden sm:inline">Отчёт о бое</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={() => onStartCombat()}

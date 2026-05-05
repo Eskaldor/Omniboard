@@ -36,6 +36,9 @@ export function normalizeSheetProfilesForSave(list: SystemSheetProfile[]): Syste
     if (p.is_default === true && defaultIdx >= 0 && i === defaultIdx) {
       next.is_default = true;
     }
+    if (Array.isArray(p.hero_columns) && p.hero_columns.length > 0) {
+      next.hero_columns = [...p.hero_columns];
+    }
     return next;
   });
 }

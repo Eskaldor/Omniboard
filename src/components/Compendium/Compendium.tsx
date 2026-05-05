@@ -21,6 +21,11 @@ import {
 import { useTranslation } from 'react-i18next';
 import { Actor, ColumnConfig } from '../../types';
 import { useCombatState } from '../../contexts/CombatStateContext';
+import { DefaultSystemSheet } from '../Modals/DefaultSystemSheet';
+import {
+  useSystemSheetProfiles,
+  resolveActiveSheetProfile,
+} from '../../hooks/useSystemSheetProfiles';
 
 // ─── Extended column type ─────────────────────────────────────────────────────
 
@@ -60,7 +65,7 @@ function formatStatValue(actor: Actor, col: CompendiumColumnConfig): string {
   return String(val);
 }
 
-// ─── DefaultSystemSheetPlaceholder ───────────────────────────────────────────
+// ─── DefaultSystemSheetPlaceholder (legacy fallback when no system context) ──
 
 function DefaultSystemSheetPlaceholder({ actor }: { actor: Actor }) {
   const statEntries = Object.entries(actor.stats).filter(
@@ -154,6 +159,10 @@ interface RosterRowProps {
   onAdd: (actor: Actor, count: number, keepId?: boolean) => void;
   isExpanded: boolean;
   onToggle: () => void;
+  systemName: string;
+  /** Pre-resolved sheet profile for this actor (or null when system has none). */
+  activeProfile: ReturnType<typeof resolveActiveSheetProfile>;
+  sheetProfilesLoading: boolean;
 }
 
 const RosterRow = React.memo(function RosterRow({
@@ -162,6 +171,9 @@ const RosterRow = React.memo(function RosterRow({
   onAdd,
   isExpanded,
   onToggle,
+  systemName,
+  activeProfile,
+  sheetProfilesLoading,
 }: RosterRowProps) {
   const [count, setCount] = useState(1);
 
@@ -260,13 +272,24 @@ const RosterRow = React.memo(function RosterRow({
         </div>
       </div>
 
-      {/* Accordion body */}
+      {/* Accordion body — full DefaultSystemSheet (read-only player variant) */}
       <div
-        className="overflow-hidden transition-[max-height] duration-200 ease-in-out"
-        style={{ maxHeight: isExpanded ? '480px' : '0px' }}
+        className="overflow-hidden transition-[max-height] duration-300 ease-in-out"
+        style={{ maxHeight: isExpanded ? '1200px' : '0px' }}
       >
         <div className="border-t border-zinc-800 bg-zinc-950/70">
-          <DefaultSystemSheetPlaceholder actor={actor} />
+          {systemName ? (
+            <DefaultSystemSheet
+              actor={actor}
+              columns={columns.filter((c) => c.show_in_mini_sheet !== false)}
+              systemName={systemName}
+              variant="player"
+              activeProfile={activeProfile}
+              sheetProfilesLoading={sheetProfilesLoading}
+            />
+          ) : (
+            <DefaultSystemSheetPlaceholder actor={actor} />
+          )}
         </div>
       </div>
     </div>
@@ -279,9 +302,19 @@ interface ActorListProps {
   actors: Actor[];
   columns: CompendiumColumnConfig[];
   onAdd: (actor: Actor, count: number, keepId?: boolean) => void;
+  systemName: string;
+  sheetProfiles: import('../../hooks/useSystemSheetProfiles').SystemSheetProfile[];
+  sheetProfilesLoading: boolean;
 }
 
-function ActorList({ actors, columns, onAdd }: ActorListProps) {
+function ActorList({
+  actors,
+  columns,
+  onAdd,
+  systemName,
+  sheetProfiles,
+  sheetProfilesLoading,
+}: ActorListProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const handleToggle = useCallback(
@@ -309,6 +342,9 @@ function ActorList({ actors, columns, onAdd }: ActorListProps) {
           onAdd={onAdd}
           isExpanded={expandedId === actor.id}
           onToggle={() => handleToggle(actor.id)}
+          systemName={systemName}
+          activeProfile={resolveActiveSheetProfile(sheetProfiles, actor.sheet_profile_id)}
+          sheetProfilesLoading={sheetProfilesLoading}
         />
       ))}
     </div>
@@ -762,6 +798,9 @@ export function Compendium({
 }: CompendiumProps) {
   useTranslation('core', { useSuspense: false });
 
+  const { profiles: sheetProfiles, loading: sheetProfilesLoading } =
+    useSystemSheetProfiles(systemName);
+
   const [activeTab, setActiveTab] = useState<TabId>('npc');
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<FilterState>({});
@@ -960,6 +999,9 @@ export function Compendium({
                 actors={filteredActors}
                 columns={systemColumns}
                 onAdd={onAdd}
+                systemName={systemName}
+                sheetProfiles={sheetProfiles}
+                sheetProfilesLoading={sheetProfilesLoading}
               />
             </div>
           </>

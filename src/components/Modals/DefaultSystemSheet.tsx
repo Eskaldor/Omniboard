@@ -15,10 +15,12 @@ import {
   Eye,
   Pin,
   Settings2,
+  Pencil,
 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import { Actor, ColumnConfig } from '../../types';
-import { useCombat } from '../../contexts/CombatContext';
-import { useCombatState } from '../../contexts/CombatStateContext';
+import { useCombatOptional } from '../../contexts/CombatContext';
+import { useCombatStateOptional } from '../../contexts/CombatStateContext';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
 import {
@@ -37,14 +39,62 @@ import {
   showRollErrorToast,
   showRollResultToast,
 } from '../../utils/rollToast';
+import { TextEditorModal } from './TextEditorModal';
+import { CheckboxGroupCell } from '../InitiativeTracker/ActorRow';
 
 type DeviceInfo = { name?: string; ip?: string; status?: string };
+
+/** Visual density / chrome variant. `gm` = compact modal, `player` = roomy mobile. */
+export type SheetVariant = 'gm' | 'player';
 
 function withCacheBuster(url: string, buster: string | number): string {
   if (!url) return url;
   const sep = url.includes('?') ? '&' : '?';
   return `${url}${sep}v=${encodeURIComponent(String(buster))}`;
 }
+
+// ─── Variant tokens ───────────────────────────────────────────────────────────
+
+interface DensityTokens {
+  rootPad: string;
+  rootGap: string;
+  sectionPad: string;
+  sectionRadius: string;
+  sectionBg: string;
+  statGridCols: string;
+  statGap: string;
+  headingTopPad: string;
+  textBlockPad: string;
+}
+
+function densityFor(variant: SheetVariant): DensityTokens {
+  if (variant === 'player') {
+    return {
+      rootPad: 'p-4',
+      rootGap: 'space-y-4',
+      sectionPad: 'p-4',
+      sectionRadius: 'rounded-xl',
+      sectionBg: 'bg-zinc-900/50 border border-zinc-800/70',
+      statGridCols: 'grid grid-cols-1 gap-3',
+      statGap: 'gap-3',
+      headingTopPad: 'pt-2',
+      textBlockPad: 'p-4',
+    };
+  }
+  return {
+    rootPad: 'p-5',
+    rootGap: 'space-y-4',
+    sectionPad: 'p-2',
+    sectionRadius: 'rounded-lg',
+    sectionBg: 'bg-zinc-950/40 border border-zinc-800',
+    statGridCols: 'grid grid-cols-2 gap-x-5',
+    statGap: 'gap-2',
+    headingTopPad: 'pt-1',
+    textBlockPad: 'p-2',
+  };
+}
+
+// ─── BadgeSelect / IconChip (unchanged) ──────────────────────────────────────
 
 function BadgeSelect({
   icon: Icon,
@@ -116,29 +166,33 @@ function IconChip({
   );
 }
 
+// ─── StatRow (numeric / fraction columns) ─────────────────────────────────────
+
 function StatRow({
   actor,
   column,
   label,
   pairColumn,
   onUpdate,
+  variant,
 }: {
   actor: Actor;
   column: ColumnConfig;
   label: string;
   pairColumn?: ColumnConfig;
   onUpdate?: (id: string, field: string, value: unknown) => void;
+  variant: SheetVariant;
 }) {
   const { t } = useTranslation('core', { useSuspense: false });
   const draft = parseStatValueDraft(actor.stats[column.key]);
   const readonly = column.is_readonly === true;
   const computedId = (column.computed_formula_id ?? '').trim();
   const isComputed = computedId !== '';
-  const editable = !readonly && !isComputed;
+  const editable = !!onUpdate && !readonly && !isComputed;
   const ovSum = draft.overrides.reduce((s, o) => s + o.value, 0);
   const hasOv = draft.overrides.length > 0;
   const canRoll = column.is_rollable === true;
-  const isWide = !!pairColumn;
+  const isPlayer = variant === 'player';
 
   const [open, setOpen] = useState(false);
   const [newSource, setNewSource] = useState('');
@@ -210,11 +264,15 @@ function StatRow({
     const d = parseStatValueDraft(actor.stats[col.key]);
     const ro = col.is_readonly === true;
     const cmp = !!(col.computed_formula_id ?? '').trim();
-    if (ro || cmp) {
+    if (!onUpdate || ro || cmp) {
       return (
         <span
-          className={`inline-flex items-center justify-center rounded-md border border-zinc-800 bg-zinc-950 italic tabular-nums text-zinc-500 ${
-            compact ? 'px-1.5 py-0.5 text-xs min-w-[2.25rem]' : 'px-2 py-0.5 text-xs min-w-[2.75rem]'
+          className={`inline-flex items-center justify-center rounded-md border border-zinc-800 bg-zinc-950 italic tabular-nums text-zinc-400 ${
+            isPlayer
+              ? 'px-3 py-1 text-sm min-w-[3rem]'
+              : compact
+              ? 'px-1.5 py-0.5 text-xs min-w-[2.25rem]'
+              : 'px-2 py-0.5 text-xs min-w-[2.75rem]'
           }`}
         >
           {d.value}
@@ -244,20 +302,25 @@ function StatRow({
         }}
         maxValue={col.max_value}
         className={`bg-zinc-900 border border-zinc-700 rounded-md text-right tabular-nums text-zinc-200 hover:border-zinc-600 focus:outline-none focus:border-emerald-500 ${
-          compact ? 'px-1.5 py-0.5 text-xs w-12' : 'px-2 py-0.5 text-xs w-14'
+          isPlayer
+            ? 'px-3 py-1.5 text-sm w-16'
+            : compact
+            ? 'px-1.5 py-0.5 text-xs w-12'
+            : 'px-2 py-0.5 text-xs w-14'
         }`}
       />
     );
   };
 
+  const labelClass = isPlayer
+    ? 'flex-1 min-w-0 truncate text-sm text-zinc-300'
+    : 'flex-1 min-w-0 truncate text-xs text-zinc-400';
+  const rowPad = isPlayer ? 'px-2 py-1.5' : 'px-1.5 py-1';
+
   return (
-    <div
-      className={`break-inside-avoid mb-1 rounded-md hover:bg-zinc-900/40 transition-colors ${
-        isWide ? '[column-span:all]' : ''
-      }`}
-    >
-      <div className="flex items-center gap-2 px-1.5 py-1">
-        <span className="flex-1 min-w-0 truncate text-xs text-zinc-400" title={label}>
+    <div className="rounded-md hover:bg-zinc-900/40 transition-colors">
+      <div className={`flex items-center gap-2 ${rowPad}`}>
+        <span className={labelClass} title={label}>
           {label}
         </span>
         <span className="flex items-center gap-1 shrink-0">
@@ -286,12 +349,12 @@ function StatRow({
             <button
               type="button"
               onClick={() => setOpen((v) => !v)}
-              className={`shrink-0 w-5 h-5 grid place-items-center rounded text-zinc-600 hover:text-zinc-200 hover:bg-zinc-800 transition-colors ${
+              className={`shrink-0 grid place-items-center rounded text-zinc-600 hover:text-zinc-200 hover:bg-zinc-800 transition-colors ${
                 open ? 'bg-zinc-800 text-zinc-200' : ''
-              }`}
+              } ${isPlayer ? 'w-7 h-7' : 'w-5 h-5'}`}
               title={t('stat_editor.overrides')}
             >
-              <ChevronDown size={12} className={open ? 'rotate-180' : ''} />
+              <ChevronDown size={isPlayer ? 14 : 12} className={open ? 'rotate-180' : ''} />
             </button>
           )}
           {canRoll && (
@@ -299,10 +362,12 @@ function StatRow({
               type="button"
               onClick={handleRoll}
               disabled={rolling}
-              className="shrink-0 w-5 h-5 grid place-items-center rounded text-zinc-500 hover:text-emerald-300 hover:bg-emerald-600/20 disabled:opacity-40 transition-colors"
+              className={`shrink-0 grid place-items-center rounded text-zinc-500 hover:text-emerald-300 hover:bg-emerald-600/20 disabled:opacity-40 transition-colors ${
+                isPlayer ? 'w-8 h-8' : 'w-5 h-5'
+              }`}
               title={t('stat_editor.roll')}
             >
-              <Dices size={12} />
+              <Dices size={isPlayer ? 16 : 12} />
             </button>
           )}
         </span>
@@ -372,53 +437,372 @@ function StatRow({
   );
 }
 
-function renderMiniSheetStatColumnNodes(
+// ─── TextStatRow (text / string columns — markdown + edit modal) ──────────────
+
+function TextStatRow({
+  actor,
+  column,
+  label,
+  onUpdate,
+  variant,
+}: {
+  actor: Actor;
+  column: ColumnConfig;
+  label: string;
+  onUpdate?: (id: string, field: string, value: unknown) => void;
+  variant: SheetVariant;
+}) {
+  const { t } = useTranslation('core', { useSuspense: false });
+  const raw = actor.stats[column.key];
+  const text = typeof raw === 'string' ? raw : raw == null ? '' : String(raw);
+  const editable = !!onUpdate && column.is_readonly !== true;
+  const isPlayer = variant === 'player';
+
+  const [editorOpen, setEditorOpen] = useState(false);
+
+  const openEditor = () => {
+    if (!editable) return;
+    setEditorOpen(true);
+  };
+
+  const labelClass = isPlayer
+    ? 'text-[11px] uppercase tracking-widest text-zinc-500 font-medium'
+    : 'text-[10px] uppercase tracking-widest text-zinc-600 font-medium';
+
+  const proseClass = isPlayer
+    ? 'prose prose-invert prose-sm max-w-none prose-p:my-1.5 prose-headings:text-zinc-200 prose-strong:text-zinc-100 prose-li:my-0.5'
+    : 'prose prose-invert prose-xs max-w-none prose-p:my-1 prose-headings:text-zinc-300 prose-strong:text-zinc-200 prose-li:my-0';
+
+  return (
+    <div className="col-span-full">
+      <div className="flex items-center justify-between gap-2 px-1 mb-1">
+        <span className={labelClass} title={label}>
+          {label}
+        </span>
+        {editable && (
+          <button
+            type="button"
+            onClick={openEditor}
+            className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+            title={t('common.edit')}
+          >
+            <Pencil size={11} />
+            {t('common.edit')}
+          </button>
+        )}
+      </div>
+      <div
+        role={editable ? 'button' : undefined}
+        tabIndex={editable ? 0 : undefined}
+        onClick={editable ? openEditor : undefined}
+        onKeyDown={
+          editable
+            ? (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  openEditor();
+                }
+              }
+            : undefined
+        }
+        className={`rounded-lg border bg-zinc-950/50 transition-colors ${
+          isPlayer ? 'p-4 border-zinc-800/70' : 'p-3 border-zinc-800'
+        } ${editable ? 'cursor-text hover:border-zinc-700' : ''}`}
+      >
+        {text.trim() ? (
+          <div className={proseClass}>
+            <ReactMarkdown>{text}</ReactMarkdown>
+          </div>
+        ) : (
+          <span className="text-xs italic text-zinc-600 select-none">
+            {editable ? t('text_editor.placeholder') ?? '…' : '—'}
+          </span>
+        )}
+      </div>
+
+      <TextEditorModal
+        isOpen={editorOpen}
+        title={label}
+        value={text}
+        onCancel={() => setEditorOpen(false)}
+        onSave={(next) => {
+          if (!onUpdate) return;
+          onUpdate(actor.id, 'stats', { ...actor.stats, [column.key]: next });
+          setEditorOpen(false);
+        }}
+      />
+    </div>
+  );
+}
+
+// ─── CheckboxGroupRow (action-economy slots: badges/dots) ─────────────────────
+
+function CheckboxGroupRow({
+  actor,
+  column,
+  label,
+  onUpdate,
+  variant,
+}: {
+  actor: Actor;
+  column: ColumnConfig;
+  label: string;
+  onUpdate?: (id: string, field: string, value: unknown) => void;
+  variant: SheetVariant;
+}) {
+  const isPlayer = variant === 'player';
+  // CheckboxGroupCell speaks `(updates: Partial<Actor>) => void`. Adapt to our triple-arg signature.
+  // The cell sends `{ stats: { [column.key]: { …slotMap } } }` — merge it onto the live stats.
+  const adaptedOnUpdate = React.useCallback(
+    (updates: Partial<Actor>) => {
+      if (!onUpdate) return;
+      if (updates.stats !== undefined) {
+        const existingGroup =
+          (actor.stats?.[column.key] as Record<string, boolean> | undefined) ?? {};
+        const incomingGroup =
+          (updates.stats[column.key] as Record<string, boolean> | undefined) ?? {};
+        onUpdate(actor.id, 'stats', {
+          ...actor.stats,
+          [column.key]: { ...existingGroup, ...incomingGroup },
+        });
+      }
+    },
+    [onUpdate, actor.id, actor.stats, column.key],
+  );
+
+  const labelClass = isPlayer
+    ? 'flex-1 min-w-0 truncate text-sm text-zinc-300'
+    : 'flex-1 min-w-0 truncate text-xs text-zinc-400';
+  const rowPad = isPlayer ? 'px-2 py-2' : 'px-1.5 py-1';
+
+  return (
+    <div className="col-span-full rounded-md hover:bg-zinc-900/40 transition-colors">
+      <div className={`flex items-center gap-3 ${rowPad}`}>
+        <span className={labelClass} title={label}>
+          {label}
+        </span>
+        <div
+          className={`shrink-0 flex flex-wrap items-center justify-end gap-1 ${
+            isPlayer ? 'gap-1.5' : 'gap-1'
+          }`}
+        >
+          <CheckboxGroupCell column={column} stats={actor.stats} onUpdate={isPlayer ? undefined : adaptedOnUpdate} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Column rendering helpers ─────────────────────────────────────────────────
+
+function isTextLikeColumn(col: ColumnConfig): boolean {
+  return col.type === 'text' || col.type === 'string';
+}
+
+function isCheckboxGroupColumn(col: ColumnConfig): boolean {
+  return col.type === 'checkbox_group';
+}
+
+function renderSheetColumn(
   actor: Actor,
-  orderedColumns: ColumnConfig[],
+  col: ColumnConfig,
   lookupColumns: ColumnConfig[],
   colName: (col: ColumnConfig) => string,
-  onUpdate?: (id: string, field: string, value: unknown) => void,
+  onUpdate: ((id: string, field: string, value: unknown) => void) | undefined,
+  variant: SheetVariant,
 ): React.ReactNode {
-  return orderedColumns.map((col) => {
-    const maxKey = getMaxKey(col);
-    const showAsFraction = (col.display_as_fraction ?? false) && !!maxKey;
-    const pairColumn = maxKey ? lookupColumns.find((c) => c.key === maxKey) : undefined;
+  if (isTextLikeColumn(col)) {
+    return (
+      <TextStatRow
+        key={col.key}
+        actor={actor}
+        column={col}
+        label={colName(col)}
+        onUpdate={onUpdate}
+        variant={variant}
+      />
+    );
+  }
 
-    if (showAsFraction && pairColumn) {
-      return (
-        <React.Fragment key={col.key}>
-          <StatRow
-            actor={actor}
-            column={col}
-            pairColumn={pairColumn}
-            label={colName(col)}
-            onUpdate={onUpdate}
-          />
-        </React.Fragment>
-      );
-    }
+  if (isCheckboxGroupColumn(col)) {
+    return (
+      <CheckboxGroupRow
+        key={col.key}
+        actor={actor}
+        column={col}
+        label={colName(col)}
+        onUpdate={onUpdate}
+        variant={variant}
+      />
+    );
+  }
 
-    if (pairColumn) {
-      return (
-        <React.Fragment key={col.key}>
-          <StatRow actor={actor} column={col} label={colName(col)} onUpdate={onUpdate} />
-          <StatRow
-            actor={actor}
-            column={pairColumn}
-            label={colName(pairColumn)}
-            onUpdate={onUpdate}
-          />
-        </React.Fragment>
-      );
-    }
+  const maxKey = getMaxKey(col);
+  const showAsFraction = (col.display_as_fraction ?? false) && !!maxKey;
+  const pairColumn = maxKey ? lookupColumns.find((c) => c.key === maxKey) : undefined;
 
+  if (showAsFraction && pairColumn) {
+    return (
+      <div key={col.key} className="col-span-full">
+        <StatRow
+          actor={actor}
+          column={col}
+          pairColumn={pairColumn}
+          label={colName(col)}
+          onUpdate={onUpdate}
+          variant={variant}
+        />
+      </div>
+    );
+  }
+
+  if (pairColumn) {
     return (
       <React.Fragment key={col.key}>
-        <StatRow actor={actor} column={col} label={colName(col)} onUpdate={onUpdate} />
+        <StatRow
+          actor={actor}
+          column={col}
+          label={colName(col)}
+          onUpdate={onUpdate}
+          variant={variant}
+        />
+        <StatRow
+          actor={actor}
+          column={pairColumn}
+          label={colName(pairColumn)}
+          onUpdate={onUpdate}
+          variant={variant}
+        />
       </React.Fragment>
     );
-  });
+  }
+
+  return (
+    <StatRow
+      key={col.key}
+      actor={actor}
+      column={col}
+      label={colName(col)}
+      onUpdate={onUpdate}
+      variant={variant}
+    />
+  );
 }
+
+// ─── Hero header (player variant only) ────────────────────────────────────────
+
+interface HeroStatChip {
+  key: string;
+  label: string;
+  value: string | number;
+}
+
+function PlayerHeroHeader({
+  actor,
+  portraitSrc,
+  heroStatChips = [],
+  onOpenPortraitPicker,
+}: {
+  actor: Actor;
+  portraitSrc: string;
+  heroStatChips?: HeroStatChip[];
+  onOpenPortraitPicker?: () => void;
+}) {
+  const { t } = useTranslation('core', { useSuspense: false });
+  const roleStyle =
+    actor.role === 'enemy'
+      ? 'bg-red-500/15 text-red-300 border-red-500/30'
+      : actor.role === 'ally'
+      ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+      : actor.role === 'character'
+      ? 'bg-blue-500/15 text-blue-300 border-blue-500/30'
+      : 'bg-zinc-700/40 text-zinc-300 border-zinc-700';
+
+  const PortraitTag = onOpenPortraitPicker ? 'button' : ('div' as const);
+
+  return (
+    <section className="relative overflow-hidden rounded-2xl border border-zinc-800/80 bg-gradient-to-b from-zinc-900 via-zinc-900/60 to-zinc-950/80 shadow-xl">
+      {/* Decorative blurred portrait backdrop */}
+      {portraitSrc && (
+        <div
+          aria-hidden
+          className="absolute inset-0 opacity-25 blur-2xl scale-110"
+          style={{
+            backgroundImage: `url(${portraitSrc})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        />
+      )}
+      <div className="relative flex items-center gap-4 p-5">
+        <PortraitTag
+          {...(onOpenPortraitPicker
+            ? { type: 'button' as const, onClick: () => onOpenPortraitPicker() }
+            : {})}
+          className={`shrink-0 rounded-xl overflow-hidden bg-zinc-900 border-2 border-zinc-700 shadow-lg w-24 aspect-[172/320] ${
+            onOpenPortraitPicker
+              ? 'hover:border-emerald-500 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500'
+              : ''
+          }`}
+        >
+          {actor.portrait ? (
+            <img
+              src={portraitSrc}
+              alt={actor.name}
+              className="w-full h-full object-cover"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <div className="w-full h-full grid place-items-center text-zinc-600">
+              <Plus size={28} strokeWidth={1.5} />
+            </div>
+          )}
+        </PortraitTag>
+
+        <div className="min-w-0 flex-1 flex flex-col gap-2">
+          <h2 className="text-xl font-semibold text-zinc-50 truncate leading-tight">
+            {actor.name}
+          </h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium uppercase tracking-wider border ${roleStyle}`}
+            >
+              {actor.role}
+            </span>
+            <span
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border bg-zinc-900/70 border-zinc-700 text-zinc-300"
+              title={t('combat.initiative')}
+            >
+              <span className="uppercase tracking-wider text-zinc-500">
+                {t('combat.initiative')}
+              </span>
+              <span className="font-mono tabular-nums text-emerald-300">
+                {actor.initiative}
+              </span>
+            </span>
+          </div>
+          {/* Configurable stat chips from hero_columns */}
+          {heroStatChips.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-0.5">
+              {heroStatChips.map((chip) => (
+                <span
+                  key={chip.key}
+                  className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium border bg-zinc-900/80 border-zinc-700/80 text-zinc-300"
+                  title={chip.label}
+                >
+                  <span className="text-zinc-500 truncate max-w-[5rem]">{chip.label}</span>
+                  <span className="font-mono tabular-nums text-zinc-100">{chip.value}</span>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── DefaultSystemSheet (root) ────────────────────────────────────────────────
 
 export function DefaultSystemSheet({
   actor,
@@ -428,6 +812,7 @@ export function DefaultSystemSheet({
   onOpenPortraitPicker,
   activeProfile = null,
   sheetProfilesLoading = false,
+  variant = 'gm',
 }: {
   actor: Actor;
   columns: ColumnConfig[];
@@ -436,16 +821,24 @@ export function DefaultSystemSheet({
   onOpenPortraitPicker?: () => void;
   activeProfile?: SystemSheetProfile | null;
   sheetProfilesLoading?: boolean;
+  /** `gm` (default) — compact modal; `player` — roomy mobile with hero header. */
+  variant?: SheetVariant;
 }) {
   const { t } = useTranslation('core', { useSuspense: false });
-  const { state } = useCombatState();
-  const { systemLayoutProfiles } = useCombat();
+  const combatState = useCombatStateOptional();
+  const combatCtx = useCombatOptional();
+  const state = combatState?.state ?? null;
+  const systemLayoutProfiles = combatCtx?.systemLayoutProfiles ?? [];
   const portraitCacheVersion = usePortraitCacheVersion();
   const colName = (col: ColumnConfig) =>
     i18n.t(`${col.key}.name`, { ns: `systems/${systemName}` }) || col.label || col.key;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [devices, setDevices] = useState<Record<string, DeviceInfo>>({});
   const [showSetup, setShowSetup] = useState(false);
+
+  const isPlayer = variant === 'player';
+  const isGM = variant === 'gm';
+  const tokens = densityFor(variant);
 
   const portraitSrc = useMemo(() => {
     const url = actor.portrait ?? '';
@@ -474,6 +867,8 @@ export function DefaultSystemSheet({
   }, [actors]);
 
   useEffect(() => {
+    // GM-only: hardware/devices are not relevant for player view.
+    if (!isGM) return;
     fetch('/api/hardware/')
       .then((r) => (r.ok ? r.json() : {}))
       .then((data: unknown) => {
@@ -484,7 +879,7 @@ export function DefaultSystemSheet({
         setDevices(d);
       })
       .catch(() => setDevices({}));
-  }, []);
+  }, [isGM]);
 
   const handleGroupChange = (value: string) => {
     if (!onUpdate) return;
@@ -594,8 +989,6 @@ export function DefaultSystemSheet({
     return tabs.find((tab) => tab.id === 'stats') ?? null;
   }, [activeProfile]);
 
-  const statGridClass = 'columns-2 gap-x-5 [column-fill:balance]';
-
   // Per-section open/closed state for `accordion` display mode (collapsed by default).
   const statsSectionKeys = useMemo(
     () =>
@@ -619,8 +1012,10 @@ export function DefaultSystemSheet({
     }
 
     const gridFor = (ordered: ColumnConfig[]) => (
-      <div className={statGridClass}>
-        {renderMiniSheetStatColumnNodes(actor, ordered, columns, colName, onUpdate)}
+      <div className={tokens.statGridCols}>
+        {ordered.map((col) =>
+          renderSheetColumn(actor, col, columns, colName, onUpdate, variant),
+        )}
       </div>
     );
 
@@ -629,11 +1024,19 @@ export function DefaultSystemSheet({
       return gridFor(columns);
     }
 
+    /**
+     * Track which column keys ended up in any accordion. Anything left over —
+     * including `checkbox_group` slots that the user forgot to assign — gets a
+     * fallback "Прочее" section at the end so it never silently disappears.
+     */
+    const claimedKeys = new Set<string>();
+
     const sections = accordions.map((acc, idx) => {
       const ordered = acc.columns
-        .map((key) => columns.find((c) => c.key === key && c.show_in_mini_sheet))
+        .map((key) => columns.find((c) => c.key === key))
         .filter((c): c is ColumnConfig => !!c);
       if (ordered.length === 0) return null;
+      ordered.forEach((c) => claimedKeys.add(c.key));
 
       const heading = (acc.name || '').trim() || t('modals.mini_sheet_group_other');
       const mode = normalizeSheetAccordionDisplay(acc.display);
@@ -642,55 +1045,93 @@ export function DefaultSystemSheet({
       const isOpen = isCollapsible ? statsOpenMap[sectionKey] === true : true;
       const grid = gridFor(ordered);
 
-      const headingInner = (
-        <>
-          <span className="h-px flex-1 bg-zinc-700/70 min-w-[1rem]" aria-hidden />
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 shrink-0 max-w-[70%] truncate">
-            {heading}
-          </span>
-          {isCollapsible && (
-            <ChevronDown
-              size={12}
-              className={`shrink-0 text-zinc-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-              aria-hidden
-            />
-          )}
-          <span className="h-px flex-1 bg-zinc-700/70 min-w-[1rem]" aria-hidden />
-        </>
-      );
-
       return (
-        <div key={`${acc.name}-${idx}`} className="space-y-2">
-          {isCollapsible ? (
-            <button
-              type="button"
-              onClick={() =>
-                setStatsOpenMap((prev) => ({ ...prev, [sectionKey]: !isOpen }))
-              }
-              aria-expanded={isOpen}
-              className="flex w-full items-center gap-3 px-1 pt-1 text-left"
-            >
-              {headingInner}
-            </button>
-          ) : (
-            <div className="flex items-center gap-3 px-1 pt-1">{headingInner}</div>
-          )}
-          {isOpen && (
-            <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-2">{grid}</div>
-          )}
-        </div>
+        <SheetSection
+          key={`${acc.name}-${idx}`}
+          heading={heading}
+          collapsible={isCollapsible}
+          isOpen={isOpen}
+          onToggle={
+            isCollapsible
+              ? () => setStatsOpenMap((prev) => ({ ...prev, [sectionKey]: !isOpen }))
+              : undefined
+          }
+          tokens={tokens}
+        >
+          {grid}
+        </SheetSection>
       );
     });
 
+    // No accordion produced any matched column → fall back to a flat grid.
     if (sections.every((s) => s == null)) {
       return gridFor(columns);
     }
 
-    return <div className="space-y-4">{sections}</div>;
+    // Append "Прочее" with all columns not claimed by any accordion. Critical:
+    // checkbox_group / text columns that the user didn't assign explicitly
+    // would otherwise disappear. The "leftover" section is always-open.
+    const leftover = columns.filter((c) => !claimedKeys.has(c.key));
+    let leftoverSection: React.ReactNode = null;
+    if (leftover.length > 0) {
+      leftoverSection = (
+        <SheetSection
+          key="__leftover__"
+          heading={t('modals.mini_sheet_group_other')}
+          collapsible={false}
+          isOpen
+          tokens={tokens}
+        >
+          {gridFor(leftover)}
+        </SheetSection>
+      );
+    }
+
+    return (
+      <div className={isPlayer ? 'space-y-5' : 'space-y-4'}>
+        {sections}
+        {leftoverSection}
+      </div>
+    );
   };
 
+  // ─── Render ─────────────────────────────────────────────────────────────────
+
+  if (isPlayer) {
+    const heroKeys: string[] = activeProfile?.hero_columns ?? [];
+    const heroStatChips: HeroStatChip[] = heroKeys
+      .map((key) => {
+        const col = columns.find((c) => c.key === key);
+        if (!col) return null;
+        const label = colName(col);
+        const raw = actor.stats[key];
+        // Resolve effective scalar value: StatValue object or plain number/string
+        const value =
+          raw != null && typeof raw === 'object' && 'value' in raw
+            ? String((raw as { value: unknown }).value ?? '—')
+            : raw != null
+            ? String(raw)
+            : '—';
+        return { key, label, value } satisfies HeroStatChip;
+      })
+      .filter((c): c is HeroStatChip => c !== null);
+
+    return (
+      <div className={`${tokens.rootPad} ${tokens.rootGap}`}>
+        <PlayerHeroHeader
+          actor={actor}
+          portraitSrc={portraitSrc}
+          heroStatChips={heroStatChips}
+          onOpenPortraitPicker={onOpenPortraitPicker}
+        />
+        <section>{renderStatsColumnPanel()}</section>
+      </div>
+    );
+  }
+
+  // GM variant — original layout (compact modal).
   return (
-    <div className="p-5 space-y-4">
+    <div className={`${tokens.rootPad} ${tokens.rootGap}`}>
       <section className="flex gap-4">
         <div className="shrink-0 flex flex-col items-center gap-2">
           <button
@@ -844,39 +1285,98 @@ export function DefaultSystemSheet({
       </section>
       )}
 
-      <div className="flex gap-2 pt-3 border-t border-zinc-800">
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleImport}
-          className="hidden"
-          accept=".json"
+      {onUpdate && (
+        <div className="flex gap-2 pt-3 border-t border-zinc-800">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleImport}
+            className="hidden"
+            accept=".json"
+          />
+          <button
+            type="button"
+            onClick={handleExport}
+            title={t('config_modal.export')}
+            className="w-9 h-9 shrink-0 grid place-items-center rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-zinc-100 transition-colors"
+          >
+            <Download size={15} />
+          </button>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            title={t('config_modal.import')}
+            className="w-9 h-9 shrink-0 grid place-items-center rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-zinc-100 transition-colors"
+          >
+            <Upload size={15} />
+          </button>
+          <button
+            type="button"
+            onClick={handleSaveToRoster}
+            className="flex-1 inline-flex items-center justify-center gap-2 py-2 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 hover:text-emerald-200 text-sm font-medium transition-colors"
+          >
+            <Save size={15} />
+            {t('common.save')}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── SheetSection — variant-aware section card ────────────────────────────────
+
+function SheetSection({
+  heading,
+  collapsible,
+  isOpen,
+  onToggle,
+  tokens,
+  children,
+}: {
+  heading: string;
+  collapsible: boolean;
+  isOpen: boolean;
+  onToggle?: () => void;
+  tokens: DensityTokens;
+  children: React.ReactNode;
+}) {
+  const headingInner = (
+    <>
+      <span className="h-px flex-1 bg-zinc-700/70 min-w-[1rem]" aria-hidden />
+      <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 shrink-0 max-w-[70%] truncate">
+        {heading}
+      </span>
+      {collapsible && (
+        <ChevronDown
+          size={12}
+          className={`shrink-0 text-zinc-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          aria-hidden
         />
+      )}
+      <span className="h-px flex-1 bg-zinc-700/70 min-w-[1rem]" aria-hidden />
+    </>
+  );
+
+  return (
+    <div className="space-y-2">
+      {collapsible ? (
         <button
           type="button"
-          onClick={handleExport}
-          title={t('config_modal.export')}
-          className="w-9 h-9 shrink-0 grid place-items-center rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-zinc-100 transition-colors"
+          onClick={onToggle}
+          aria-expanded={isOpen}
+          className={`flex w-full items-center gap-3 px-1 ${tokens.headingTopPad} text-left`}
         >
-          <Download size={15} />
+          {headingInner}
         </button>
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          title={t('config_modal.import')}
-          className="w-9 h-9 shrink-0 grid place-items-center rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-zinc-100 transition-colors"
-        >
-          <Upload size={15} />
-        </button>
-        <button
-          type="button"
-          onClick={handleSaveToRoster}
-          className="flex-1 inline-flex items-center justify-center gap-2 py-2 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 hover:text-emerald-200 text-sm font-medium transition-colors"
-        >
-          <Save size={15} />
-          {t('common.save')}
-        </button>
-      </div>
+      ) : (
+        <div className={`flex items-center gap-3 px-1 ${tokens.headingTopPad}`}>{headingInner}</div>
+      )}
+      {isOpen && (
+        <div className={`${tokens.sectionRadius} ${tokens.sectionBg} ${tokens.sectionPad}`}>
+          {children}
+        </div>
+      )}
     </div>
   );
 }

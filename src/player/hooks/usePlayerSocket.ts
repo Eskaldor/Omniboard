@@ -4,7 +4,7 @@ import type { PublicCombatState } from '../types';
 const RECONNECT_DELAY_MS = 2000;
 const FALLBACK_THROTTLE_MS = 5000;
 
-export function usePlayerSocket() {
+export function usePlayerSocket(token?: string) {
   const [state, setState] = useState<PublicCombatState | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
@@ -28,7 +28,8 @@ export function usePlayerSocket() {
   useEffect(() => {
     isMountedRef.current = true;
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${wsProtocol}//${window.location.host}/ws/player`;
+    const tokenParam = token ? `?token=${encodeURIComponent(token)}` : '';
+    const wsUrl = `${wsProtocol}//${window.location.host}/ws/player${tokenParam}`;
 
     const connect = () => {
       if (!isMountedRef.current) return;
@@ -60,7 +61,9 @@ export function usePlayerSocket() {
       if (reconnectRef.current) clearTimeout(reconnectRef.current);
       wsRef.current?.close();
     };
-  }, [fetchFallback]);
+    // token is included so the socket reconnects with the personalized URL after claim.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, fetchFallback]);
 
   return { state, isConnected };
 }

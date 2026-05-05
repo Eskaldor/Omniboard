@@ -1,0 +1,90 @@
+{
+  "id": "50befac4-7ed5-4c41-9e09-ebabbd19843b",
+  "name": "Чернокнижник",
+  "role": "enemy",
+  "is_revealed": true,
+  "is_pinned": false,
+  "group_id": null,
+  "group_name": null,
+  "group_mode": "sequential",
+  "group_color": null,
+  "initiative": 0,
+  "has_acted": false,
+  "portrait": "/assets/systems/D&D 5e/portraits/bandit.png",
+  "show_portrait": false,
+  "miniature_id": null,
+  "layout_profile_id": null,
+  "sheet_profile_id": "profile",
+  "stats": {
+    "hp": {
+      "base": 5,
+      "formula_id": null,
+      "overrides": [],
+      "value": 5
+    },
+    "ac": {
+      "base": 17,
+      "formula_id": null,
+      "overrides": [],
+      "value": 17
+    },
+    "speed": {
+      "base": 30,
+      "formula_id": null,
+      "overrides": [],
+      "value": 30
+    },
+    "com1": {
+      "Реакция": true,
+      "Бонусное ": true,
+      "Основное": true
+    },
+    "bladpul": {
+      "res1": true,
+      "res2": true,
+      "res3": true,
+      "slot_3": true,
+      "slot_4": true,
+      "slot_5": true,
+      "slot_6": true,
+      "slot_7": true
+    }
+  },
+  "effects": [],
+  "visibility": {
+    "hp": true,
+    "stats": true,
+    "effects": true,
+    "name": true
+  },
+  "hotbar": [],
+  "actions": {
+    "bardic_inspiration": {
+      "show_on_panel": true,
+      "show_in_tracker": false,
+      "formula_override": "1d6+100",
+      "comment": null,
+      "custom_name": null,
+      "custom_formula": null
+    }
+  },
+  "actions_panel_override": {
+    "accordions": [
+      {
+        "name": "Действия боя",
+        "columns": [
+          "hit_greatsword",
+          "hit_slashing"
+        ],
+        "display": "accordion"
+      },
+      {
+        "name": "Спасброски",
+        "columns": [
+          "initiative"
+        ],
+        "display": "accordion"
+      }
+    ]
+  }
+}

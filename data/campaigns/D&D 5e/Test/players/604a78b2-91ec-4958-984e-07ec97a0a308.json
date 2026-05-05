@@ -1,0 +1,81 @@
+{
+  "id": "604a78b2-91ec-4958-984e-07ec97a0a308",
+  "name": "Гоблин маг",
+  "role": "enemy",
+  "is_revealed": true,
+  "is_pinned": true,
+  "group_id": null,
+  "group_name": null,
+  "group_mode": null,
+  "group_color": null,
+  "initiative": 0,
+  "has_acted": false,
+  "portrait": "/assets/systems/D&D 5e/portraits/goblin_mag.png",
+  "show_portrait": true,
+  "miniature_id": null,
+  "layout_profile_id": "1776798216413",
+  "sheet_profile_id": null,
+  "stats": {
+    "hp": {
+      "base": 50,
+      "formula_id": null,
+      "overrides": [],
+      "value": 50
+    },
+    "ac": {
+      "base": 10,
+      "formula_id": null,
+      "overrides": [],
+      "value": 10
+    },
+    "speed": {
+      "base": 30,
+      "formula_id": null,
+      "overrides": [],
+      "value": 30
+    },
+    "mana": {
+      "base": 52,
+      "formula_id": null,
+      "overrides": [],
+      "value": 52
+    },
+    "max_mana": {
+      "base": 60,
+      "formula_id": null,
+      "overrides": [],
+      "value": 60
+    },
+    "com": {
+      "base": 0,
+      "formula_id": null,
+      "overrides": [],
+      "value": 0
+    },
+    "com1": {
+      "Реакция": true,
+      "Бонусное ": true,
+      "Основное": true
+    },
+    "bladpul": {
+      "res1": true,
+      "res2": true,
+      "res3": true,
+      "slot_3": true,
+      "slot_4": true,
+      "slot_5": true,
+      "slot_6": true,
+      "slot_7": true
+    }
+  },
+  "effects": [],
+  "visibility": {
+    "hp": true,
+    "stats": true,
+    "effects": true,
+    "name": true
+  },
+  "hotbar": [],
+  "actions": {},
+  "actions_panel_override": null
+}

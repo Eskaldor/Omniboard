@@ -1,0 +1,105 @@
+{
+  "id": "6a38b2b6-7269-4b23-ba18-cf021f4003ee",
+  "name": "Винланд",
+  "role": "character",
+  "is_revealed": true,
+  "is_pinned": false,
+  "group_id": null,
+  "group_name": null,
+  "group_mode": null,
+  "group_color": null,
+  "initiative": 0,
+  "has_acted": false,
+  "portrait": "",
+  "show_portrait": false,
+  "miniature_id": null,
+  "layout_profile_id": null,
+  "sheet_profile_id": "profile",
+  "stats": {
+    "hp": {
+      "base": 5,
+      "formula_id": null,
+      "overrides": [],
+      "value": 5
+    },
+    "speed": {
+      "base": 30,
+      "formula_id": null,
+      "overrides": [],
+      "value": 30
+    },
+    "bladpul": {
+      "res1": true,
+      "res2": true,
+      "res3": true,
+      "slot_3": true,
+      "slot_4": true,
+      "slot_5": true,
+      "slot_6": true,
+      "slot_7": true
+    },
+    "ac": {
+      "base": 34,
+      "formula_id": null,
+      "overrides": [],
+      "value": 34
+    },
+    "mana": {
+      "base": 0,
+      "formula_id": null,
+      "overrides": [],
+      "value": 0
+    },
+    "com1": {
+      "Реакция": true,
+      "Бонусное ": true,
+      "Основное": true
+    }
+  },
+  "effects": [],
+  "visibility": {
+    "hp": true,
+    "stats": true,
+    "effects": true,
+    "name": true
+  },
+  "hotbar": [],
+  "actions": {
+    "bardic_inspiration": {
+      "show_on_panel": true,
+      "show_in_tracker": false,
+      "formula_override": "1d6+3",
+      "comment": null,
+      "custom_name": null,
+      "custom_formula": null
+    },
+    "multistack": {
+      "show_on_panel": true,
+      "show_in_tracker": true,
+      "formula_override": null,
+      "comment": null,
+      "custom_name": "Мб",
+      "custom_formula": "5d4"
+    }
+  },
+  "actions_panel_override": {
+    "accordions": [
+      {
+        "name": "Действия боя",
+        "columns": [
+          "hit_greatsword",
+          "hit_slashing",
+          "multistack"
+        ],
+        "display": "accordion"
+      },
+      {
+        "name": "Спасброски",
+        "columns": [
+          "initiative"
+        ],
+        "display": "accordion"
+      }
+    ]
+  }
+}

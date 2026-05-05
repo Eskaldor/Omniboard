@@ -9,16 +9,57 @@ import {
 } from '../../hooks/useSystemSheetProfiles';
 import type { SystemActionDef } from '../../hooks/useSystemActions';
 
+/** Visual density / chrome variant. Mirrors `SheetVariant` in DefaultSystemSheet. */
+export type ActionsPanelVariant = 'gm' | 'player';
+
+interface ActionsPanelDensity {
+  outerPad: string;
+  outerSpace: string;
+  flatGrid: string;
+  groupGrid: string;
+  buttonPad: string;
+  titleClass: string;
+  formulaClass: string;
+  iconSize: number;
+}
+
+function densityFor(variant: ActionsPanelVariant): ActionsPanelDensity {
+  if (variant === 'player') {
+    return {
+      outerPad: 'p-4 pt-3',
+      outerSpace: 'space-y-5',
+      flatGrid: 'p-4 grid gap-3 grid-cols-1 sm:grid-cols-2',
+      groupGrid: 'p-4 grid gap-3 grid-cols-1 sm:grid-cols-2',
+      buttonPad: 'px-4 py-3.5',
+      titleClass: 'text-base font-medium text-zinc-100 truncate',
+      formulaClass: 'mt-1.5 font-mono text-xs text-zinc-400 truncate',
+      iconSize: 18,
+    };
+  }
+  return {
+    outerPad: 'p-4 pt-3',
+    outerSpace: 'space-y-4',
+    flatGrid: 'p-4 grid gap-2 sm:grid-cols-2',
+    groupGrid: 'p-3 grid gap-2 sm:grid-cols-2',
+    buttonPad: 'px-3 py-2.5',
+    titleClass: 'text-sm font-medium text-zinc-200 truncate',
+    formulaClass: 'mt-1 font-mono text-[11px] text-zinc-500 truncate',
+    iconSize: 16,
+  };
+}
+
 function MacroRollButton({
   actionKey,
   def,
   actor,
   onRollAction,
+  density,
 }: {
   actionKey: string;
   def: SystemActionDef;
   actor: Actor;
   onRollAction: (formula: string, comment: string) => void | Promise<void>;
+  density: ActionsPanelDensity;
 }) {
   const ov = actor.actions?.[actionKey];
   const displayFormula = (ov?.formula_override?.trim() || def.formula).trim();
@@ -28,13 +69,16 @@ function MacroRollButton({
     <button
       type="button"
       onClick={() => void onRollAction(displayFormula, rollComment)}
-      className="text-left rounded-xl border border-zinc-800 bg-zinc-950/50 hover:border-emerald-500/40 hover:bg-zinc-900/60 px-3 py-2.5 transition-colors group"
+      className={`text-left rounded-xl border border-zinc-800 bg-zinc-950/50 hover:border-emerald-500/40 hover:bg-zinc-900/60 transition-colors group ${density.buttonPad}`}
     >
       <div className="flex items-start justify-between gap-2">
-        <span className="text-sm font-medium text-zinc-200 truncate">{def.name}</span>
-        <Dices size={16} className="shrink-0 text-zinc-500 group-hover:text-emerald-400 transition-colors" />
+        <span className={density.titleClass}>{def.name}</span>
+        <Dices
+          size={density.iconSize}
+          className="shrink-0 text-zinc-500 group-hover:text-emerald-400 transition-colors"
+        />
       </div>
-      <div className="mt-1 font-mono text-[11px] text-zinc-500 truncate" title={displayFormula}>
+      <div className={density.formulaClass} title={displayFormula}>
         {displayFormula}
       </div>
     </button>
@@ -97,6 +141,7 @@ export function ActionsPanel({
   mergedActionDefs,
   onRollAction,
   actionsTab,
+  variant = 'gm',
 }: {
   actor: Actor;
   /** System `actions.json` merged with this actor's `custom_formula` macros. */
@@ -107,8 +152,11 @@ export function ActionsPanel({
    * then per-actor grouping replaces the template.
    */
   actionsTab?: SystemSheetLayoutTab | null;
+  /** `gm` (default) — compact modal; `player` — roomy mobile with bigger touch targets. */
+  variant?: ActionsPanelVariant;
 }) {
   const { t } = useTranslation('core', { useSuspense: false });
+  const density = densityFor(variant);
 
   const entriesFiltered = Object.entries(mergedActionDefs).filter(
     ([actionKey]) => actor.actions?.[actionKey]?.show_on_panel !== false,
@@ -139,7 +187,7 @@ export function ActionsPanel({
   }, [sectionKeys.join('|')]);
 
   const renderFlatGrid = (entries: [string, SystemActionDef][]) => (
-    <div className="p-4 grid gap-2 sm:grid-cols-2">
+    <div className={density.flatGrid}>
       {entries.map(([actionKey, def]) => (
         <MacroRollButton
           key={actionKey}
@@ -147,6 +195,7 @@ export function ActionsPanel({
           def={def}
           actor={actor}
           onRollAction={onRollAction}
+          density={density}
         />
       ))}
     </div>
@@ -181,7 +230,7 @@ export function ActionsPanel({
     const isOpen = isCollapsible ? openMap[sectionKey] === true : true;
 
     const macroGrid = (
-      <div className="p-3 grid gap-2 sm:grid-cols-2">
+      <div className={density.groupGrid}>
         {ordered.map(([actionKey, def]) => (
           <MacroRollButton
             key={actionKey}
@@ -189,6 +238,7 @@ export function ActionsPanel({
             def={def}
             actor={actor}
             onRollAction={onRollAction}
+            density={density}
           />
         ))}
       </div>
@@ -220,5 +270,5 @@ export function ActionsPanel({
     return renderFlatGrid(entriesFiltered);
   }
 
-  return <div className="p-4 pt-3 space-y-4">{sections}</div>;
+  return <div className={`${density.outerPad} ${density.outerSpace}`}>{sections}</div>;
 }
