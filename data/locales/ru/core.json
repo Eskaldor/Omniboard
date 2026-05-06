@@ -31,6 +31,26 @@
     "selected": "Выбрано",
     "empty_dash": "—"
   },
+  "player": {
+    "dice": {
+      "title": "Набор кубов",
+      "formula": "Формула",
+      "clear": "Очистить",
+      "roll": "Бросить",
+      "rolling": "Бросаем…"
+    },
+    "roll": {
+      "secret": "Скрытый бросок"
+    },
+    "log": {
+      "empty": "Лог пуст",
+      "secret": "Шёпот",
+      "whisper_placeholder": "Шёпот мастеру…",
+      "send": "Отправить",
+      "sent": "Отправлено",
+      "send_failed": "Не удалось отправить"
+    }
+  },
   "header": {
     "miniatures": "Миниатюры",
     "library": "Библиотека",
@@ -121,7 +141,10 @@
     "error_headline": "Ошибка броска",
     "batch_headline": "Броски",
     "batch_overflow": "ещё {{count}}…",
-    "gm_prefix": "Мастер"
+    "gm_prefix": "Мастер",
+    "request_headline": "Запрос на бросок",
+    "request_actor_fallback": "Игрок",
+    "request_secret": "(скрытый)"
   },
   "config_modal": {
     "table": "Таблица",
@@ -717,6 +740,13 @@
     "initiative_lock_hint": "В начале каждого нового раунда автоматически перебрасывать инициативу по тем же фильтрам ролей",
     "initiative_show_row_dice": "Кубик в строках",
     "initiative_disabled_hint": "Для этой системы бросок инициативы отключён (mechanics.json: initiative_roll — none).",
-    "initiative_settings_error": "Не удалось сохранить настройки инициативы."
+    "initiative_settings_error": "Не удалось сохранить настройки инициативы.",
+    "out_of_turn_button": "Броски вне хода",
+    "out_of_turn_no_requests_label": "Без запросов ко всем",
+    "out_of_turn_no_requests_hint": "Все могут бросать вне своего хода сразу. Иначе — только после вашего «Ок» в очереди ниже.",
+    "roll_request_ok": "Ок",
+    "roll_request_deny": "Нет",
+    "roll_request_round_pass": "На раунд",
+    "roll_requests_empty": "Запросов нет"
   }
 }

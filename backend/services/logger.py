@@ -92,6 +92,7 @@ def add_log(
     actor_id: str | None = None,
     actor_name: str | None = None,
     details: dict | None = None,
+    is_secret: bool = False,
 ) -> None:
     if not app_state.state.session.enable_logging:
         return
@@ -102,6 +103,7 @@ def add_log(
             actor_id=actor_id,
             actor_name=actor_name,
             details=details or {},
+            is_secret=bool(is_secret),
         )
     )
 

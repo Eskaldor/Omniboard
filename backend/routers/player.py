@@ -8,8 +8,10 @@ from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Header
+from fastapi.responses import JSONResponse
 
 from backend import state as app_state
+from backend.services.player_state import get_player_public_state
 from backend.models import (
     Actor,
     ActiveCampaignRequest,
@@ -27,7 +29,18 @@ from backend.paths import (
     get_campaign_players_dir,
     get_campaigns_system_dir,
 )
-from backend.routers.ws import broadcast_state
+from backend.routers.ws import (
+    broadcast_roll_request_status_to_player,
+    broadcast_roll_request_to_gm,
+    broadcast_state,
+    broadcast_whisper_event,
+)
+from backend.services.logger import add_log
+from backend.services.dice import DiceManager
+from backend.services.out_of_turn_roll_policy import player_may_roll_now
+from backend.routers.ws import broadcast_roll_event
+
+_dice = DiceManager()
 
 router = APIRouter(prefix="/api/player", tags=["player"])
 
@@ -61,6 +74,152 @@ async def get_player_session() -> dict:
         "is_combat_active": app_state.state.core.is_active,
         "round": app_state.state.core.round,
     }
+
+
+@router.get("/combat-state")
+async def get_player_combat_state(
+    x_player_token: Optional[str] = Header(None),
+) -> dict:
+    """Public combat payload for Player View (never returns full GM state).
+
+    If token is provided and recognized, response is personalized (own actor unmasked).
+    """
+    actor_id = app_state.token_to_actor.get(x_player_token) if x_player_token else None
+    return get_player_public_state(app_state.state, actor_id)
+
+
+@router.post("/log/whisper")
+async def player_whisper(
+    payload: dict,
+    x_player_token: Optional[str] = Header(None),
+) -> dict:
+    """Player: add a secret text entry (visible only to the author and GM)."""
+    if not x_player_token:
+        raise HTTPException(status_code=403, detail="Missing token")
+    actor_id = app_state.token_to_actor.get(x_player_token)
+    if not actor_id:
+        raise HTTPException(status_code=403, detail="Invalid token")
+    # Ensure claim is still valid for this actor.
+    if app_state.claimed_players.get(actor_id) != x_player_token:
+        raise HTTPException(status_code=403, detail="Invalid token")
+
+    text = (payload.get("text") or "").strip()
+    if not text:
+        raise HTTPException(status_code=422, detail="text is required")
+
+    actor = next((a for a in app_state.state.core.actors if a.id == actor_id), None)
+    actor_name = actor.name if actor else actor_id
+
+    add_log(
+        "text",
+        actor_id=actor_id,
+        actor_name=actor_name,
+        # Keep both keys: GM CombatLog expects `details.message`,
+        # Player LogView prefers `details.text` (and already falls back to message).
+        details={"text": text, "message": text},
+        is_secret=True,
+    )
+    await broadcast_state()
+    await broadcast_whisper_event(
+        payload={
+            "actor_id": actor_id,
+            "actor_name": actor_name,
+            "text": text,
+            "is_secret": True,
+        }
+    )
+    return {"ok": True}
+
+
+@router.post("/roll/request")
+async def request_player_roll(
+    payload: dict,
+    x_player_token: Optional[str] = Header(None),
+) -> dict:
+    """Запрос броска из Player View вне своего хода.
+
+    Сразу исполняет бросок, если свой ход, включён глобальный режим без запросов,
+    или у актора есть «пас на текущий раунд» от GM. Иначе — pending и WS мастеру.
+    """
+    if not x_player_token:
+        raise HTTPException(status_code=403, detail="Missing token")
+    actor_id = app_state.token_to_actor.get(x_player_token)
+    if not actor_id:
+        raise HTTPException(status_code=403, detail="Invalid token")
+    if app_state.claimed_players.get(actor_id) != x_player_token:
+        raise HTTPException(status_code=403, detail="Invalid token")
+
+    expression = str(payload.get("expression") or "").strip()
+    if not expression:
+        raise HTTPException(status_code=422, detail="expression is required")
+    comment = str(payload.get("comment") or "").strip() or None
+    is_secret = bool(payload.get("is_secret") is True)
+
+    st = app_state.state
+    actor = next((a for a in st.core.actors if a.id == actor_id), None)
+    if actor is None:
+        raise HTTPException(status_code=404, detail="Actor not found in combat")
+
+    if player_may_roll_now(st, actor_id):
+        # Execute immediately (same semantics as /api/combat/actors/{id}/roll).
+        system_name = (st.core.system or "").strip()
+        result = _dice.execute_roll(expression, system_name, actor)
+        if True:
+            details = {
+                "expression": expression,
+                "formula": str(result.formula),
+                "total": int(result.total),
+                "details": str(result.details),
+                "is_glitch": bool(result.is_glitch),
+                "is_crit_glitch": bool(result.is_crit_glitch),
+            }
+            if comment:
+                details["comment"] = comment
+            add_log(
+                "roll",
+                actor_id=actor.id,
+                actor_name=actor.name,
+                details=details,
+                is_secret=is_secret,
+            )
+        await broadcast_state()
+        # GM toast on every player roll; secret rolls also toast to the author.
+        await broadcast_roll_event(
+            actor_id=None,
+            payload={"actor_id": actor.id, "actor_name": actor.name, "is_secret": is_secret, **result.model_dump(mode="json")},
+        )
+        if is_secret:
+            await broadcast_roll_event(
+                actor_id=actor.id,
+                payload={"actor_id": actor.id, "actor_name": actor.name, "is_secret": True, **result.model_dump(mode="json")},
+            )
+        return JSONResponse(
+            status_code=200,
+            content={"status": "approved", "result": result.model_dump(mode="json")},
+        )
+
+    # Create pending request
+    import uuid
+    from datetime import datetime
+
+    request_id = uuid.uuid4().hex
+    req_payload = {
+        "request_id": request_id,
+        "actor_id": actor.id,
+        "actor_name": actor.name,
+        "expression": expression,
+        "comment": comment,
+        "is_secret": is_secret,
+        "created_at": datetime.utcnow().isoformat() + "Z",
+    }
+    st.session.pending_roll_requests[request_id] = req_payload
+    await broadcast_state()
+    await broadcast_roll_request_to_gm(payload=req_payload)
+    await broadcast_roll_request_status_to_player(
+        actor_id=actor.id,
+        payload={"request_id": request_id, "status": "pending"},
+    )
+    return JSONResponse(status_code=202, content={"status": "pending", "request_id": request_id})
 
 
 # ---------------------------------------------------------------------------

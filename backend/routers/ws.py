@@ -18,6 +18,94 @@ router = APIRouter(tags=["ws"])
 # без фильтрации видимости.
 _player_sockets: dict[WebSocket, str | None] = {}
 
+async def broadcast_roll_event(*, actor_id: str | None, payload: dict) -> None:
+    """Send a roll toast event to GM and (optionally) one player.
+
+    `actor_id=None` means GM-only.
+    """
+    message = json.dumps({"type": "roll_event", "payload": payload})
+
+    dead_master: list[WebSocket] = []
+    for client in list(app_state.connected_clients):
+        try:
+            await client.send_text(message)
+        except Exception:
+            dead_master.append(client)
+    for client in dead_master:
+        try:
+            app_state.connected_clients.remove(client)
+        except ValueError:
+            pass
+
+    if not actor_id:
+        return
+
+    dead_player: list[WebSocket] = []
+    for client, aid in list(_player_sockets.items()):
+        if aid != actor_id:
+            continue
+        try:
+            await client.send_text(message)
+        except Exception:
+            dead_player.append(client)
+    for client in dead_player:
+        _player_sockets.pop(client, None)
+        try:
+            app_state.player_clients.remove(client)
+        except ValueError:
+            pass
+
+
+async def broadcast_roll_request_to_gm(*, payload: dict) -> None:
+    """Send an out-of-turn roll request to GM only."""
+    message = json.dumps({"type": "roll_request", "payload": payload})
+    dead: list[WebSocket] = []
+    for client in list(app_state.connected_clients):
+        try:
+            await client.send_text(message)
+        except Exception:
+            dead.append(client)
+    for client in dead:
+        try:
+            app_state.connected_clients.remove(client)
+        except ValueError:
+            pass
+
+
+async def broadcast_roll_request_status_to_player(*, actor_id: str, payload: dict) -> None:
+    """Send roll request status to a specific player (by actor_id)."""
+    message = json.dumps({"type": "roll_request_status", "payload": payload})
+    dead_player: list[WebSocket] = []
+    for client, aid in list(_player_sockets.items()):
+        if aid != actor_id:
+            continue
+        try:
+            await client.send_text(message)
+        except Exception:
+            dead_player.append(client)
+    for client in dead_player:
+        _player_sockets.pop(client, None)
+        try:
+            app_state.player_clients.remove(client)
+        except ValueError:
+            pass
+
+
+async def broadcast_whisper_event(*, payload: dict) -> None:
+    """Send a whisper toast event to GM only."""
+    message = json.dumps({"type": "whisper_event", "payload": payload})
+    dead: list[WebSocket] = []
+    for client in list(app_state.connected_clients):
+        try:
+            await client.send_text(message)
+        except Exception:
+            dead.append(client)
+    for client in dead:
+        try:
+            app_state.connected_clients.remove(client)
+        except ValueError:
+            pass
+
 
 async def broadcast_player_state() -> None:
     """Отправить персонализированный стейт каждому подключённому клиенту игрока."""

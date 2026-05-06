@@ -1,1 +1,50 @@
-[]
+[
+  {
+    "type": "combat_start",
+    "round": 1,
+    "actor_id": null,
+    "actor_name": null,
+    "details": {},
+    "is_secret": false
+  },
+  {
+    "type": "combat_end",
+    "round": 1,
+    "actor_id": null,
+    "actor_name": null,
+    "details": {},
+    "is_secret": false
+  },
+  {
+    "type": "combat_start",
+    "round": 1,
+    "actor_id": null,
+    "actor_name": null,
+    "details": {},
+    "is_secret": false
+  },
+  {
+    "type": "actor_joined",
+    "round": 1,
+    "actor_id": "775fca25-39b8-4901-92bf-f17f2ecf6ba1",
+    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "details": {},
+    "is_secret": false
+  },
+  {
+    "type": "actor_joined",
+    "round": 1,
+    "actor_id": "2f86be84-0118-42fd-90e0-21e60b0d93be",
+    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "details": {},
+    "is_secret": false
+  },
+  {
+    "type": "actor_joined",
+    "round": 1,
+    "actor_id": "3c97698d-51b1-476e-8fb5-8b9054724fae",
+    "actor_name": "\u041d\u043e\u0432\u044b\u0439 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a",
+    "details": {},
+    "is_secret": false
+  }
+]

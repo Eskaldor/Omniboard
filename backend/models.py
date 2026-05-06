@@ -381,11 +381,13 @@ class LogEntry(BaseModel):
     actor_id: Optional[str] = None
     actor_name: Optional[str] = None
     details: Dict[str, Any] = {}
+    is_secret: bool = False
 
 
 class RollRequest(BaseModel):
     expression: str
     is_preroll: bool = False
+    is_secret: bool = False
     comment: Optional[str] = None
 
 
@@ -484,6 +486,12 @@ class SessionMeta(BaseModel):
     initiative_show_per_actor_dice: bool = True
     # ID активной кампании; None = лобби игрока пустое
     active_campaign_id: Optional[str] = None
+    # Allow players to roll outside their turn without GM approval.
+    allow_out_of_turn_rolls: bool = False
+    # actor_id -> номер раунда боя: этому актёру разрешены броски вне хода до конца этого раунда (включительно).
+    actor_out_of_turn_round_pass: Dict[str, int] = Field(default_factory=dict)
+    # Pending out-of-turn roll requests (request_id -> payload dict). Stored in combat state.
+    pending_roll_requests: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
 
 
 class PlayerCharacterSummary(BaseModel):
@@ -764,6 +772,9 @@ def combat_session_merged_with_combat_state(
             initiative_reroll_locked=session.session.initiative_reroll_locked,
             initiative_show_per_actor_dice=session.session.initiative_show_per_actor_dice,
             active_campaign_id=session.session.active_campaign_id,
+            allow_out_of_turn_rolls=session.session.allow_out_of_turn_rolls,
+            actor_out_of_turn_round_pass=dict(session.session.actor_out_of_turn_round_pass),
+            pending_roll_requests=dict(session.session.pending_roll_requests),
         ),
     )
 

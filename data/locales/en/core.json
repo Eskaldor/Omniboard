@@ -29,6 +29,26 @@
     "selected": "Selected",
     "empty_dash": "—"
   },
+  "player": {
+    "dice": {
+      "title": "Dice Roller",
+      "formula": "Formula",
+      "clear": "Clear",
+      "roll": "Roll",
+      "rolling": "Rolling…"
+    },
+    "roll": {
+      "secret": "Secret roll"
+    },
+    "log": {
+      "empty": "Log is empty",
+      "secret": "Whisper",
+      "whisper_placeholder": "Whisper to GM…",
+      "send": "Send",
+      "sent": "Sent",
+      "send_failed": "Failed to send"
+    }
+  },
   "header": {
     "miniatures": "Miniatures",
     "library": "Library",
@@ -119,7 +139,10 @@
     "error_headline": "Roll failed",
     "batch_headline": "Rolls",
     "batch_overflow": "+{{count}} more",
-    "gm_prefix": "GM"
+    "gm_prefix": "GM",
+    "request_headline": "Roll request",
+    "request_actor_fallback": "Player",
+    "request_secret": "(secret)"
   },
   "config_modal": {
     "table": "Table",
@@ -701,6 +724,13 @@
     "initiative_lock_hint": "At the start of each new round, reroll initiative for the same role filters",
     "initiative_show_row_dice": "Row dice button",
     "initiative_disabled_hint": "Initiative rolling is disabled for this system (mechanics.json: initiative_roll set to none).",
-    "initiative_settings_error": "Could not save initiative settings."
+    "initiative_settings_error": "Could not save initiative settings.",
+    "out_of_turn_button": "Out-of-turn rolls",
+    "out_of_turn_no_requests_label": "No approval needed",
+    "out_of_turn_no_requests_hint": "Anyone may roll out of turn immediately. Otherwise players must wait for your OK in the queue below.",
+    "roll_request_ok": "OK",
+    "roll_request_deny": "No",
+    "roll_request_round_pass": "This round",
+    "roll_requests_empty": "No pending requests"
   }
 }

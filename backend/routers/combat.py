@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, BackgroundTasks, Body, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Body, HTTPException, Header
 from pydantic import BaseModel, ConfigDict, Field
 
 from backend import combat_engine
@@ -28,7 +28,9 @@ from backend.models import (
 )
 from backend.paths import LOGS_DIR
 from backend.routers.hardware import get_esp_manager
-from backend.routers.ws import broadcast_state
+from backend.routers.ws import broadcast_roll_event, broadcast_state
+from backend.routers.ws import broadcast_roll_request_status_to_player, broadcast_roll_request_to_gm
+from backend.services.out_of_turn_roll_policy import player_may_roll_now
 from backend.services import led_interceptor
 from backend.services.dice import DiceManager, RollResult
 from backend.services.initiative_roll import (
@@ -147,6 +149,13 @@ def _log_turn_progression(
     st = app_state.state
     if st.core.round > prev_round:
         add_log("round_start")
+        # Пасы «бросок вне хода на этот раунд» действуют только в раунде, в котором выданы.
+        r_now = int(st.core.round)
+        st.session.actor_out_of_turn_round_pass = {
+            aid: int(r)
+            for aid, r in st.session.actor_out_of_turn_round_pass.items()
+            if int(r) == r_now
+        }
     for a in st.core.actors:
         prev_by_id = prev_effects_by_actor.get(a.id, {})
         new_ids = {e.id for e in a.effects}
@@ -205,14 +214,29 @@ async def roll_generic(body: RollRequest):
             actor_id=None,
             actor_name="GM",
             details=log_details,
+            is_secret=bool(getattr(body, "is_secret", False)),
         )
     await save_snapshot()
     await broadcast_state()
+    if getattr(body, "is_secret", False):
+        await broadcast_roll_event(
+            actor_id=None,
+            payload={
+                "actor_id": None,
+                "actor_name": "GM",
+                "is_secret": True,
+                **result.model_dump(mode="json"),
+            },
+        )
     return result.model_dump(mode="json")
 
 
 @router.post("/actors/{actor_id}/roll")
-async def roll_for_actor(actor_id: str, body: RollRequest):
+async def roll_for_actor(
+    actor_id: str,
+    body: RollRequest,
+    x_player_token: str | None = Header(None),
+):
     """Бросок кубов с подстановкой [stat] из актора; опционально без записи в лог (preroll)."""
     st = app_state.state
     actor = next((a for a in st.core.actors if a.id == actor_id), None)
@@ -223,16 +247,124 @@ async def roll_for_actor(actor_id: str, body: RollRequest):
         raise HTTPException(status_code=400, detail="expression is required")
     system_name = (st.core.system or "").strip()
     result = _dice.execute_roll(expr, system_name, actor)
+
+    is_secret = bool(getattr(body, "is_secret", False))
+    is_player_roll = (
+        x_player_token is not None
+        and app_state.claimed_players.get(actor.id) == x_player_token
+        and app_state.token_to_actor.get(x_player_token) == actor.id
+    )
+    if is_player_roll and not body.is_preroll and not player_may_roll_now(st, actor.id):
+        raise HTTPException(status_code=403, detail="out-of-turn roll not permitted")
     if not body.is_preroll:
         add_log(
             "roll",
             actor_id=actor.id,
             actor_name=actor.name,
             details=_roll_log_details(body, result),
+            is_secret=is_secret,
         )
     await save_snapshot()
     await broadcast_state()
+    # Player rolls: always notify GM via roll_event (toast).
+    # Secret rolls: also notify the author (and GM) via roll_event.
+    if is_player_roll:
+        await broadcast_roll_event(
+            actor_id=None,
+            payload={
+                "actor_id": actor.id,
+                "actor_name": actor.name,
+                "is_secret": is_secret,
+                **result.model_dump(mode="json"),
+            },
+        )
+    if is_secret:
+        await broadcast_roll_event(
+            actor_id=actor.id,
+            payload={
+                "actor_id": actor.id,
+                "actor_name": actor.name,
+                "is_secret": True,
+                **result.model_dump(mode="json"),
+            },
+        )
     return result.model_dump()
+
+
+@router.post("/roll-requests/{request_id}/resolve")
+async def resolve_roll_request(request_id: str, payload: dict):
+    """Resolve a pending out-of-turn roll request.
+
+    Body: { decision: 'approve_once' | 'deny' | 'grant_actor_round' }
+    grant_actor_round — этому актёру разрешить броски вне хода до конца текущего раунда + выполнить этот бросок.
+    """
+    decision = str(payload.get("decision") or "").strip().lower()
+    if decision not in ("approve_once", "deny", "grant_actor_round"):
+        raise HTTPException(status_code=422, detail="invalid decision")
+
+    st = app_state.state
+    req = st.session.pending_roll_requests.pop(request_id, None)
+    if not isinstance(req, dict):
+        raise HTTPException(status_code=404, detail="request not found")
+
+    actor_id = str(req.get("actor_id") or "").strip()
+    expr = str(req.get("expression") or "").strip()
+    comment = str(req.get("comment") or "").strip() or None
+    is_secret = bool(req.get("is_secret") is True)
+
+    if not actor_id or not expr:
+        raise HTTPException(status_code=422, detail="invalid request payload")
+
+    actor = next((a for a in st.core.actors if a.id == actor_id), None)
+    actor_name = actor.name if actor else str(req.get("actor_name") or actor_id)
+
+    if decision == "deny":
+        await broadcast_state()
+        await broadcast_roll_request_status_to_player(
+            actor_id=actor_id,
+            payload={"request_id": request_id, "status": "denied"},
+        )
+        return {"ok": True, "status": "denied"}
+
+    if actor is None:
+        await broadcast_state()
+        await broadcast_roll_request_status_to_player(
+            actor_id=actor_id,
+            payload={"request_id": request_id, "status": "denied", "reason": "actor not found"},
+        )
+        return {"ok": True, "status": "denied"}
+
+    if decision == "grant_actor_round":
+        st.session.actor_out_of_turn_round_pass[actor.id] = int(st.core.round)
+
+    system_name = (st.core.system or "").strip()
+    result = _dice.execute_roll(expr, system_name, actor)
+    details = dict(_roll_log_details(RollRequest(expression=expr, comment=comment), result))
+    add_log(
+        "roll",
+        actor_id=actor.id,
+        actor_name=actor.name,
+        details=details,
+        is_secret=is_secret,
+    )
+    await save_snapshot()
+    await broadcast_state()
+
+    # GM toast always; player gets roll_event too (no HTTP response on approval flow).
+    await broadcast_roll_event(
+        actor_id=None,
+        payload={"actor_id": actor.id, "actor_name": actor_name, "is_secret": is_secret, **result.model_dump(mode="json")},
+    )
+    await broadcast_roll_event(
+        actor_id=actor.id,
+        payload={"actor_id": actor.id, "actor_name": actor_name, "is_secret": is_secret, **result.model_dump(mode="json")},
+    )
+
+    await broadcast_roll_request_status_to_player(
+        actor_id=actor.id,
+        payload={"request_id": request_id, "status": "approved"},
+    )
+    return {"ok": True, "status": "approved", "result": result.model_dump(mode="json")}
 
 
 @router.patch("/initiative/settings")
@@ -625,6 +757,8 @@ async def update_combat_settings(payload: dict):
     if "screen_brightness" in payload:
         # 1–100 (%); нормализация и миграция с 0–255 — в HardwareState
         app_state.state.hardware.screen_brightness = int(payload["screen_brightness"])
+    if "allow_out_of_turn_rolls" in payload:
+        app_state.state.session.allow_out_of_turn_rolls = bool(payload["allow_out_of_turn_rolls"])
 
     await save_snapshot()
     # Persist current state of settings immediately to disk (non-blocking)
@@ -642,6 +776,7 @@ async def update_combat_settings(payload: dict):
         "is_manual_mode": app_state.state.core.is_manual_mode,
         "engine_type": app_state.state.core.engine_type,
         "screen_brightness": app_state.state.hardware.screen_brightness,
+        "allow_out_of_turn_rolls": app_state.state.session.allow_out_of_turn_rolls,
     }
 
 

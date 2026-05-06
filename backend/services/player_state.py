@@ -67,6 +67,7 @@ def get_player_public_state(
                 "history_stack": True,
                 "history_index": True,
                 "prerolls": True,
+                "pending_roll_requests": True,
             }
         },
     )
@@ -81,6 +82,23 @@ def get_player_public_state(
             if result is not None:
                 filtered_actors.append(result)
     data["core"]["actors"] = filtered_actors
+
+    # Filter session history: secret entries are only visible to their author.
+    try:
+        hist = data.get("session", {}).get("history")
+        if isinstance(hist, list) and hist:
+            out: list[Any] = []
+            for entry in hist:
+                if not isinstance(entry, dict):
+                    continue
+                if entry.get("is_secret") is True:
+                    if current_player_actor_id and entry.get("actor_id") == current_player_actor_id:
+                        out.append(entry)
+                else:
+                    out.append(entry)
+            data["session"]["history"] = out
+    except Exception:
+        pass
 
     # Убираем информацию о железе — не нужна игрокам
     data["hardware"] = {}

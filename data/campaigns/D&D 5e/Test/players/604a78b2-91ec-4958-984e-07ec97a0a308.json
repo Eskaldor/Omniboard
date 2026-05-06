@@ -17,10 +17,10 @@
   "sheet_profile_id": null,
   "stats": {
     "hp": {
-      "base": 50,
+      "base": 60,
       "formula_id": null,
       "overrides": [],
-      "value": 50
+      "value": 60
     },
     "ac": {
       "base": 10,

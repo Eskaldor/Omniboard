@@ -1,6 +1,6 @@
 # Omniboard — Progress & Backlog
 
-> Обновлено: 05.05.2026 (**Фаза 15.1** — персонализированный `/ws/player`, отчёт о бое + синхронизация кампании, хук `usePlayerActor`, универсальный лист `DefaultSystemSheet variant="player"`, Foundry-style реестр кастомных листов); ранее: **Фаза 15** — Player View: кампании, лобби, `/ws/player`, мобильный клиент, вкладка Персонажи в Компендиуме; **§2.1.5** — `initiative_roll`; toast броска **ADR-25**
+> Обновлено: 06.05.2026 (**Фаза 15.2** — Mobile UX (haptics), Player Dice tab, secret rolls + whisper to GM, политика бросков вне хода (очередь запросов + «пас на раунд» + глобальный тумблер), PWA-скелет); ранее: 05.05.2026 (**Фаза 15.1** — персонализированный `/ws/player`, отчёт о бое + синхронизация кампании, хук `usePlayerActor`, универсальный лист `DefaultSystemSheet variant="player"`, Foundry-style реестр кастомных листов)
 
 ---
 
@@ -29,6 +29,20 @@
 - [x] Очистка лога (`DELETE /api/combat/log`)
 - [x] Открытие папки логов из UI (`POST /api/logs/open_folder`)
 - [x] `PATCH /api/combat/settings` — вкл/выкл логирования
+- [x] `LogEntry.is_secret`: скрытые записи лога (видит мастер и автор); в Player View лог фильтруется
+- [x] Шёпот игрока мастеру: `POST /api/player/log/whisper` + WS `whisper_event` (тост у GM)
+
+## ✅ Фаза 15.2 — Player View: Mobile UX, Dice, Secret/Whisper, Out-of-turn Rolls
+- [x] Haptics: `navigator.vibrate()` через `src/utils/haptics.ts` + вызовы на ключевых действиях
+- [x] Player Dice tab: `src/player/views/DiceView.tsx` + вкладка в `BottomNavBar`
+- [x] Player toast UI: `Toaster` подключён и используются тематические тосты бросков
+- [x] Secret rolls: `is_secret` в логах и в roll_event; `EyeOff` соответствует «скрытому» режиму
+- [x] Броски вне хода:
+  - [x] Глобальный режим «без запросов»: `session.allow_out_of_turn_rolls` (тумблер в GM Console)
+  - [x] Очередь запросов: `session.pending_roll_requests` + WS `roll_request`
+  - [x] Решение запроса: `approve_once | deny | grant_actor_round` (`grant_actor_round` = пас актёру до конца раунда)
+  - [x] Исправление ответа `/api/player/roll/request`: **200 approved** / **202 pending**, чтобы UI игрока не «залипал» после выдачи «пас на раунд»
+- [x] PWA-скелет: `vite-plugin-pwa` + базовый manifest/workbox denylist
 
 ## ✅ Фаза 4 — Encounters & Roster
 - [x] Сохранение боёв: полный **`CombatSession`** (в т.ч. **`core`**, **`session`**, **`display`**, **`hardware`**)

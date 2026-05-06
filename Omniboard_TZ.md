@@ -1,6 +1,6 @@
 # Nevrar's Omniboard — ТЗ v2.0
 
-> Обновлено: 05.05.2026 (**§2.8** — персонализированный `/ws/player?token=`, `usePlayerActor`, `DefaultSystemSheet variant="player"`, `POST /api/player/combat-report`; **ADR-28**; §4 Player View синхронизирован); ранее: 04.05.2026 (**§2.8** — Player View: кампании, клейм персонажа, `/ws/player`, `/api/player`; **ADR-27**); 03.05.2026 (**§2.1.5** — `initiative_roll`; **ADR-26**); **§2.7** — rollToast; **§2.6** — терминал бросков; **§2.1.3** — `sheet_profiles`
+> Обновлено: 06.05.2026 (**§2.8** — вкладка «Кубы», haptics, `is_secret`, whisper to GM, броски вне хода: очередь запросов + «пас на раунд» + глобальный тумблер; исправление `/api/player/roll/request`: **200 approved / 202 pending**); ранее: 05.05.2026 (**§2.8** — персонализированный `/ws/player?token=`, `usePlayerActor`, `DefaultSystemSheet variant="player"`, `POST /api/player/combat-report`; **ADR-28**; §4 Player View синхронизирован)
 > Стек сменился с Vue 3 на React 19 (сгенерировано в Google AI Studio).
 
 ## 📌 Суть проекта
@@ -269,6 +269,15 @@ Markdown-экспорт лога (`backend/services/logger.py`) и UI лога �
 5. Когда `turn_queue[current_index] === auth.actorId` — вкладка «Действия» активируется.
 6. После боя GM нажимает 📖 «Отчёт о бое» → `POST /api/player/combat-report` → изменения записываются в файлы кампании.
 
+#### Скрытые броски, шёпот и броски вне хода (Player View)
+
+- **Secret mode:** флаг `is_secret` в запросах броска и в `LogEntry`; иконка `EyeOff` соответствует скрытому режиму.
+- **Whisper to GM:** `POST /api/player/log/whisper` + WS `whisper_event` (тост у мастера).
+- **Out-of-turn rolls:** игрок при попытке броска не в свой ход обращается к `POST /api/player/roll/request`:
+  - **200** `{ status: "approved", result }` — бросок выполнен сразу (свой ход / глобальный режим / «пас на раунд»)
+  - **202** `{ status: "pending", request_id }` — создан запрос, мастер решает в очереди
+  - Решение мастера: `POST /api/combat/roll-requests/{request_id}/resolve` с `decision: approve_once | deny | grant_actor_round` (`grant_actor_round` выдаёт актёру право бросать вне хода до конца текущего `core.round`).
+
 #### keepId — сохранение UUID при добавлении в бой
 
 Персонажи кампании добавляются в бой через Компендиум (вкладка «Персонажи»). Кнопка «В бой» вызывает `onAdd(actor, 1, keepId=true)`, что сохраняет оригинальный `actor.id` из файла кампании. Это гарантирует, что `turn_queue[index]` совпадёт с `auth.actorId` токена игрока. НПС (вкладка «НПС») добавляются с `keepId=false` — каждый получает новый UUID.
@@ -301,10 +310,11 @@ Markdown-экспорт лога (`backend/services/logger.py`) и UI лога �
 | `hooks/usePlayerActor.ts` | **Единственный** источник данных актора: WS-стейт → HTTP fallback. `{ actor, loading, error, refetch }` |
 | `views/SheetView.tsx` | Лист персонажа через `DefaultSystemSheet variant="player"` |
 | `views/ActionsView.tsx` | Панель макросов; активна только в ход игрока |
+| `views/DiceView.tsx` | Вкладка «Кубы»: сбор выражения и бросок (с теми же правилами `is_secret` и внеходовых запросов) |
 | `views/InitiativeView.tsx` | Read-only список очереди; amber = текущий ход, emerald = свой актор |
 | `views/LogView.tsx` | Реверсная история боя с иконками событий |
 | `views/LobbyView.tsx` | Лобби: выбор персонажа, статус «занят» |
-| `components/BottomNavBar.tsx` | 4 вкладки (sheet / actions / initiative / log) |
+| `components/BottomNavBar.tsx` | 5 вкладок (sheet / actions / dice / initiative / log) |
 
 **Источник данных актора** (`usePlayerActor`): WS-стейт (`state.core.actors.find(id)`) — приоритет, мгновенные GM-правки; HTTP `GET /api/player/actor/{id}` — bootstrap для лобби (актор ещё не в бою) и fallback при обрыве WS.
 
@@ -561,6 +571,9 @@ Markdown-экспорт лога (`backend/services/logger.py`) и UI лога �
 | Метод | Путь | Описание |
 |---|---|---|
 | `GET` | `/api/player/actor/{actor_id}` | Полные данные актора: приоритет — живой стейт боя, fallback — файл кампании. Только владельцу по токену. |
+| `GET` | `/api/player/combat-state` | Публичный стейт боя, персонализированный по токену (собственный актор без масок и с полной историей видимых записей). |
+| `POST` | `/api/player/log/whisper` | Шёпот игрока мастеру (текст в лог как секретная запись + WS `whisper_event` у мастера). |
+| `POST` | `/api/player/roll/request` | Бросок игрока с политикой вне хода: **200 approved** (с результатом) или **202 pending** (с `request_id` и очередью у мастера). |
 
 #### GM-эндпоинты
 
