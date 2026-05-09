@@ -6,6 +6,8 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 DATA_DIR = BASE_DIR / "data" / "systems"
+GLOBAL_CONFIG_DIR = BASE_DIR / "data" / "config"
+AI_SETTINGS_PATH = GLOBAL_CONFIG_DIR / "ai_settings.json"
 
 
 def _safe_system_file_path(system_name: str, file_name: str) -> Path | None:
@@ -97,6 +99,7 @@ def get_campaigns_system_dir(system: str) -> Path | None:
 
 def ensure_dirs() -> None:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
+    GLOBAL_CONFIG_DIR.mkdir(parents=True, exist_ok=True)
 
     ASSETS_DIR.mkdir(parents=True, exist_ok=True)
     DEFAULT_ASSETS_DIR.mkdir(exist_ok=True)

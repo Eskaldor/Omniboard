@@ -1,6 +1,6 @@
 # Omniboard — Progress & Backlog
 
-> Обновлено: 06.05.2026 (**Фаза 15.2** — Mobile UX (haptics), Player Dice tab, secret rolls + whisper to GM, политика бросков вне хода (очередь запросов + «пас на раунд» + глобальный тумблер), PWA-скелет); ранее: 05.05.2026 (**Фаза 15.1** — персонализированный `/ws/player`, отчёт о бое + синхронизация кампании, хук `usePlayerActor`, универсальный лист `DefaultSystemSheet variant="player"`, Foundry-style реестр кастомных листов)
+> Обновлено: 09.05.2026 (**Фаза AI.1** — базовый текстовый чат в GM Console, `/api/ai/*`, конфиг провайдера); ранее: 06.05.2026 (**Фаза 15.2** — Mobile UX (haptics), Player Dice tab, secret rolls + whisper to GM, политика бросков вне хода (очередь запросов + «пас на раунд» + глобальный тумблер), PWA-скелет); 05.05.2026 (**Фаза 15.1** — персонализированный `/ws/player`, отчёт о бое + синхронизация кампании, хук `usePlayerActor`, универсальный лист `DefaultSystemSheet variant="player"`, Foundry-style реестр кастомных листов)
 
 ---
 
@@ -328,6 +328,29 @@ UX-ревизия `ConfigModal`: горизонтальные табы плох�
 - [x] **Справка и i18n:** `?` / тултип и плейсхолдер строки броска; ключи `gm_console.*` в **ru / en / je / ger** (`placeholder_roll`, `roll_help_tooltip` и др.).
 - [x] **Журнал боя:** вывод `comment` под строкой броска; разбор `**…**` из строки результата d20 через `react-markdown` (выделение критов).
 - [ ] *Хвост (по желанию):* клавиатурная навигация в попапе (↑↓ / Space / Enter); live-превью резолва под инпутом; частичная отправка при `anyMissing` вместо полного отказа; unit-тесты на `rollTerminal.ts`.
+
+---
+
+## ✅ Фаза AI.1 — Базовая интеграция текстового чата (Май 2026)
+
+Первая фаза дорожной карты ИИ: сквозной поток «локальный конфиг → GM Console → выбранный провайдер», без голоса, tool-calling и RAG (**Red Knight** остаётся видением; см. `Red_Knight_Vision.md`).
+
+### Отчёт по проделанной работе
+
+1. **Глобальный конфиг провайдера:** JSON **`data/config/ai_settings.json`** (не коммитить ключи). Модель **`AIConfig`** (`backend/models.py`): **`chat_api_key`**, **`chat_base_url`**, **`chat_model`** для текстового чата; поля **`image_*`** зарезервированы под композитор/картинки. **`backend/utils/ai_config.py`** — загрузка/сохранение и миграция устаревших ключей (`openrouter_*`, `default_text_model`, `google_api_key` → `image_api_key` где применимо).
+
+2. **API:** **`backend/routers/ai.py`** — **`GET/POST /api/ai/settings`**, **`POST /api/ai/chat`** с телом **`{ "messages": [ { "role", "content" }, … ] }`**. Бэкенд проксирует на OpenAI-совместимый **`POST {chat_base_url}/chat/completions`** (`Authorization: Bearer …`). Разбор ошибок провайдера — **`_extract_upstream_error`** (в т.ч. ответы Gemini в виде JSON-массива).
+
+3. **Интерфейс:** режим **AI** в нижней GM Console — **`AIChatDrawer`**, хук **`useAiChat`**; настройки — вкладка **`AITab`** в **`ConfigModal`** (**`useAiSettings`**). Локали: ключи **`gm_console.ai_chat_*`** в **`data/locales/{en,ru,ger,je}/core.json`**.
+
+4. **Исправление регрессии при отправке:** история для запроса должна собираться **синхронно** из текущего состояния (`const outbound = [...messages, …]`) до **`fetch`**. Ранее массив заполнялся только внутри апдейтера **`setMessages`**, который выполнялся позже в том же тике — уходило **`messages: []`**, Gemini возвращал **`GenerateContentRequest.contents: contents is not specified`**.
+
+### Границы фазы (что не входит)
+
+- Нет вызова инструментов и мутации **`CombatSession`** из чата.
+- Нет встроенного RAG по правилам/заметкам; модель не «видит» стол автоматически.
+
+**Файлы:** `backend/routers/ai.py`, `backend/utils/ai_config.py`, `backend/models.py`, `src/hooks/useAiChat.ts`, `src/hooks/useAiSettings.ts`, `src/components/GMConsole/AIChatDrawer.tsx`, `src/components/GMConsole/GMConsoleSlider.tsx`, `src/components/Modals/ConfigTabs/AITab.tsx`.
 
 ---
 

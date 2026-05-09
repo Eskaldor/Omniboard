@@ -536,6 +536,41 @@ class PlayerCharacterImportRequest(BaseModel):
     source: Literal["roster", "combat"] = "roster"
 
 
+class AIConfig(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    # Provider for text/chat generation (GM assistant / logic / SCL)
+    chat_api_key: str = ""
+    chat_base_url: str = ""
+    chat_model: str = ""
+
+    # Provider for image generation (portrait composer)
+    image_api_key: str = ""
+    image_base_url: str = ""
+    image_model: str = ""
+
+    @field_validator("chat_base_url", "image_base_url", mode="after")
+    @classmethod
+    def normalize_and_validate_base_url(cls, v: str) -> str:
+        v = (v or "").rstrip("/")
+        if v and not (v.startswith("http://") or v.startswith("https://")):
+            raise ValueError("Base URL must start with http:// or https://")
+        return v
+
+
+class AIChatRequest(BaseModel):
+    """OpenAI-compatible chat payload forwarded by `/api/ai/chat`."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    messages: List[Dict[str, Any]]
+
+
+class AIChatAssistantReply(BaseModel):
+    role: Literal["assistant"] = "assistant"
+    content: str
+
+
 class CombatSession(BaseModel):
     """Корневой агрегат сессии боя (доменная декомпозиция ADR-18)."""
 

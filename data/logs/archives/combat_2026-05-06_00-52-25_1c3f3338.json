@@ -1,0 +1,18 @@
+[
+  {
+    "type": "combat_start",
+    "round": 1,
+    "actor_id": null,
+    "actor_name": null,
+    "details": {},
+    "is_secret": false
+  },
+  {
+    "type": "combat_end",
+    "round": 1,
+    "actor_id": null,
+    "actor_name": null,
+    "details": {},
+    "is_secret": false
+  }
+]

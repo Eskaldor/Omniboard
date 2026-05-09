@@ -1,6 +1,6 @@
 # Nevrar's Omniboard — ТЗ v2.0
 
-> Обновлено: 06.05.2026 (**§2.8** — вкладка «Кубы», haptics, `is_secret`, whisper to GM, броски вне хода: очередь запросов + «пас на раунд» + глобальный тумблер; исправление `/api/player/roll/request`: **200 approved / 202 pending**); ранее: 05.05.2026 (**§2.8** — персонализированный `/ws/player?token=`, `usePlayerActor`, `DefaultSystemSheet variant="player"`, `POST /api/player/combat-report`; **ADR-28**; §4 Player View синхронизирован)
+> Обновлено: 09.05.2026 (**§4 API** — маршруты **`/api/ai`** текстового чата, конфиг **`data/config/ai_settings.json`**; **ADR-29**); ранее: 06.05.2026 (**§2.8** — вкладка «Кубы», haptics, `is_secret`, whisper to GM, броски вне хода: очередь запросов + «пас на раунд» + глобальный тумблер; исправление `/api/player/roll/request`: **200 approved / 202 pending**); 05.05.2026 (**§2.8** — персонализированный `/ws/player?token=`, `usePlayerActor`, `DefaultSystemSheet variant="player"`, `POST /api/player/combat-report`; **ADR-28**; §4 Player View синхронизирован)
 > Стек сменился с Vue 3 на React 19 (сгенерировано в Google AI Studio).
 
 ## 📌 Суть проекта
@@ -498,6 +498,17 @@ Markdown-экспорт лога (`backend/services/logger.py`) и UI лога �
 ### Логи файлов (`/api/logs`)
 
 - `POST /api/logs/open_folder` — открыть папку логов на машине сервера (ОС-зависимо)
+
+### ИИ — текстовый чат (`/api/ai`)
+
+Фаза **AI.1** (GM Console, режим **AI**): без голоса, без вызова инструментов и без автоматического контекста боя.
+
+- **Хранение настроек:** `**data/config/ai_settings.json**` (глобально для приложения). Поля см. модель **`AIConfig`** в `backend/models.py`: как минимум **`chat_api_key`**, **`chat_base_url`**, **`chat_model`** для чата; ключи API не должны попадать в VCS.
+- `GET /api/ai/settings` — текущий **`AIConfig`**.
+- `POST /api/ai/settings` — сохранить **`AIConfig`** (перезапись файла).
+- `POST /api/ai/chat` — тело **`{ "messages": [ { "role": str, "content": str }, … ] }`** (OpenAI-совместимые роли строками); ответ **`{ "role": "assistant", "content": str }`**. Бэкенд вызывает провайдера **`POST {chat_base_url}/chat/completions`** с заголовком **`Authorization: Bearer <chat_api_key>`**. Ошибки провайдера → клиенту **502** с текстом в **`detail`**.
+
+Подробности реализации и ограничения — **`Progress_and_Backlog.md`** (фаза AI.1), архитектура — **ADR-29**.
 
 ### Системы и Локализация (`/api/systems`, `/api/locales`)
 

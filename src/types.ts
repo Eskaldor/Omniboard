@@ -17,6 +17,15 @@ export interface Effect {
   ai_variations?: Record<string, string>;
 }
 
+export interface AISettings {
+  chat_api_key: string;
+  chat_base_url: string;
+  chat_model: string;
+  image_api_key: string;
+  image_base_url: string;
+  image_model: string;
+}
+
 export interface Visibility {
   hp: boolean;
   stats: boolean;

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AnimatePresence, motion } from 'motion/react';
-import { BookOpen, Bot, ChevronDown, Dices, Lock, Plus } from 'lucide-react';
+import { BookOpen, Bot, ChevronDown, Dices, Lock, MessageSquare, Plus } from 'lucide-react';
 import { useCombatState } from '../../contexts/CombatStateContext';
 import { useColumns } from '../../contexts/ColumnsContext';
 import { useGMConsole } from '../../contexts/GMConsoleContext';
@@ -27,6 +27,8 @@ import {
   toastInitiativeRollOutcome,
   type RollBatchRow,
 } from '../../utils/rollToast';
+import { useAiChat } from '../../hooks/useAiChat';
+import { AIChatDrawer } from './AIChatDrawer';
 import { NoteCard } from './NoteCard';
 import {
   RollTokenPopup,
@@ -102,14 +104,17 @@ function isAtStartOfSegment(text: string, pos: number): boolean {
 
 export function GMConsoleSlider() {
   const { t } = useTranslation('core', { useSuspense: false });
-  const { state: combatState, refetchState } = useCombatState();
+  const { state: combatState, refetchState, pendingRollRequests, setPendingRollRequests } = useCombatState();
   const { systemName, columns } = useColumns();
   const combatSystem = ((combatState?.core.system ?? systemName) || '').trim();
   const { actions: systemActions } = useSystemActions(combatSystem);
   const { isFabSummoned, setIsFabSummoned } = useGMConsole();
+  const { messages: aiMessages, isLoading: aiLoading, sendMessage: sendAiMessage } = useAiChat();
   const [panelOpen, setPanelOpen] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
+  const [aiChatOpen, setAiChatOpen] = useState(false);
   const [initiativeStripOpen, setInitiativeStripOpen] = useState(false);
+  const [rollRequestsOpen, setRollRequestsOpen] = useState(false);
   const [bulkInitiativeRolling, setBulkInitiativeRolling] = useState(false);
   const [noteColumns, setNoteColumns] = useState<NoteColumn[]>(() => [newColumn()]);
   const [noteFiles, setNoteFiles] = useState<string[]>([]);
@@ -612,10 +617,21 @@ export function GMConsoleSlider() {
         return;
       }
 
+      if (inputMode === 'ai') {
+        const toSend = trimmed;
+        setCommand('');
+        setAiChatOpen(true);
+        void (async () => {
+          const ok = await sendAiMessage(toSend);
+          flashActionStatus(ok ? 'success' : 'error');
+        })();
+        return;
+      }
+
       setCommand('');
       flashActionStatus('success');
     },
-    [flashActionStatus, inputMode, popupToken, submitRoll],
+    [flashActionStatus, inputMode, popupToken, sendAiMessage, submitRoll],
   );
 
   const handleFabDoubleClick = useCallback(
@@ -641,10 +657,43 @@ export function GMConsoleSlider() {
   const inclNeutral = iniSess?.initiative_include_neutral ?? true;
   const iniLocked = iniSess?.initiative_reroll_locked ?? false;
   const iniShowRowDice = iniSess?.initiative_show_per_actor_dice !== false;
+  const allowOutOfTurn = iniSess?.allow_out_of_turn_rolls === true;
+
+  const toggleOutOfTurnPolicy = useCallback(async () => {
+    try {
+      await fetch('/api/combat/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ allow_out_of_turn_rolls: !allowOutOfTurn }),
+      });
+      await refetchState();
+    } catch {
+      // ignore
+    }
+  }, [allowOutOfTurn, refetchState]);
+
+  const resolveRollRequest = useCallback(
+    async (requestId: string, decision: 'approve_once' | 'deny' | 'grant_actor_round') => {
+      try {
+        await fetch(`/api/combat/roll-requests/${encodeURIComponent(requestId)}/resolve`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ decision }),
+        });
+      } catch {
+        // ignore
+      } finally {
+        setPendingRollRequests((prev) => prev.filter((r) => r.request_id !== requestId));
+        await refetchState();
+      }
+    },
+    [refetchState, setPendingRollRequests],
+  );
 
   useEffect(() => {
     if (!panelOpen) {
       setNotesOpen(false);
+      setAiChatOpen(false);
       setInitiativeStripOpen(false);
     }
   }, [panelOpen]);
@@ -734,7 +783,9 @@ export function GMConsoleSlider() {
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={springPanel}
-              className="pointer-events-none flex w-full flex-col justify-end origin-bottom overflow-hidden"
+              className={`pointer-events-none flex w-full flex-col justify-end origin-bottom ${
+                rollRequestsOpen ? 'overflow-visible' : 'overflow-hidden'
+              }`}
             >
               <AnimatePresence initial={false}>
                 {initiativeStripOpen && !hideInitiativeConsole ? (
@@ -885,6 +936,21 @@ export function GMConsoleSlider() {
                 ) : null}
               </AnimatePresence>
 
+              <AnimatePresence initial={false}>
+                {aiChatOpen ? (
+                  <motion.div
+                    key="gm-console-ai-chat-layer"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={springNotes}
+                    className="pointer-events-none w-full origin-bottom overflow-hidden bg-transparent"
+                  >
+                    <AIChatDrawer messages={aiMessages} isLoading={aiLoading} />
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+
               <div className="relative z-20 flex w-full flex-col pointer-events-auto border-t border-zinc-800 bg-zinc-950 shadow-[0_-8px_40px_rgba(0,0,0,0.6)]">
                 <div className="flex flex-wrap items-center gap-2 border-b border-zinc-800 bg-zinc-900/80 px-3 py-2">
                   <button
@@ -892,6 +958,7 @@ export function GMConsoleSlider() {
                     onClick={() => {
                       setNotesOpen((v) => !v);
                       setInitiativeStripOpen(false);
+                      setAiChatOpen(false);
                     }}
                     aria-expanded={notesOpen}
                     title={t('gm_console.toggle_notes')}
@@ -919,6 +986,7 @@ export function GMConsoleSlider() {
                       if (hideInitiativeConsole) return;
                       setInitiativeStripOpen((v) => !v);
                       setNotesOpen(false);
+                      setAiChatOpen(false);
                     }}
                     aria-expanded={initiativeStripOpen}
                     title={t('gm_console.placeholder_initiative')}
@@ -942,12 +1010,142 @@ export function GMConsoleSlider() {
                     </motion.span>
                     <span className="hidden sm:inline">{t('gm_console.placeholder_initiative')}</span>
                   </button>
+                  <span className="h-5 w-px shrink-0 bg-zinc-700/60" aria-hidden />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAiChatOpen((v) => !v);
+                      setNotesOpen(false);
+                      setInitiativeStripOpen(false);
+                    }}
+                    aria-expanded={aiChatOpen}
+                    title={t('gm_console.ai_chat_toggle')}
+                    className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                      aiChatOpen
+                        ? 'bg-rose-600/20 text-rose-300 ring-1 ring-rose-500/50'
+                        : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-zinc-100'
+                    }`}
+                  >
+                    <MessageSquare size={15} aria-hidden />
+                    <motion.span
+                      animate={{ rotate: aiChatOpen ? 180 : 0 }}
+                      transition={springNotes}
+                      className="inline-flex"
+                    >
+                      <ChevronDown size={15} aria-hidden />
+                    </motion.span>
+                    <span className="hidden sm:inline">{t('gm_console.ai_chat_toggle')}</span>
+                  </button>
                   <button type="button" disabled className={toolBtnClass}>
                     {t('gm_console.roll_matrix')}
                   </button>
-                  <button type="button" disabled className={toolBtnClass}>
-                    {t('gm_console.placeholder_monster_attack')}
-                  </button>
+                  <div className="relative pointer-events-auto">
+                    <button
+                      type="button"
+                      onClick={() => setRollRequestsOpen((v) => !v)}
+                      aria-expanded={rollRequestsOpen}
+                      className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                        rollRequestsOpen || allowOutOfTurn
+                          ? 'bg-emerald-600/20 text-emerald-400 ring-1 ring-emerald-500/50 hover:bg-emerald-600/30'
+                          : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-zinc-100'
+                      }`}
+                      title={t('gm_console.out_of_turn_button')}
+                    >
+                      {t('gm_console.out_of_turn_button')}
+                      {pendingRollRequests.length > 0 ? (
+                        <span className="ml-2 rounded-full bg-amber-500/20 text-amber-300 px-2 py-0.5 text-[10px]">
+                          {pendingRollRequests.length}
+                        </span>
+                      ) : null}
+                    </button>
+
+                    {rollRequestsOpen ? (
+                      <div className="absolute right-0 bottom-full z-[60] mb-2 w-[22rem] max-w-[90vw] rounded-xl border border-zinc-800 bg-zinc-950/95 backdrop-blur shadow-2xl overflow-hidden">
+                        <div className="px-3 py-2 border-b border-zinc-800">
+                          <div className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
+                            {t('gm_console.out_of_turn_button')}
+                          </div>
+                          <div className="mt-3 flex items-start gap-3">
+                            <div className="min-w-0 flex-1 space-y-1">
+                              <div className="text-xs font-medium text-zinc-200 leading-snug">
+                                {t('gm_console.out_of_turn_no_requests_label')}
+                              </div>
+                              <p className="text-[11px] text-zinc-500 leading-snug">
+                                {t('gm_console.out_of_turn_no_requests_hint')}
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              role="switch"
+                              aria-checked={allowOutOfTurn}
+                              onClick={() => void toggleOutOfTurnPolicy()}
+                              title={t('gm_console.out_of_turn_no_requests_label')}
+                              className={`relative mt-0.5 h-7 w-11 shrink-0 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 ${
+                                allowOutOfTurn ? 'bg-emerald-600/60' : 'bg-zinc-700'
+                              }`}
+                            >
+                              <span
+                                aria-hidden
+                                className={`pointer-events-none absolute top-0.5 left-0.5 h-6 w-6 rounded-full bg-white shadow-sm transition-transform duration-200 ease-out ${
+                                  allowOutOfTurn ? 'translate-x-4' : 'translate-x-0'
+                                }`}
+                              />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="max-h-64 overflow-y-auto p-2 space-y-2">
+                          {pendingRollRequests.length === 0 ? (
+                            <div className="text-xs text-zinc-600 px-2 py-3">{t('gm_console.roll_requests_empty')}</div>
+                          ) : (
+                            pendingRollRequests.map((r) => (
+                              <div
+                                key={r.request_id}
+                                className="rounded-lg border border-zinc-800 bg-zinc-900/60 px-3 py-2"
+                              >
+                                <div className="text-xs text-zinc-200 truncate">
+                                  {(r.actor_name ?? r.actor_id) || r.actor_id}
+                                  {r.is_secret ? (
+                                    <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-300">
+                                      secret
+                                    </span>
+                                  ) : null}
+                                </div>
+                                <div className="text-[11px] font-mono text-zinc-500 break-words">
+                                  {r.expression}
+                                </div>
+                                {r.comment ? (
+                                  <div className="text-[11px] text-zinc-400 mt-1 break-words">{r.comment}</div>
+                                ) : null}
+                                <div className="mt-2 flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => void resolveRollRequest(r.request_id, 'approve_once')}
+                                    className="flex-1 rounded-md border border-emerald-500/30 bg-emerald-600/15 text-emerald-300 text-xs py-1.5 hover:bg-emerald-600/25"
+                                  >
+                                    {t('gm_console.roll_request_ok')}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => void resolveRollRequest(r.request_id, 'deny')}
+                                    className="flex-1 rounded-md border border-rose-500/30 bg-rose-600/10 text-rose-300 text-xs py-1.5 hover:bg-rose-600/15"
+                                  >
+                                    {t('gm_console.roll_request_deny')}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => void resolveRollRequest(r.request_id, 'grant_actor_round')}
+                                    className="flex-1 rounded-md border border-amber-500/30 bg-amber-600/10 text-amber-300 text-xs py-1.5 hover:bg-amber-600/15"
+                                  >
+                                    {t('gm_console.roll_request_round_pass')}
+                                  </button>
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
 
                 <div className="relative bg-zinc-950 px-3 py-2.5">

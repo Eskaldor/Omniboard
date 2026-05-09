@@ -7,6 +7,8 @@ type CombatStateContextValue = {
   setState: React.Dispatch<React.SetStateAction<CombatState | null>>;
   wsError: string | null;
   isConnected: boolean;
+  pendingRollRequests: import('../hooks/useCombatState').PendingRollRequest[];
+  setPendingRollRequests: React.Dispatch<React.SetStateAction<import('../hooks/useCombatState').PendingRollRequest[]>>;
   refetchState: () => Promise<void>;
   reconnect: () => void;
 };
@@ -33,6 +35,8 @@ export function CombatStateProvider({ children }: { children: React.ReactNode })
         setState: value.setState,
         wsError: value.wsError,
         isConnected: value.isConnected,
+        pendingRollRequests: value.pendingRollRequests,
+        setPendingRollRequests: value.setPendingRollRequests,
         refetchState: value.refetchState,
         reconnect: value.reconnect,
       }}

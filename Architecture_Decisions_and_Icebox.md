@@ -1,6 +1,6 @@
 # Omniboard — Архитектурные решения и Ледник
 
-> Обновлено: 05.05.2026 (**ADR-28** — персонализированный `/ws/player` и отчёт о бое); ранее: **ADR-27** — Player View; **ADR-26** — `initiative_roll`; **ADR-25** — toast броска; **ADR-24** — терминал GM Console
+> Обновлено: 09.05.2026 (**ADR-29** — прокси текстового чата и конфиг ИИ); ранее: **ADR-28** — персонализированный `/ws/player` и отчёт о бое; **ADR-27** — Player View; **ADR-26** — `initiative_roll`; **ADR-25** — toast броска; **ADR-24** — терминал GM Console
 
 ---
 
@@ -298,6 +298,24 @@ actor_id = turn_queue[target_index]
 
 **Файлы:** `backend/services/player_state.py`, `backend/routers/ws.py`, `backend/routers/player.py`, `src/player/hooks/usePlayerActor.ts`, `src/player/hooks/usePlayerSocket.ts`, `src/player/PlayerApp.tsx`, `src/player/views/SheetView.tsx`, `src/player/views/ActionsView.tsx`, `src/components/Modals/CombatReportModal.tsx`, `src/components/CombatToolbar.tsx`.
 
+### ADR-29: Прокси текстового чата и файл конфигурации ИИ (фаза AI.1)
+
+**Статус:** Реализовано (май 2026).
+
+**Контекст:** режим **AI** в GM Console изначально был UI-заглушкой. Нужен минимальный безопасный путь к LLM без раскрытия ключей во фронте и без привязки к одному вендору в коде UI.
+
+**Решение:**
+
+1. **Глобальный конфиг** в **`data/config/ai_settings.json`** (`AIConfig`: `chat_api_key`, `chat_base_url`, `chat_model`; опционально `image_*` для будущего композитора). Загрузка через **`backend/utils/ai_config.py`**, миграция легаси-ключей из ранних экспериментов (OpenRouter и т.п.).
+
+2. **Единая точка выхода к провайдеру** — **`POST /api/ai/chat`**: тело с массивом **`messages`** в форме OpenAI Chat; бэкенд дергает **`{chat_base_url}/chat/completions`** с **`httpx`**, парсит **`choices[0].message.content`**, ошибки HTTP провайдера отдаёт клиенту как **502** с усечённым **`detail`**.
+
+3. **Ключи только на сервере.** Браузер вызывает свой же origin `/api/…`; секреты не проходят через `localStorage` и не зашиваются в сборку.
+
+**Границы фазы:** нет function calling, нет инъекции снимка **`CombatSession`** в промпт, нет RAG. Расширения — см. icebox «Красный Рыцарь» и **`Red_Knight_Vision.md`**.
+
+**Файлы:** `backend/routers/ai.py`, `backend/utils/ai_config.py`, `backend/models.py`, `src/hooks/useAiChat.ts`, `src/components/GMConsole/AIChatDrawer.tsx`, `src/components/Modals/ConfigTabs/AITab.tsx`.
+
 ---
 
 ## Отклонённые идеи
@@ -326,7 +344,7 @@ actor_id = turn_queue[target_index]
 
 Выдвижная боковая/нижняя панель и отдельная страница `**/gm-console`** для многоэкранного сетапа: терминал бросков, AI-помощник, Roll Matrix, быстрые заметки и история последних действий. Консоль не должна перекрывать трекер боя модалками; цель — второй монитор / планшет мастера.
 
-*Частично закрыто (май 2026):* нижняя плавающая консоль в основном UI даёт режимы Note/Roll/AI, язык токенов броска (`@`, `!`, `$`, сегменты `;`, комментарий `#`, см. **ADR-24** и `Omniboard_TZ.md` §2.6), попап автодополнения, `POST /api/combat/roll` и Smart Notes — **без** отдельного маршрута `/gm-console`.
+*Частично закрыто (май 2026):* нижняя плавающая консоль в основном UI даёт режимы Note/Roll/AI, язык токенов броска (`@`, `!`, `$`, сегменты `;`, комментарий `#`, см. **ADR-24** и `Omniboard_TZ.md` §2.6), попап автодополнения, `POST /api/combat/roll` и Smart Notes — **без** отдельного маршрута `/gm-console`. Режим **AI**: текстовый чат через **`/api/ai/chat`** (**ADR-29**, фаза AI.1 в **`Progress_and_Backlog.md`**).
 
 ### ~~🧊 Data-driven макросы бросков (`!stat`)~~ → **закрыто на клиенте (ADR-24)**
 

@@ -175,8 +175,12 @@ function LogEvent({ entry, index }: { entry: LogEntryView; index: number }) {
       return (
         <div className="py-1 px-2 rounded text-sm text-zinc-400">
           {entry.actor_name && <span className="text-zinc-300">{entry.actor_name}: </span>}
-          {entry.type === 'text' && typeof entry.details?.message === 'string'
-            ? entry.details.message
+          {entry.type === 'text'
+            ? typeof entry.details?.message === 'string'
+              ? entry.details.message
+              : typeof entry.details?.text === 'string'
+                ? entry.details.text
+                : ''
             : `${entry.type}`}
         </div>
       );
