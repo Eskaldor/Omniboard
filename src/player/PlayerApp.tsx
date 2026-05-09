@@ -3,6 +3,7 @@ import { BottomNavBar } from './components/BottomNavBar';
 import { LobbyView } from './views/LobbyView';
 import { SheetView } from './views/SheetView';
 import { ActionsView } from './views/ActionsView';
+import { DiceView } from './views/DiceView';
 import { InitiativeView } from './views/InitiativeView';
 import { LogView } from './views/LogView';
 import { usePlayerAuth } from './hooks/usePlayerAuth';
@@ -11,7 +12,7 @@ import type { PlayerTab } from './types';
 
 export default function PlayerApp() {
   const { auth, claim, unclaim } = usePlayerAuth();
-  const { state, isConnected } = usePlayerSocket(auth?.token);
+  const { state, isConnected, syncMode, rollRequestStatus } = usePlayerSocket(auth?.token);
   const [tab, setTab] = useState<PlayerTab>('sheet');
 
   // Не прошли аутентификацию — показываем лобби
@@ -20,6 +21,25 @@ export default function PlayerApp() {
   }
 
   const system = state?.core.system ?? '';
+  const isCombatActive = state?.core?.is_active === true;
+  const dotClass = !auth.token || !state || !isCombatActive
+    ? 'bg-zinc-600'
+    : syncMode === 'ws' && isConnected
+      ? 'bg-emerald-500'
+      : syncMode === 'http'
+        ? 'bg-amber-400'
+        : 'bg-zinc-600';
+  const dotTitle = !auth.token
+    ? 'Нет токена'
+    : !state
+      ? 'Нет данных'
+      : !isCombatActive
+        ? 'Бой не активен'
+        : syncMode === 'ws' && isConnected
+          ? 'Синхронизация: WebSocket'
+          : syncMode === 'http'
+            ? 'Синхронизация: HTTP fallback'
+            : 'Нет соединения';
 
   return (
     <div className="flex flex-col h-dvh bg-zinc-950 text-zinc-100 overflow-hidden">
@@ -30,7 +50,8 @@ export default function PlayerApp() {
         </span>
         <div className="flex items-center gap-2">
           <span
-            className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-zinc-600'}`}
+            title={dotTitle}
+            className={`w-1.5 h-1.5 rounded-full ${dotClass}`}
           />
           <button
             onClick={() => void unclaim()}
@@ -44,9 +65,10 @@ export default function PlayerApp() {
       {/* Main content */}
       <main className="flex-1 overflow-y-auto overscroll-contain pb-16">
         {tab === 'sheet' && <SheetView auth={auth} system={system} state={state} />}
-        {tab === 'actions' && <ActionsView auth={auth} state={state} />}
+        {tab === 'actions' && <ActionsView auth={auth} state={state} rollRequestStatus={rollRequestStatus} />}
+        {tab === 'dice' && <DiceView auth={auth} state={state} rollRequestStatus={rollRequestStatus} />}
         {tab === 'initiative' && <InitiativeView state={state} myActorId={auth.actorId} />}
-        {tab === 'log' && <LogView state={state} />}
+        {tab === 'log' && <LogView auth={auth} state={state} />}
       </main>
 
       <BottomNavBar active={tab} onChange={setTab} />

@@ -1,13 +1,18 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import type { Actor, ColumnConfig } from '../../types';
 import { DefaultSystemSheet } from '../Modals/DefaultSystemSheet';
 import { resolveActiveSheetProfile, useSystemSheetProfiles } from '../../hooks/useSystemSheetProfiles';
 import { getCustomActorSheet } from './SheetRegistry';
+import i18n from '../../i18n';
+import type { PublicCombatState } from '../../player/types';
 
 export function ActorFullSheet({
   actor,
   columns,
   systemName,
+  playerAuthToken,
+  playerActorId,
+  playerState,
   onUpdate,
   onPatchActor,
   onOpenPortraitPicker,
@@ -17,6 +22,9 @@ export function ActorFullSheet({
   actor: Actor;
   columns: ColumnConfig[];
   systemName: string;
+  playerAuthToken?: string;
+  playerActorId?: string;
+  playerState?: PublicCombatState | null;
   onUpdate?: (id: string, field: string, value: unknown) => void;
   onPatchActor?: (updates: Partial<Actor>) => void;
   onOpenPortraitPicker?: () => void;
@@ -34,6 +42,20 @@ export function ActorFullSheet({
     () => resolveActiveSheetProfile(profiles, actor.sheet_profile_id),
     [profiles, actor.sheet_profile_id],
   );
+
+  const systemNamespace = `systems/${resolvedSystemName}`;
+  useEffect(() => {
+    if (!resolvedSystemName) return;
+    try {
+      const lang = i18n.language || (i18n.options?.fallbackLng as string) || 'en';
+      const langCode = typeof lang === 'string' ? lang.split('-')[0] : 'en';
+      if (langCode && !i18n.hasResourceBundle(langCode, systemNamespace)) {
+        i18n.loadNamespaces(systemNamespace).catch(() => {});
+      }
+    } catch {
+      // ignore
+    }
+  }, [resolvedSystemName, systemNamespace]);
 
   const Custom = getCustomActorSheet(resolvedProfile?.custom_component_id);
   if (Custom) {
@@ -56,6 +78,9 @@ export function ActorFullSheet({
       columns={columns}
       systemName={resolvedSystemName}
       variant="player"
+      playerAuthToken={playerAuthToken}
+      playerActorId={playerActorId}
+      playerState={playerState}
       onUpdate={onUpdate}
       onPatchActor={onPatchActor}
       onOpenPortraitPicker={onOpenPortraitPicker}

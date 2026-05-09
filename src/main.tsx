@@ -12,7 +12,20 @@ const isPlayerRoute = window.location.pathname.startsWith('/player');
 
 function renderApp() {
   if (isPlayerRoute) {
-    createRoot(document.getElementById('root')!).render(<PlayerApp />);
+    createRoot(document.getElementById('root')!).render(
+      <>
+        <PlayerApp />
+        <Toaster
+          position="bottom-center"
+          toastOptions={{
+            duration: 3800,
+            className:
+              '!bg-zinc-900 !text-zinc-100 !border !border-zinc-700/90 !rounded-xl !shadow-lg !shadow-black/40 !px-4 !py-3',
+            style: { maxWidth: 'min(26rem, calc(100vw - 2rem))' },
+          }}
+        />
+      </>,
+    );
     return;
   }
 

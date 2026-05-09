@@ -28,6 +28,7 @@ import {
   parseStatValueDraft,
   type StatOverrideDraft,
 } from '../../utils/stats';
+import { hasActorRoundOutOfTurnPass } from '../../utils/outOfTurnRoll';
 import { InlineInput } from '../InitiativeTracker/InlineInput';
 import { usePortraitCacheVersion } from '../../utils/portraitCache';
 import {
@@ -39,10 +40,12 @@ import {
   useSystemSheetProfiles,
 } from '../../hooks/useSystemSheetProfiles';
 import {
+  normalizeRollResult,
   parseRollHttpResponse,
   showRollErrorToast,
   showRollResultToast,
 } from '../../utils/rollToast';
+import { hapticTap } from '../../utils/haptics';
 import { TextEditorModal } from './TextEditorModal';
 import { CheckboxGroupCell } from '../InitiativeTracker/ActorRow';
 
@@ -179,6 +182,9 @@ function StatRow({
   pairColumn,
   onUpdate,
   variant,
+  playerAuthToken,
+  playerActorId,
+  playerState,
 }: {
   actor: Actor;
   column: ColumnConfig;
@@ -186,6 +192,9 @@ function StatRow({
   pairColumn?: ColumnConfig;
   onUpdate?: (id: string, field: string, value: unknown) => void;
   variant: SheetVariant;
+  playerAuthToken?: string;
+  playerActorId?: string;
+  playerState?: import('../../player/types').PublicCombatState | null;
 }) {
   const { t } = useTranslation('core', { useSuspense: false });
   const draft = parseStatValueDraft(actor.stats[column.key]);
@@ -242,21 +251,53 @@ function StatRow({
       const expr = rawExpr
         ? rawExpr.replace(/\[value\]/g, `[${column.key}]`)
         : `1d20 + [${column.key}]`;
+      const isPlayer = variant === 'player';
+      const allowOutOfTurn = playerState?.session?.allow_out_of_turn_rolls === true;
+      const isMyTurn =
+        (playerState?.core?.is_active ?? false) &&
+        playerState?.core?.turn_queue != null &&
+        playerActorId != null &&
+        playerState.core.turn_queue[playerState.core.current_index ?? 0] === playerActorId;
+      const roundPass = hasActorRoundOutOfTurnPass(playerState?.session, playerState?.core?.round, playerActorId);
+      const canRollNow = !isPlayer || isMyTurn || allowOutOfTurn || roundPass;
+
+      if (isPlayer && !canRollNow && playerAuthToken) {
+        const res = await fetch('/api/player/roll/request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Player-Token': playerAuthToken },
+          body: JSON.stringify({ expression: expr, comment: label, is_secret: false }),
+        });
+        const raw = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+        const status = typeof raw.status === 'string' ? raw.status : '';
+        if (status === 'pending') return;
+        if (status === 'approved') {
+          const result = normalizeRollResult(raw.result);
+          if (!result) {
+            showRollErrorToast(t('stat_editor.roll_failed'));
+            return;
+          }
+          showRollResultToast({ result, actorName: actor.name, comment: label });
+          hapticTap('light');
+          return;
+        }
+        if (!res.ok) {
+          showRollErrorToast(typeof raw.detail === 'string' ? raw.detail : t('stat_editor.roll_failed'));
+        }
+        return;
+      }
+
       const res = await fetch(`/api/combat/actors/${encodeURIComponent(actor.id)}/roll`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(playerAuthToken ? { 'X-Player-Token': playerAuthToken } : {}) },
         body: JSON.stringify({ expression: expr, is_preroll: false }),
       });
       const parsed = await parseRollHttpResponse(res);
       if (!parsed.ok) {
-        showRollErrorToast(parsed.message);
+        showRollErrorToast((parsed as { ok: false; message: string }).message);
         return;
       }
-      showRollResultToast({
-        result: parsed.result,
-        actorName: actor.name,
-        comment: label,
-      });
+      showRollResultToast({ result: parsed.result, actorName: actor.name, comment: label });
+      hapticTap('light');
     } catch {
       showRollErrorToast(t('stat_editor.roll_network_error'));
     } finally {
@@ -616,6 +657,9 @@ function renderSheetColumn(
   colName: (col: ColumnConfig) => string,
   onUpdate: ((id: string, field: string, value: unknown) => void) | undefined,
   variant: SheetVariant,
+  playerAuthToken?: string,
+  playerActorId?: string,
+  playerState?: import('../../player/types').PublicCombatState | null,
 ): React.ReactNode {
   if (isTextLikeColumn(col)) {
     return (
@@ -657,6 +701,9 @@ function renderSheetColumn(
           label={colName(col)}
           onUpdate={onUpdate}
           variant={variant}
+          playerAuthToken={playerAuthToken}
+          playerActorId={playerActorId}
+          playerState={playerState}
         />
       </div>
     );
@@ -671,6 +718,9 @@ function renderSheetColumn(
           label={colName(col)}
           onUpdate={onUpdate}
           variant={variant}
+          playerAuthToken={playerAuthToken}
+          playerActorId={playerActorId}
+          playerState={playerState}
         />
         <StatRow
           actor={actor}
@@ -678,6 +728,9 @@ function renderSheetColumn(
           label={colName(pairColumn)}
           onUpdate={onUpdate}
           variant={variant}
+          playerAuthToken={playerAuthToken}
+          playerActorId={playerActorId}
+          playerState={playerState}
         />
       </React.Fragment>
     );
@@ -691,6 +744,9 @@ function renderSheetColumn(
       label={colName(col)}
       onUpdate={onUpdate}
       variant={variant}
+      playerAuthToken={playerAuthToken}
+      playerActorId={playerActorId}
+      playerState={playerState}
     />
   );
 }
@@ -820,6 +876,9 @@ export function DefaultSystemSheet({
   sheetProfiles,
   sheetProfilesLoading,
   variant = 'gm',
+  playerAuthToken,
+  playerActorId,
+  playerState,
 }: {
   actor: Actor;
   columns: ColumnConfig[];
@@ -833,6 +892,9 @@ export function DefaultSystemSheet({
   sheetProfilesLoading?: boolean;
   /** `gm` (default) — compact modal; `player` — roomy mobile with hero header. */
   variant?: SheetVariant;
+  playerAuthToken?: string;
+  playerActorId?: string;
+  playerState?: import('../../player/types').PublicCombatState | null;
 }) {
   const { t } = useTranslation('core', { useSuspense: false });
   const combatState = useCombatStateOptional();
@@ -841,7 +903,10 @@ export function DefaultSystemSheet({
   const systemLayoutProfiles = combatCtx?.systemLayoutProfiles ?? [];
   const portraitCacheVersion = usePortraitCacheVersion();
   const colName = (col: ColumnConfig) =>
-    i18n.t(`${col.key}.name`, { ns: `systems/${systemName}` }) || col.label || col.key;
+    i18n.t(`${col.key}.name`, {
+      ns: `systems/${systemName}`,
+      defaultValue: col.label || col.key,
+    });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [devices, setDevices] = useState<Record<string, DeviceInfo>>({});
   const [showSetup, setShowSetup] = useState(false);
@@ -1025,6 +1090,27 @@ export function DefaultSystemSheet({
     setStatsOpenMap({});
   }, [statsSectionKeys.join('|')]);
 
+  const playerAccordionMeta = useMemo(() => {
+    const accordions = activeProfile?.stats?.accordions ?? [];
+    return accordions
+      .map((acc, idx) => {
+        const name = (acc.name || '').trim() || t('modals.mini_sheet_group_other');
+        const mode = normalizeSheetAccordionDisplay(acc.display);
+        const collapsible = mode === 'accordion';
+        const sectionKey = statsSectionKeys[idx];
+        const isOpen = collapsible ? statsOpenMap[sectionKey] === true : true;
+        return {
+          idx,
+          name,
+          anchorId: `player-sheet-acc-${idx}`,
+          collapsible,
+          isOpen,
+          sectionKey,
+        };
+      })
+      .filter((x) => x.name.trim() !== '');
+  }, [activeProfile?.stats?.accordions, statsOpenMap, statsSectionKeys, t]);
+
   const renderStatsColumnPanel = () => {
     if (columns.length === 0) {
       return <div className="text-xs text-zinc-600 italic px-1">{t('modals.stats')}: —</div>;
@@ -1037,7 +1123,17 @@ export function DefaultSystemSheet({
     const gridFor = (ordered: ColumnConfig[]) => (
       <div className={tokens.statGridCols}>
         {ordered.map((col) =>
-          renderSheetColumn(actor, col, columns, colName, onUpdate, variant),
+          renderSheetColumn(
+            actor,
+            col,
+            columns,
+            colName,
+            onUpdate,
+            variant,
+            playerAuthToken,
+            playerActorId,
+            playerState,
+          ),
         )}
       </div>
     );
@@ -1063,6 +1159,7 @@ export function DefaultSystemSheet({
       return (
         <SheetSection
           key={`${acc.name}-${idx}`}
+          anchorId={isPlayer ? `player-sheet-acc-${idx}` : undefined}
           heading={heading}
           collapsible={isCollapsible}
           isOpen={isOpen}
@@ -1118,6 +1215,40 @@ export function DefaultSystemSheet({
           heroStatChips={heroStatChips}
           onOpenPortraitPicker={onOpenPortraitPicker}
         />
+        {playerAccordionMeta.length > 1 ? (
+          <div className="-mx-4 sticky top-0 z-20 bg-zinc-950/85 backdrop-blur border-y border-zinc-800/60">
+            <div className="px-4 py-2 overflow-x-auto [scrollbar-width:none]">
+              <div className="flex items-center gap-2 min-w-max">
+                {playerAccordionMeta.map((m) => {
+                  const active = m.isOpen;
+                  return (
+                    <button
+                      key={m.anchorId}
+                      type="button"
+                      onClick={() => {
+                        if (m.collapsible && !m.isOpen) {
+                          setStatsOpenMap((prev) => ({ ...prev, [m.sectionKey]: true }));
+                        }
+                        requestAnimationFrame(() => {
+                          const el = document.getElementById(m.anchorId);
+                          el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        });
+                      }}
+                      className={[
+                        'shrink-0 inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+                        active
+                          ? 'bg-amber-500/15 border-amber-500/40 text-amber-300'
+                          : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 active:text-zinc-200',
+                      ].join(' ')}
+                    >
+                      <span className="truncate max-w-[12rem]">{m.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        ) : null}
         <section>{renderStatsColumnPanel()}</section>
       </div>
     );
@@ -1331,6 +1462,7 @@ export function DefaultSystemSheet({
 // ─── SheetSection — variant-aware section card ────────────────────────────────
 
 function SheetSection({
+  anchorId,
   heading,
   collapsible,
   isOpen,
@@ -1338,6 +1470,7 @@ function SheetSection({
   tokens,
   children,
 }: {
+  anchorId?: string;
   heading: string;
   collapsible: boolean;
   isOpen: boolean;
@@ -1363,7 +1496,7 @@ function SheetSection({
   );
 
   return (
-    <div className="space-y-2">
+    <div id={anchorId} className="space-y-2 scroll-mt-28">
       {collapsible ? (
         <button
           type="button"

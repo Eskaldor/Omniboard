@@ -209,6 +209,7 @@ export interface CombatLogEntry {
   actor_id?: string | null;
   actor_name?: string | null;
   details: Record<string, unknown>;
+  is_secret?: boolean;
 }
 
 /** Боевая механика (ADR-18 / backend CombatCore). */
@@ -313,6 +314,10 @@ export interface SessionMeta {
   initiative_show_per_actor_dice?: boolean;
   /** ID активной кампании игроков (Player View лобби). */
   active_campaign_id?: string | null;
+  /** Allow players to roll outside their turn without GM approval. */
+  allow_out_of_turn_rolls?: boolean;
+  /** actor_id → номер раунда: этому актёру разрешены броски вне хода до конца этого раунда. */
+  actor_out_of_turn_round_pass?: Record<string, number>;
 }
 
 /**

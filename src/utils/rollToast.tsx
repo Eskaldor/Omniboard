@@ -1,5 +1,6 @@
 import toast from 'react-hot-toast';
 import i18n from '../i18n';
+import { X } from 'lucide-react';
 
 export type RollResultPayload = {
   total: number;
@@ -13,8 +14,8 @@ const NS = 'core';
 const DETAILS_SOFT_MAX = 140;
 const BATCH_MAX_ROWS = 12;
 
-function t(key: string): string {
-  return i18n.t(key, { ns: NS });
+function t(key: string, options?: Record<string, unknown>): string {
+  return String(i18n.t(key, { ns: NS, ...(options ?? {}) }));
 }
 
 export function truncateText(s: string, maxLen: number): string {
@@ -154,9 +155,65 @@ export function showRollResultToast(opts: {
   const subhead = subParts.length > 0 ? subParts.join(' · ') : undefined;
 
   toast.custom(
-    () => (
-      <div className="rounded-xl border border-zinc-700/90 bg-zinc-900 px-4 py-3 shadow-lg shadow-black/40">
+    (tst) => (
+      <div className="rounded-xl border border-zinc-700/90 bg-zinc-900 px-4 py-3 shadow-lg shadow-black/40 relative">
+        <button
+          type="button"
+          onClick={() => toast.dismiss(tst.id)}
+          className="absolute right-2 top-2 w-7 h-7 grid place-items-center rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/70 transition-colors"
+          title="Закрыть"
+        >
+          <X size={14} />
+        </button>
         <RollToastBody headline={t('roll_toast.result_headline')} subhead={subhead} result={result} />
+      </div>
+    ),
+    { duration: durationMs },
+  );
+}
+
+/** GM: игрок запросил бросок вне своего хода — в том же хроме, что и прочие roll-тосты. */
+export function showRollRequestToast(opts: {
+  actorName?: string;
+  expression: string;
+  comment?: string | null;
+  isSecret?: boolean;
+  durationMs?: number;
+}) {
+  const { actorName, expression, comment, isSecret, durationMs = 5200 } = opts;
+  const headline = t('roll_toast.request_headline');
+  const actorLine = (actorName ?? '').trim() || t('roll_toast.request_actor_fallback');
+  const exprShort = truncateText(expression, 72);
+  const commentTrim = (comment ?? '').trim();
+
+  toast.custom(
+    (tst) => (
+      <div className="rounded-xl border border-amber-500/35 bg-zinc-900 px-4 py-3 shadow-lg shadow-black/40 max-w-[22rem] relative">
+        <button
+          type="button"
+          onClick={() => toast.dismiss(tst.id)}
+          className="absolute right-2 top-2 w-7 h-7 grid place-items-center rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/70 transition-colors"
+          title="Закрыть"
+        >
+          <X size={14} />
+        </button>
+        <div className="text-[11px] font-semibold uppercase tracking-wide text-amber-400/90 mb-1 pr-8">
+          {headline}
+          {isSecret ? (
+            <span className="ml-2 normal-case font-medium text-zinc-500">{t('roll_toast.request_secret')}</span>
+          ) : null}
+        </div>
+        <div className="text-xs text-zinc-200 font-medium truncate pr-6" title={actorLine}>
+          {actorLine}
+        </div>
+        <div className="mt-1 font-mono text-[11px] text-emerald-400/95 break-words" title={expression}>
+          {exprShort}
+        </div>
+        {commentTrim ? (
+          <div className="mt-1 text-[11px] text-zinc-500 line-clamp-2" title={commentTrim}>
+            {commentTrim}
+          </div>
+        ) : null}
       </div>
     ),
     { duration: durationMs },
@@ -165,8 +222,16 @@ export function showRollResultToast(opts: {
 
 export function showRollErrorToast(message: string, durationMs = 4000) {
   toast.custom(
-    () => (
-      <div className="rounded-xl border border-rose-500/40 bg-zinc-900 px-4 py-3 shadow-lg shadow-black/40 max-w-[22rem]">
+    (tst) => (
+      <div className="rounded-xl border border-rose-500/40 bg-zinc-900 px-4 py-3 shadow-lg shadow-black/40 max-w-[22rem] relative">
+        <button
+          type="button"
+          onClick={() => toast.dismiss(tst.id)}
+          className="absolute right-2 top-2 w-7 h-7 grid place-items-center rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/70 transition-colors"
+          title="Закрыть"
+        >
+          <X size={14} />
+        </button>
         <div className="text-[11px] font-semibold uppercase tracking-wide text-rose-400/90 mb-1">
           {t('roll_toast.error_headline')}
         </div>
@@ -236,8 +301,16 @@ export function showRollBatchToast(rows: RollBatchRow[], durationMs = 5600) {
   const overflow = rows.length - visible.length;
 
   toast.custom(
-    () => (
-      <div className="rounded-xl border border-zinc-700/90 bg-zinc-900 px-3 py-2.5 shadow-lg shadow-black/40 min-w-[16rem] max-w-[26rem]">
+    (tst) => (
+      <div className="rounded-xl border border-zinc-700/90 bg-zinc-900 px-3 py-2.5 shadow-lg shadow-black/40 min-w-[16rem] max-w-[26rem] relative">
+        <button
+          type="button"
+          onClick={() => toast.dismiss(tst.id)}
+          className="absolute right-2 top-2 w-7 h-7 grid place-items-center rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/70 transition-colors"
+          title="Закрыть"
+        >
+          <X size={14} />
+        </button>
         <div className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500 mb-2 px-1">
           {t('roll_toast.batch_headline')}
         </div>

@@ -21,7 +21,7 @@ export interface PlayerSessionInfo {
   round: number;
 }
 
-export type PlayerTab = 'sheet' | 'actions' | 'initiative' | 'log';
+export type PlayerTab = 'sheet' | 'actions' | 'dice' | 'initiative' | 'log';
 
 export interface SheetViewProps {
   actor: Actor | null;

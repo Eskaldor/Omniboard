@@ -48,6 +48,9 @@ export function SheetView({ auth, system, state = null }: Props) {
       actor={actor}
       columns={sheetCols}
       systemName={system}
+      playerAuthToken={auth.token}
+      playerActorId={auth.actorId}
+      playerState={state}
     />
   );
 }
