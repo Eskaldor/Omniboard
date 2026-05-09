@@ -11,6 +11,9 @@ __pycache__/
 venv/
 package-lock.json
 
+# AI provider secrets (local only; see Omniboard_TZ / ADR-29)
+data/config/ai_settings.json
+
 # Claude / Cursor local worktrees and agent metadata
 .claude/
 
