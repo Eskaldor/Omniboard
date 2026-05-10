@@ -50,6 +50,83 @@ from backend.services.render_push import proactive_render_and_push
 
 router = APIRouter(prefix="/api/combat", tags=["combat"])
 
+
+class MatrixSelectionPatch(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    actor_id: str = Field(..., min_length=1)
+    cell_id: str = Field(..., min_length=1)
+    slot_index: int = 0
+    queued: bool = True
+
+
+class MatrixGhostPatch(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    matrix_ghost_global: bool | None = None
+    actor_id: str | None = None
+    row_ghost: bool | None = None
+
+
+def _flush_matrix_queue_for_actor_ids(actor_ids: list[str]) -> None:
+    """Emit log lines for queued matrix cells for the ending turn slot; clear those queues."""
+    st = app_state.state
+    sess = st.session
+    ghost_glob = sess.matrix_ghost_global
+    for aid in actor_ids:
+        qraw = sess.matrix_cell_queue.get(aid)
+        if not isinstance(qraw, list) or len(qraw) == 0:
+            sess.matrix_cell_queue.pop(aid, None)
+            continue
+        actor = next((a for a in st.core.actors if a.id == aid), None)
+        groups = sess.prerolls.get(aid)
+        if not isinstance(groups, list):
+            groups = []
+        row_ghost = bool(sess.matrix_row_ghost.get(aid))
+        if ghost_glob or row_ghost or actor is None:
+            sess.matrix_cell_queue[aid] = []
+            continue
+        for raw in qraw:
+            if not isinstance(raw, dict):
+                continue
+            cid = str(raw.get("cell_id") or "").strip()
+            try:
+                sidx = int(raw.get("slot_index", 0))
+            except (TypeError, ValueError):
+                sidx = 0
+            parent, slot = MatrixManager.find_slot(groups, cid, sidx)
+            if parent is None or slot is None:
+                continue
+            if slot.get("used"):
+                continue
+            results = slot.get("results") or []
+            totals: list[Any] = []
+            detail_lines: list[str] = []
+            for r in results:
+                if isinstance(r, dict):
+                    totals.append(r.get("total"))
+                    formula = str(r.get("formula", ""))
+                    det_str = str(r.get("details", ""))
+                    detail_lines.append(f"{formula} → {r.get('total')} ({det_str})")
+            label = str(parent.get("label") or parent.get("rule_id") or cid)
+            msg = f"Matrix «{label}» #{sidx + 1}: {' | '.join(str(x) for x in totals)}"
+            add_log(
+                "text",
+                actor_id=actor.id,
+                actor_name=actor.name,
+                details={
+                    "is_matrix_use": True,
+                    "is_matrix_queue_flush": True,
+                    "cell_id": cid,
+                    "label": label,
+                    "slot_index": sidx,
+                    "totals": totals,
+                    "breakdown": detail_lines,
+                    "message": msg,
+                },
+            )
+        sess.matrix_cell_queue[aid] = []
+
 _dice = DiceManager()
 _archive_warn = logging.getLogger("omniboard.combat_archive")
 
@@ -447,9 +524,57 @@ async def matrix_generate():
     st = app_state.state
     prerolls = MatrixManager.build_prerolls(st, _dice)
     st.session.prerolls = prerolls
+    st.session.matrix_cell_queue = {}
     await save_snapshot()
     await broadcast_state()
     return {"prerolls": prerolls}
+
+
+@router.patch("/matrix/selection")
+async def matrix_patch_selection(body: MatrixSelectionPatch):
+    """Toggle queued matrix cell for ``POST /next-turn`` flush."""
+    st = app_state.state
+    aid = body.actor_id.strip()
+    actor = next((a for a in st.core.actors if a.id == aid), None)
+    if actor is None:
+        raise HTTPException(status_code=404, detail="actor not found")
+    cid = body.cell_id.strip()
+    q = st.session.matrix_cell_queue.setdefault(aid, [])
+    token = {"cell_id": cid, "slot_index": int(body.slot_index)}
+
+    def _same(item: dict[str, Any]) -> bool:
+        return (
+            str(item.get("cell_id") or "").strip() == cid
+            and int(item.get("slot_index", 0)) == int(body.slot_index)
+        )
+
+    if body.queued:
+        if not any(isinstance(x, dict) and _same(x) for x in q):
+            q.append(token)
+    else:
+        st.session.matrix_cell_queue[aid] = [x for x in q if not (isinstance(x, dict) and _same(x))]
+        if len(st.session.matrix_cell_queue[aid]) == 0:
+            st.session.matrix_cell_queue.pop(aid, None)
+    await save_snapshot()
+    await broadcast_state()
+    return {"ok": True}
+
+
+@router.patch("/matrix/ghost")
+async def matrix_patch_ghost(body: MatrixGhostPatch):
+    """Global or per-actor ghost mode for matrix queue logging."""
+    st = app_state.state
+    if body.matrix_ghost_global is not None:
+        st.session.matrix_ghost_global = bool(body.matrix_ghost_global)
+    aid = (body.actor_id or "").strip()
+    if aid and body.row_ghost is not None:
+        if body.row_ghost:
+            st.session.matrix_row_ghost[aid] = True
+        else:
+            st.session.matrix_row_ghost.pop(aid, None)
+    await save_snapshot()
+    await broadcast_state()
+    return {"ok": True}
 
 
 @router.post("/actors/{actor_id}/matrix/use")
@@ -463,22 +588,9 @@ async def matrix_use_preroll(actor_id: str, body: MatrixUseRequest):
     if not isinstance(groups, list):
         raise HTTPException(status_code=400, detail="no matrix prerolls for actor")
     rule_id = (body.rule_id or "").strip()
-    target: dict | None = None
-    for g in groups:
-        if isinstance(g, dict) and g.get("rule_id") == rule_id:
-            target = g
-            break
-    if target is None:
+    target, slot = MatrixManager.find_slot(groups, rule_id, body.index)
+    if target is None or slot is None:
         raise HTTPException(status_code=404, detail="rule not found")
-    slots = target.get("slots")
-    if not isinstance(slots, list):
-        raise HTTPException(status_code=400, detail="invalid preroll structure")
-    slot = next(
-        (s for s in slots if isinstance(s, dict) and s.get("index") == body.index),
-        None,
-    )
-    if slot is None:
-        raise HTTPException(status_code=404, detail="slot not found")
     if slot.get("used"):
         raise HTTPException(status_code=400, detail="slot already used")
     slot["used"] = True
@@ -573,9 +685,14 @@ async def next_turn(background_tasks: BackgroundTasks, payload: dict = Body(defa
     prev_effects_by_actor: dict[str, dict[str, str]] = {
         a.id: {e.id: e.name for e in a.effects} for a in st.core.actors
     }
+    _flush_matrix_queue_for_actor_ids(list(prev_ids))
     app_state.state = next_turn_for_session(st, target_actor_id)
     _log_turn_progression(prev_round, prev_effects_by_actor)
     _maybe_reroll_locked_initiative_on_new_round(prev_round)
+
+    if app_state.state.core.round > prev_round:
+        app_state.state.session.prerolls = MatrixManager.build_prerolls(app_state.state, _dice)
+        app_state.state.session.matrix_cell_queue = {}
 
     # Second snapshot captures the new state (still RAM-only and fast).
     await save_snapshot()

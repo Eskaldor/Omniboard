@@ -29,6 +29,7 @@ import {
 } from '../../utils/rollToast';
 import { useAiChat } from '../../hooks/useAiChat';
 import { AIChatDrawer } from './AIChatDrawer';
+import { RollMatrixDrawer } from './RollMatrixDrawer';
 import { NoteCard } from './NoteCard';
 import {
   RollTokenPopup,
@@ -104,7 +105,8 @@ function isAtStartOfSegment(text: string, pos: number): boolean {
 
 export function GMConsoleSlider() {
   const { t } = useTranslation('core', { useSuspense: false });
-  const { state: combatState, refetchState, pendingRollRequests, setPendingRollRequests } = useCombatState();
+  const { state: combatState, refetchState, pendingRollRequests, setPendingRollRequests } =
+    useCombatState();
   const { systemName, columns } = useColumns();
   const combatSystem = ((combatState?.core.system ?? systemName) || '').trim();
   const { actions: systemActions } = useSystemActions(combatSystem);
@@ -115,6 +117,7 @@ export function GMConsoleSlider() {
   const [aiChatOpen, setAiChatOpen] = useState(false);
   const [initiativeStripOpen, setInitiativeStripOpen] = useState(false);
   const [rollRequestsOpen, setRollRequestsOpen] = useState(false);
+  const [rollMatrixOpen, setRollMatrixOpen] = useState(false);
   const [bulkInitiativeRolling, setBulkInitiativeRolling] = useState(false);
   const [noteColumns, setNoteColumns] = useState<NoteColumn[]>(() => [newColumn()]);
   const [noteFiles, setNoteFiles] = useState<string[]>([]);
@@ -695,6 +698,7 @@ export function GMConsoleSlider() {
       setNotesOpen(false);
       setAiChatOpen(false);
       setInitiativeStripOpen(false);
+      setRollMatrixOpen(false);
     }
   }, [panelOpen]);
 
@@ -951,6 +955,21 @@ export function GMConsoleSlider() {
                 ) : null}
               </AnimatePresence>
 
+              <AnimatePresence initial={false}>
+                {rollMatrixOpen ? (
+                  <motion.div
+                    key="gm-console-roll-matrix-layer"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={springNotes}
+                    className="pointer-events-none w-full origin-bottom overflow-hidden bg-transparent"
+                  >
+                    <RollMatrixDrawer combatSession={combatState} onRefetch={refetchState} />
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+
               <div className="relative z-20 flex w-full flex-col pointer-events-auto border-t border-zinc-800 bg-zinc-950 shadow-[0_-8px_40px_rgba(0,0,0,0.6)]">
                 <div className="flex flex-wrap items-center gap-2 border-b border-zinc-800 bg-zinc-900/80 px-3 py-2">
                   <button
@@ -959,6 +978,7 @@ export function GMConsoleSlider() {
                       setNotesOpen((v) => !v);
                       setInitiativeStripOpen(false);
                       setAiChatOpen(false);
+                      setRollMatrixOpen(false);
                     }}
                     aria-expanded={notesOpen}
                     title={t('gm_console.toggle_notes')}
@@ -987,6 +1007,7 @@ export function GMConsoleSlider() {
                       setInitiativeStripOpen((v) => !v);
                       setNotesOpen(false);
                       setAiChatOpen(false);
+                      setRollMatrixOpen(false);
                     }}
                     aria-expanded={initiativeStripOpen}
                     title={t('gm_console.placeholder_initiative')}
@@ -1017,6 +1038,7 @@ export function GMConsoleSlider() {
                       setAiChatOpen((v) => !v);
                       setNotesOpen(false);
                       setInitiativeStripOpen(false);
+                      setRollMatrixOpen(false);
                     }}
                     aria-expanded={aiChatOpen}
                     title={t('gm_console.ai_chat_toggle')}
@@ -1036,8 +1058,31 @@ export function GMConsoleSlider() {
                     </motion.span>
                     <span className="hidden sm:inline">{t('gm_console.ai_chat_toggle')}</span>
                   </button>
-                  <button type="button" disabled className={toolBtnClass}>
-                    {t('gm_console.roll_matrix')}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRollMatrixOpen((v) => !v);
+                      setNotesOpen(false);
+                      setInitiativeStripOpen(false);
+                      setAiChatOpen(false);
+                    }}
+                    aria-expanded={rollMatrixOpen}
+                    title={t('gm_console.roll_matrix')}
+                    className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                      rollMatrixOpen
+                        ? 'bg-amber-600/20 text-amber-200 ring-1 ring-amber-500/50'
+                        : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-zinc-100'
+                    }`}
+                  >
+                    <Dices size={15} aria-hidden />
+                    <motion.span
+                      animate={{ rotate: rollMatrixOpen ? 180 : 0 }}
+                      transition={springNotes}
+                      className="inline-flex"
+                    >
+                      <ChevronDown size={15} aria-hidden />
+                    </motion.span>
+                    <span className="hidden sm:inline">{t('gm_console.roll_matrix')}</span>
                   </button>
                   <div className="relative pointer-events-auto">
                     <button

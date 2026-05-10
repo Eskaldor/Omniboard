@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Loader2, Plus, Trash } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
-import type { Actor, ColumnConfig, Effect, MatrixRuleGroup } from '../../types';
+import type { Actor, ColumnConfig, Effect } from '../../types';
 import type { SystemActionDef } from '../../hooks/useSystemActions';
 import { mergeActorActionDefs } from '../../utils/mergeActorActionDefs';
 import {
@@ -22,82 +22,6 @@ function withCacheBuster(url: string, buster: string | number): string {
   if (!url) return url;
   const sep = url.includes('?') ? '&' : '?';
   return `${url}${sep}v=${encodeURIComponent(String(buster))}`;
-}
-
-function matrixSlotSummary(
-  rule: MatrixRuleGroup,
-  slot: MatrixRuleGroup['slots'][number],
-  unknownTotal: string,
-): string {
-  const parts = (slot.results ?? []).map((r) =>
-    typeof r.total === 'number' && Number.isFinite(r.total) ? String(r.total) : unknownTotal,
-  );
-  if (rule.display === 'pair') return parts.join(' | ');
-  return parts[0] ?? unknownTotal;
-}
-
-function MatrixPrerollButtons({
-  actorId,
-  rules,
-  onUsed,
-}: {
-  actorId: string;
-  rules: MatrixRuleGroup[] | undefined;
-  onUsed?: () => void | Promise<void>;
-}) {
-  const { t } = useTranslation('core', { useSuspense: false });
-  const unknownTotal = t('stat_editor.unknown_total');
-  const list = rules ?? [];
-  if (list.length === 0) {
-    return <span className="text-zinc-600 text-[11px]">{t('common.empty_dash')}</span>;
-  }
-  return (
-    <div className="flex flex-col gap-1.5 min-w-0 max-w-[11rem]">
-      {list.map((rule) => (
-        <div key={rule.rule_id} className="flex flex-col gap-0.5">
-          <span className="text-[10px] text-zinc-500 truncate" title={rule.label}>
-            {rule.label}
-          </span>
-          <div className="flex flex-wrap gap-0.5">
-            {(rule.slots ?? []).map((slot) => {
-              const label = matrixSlotSummary(rule, slot, unknownTotal);
-              const tip = (slot.results ?? [])
-                .map((r) => `${r.formula} → ${r.total}: ${r.details}`)
-                .join('; ');
-              return (
-                <button
-                  key={`${rule.rule_id}-${slot.index}`}
-                  type="button"
-                  title={tip}
-                  disabled={slot.used}
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    if (slot.used) return;
-                    const res = await fetch(
-                      `/api/combat/actors/${encodeURIComponent(actorId)}/matrix/use`,
-                      {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ rule_id: rule.rule_id, index: slot.index }),
-                      },
-                    );
-                    if (res.ok) await onUsed?.();
-                  }}
-                  className={`text-[11px] tabular-nums px-1.5 py-0.5 rounded border transition-colors ${
-                    slot.used
-                      ? 'bg-zinc-900/80 text-zinc-600 border-zinc-800 cursor-not-allowed line-through'
-                      : 'bg-amber-500/15 text-amber-200 border-amber-500/40 hover:bg-amber-500/25'
-                  }`}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
 }
 
 const TRACKER_MACRO_VISIBLE_CAP = 4;
@@ -456,8 +380,6 @@ export interface ActorRowProps {
   onManualRowActivate?: () => void | Promise<void>;
   /** After a roll from the stat editor, refetch server state (log + actors). */
   onCombatRefetch?: () => void | Promise<void>;
-  showMatrixColumn?: boolean;
-  matrixRules?: MatrixRuleGroup[];
   showMacrosColumn?: boolean;
   systemActions?: Record<string, SystemActionDef>;
 }
@@ -495,8 +417,6 @@ function ActorRowComponent({
   isActiveCombat = false,
   onManualRowActivate,
   onCombatRefetch,
-  showMatrixColumn = false,
-  matrixRules,
   showMacrosColumn = false,
   systemActions = {},
 }: ActorRowProps) {
@@ -987,12 +907,6 @@ function ActorRowComponent({
         </td>
       ))}
 
-      {showMatrixColumn && (
-        <td className="px-1 py-1 align-middle max-w-[12rem] whitespace-normal border-b border-zinc-800/50 bg-zinc-900/30">
-          <MatrixPrerollButtons actorId={actor.id} rules={matrixRules} onUsed={onCombatRefetch} />
-        </td>
-      )}
-
       {showMacrosColumn && (
         <td className="px-2 py-1 align-middle max-w-[14rem] whitespace-normal border-b border-zinc-800/50 bg-zinc-900/25">
           <TrackerMacroButtons
@@ -1094,11 +1008,9 @@ export const ActorRow = React.memo(ActorRowComponent, (prev, next) => {
   if ((prev.rowClickEnabled ?? false) !== (next.rowClickEnabled ?? false)) return false;
   if ((prev.phaseRowInactive ?? false) !== (next.phaseRowInactive ?? false)) return false;
   if ((prev.isActiveCombat ?? false) !== (next.isActiveCombat ?? false)) return false;
-  if ((prev.showMatrixColumn ?? false) !== (next.showMatrixColumn ?? false)) return false;
   if ((prev.showMacrosColumn ?? false) !== (next.showMacrosColumn ?? false)) return false;
   if (prev.systemActions !== next.systemActions) return false;
   if (prev.columns !== next.columns) return false;
-  if (prev.matrixRules !== next.matrixRules) return false;
 
   if (prev.onUpdate !== next.onUpdate) return false;
   if (prev.onDelete !== next.onDelete) return false;

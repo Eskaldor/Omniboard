@@ -298,12 +298,46 @@ export interface MatrixPrerollSlot {
   results: MatrixRollResult[];
 }
 
-/** Одно правило из matrix.json со сгенерированными слотами для актора. */
+/** Одно правило из matrix.json со сгенерированными слотами для актора (legacy плоский вид). */
 export interface MatrixRuleGroup {
   rule_id: string;
   label: string;
   display: 'single' | 'pair';
   slots: MatrixPrerollSlot[];
+}
+
+/** Колонка матрицы v2 (внутри группы). */
+export interface MatrixColumnCell {
+  column_id: string;
+  label: string;
+  cell_id: string;
+  display: 'single' | 'pair';
+  slots: MatrixPrerollSlot[];
+  skipped?: boolean;
+  skip_reason?: string;
+}
+
+/** Группа колонок матрицы v2. */
+export interface MatrixPrerollGroupRow {
+  group_id: string;
+  label: string;
+  columns: MatrixColumnCell[];
+}
+
+export type MatrixActorPrerollsRow = MatrixRuleGroup | MatrixPrerollGroupRow;
+
+export function isMatrixPrerollGroupRow(row: MatrixActorPrerollsRow): row is MatrixPrerollGroupRow {
+  return (
+    typeof row === 'object' &&
+    row !== null &&
+    'columns' in row &&
+    Array.isArray((row as MatrixPrerollGroupRow).columns)
+  );
+}
+
+export interface MatrixQueueEntry {
+  cell_id: string;
+  slot_index: number;
 }
 
 /** Лог, автосохранение, стек undo/redo (ADR-18 / backend SessionMeta). */
@@ -316,7 +350,10 @@ export interface SessionMeta {
   history_stack?: Record<string, unknown>[];
   history_index?: number;
   /** Предброски матрицы: actor_id → группы правил (POST /api/combat/matrix/generate). */
-  prerolls?: Record<string, MatrixRuleGroup[]>;
+  prerolls?: Record<string, MatrixActorPrerollsRow[]>;
+  matrix_cell_queue?: Record<string, MatrixQueueEntry[]>;
+  matrix_ghost_global?: boolean;
+  matrix_row_ghost?: Record<string, boolean>;
   /** Массовый бросок инициативы (фильтры ролей). */
   initiative_include_character?: boolean;
   initiative_include_enemy?: boolean;

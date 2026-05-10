@@ -1,11 +1,22 @@
 {
-  "generation_rules": [
+  "schema_version": 2,
+  "actor_filter": {
+    "exclude_roles": ["character"]
+  },
+  "groups": [
     {
-      "id": "default_pool",
-      "label": "d20",
-      "expression": "1d20",
-      "count": 1,
-      "display": "single"
+      "id": "rolls",
+      "label": "Rolls",
+      "columns": [
+        {
+          "id": "pool",
+          "label": "Pool",
+          "kind": "expression",
+          "expression": "1d20",
+          "count": 1,
+          "display": "single"
+        }
+      ]
     }
   ]
 }

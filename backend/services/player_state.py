@@ -67,6 +67,9 @@ def get_player_public_state(
                 "history_stack": True,
                 "history_index": True,
                 "prerolls": True,
+                "matrix_cell_queue": True,
+                "matrix_ghost_global": True,
+                "matrix_row_ghost": True,
                 "pending_roll_requests": True,
             }
         },

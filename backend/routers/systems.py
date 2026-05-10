@@ -250,6 +250,27 @@ async def get_system_actions(system_name: str):
     return load_config_with_override(system_name, "actions.json")
 
 
+@router.get("/{system_name}/matrix")
+async def get_system_matrix(system_name: str):
+    """Merged Roll Matrix config (default/config + ``data/systems/.../matrix.json``)."""
+    if not is_safe_system_subdirectory(system_name):
+        raise HTTPException(status_code=400, detail="invalid system name")
+    data = load_config_with_override(system_name, "matrix.json")
+    return data if isinstance(data, dict) else {"generation_rules": []}
+
+
+@router.post("/{system_name}/matrix")
+async def save_system_matrix(system_name: str, payload: dict[str, Any] = Body(...)):
+    """Persist matrix override under ``data/systems/<name>/matrix.json``."""
+    sys_dir = _system_dir(system_name)
+    if sys_dir is None:
+        raise HTTPException(status_code=400, detail="invalid system name")
+    sys_dir.mkdir(parents=True, exist_ok=True)
+    file_path = sys_dir / "matrix.json"
+    file_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+    return {"status": "ok"}
+
+
 @router.post("/{system_name}/columns")
 async def save_system_columns(system_name: str, body: SaveColumnsRequest):
     system_name = (system_name or "").strip()

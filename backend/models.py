@@ -498,6 +498,11 @@ class SessionMeta(BaseModel):
     actor_out_of_turn_round_pass: Dict[str, int] = Field(default_factory=dict)
     # Pending out-of-turn roll requests (request_id -> payload dict). Stored in combat state.
     pending_roll_requests: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
+    # Roll Matrix (GM): queued cells to log on next turn — actor_id -> [{cell_id, slot_index}]
+    matrix_cell_queue: Dict[str, List[Dict[str, Any]]] = Field(default_factory=dict)
+    # Ghost mode: skip logging queued matrix cells (global or per-actor).
+    matrix_ghost_global: bool = False
+    matrix_row_ghost: Dict[str, bool] = Field(default_factory=dict)
 
 
 class PlayerCharacterSummary(BaseModel):
@@ -657,6 +662,9 @@ class CombatSession(BaseModel):
             "history_stack",
             "history_index",
             "prerolls",
+            "matrix_cell_queue",
+            "matrix_ghost_global",
+            "matrix_row_ghost",
             "initiative_include_character",
             "initiative_include_enemy",
             "initiative_include_ally",
@@ -850,6 +858,9 @@ def combat_session_merged_with_combat_state(
             allow_out_of_turn_rolls=session.session.allow_out_of_turn_rolls,
             actor_out_of_turn_round_pass=dict(session.session.actor_out_of_turn_round_pass),
             pending_roll_requests=dict(session.session.pending_roll_requests),
+            matrix_cell_queue=dict(session.session.matrix_cell_queue),
+            matrix_ghost_global=session.session.matrix_ghost_global,
+            matrix_row_ghost=dict(session.session.matrix_row_ghost),
         ),
     )
 

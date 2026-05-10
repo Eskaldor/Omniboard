@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState, useEffect } from 'react';
-import { X, Save, Settings2, Monitor, Columns3, Languages, FileText, BookOpen, Bot } from 'lucide-react';
+import { X, Save, Settings2, Monitor, Columns3, Languages, FileText, BookOpen, Bot, LayoutGrid } from 'lucide-react';
 import { ColumnConfig } from '../../types';
 import { useCombatState } from '../../contexts/CombatStateContext';
 import { useTranslation } from 'react-i18next';
@@ -10,8 +10,17 @@ import { LanguageTab } from './ConfigTabs/LanguageTab';
 import { SheetTab } from './ConfigTabs/SheetTab';
 import { CampaignTab } from './ConfigTabs/CampaignTab';
 import { AITab } from './ConfigTabs/AITab';
+import { MatrixTab } from './ConfigTabs/MatrixTab';
 
-type ConfigSectionId = 'system' | 'display' | 'columns' | 'sheet' | 'language' | 'campaign' | 'ai';
+type ConfigSectionId =
+  | 'system'
+  | 'display'
+  | 'columns'
+  | 'sheet'
+  | 'language'
+  | 'campaign'
+  | 'ai'
+  | 'matrix';
 
 function usePatchCombatSettings(refetchState: () => Promise<void>) {
   return useCallback(
@@ -401,6 +410,7 @@ export function ConfigModal({
         { id: 'sheet' as const, label: t('config_modal.section_sheet'), icon: FileText },
         { id: 'language' as const, label: t('config_modal.section_language'), icon: Languages },
         { id: 'ai' as const, label: t('config_modal.section_ai'), icon: Bot },
+        { id: 'matrix' as const, label: t('config_modal.section_matrix'), icon: LayoutGrid },
         { id: 'campaign' as const, label: 'Кампании', icon: BookOpen },
       ] as const,
     [t],
@@ -521,6 +531,8 @@ export function ConfigModal({
             {activeSection === 'ai' && (
               <AITab inputClass={inputClass} systemName={systemName} />
             )}
+
+            {activeSection === 'matrix' && <MatrixTab systemName={systemName} />}
 
             {activeSection === 'campaign' && (
               <CampaignTab

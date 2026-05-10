@@ -149,6 +149,9 @@ def reset_combat_state() -> None:
     st.core.current_index = 0
     st.session.history = []
     st.session.prerolls = {}
+    st.session.matrix_cell_queue = {}
+    st.session.matrix_row_ghost = {}
+    st.session.matrix_ghost_global = False
     for actor in st.core.actors:
         actor.effects = []
 
@@ -169,6 +172,9 @@ def clear_combat_state(*, keep_pinned: bool = True) -> None:
     st.core.is_active = False
     st.session.history = []
     st.session.prerolls = {}
+    st.session.matrix_cell_queue = {}
+    st.session.matrix_row_ghost = {}
+    st.session.matrix_ghost_global = False
 
 
 def next_turn(log: LogFn) -> None:
