@@ -24,6 +24,12 @@ def load_state() -> CombatSession:
 
 state: CombatSession = load_state()
 
+# Async lock for coordinating reads/writes against ``state`` from concurrent
+# coroutines (e.g. multiple in-flight /api/ai/chat requests). FastAPI runs on a
+# single event loop, but ``await`` points yield — without this lock a tool-call
+# write from one chat could interleave with another chat's context-read.
+lock: asyncio.Lock = asyncio.Lock()
+
 # Connected WebSocket clients
 connected_clients: list = []
 player_clients: list = []

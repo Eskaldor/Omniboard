@@ -107,6 +107,28 @@ async def broadcast_whisper_event(*, payload: dict) -> None:
             pass
 
 
+async def broadcast_ai_image_event(payload: dict) -> None:
+    """Notify GM clients that an AI-generated library image is ready (or failed).
+
+    Payload shape: ``{"type": "ai_image_ready", "job_id": str, "ok": bool,
+    "path"?: str, "error"?: str}``. Consumed by LibraryModal to refresh
+    thumbnails without polling. Sent as the full event (not wrapped in another
+    ``payload`` key) since it's already a flat envelope.
+    """
+    message = json.dumps(payload)
+    dead: list[WebSocket] = []
+    for client in list(app_state.connected_clients):
+        try:
+            await client.send_text(message)
+        except Exception:
+            dead.append(client)
+    for client in dead:
+        try:
+            app_state.connected_clients.remove(client)
+        except ValueError:
+            pass
+
+
 async def broadcast_player_state() -> None:
     """Отправить персонализированный стейт каждому подключённому клиенту игрока."""
     if not _player_sockets:

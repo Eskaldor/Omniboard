@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Plus, Trash } from 'lucide-react';
+import { Loader2, Plus, Trash } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
 import type { Actor, ColumnConfig, Effect, MatrixRuleGroup } from '../../types';
@@ -687,6 +687,19 @@ function ActorRowComponent({
               ) : (
                 <div className="w-full h-full rounded-xl bg-zinc-900 border border-dashed border-zinc-700 flex items-center justify-center">
                   <Plus size={16} className="text-zinc-600" />
+                </div>
+              )}
+              {actor.is_generating_portrait && (
+                <div
+                  className="pointer-events-none absolute inset-0 rounded-xl bg-zinc-950/65 backdrop-blur-[1px] flex items-center justify-center animate-pulse"
+                  role="status"
+                  aria-label="AI portrait generating"
+                >
+                  <Loader2
+                    size={18}
+                    className="animate-spin text-emerald-300 drop-shadow"
+                    strokeWidth={2.5}
+                  />
                 </div>
               )}
             </div>

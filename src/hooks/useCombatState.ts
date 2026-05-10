@@ -75,6 +75,18 @@ export function useCombatState() {
           setWsError(null);
           return;
         }
+        if (data.type === 'ai_image_ready') {
+          // Phase-3 AI Composer library job — bridge to a window event so
+          // LibraryModal can react without opening a second WS connection.
+          try {
+            window.dispatchEvent(
+              new CustomEvent('omniboard:ai-image-ready', { detail: data }),
+            );
+          } catch {
+            /* no-op */
+          }
+          return;
+        }
         if (data.type === 'roll_event') {
           const payload = data.payload as Record<string, unknown> | null;
           const result = normalizeRollResult(payload);

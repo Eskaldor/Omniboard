@@ -8,6 +8,7 @@ const DEFAULT_SETTINGS: AISettings = {
   image_api_key: '',
   image_base_url: '',
   image_model: '',
+  ai_mode: 'standard',
 };
 
 function parseApiErrorBody(status: number, text: string): string {

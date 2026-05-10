@@ -17,6 +17,8 @@ export interface Effect {
   ai_variations?: Record<string, string>;
 }
 
+export type AiMode = 'standard' | 'red_knight';
+
 export interface AISettings {
   chat_api_key: string;
   chat_base_url: string;
@@ -24,6 +26,7 @@ export interface AISettings {
   image_api_key: string;
   image_base_url: string;
   image_model: string;
+  ai_mode: AiMode;
 }
 
 export interface Visibility {
@@ -58,6 +61,8 @@ export interface Actor {
   has_acted?: boolean;
   portrait: string;
   show_portrait?: boolean;
+  /** Phase-3 AI Composer: true while a regeneration is in flight. UI overlays a spinner. */
+  is_generating_portrait?: boolean;
   miniature_id: string | null;
   /** Привязка к профилю отображения миниатюры */
   layout_profile_id?: string | null;

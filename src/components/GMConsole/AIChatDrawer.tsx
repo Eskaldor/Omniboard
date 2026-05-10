@@ -103,17 +103,54 @@ export const AIChatDrawer = memo(function AIChatDrawer({
             );
           }
 
+          const hasReport = !!m.system_report && m.system_report.length > 0;
+          const hasText = m.content.trim().length > 0;
+          const usage = m.usage;
+          const usageLabel = usage
+            ? `[Tokens: ${usage.prompt_tokens ?? '?'} + ${usage.completion_tokens ?? '?'} = ${
+                usage.total_tokens ?? '?'
+              }]`
+            : null;
           return (
             <div key={i} className="flex justify-start gap-2">
               <div className="mt-0.5 shrink-0 rounded-lg bg-zinc-800/90 p-1.5 text-rose-300 ring-1 ring-zinc-700/80">
                 <Bot size={14} strokeWidth={2} aria-hidden />
               </div>
               <div className="max-w-[min(100%,32rem)] rounded-2xl rounded-bl-md bg-zinc-900/90 px-3 py-2 ring-1 ring-zinc-700/70">
-                <div className={mdScrollWrap}>
-                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
-                    {m.content}
-                  </ReactMarkdown>
-                </div>
+                {hasText ? (
+                  <div className={mdScrollWrap}>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
+                      {m.content}
+                    </ReactMarkdown>
+                  </div>
+                ) : null}
+                {hasReport ? (
+                  <div
+                    className={`rounded-md border border-emerald-700/50 bg-emerald-950/40 px-2 py-1 text-[11px] text-emerald-200 ${
+                      hasText ? 'mt-2' : ''
+                    }`}
+                    role="status"
+                    aria-label={t('gm_console.ai_system_actions')}
+                  >
+                    <div className="font-medium opacity-80 mb-0.5">
+                      {t('gm_console.ai_system_actions')}
+                    </div>
+                    <ul className="list-disc space-y-0.5 pl-4">
+                      {m.system_report!.map((line, idx) => (
+                        <li key={idx} className="whitespace-pre-wrap">
+                          {line}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+                {usageLabel ? (
+                  <div className="mt-1 flex justify-end">
+                    <span className="text-[10px] text-zinc-500 opacity-70 font-mono">
+                      {usageLabel}
+                    </span>
+                  </div>
+                ) : null}
               </div>
             </div>
           );

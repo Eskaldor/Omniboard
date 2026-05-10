@@ -294,6 +294,12 @@ class Actor(BaseModel):
     has_acted: bool = False
     portrait: str
     show_portrait: bool = False
+    # True while a Phase-3 AI Composer job is producing a new portrait. Set by the
+    # backend when an effect with ``ai_prompt`` is applied (or via a future tool);
+    # cleared when the generated PNG is saved and the actor.portrait path is updated.
+    # The flag rides on the regular WS state_update so the UI can render a spinner
+    # over the existing portrait until the new one lands.
+    is_generating_portrait: bool = False
     miniature_id: Optional[str] = None
     layout_profile_id: Optional[str] = None  # Привязка к профилю отображения
     sheet_profile_id: Optional[str] = None  # Mini-sheet template id from sheet_profiles.json
@@ -549,6 +555,11 @@ class AIConfig(BaseModel):
     image_base_url: str = ""
     image_model: str = ""
 
+    # AI behavior profile.
+    # ``standard``: pure passthrough chat (no contract injection, no tool calling).
+    # ``red_knight``: Co-GM mode with combat context + apply_combat_mutations tool.
+    ai_mode: Literal["standard", "red_knight"] = "standard"
+
     @field_validator("chat_base_url", "image_base_url", mode="after")
     @classmethod
     def normalize_and_validate_base_url(cls, v: str) -> str:
@@ -566,8 +577,37 @@ class AIChatRequest(BaseModel):
     messages: List[Dict[str, Any]]
 
 
+class AIChatUsage(BaseModel):
+    """Token-usage telemetry from the upstream LLM (subset of the OpenAI shape)."""
+
+    prompt_tokens: Optional[int] = None
+    completion_tokens: Optional[int] = None
+    total_tokens: Optional[int] = None
+
+
 class AIChatAssistantReply(BaseModel):
     role: Literal["assistant"] = "assistant"
+    content: str
+    # Brief audit lines for mutations the LLM dispatched via apply_combat_mutations.
+    # ``None`` (omitted) when no tool calls were made.
+    system_report: Optional[List[str]] = None
+    # Optional token-usage telemetry forwarded from the provider.
+    usage: Optional[AIChatUsage] = None
+
+
+class AISystemPromptResponse(BaseModel):
+    """GET /api/ai/system_prompt response — markdown contract + its source."""
+
+    content: str
+    source: Literal["system", "default", "missing"]
+
+
+class AISystemPromptPayload(BaseModel):
+    """POST /api/ai/system_prompt body — write override markdown for a system."""
+
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    system: str
     content: str
 
 

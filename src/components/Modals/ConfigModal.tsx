@@ -518,7 +518,9 @@ export function ConfigModal({
 
             {activeSection === 'sheet' && <SheetTab />}
 
-            {activeSection === 'ai' && <AITab inputClass={inputClass} />}
+            {activeSection === 'ai' && (
+              <AITab inputClass={inputClass} systemName={systemName} />
+            )}
 
             {activeSection === 'campaign' && (
               <CampaignTab

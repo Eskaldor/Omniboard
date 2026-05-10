@@ -354,6 +354,142 @@ UX-ревизия `ConfigModal`: горизонтальные табы плох�
 
 ---
 
+## ✅ Фаза AI.2 — Co-GM: контекст боя и Tool Calling (09.05.2026)
+
+Чат превратился из риторического собеседника в Co-GM, который видит стол и может пушить мутации обратно в `CombatSession`. Подробное обоснование архитектуры — **ADR-30** в `Architecture_Decisions_and_Icebox.md`.
+
+### Отчёт по проделанной работе
+
+1. **Системный контракт per-system** — markdown `ai_system_prompt.md` через Asset Override (ADR-4). Default — `data/assets/default/config/ai_system_prompt.md`, override — `data/systems/<system_name>/config/ai_system_prompt.md` (новый подкаталог `config/`). Эндпоинты: **`GET /api/ai/system_prompt?system=…`** → `{content, source: "system"|"default"|"missing"}`, **`POST /api/ai/system_prompt`** body `{system, content}`. UI редактируется на вкладке AI ConfigModal.
+
+2. **Минимальный JSON-снимок боя** в системном сообщении: `round`, `phase{is_active, current_index, current_pass}`, `active_actor_id`, `stat_schema{numeric_stats, max_pairs}` (берётся из `columns.json`, никакого хардкода `hp`/`max_hp`), `actors[]` с id/name/faction (`character→hero`) и числовыми статами. Без портретов, формул, IP, MAC. Guardrails: при > 60 акторов сначала отбрасываем `is_revealed=false`, потом усекаем + флаг `_truncated_: true`.
+
+3. **Один LLM-инструмент `apply_combat_mutations`** (OpenAI Tool Calling) с массивом `actions: [{target_id, stat_id, operation: "add"|"subtract"|"set", value}]`. Поддерживаются ключевые слова `all_heroes` / `all_enemies` / `all_allies` / `all_neutrals`. Бэкенд валидирует `stat_id` против системного `numeric_stats`, `target_id` против живых акторов; клампит по `max_<stat>` и до 0 при `subtract`.
+
+4. **Поведение как у ручных правок GM:** после применения — `save_snapshot()` (ADR-3 undo) + `broadcast_state()` + запись `stat_change` через `add_log` (ADR-7) с `details.source: "ai"`. Действия откатываются Undo, попадают в `data/logs/latest_combat.md`, синхронизируются на ESP32.
+
+5. **Single round-trip + защитный парсер.** Не отправляем `tool_result` обратно модели — UI получает текст ассистента + панель `system_report` (массив строк-аудита). Парсер `tool_calls` толерантен к Gemini-quirks (отсутствующие/частичные поля).
+
+**Файлы:** `backend/services/ai_context.py`, `backend/routers/ai.py`, `backend/models.py`, `data/assets/default/config/ai_system_prompt.md`, `src/hooks/useAiChat.ts`, `src/hooks/useAiSystemPrompt.ts`, `src/components/GMConsole/AIChatDrawer.tsx`, `src/components/Modals/ConfigTabs/AITab.tsx`, `data/locales/{en,ru,ger,je}/core.json`.
+
+---
+
+## ✅ Фаза AI.2.5 — Hardening, телеметрия и персистенция чата (10.05.2026)
+
+Закрытие пяти слабых мест Co-GM (см. **ADR-31**): prompt injection, math exploits, parser brittleness, потеря чата при F5, отсутствие телеметрии.
+
+### Семантика `ai_mode` — переключатель местами
+
+`ai_mode` в `AIConfig` теперь:
+
+- **`standard`** (дефолт) — Co-GM с контрактом + `apply_combat_mutations` (то, что было «red_knight» в ADR-30).
+- **`red_knight`** — заглушка под будущий самостоятельный агент (RAG / векторная БД сессий / расшитые корбуки / Home Assistant). Пока инфраструктура агента не готова — passthrough-чат без контракта и без инструментов.
+
+UI: радиогруппа во вкладке AI с amber-плашкой «Инфраструктура Красного Рыцаря в разработке» под вторым вариантом.
+
+### Math hardening и санитайзер (`backend/services/ai_context.py`)
+
+- `value` всегда `abs(float(value))` ДО арифметики — отрицательное «лечение» на `add` или скрытый damage на `subtract` через знак невозможны.
+- `add` клампит на `max_<stat>`, `subtract` — на `0`, `set` — на `[0, max_<stat>]`.
+- `_sanitize_actor_name`: вырезает control-chars + markdown-спецсимволы (`` ` * _ [ ] < > # ~ | \ ``), коллапсирует пробелы, длина ≤ 50.
+- `_is_alive` обобщён: «живой = хоть один числовой стат > 0», уважает потенциальное `actor.status != "dead"`. Жёсткой привязки к `hp` больше нет.
+- Старая константа `APPLY_MUTATIONS_TOOL` стала функцией **`get_mutations_tool_schema(system_name)`** — `stat_id.enum` динамически собирается из `numeric_stats` системы, `value.minimum: 0` подсказывает модели использовать magnitude + operation.
+
+### Resilient parser, state lock и synthetic content (`backend/routers/ai.py`)
+
+- `_extract_assistant_message` больше не raises — `{}` на любую малформированность.
+- `_content_to_str(None) = ""`, поддержка OpenAI-style nested content + Anthropic `text` parts.
+- Если LLM применил инструмент, но прислал пустой `content` — бэкенд подставляет «Действия применены.». Без этого следующий ход уносил пустой content block обратно в провайдера и Anthropic / Gemini возвращали 400 → re-trigger loop.
+- Новый модульный `app_state.lock: asyncio.Lock` (`backend/state.py`); `/api/ai/chat` оборачивает построение системного сообщения и блок применения мутаций. HTTP-вызов провайдера ВНЕ lock — параллельные чаты не сериализуются на сети.
+
+### Token telemetry — `backend/services/ai_logger.py`
+
+- Структурированные JSONL-логи по дню: `data/logs/ai/YYYY-MM-DD.jsonl`. Daemon-тред (паттерн `add_log` из ADR-7) — запрос не блокируется на диск.
+- В каждой записи: `ts`, `request_id`, `mode`, `model`, `system`, `request{messages summary, tools_offered}`, `response{status, latency_ms, content_chars, content_excerpt, tool_calls[name,args_chars,actions_count], usage, error}`, `mutations{applied_count, warnings_count, lines}`.
+- Логируются ВСЕ исходы: timeout, connect error, HTTP ≥ 400, invalid JSON, empty content, синтетический ответ, успех. Авто-ретеншен 60 дней.
+- **Новый эндпоинт `GET /api/ai/usage/summary?days=N`** → `{today, window{calls, prompt_tokens, completion_tokens, total_tokens, days}, last_call{ts, mode, model, latency_ms, applied_count, usage}}`.
+- `AIChatAssistantReply.usage` едет на фронт; `AIChatDrawer` рисует `[Tokens: P + C = T]` мелким моно в углу assistant-бабла. В AI-настройках — SectionCard «Расход токенов» с двумя колонками (Сегодня / 7 дней) и плашкой «Последний запрос».
+
+### Персистенция чата — `backend/services/ai_chat_history.py`
+
+- Файл `data/state_ai_chat.json` живёт **отдельно от** `state_autosave.json` — чтобы не раздувать undo-стек длинными разговорами и не выносить чат в WS-payload боя.
+- Формат: `{version: 1, updated_at, messages:[{role, content, system_report?, usage?}]}`. Whitelist-санитайзер: `isLocal` отбрасывается, валидные роли — `user|assistant|system`. Хард-кэп 500 сообщений.
+- Атомарная запись через `tempfile.mkstemp + os.replace`, `threading.Lock` для конкурентных писателей.
+- **Новые эндпоинты** `GET /api/ai/chat/history` → `{messages:[…]}` для гидратации после рефреша; `DELETE /api/ai/chat/history` → wipe.
+- **«В рамках боя»:** `POST /api/combat/clear` дополнительно вызывает `clear_ai_chat_history()` — новый бой стартует с чистым диалогом.
+- Фронт `useAiChat` гидрирует на маунте, экспортирует `clearChat()` наружу.
+- **Anti-poison фильтр:** UI-нотисы (нет ключей / network error) маркируются `isLocal: true` и **не** отправляются в outbound payload `/api/ai/chat`. Бэкенд их не видит, в персистенцию они не попадают.
+
+### Defensive guard в `POST /api/assets/{category}`
+
+Явный список зарезервированных подпутей (`generate`, `notes`, `bars`) с понятным 400 — на случай если порядок роутов сломается. Не решает проблему Pydantic-валидации до тела (она 422-ит раньше), но улучшает диагностику.
+
+**Файлы:** `backend/services/ai_context.py`, `backend/services/ai_logger.py`, `backend/services/ai_chat_history.py`, `backend/state.py`, `backend/routers/ai.py`, `backend/routers/combat.py`, `backend/routers/assets.py`, `backend/models.py`, `src/hooks/useAiChat.ts`, `src/hooks/useAiUsage.ts`, `src/hooks/useAiSettings.ts`, `src/components/GMConsole/AIChatDrawer.tsx`, `src/components/Modals/ConfigTabs/AITab.tsx`, `src/types.ts`, `data/locales/{en,ru,ger,je}/core.json`.
+
+---
+
+## ✅ Фаза AI.3 — AI Composer: динамическая генерация портретов (10.05.2026)
+
+Замыкаем визуальный канал table↔hardware. Портрет — единственное, что видно одновременно на UI и на 172×320 экране Omnimini, и до этой фазы он был полностью статичен. AI.3 даёт две точки входа: ручную генерацию в библиотеке + автоматическую регенерацию по эффекту с `ai_prompt`. Подробное обоснование — **ADR-32**.
+
+### Pillow ядро (`backend/services/image_utils.py`)
+
+`smart_crop_and_resize(bytes, target_w=172, target_h=320) → bytes`:
+
+- Аспект источника шире 172:320 → симметричная боковая обрезка.
+- Аспект источника выше → head-bias crop (10% сверху, остальное снизу), голова/лицо переживают кадрирование.
+- LANCZOS-resampling до точно 172×320 PNG. RGBA-прозрачность сохраняется.
+- Sync (CPU-bound) — вызывается из event-loop через `asyncio.to_thread`.
+- `TARGET_W`/`TARGET_H` захардкожены — это геометрия экрана Omnimini (CLAUDE.md).
+
+### Композитор (`backend/services/ai_composer.py`)
+
+**`generate_image(prompt, base_image_path) → bytes`** с авто-детектором провайдера:
+
+- **Native Gemini** (`generativelanguage.googleapis.com` БЕЗ `/openai` в пути): `POST {base}/v1beta/models/{model}:generateContent`, ключ в заголовке `x-goog-api-key`. Тело — `{contents:[{parts:[{text}, {inline_data?}]}], generationConfig:{responseModalities:["TEXT","IMAGE"]}}`. URL **принудительно нормализуется к `/v1beta`** независимо от того, что прописал пользователь — `responseModalities` поддерживается только под этой версией. Парсер ходит по `candidates[].content.parts[]`, распознаёт `inline_data`/`inlineData`, ловит `promptFeedback.blockReason` и `finishReason != STOP` с понятными сообщениями.
+- **OpenAI / OpenRouter / LiteLLM compat** (всё остальное): txt2img — `POST {base}/images/generations` с JSON; img2img — `POST {base}/images/edits` (multipart, источник пред-обрабатывается до 1024×1024 RGBA PNG). `Authorization: Bearer`.
+
+**Два потока:**
+
+1. **Actor portrait regeneration** — `process_actor_portrait_task(actor_id, prompt, base_image_path)`. Триггер — наложение эффекта с непустым `ai_prompt` через `PATCH /api/actors/{id}`. Под `app_state.lock`: апдейт `actor.portrait` + сброс `is_generating_portrait=False` → `save_snapshot` → `broadcast_state` → best-effort `proactive_render_and_push`. Идемпотентен на ошибке.
+
+2. **Library async job** — `process_library_portrait_task(job_id, prompt)`. RAM-registry `_JOBS: dict[str, GenerationJob]` (status `queued|running|done|failed`, кэп 200 с вытеснением старых finished). По завершению шлёт WS `ai_image_ready`.
+
+### Хук в `PATCH /api/actors/{id}` (`backend/routers/actors.py`)
+
+В существующем effect-diff блоке (см. ADR-30) ищем первый новый эффект с непустым `ai_prompt`. Если есть — ставим `actor.is_generating_portrait = True` **до** `broadcast_state()` (UI получает спиннер тем же тиком, когда видит эффект), и через `BackgroundTasks.add_task` дис­патчим `process_actor_portrait_task`. **LLM-инструмент `generate_portrait` сознательно НЕ добавлен** — регенерация только ручным действием GM в UI.
+
+### WebSocket события и фронт
+
+- `Actor.is_generating_portrait: bool = False` (новое поле модели) едет на регулярном `state_update`. `ActorRow.tsx` рисует `Loader2 animate-spin` в `bg-zinc-950/65 backdrop-blur` поверх существующего портрета.
+- Новый WS-broadcast **`broadcast_ai_image_event(payload)`** (`backend/routers/ws.py`) шлёт плоский `{type:"ai_image_ready", job_id, ok, path?, error?}`.
+- Фронт-мост в `useCombatState.ts`: при получении `ai_image_ready` re-emit как `window` CustomEvent `omniboard:ai-image-ready`. `LibraryModal` слушает одно событие без открытия второго WS-сокета.
+
+### Endpoints (новые)
+
+- **`POST /api/assets/generate`** — `{prompt: str, max 2000}` → `{job_id, status:"queued"}` мгновенно. Asyncio-task сразу запускается.
+- **`GET /api/assets/generate/{job_id}`** — поллинг fallback (если WS недоступен): `{job_id, status, path, error, created_at, finished_at}`.
+- **`GET /api/ai/image/models`** — диагностика. Auto-detect провайдера, для Gemini зовёт `/v1beta/models` с `x-goog-api-key`, для OpenAI `/models` с `Authorization: Bearer`. Возвращает `{provider, endpoint, models:[{id, display_name, supports_image, methods, description}]}`. Эвристика «image-capable»: `image|imagen|dall-e|sdxl|flux|stable-diffusion` в имени; image-capable модели всплывают наверх. UI: панель в `AITab` с кликабельными строками — клик ставит `id` в поле Model.
+
+### Storage
+
+`data/assets/generated/<actor_<id>|lib>_<sha1prefix>.png`. Плоская кросс-системная папка под существующим `app.mount("/assets", …)` — фронт получает PNG как `/assets/generated/<file>.png`. Имя `actor_<id>_<hash>` коллапсирует «тот же актёр + тот же промпт» в один файл (детерминированный хэш промпта, 10 символов). Library jobs включают наносекундный suffix чтобы не перезаписать предыдущую генерацию того же промпта. Папка создаётся в `ensure_dirs()` (см. `backend/paths.py:GENERATED_ASSETS_DIR`).
+
+### LibraryModal — кнопка «Generate with AI»
+
+Фиолетовая кнопка с иконкой `Sparkles` рядом с Upload (только на табе `portraits`). Открывает встроенный модал с textarea (max 2000 chars), Cancel / Generate. На сабмит — POST на endpoint, состояние `aiGenerating` со спиннером, listener `omniboard:ai-image-ready` фильтрует по `job_id` и рефечит ассеты.
+
+### Границы фазы
+
+- LLM-инструмент `generate_portrait` отложен — сознательное решение, не «не успели». Регенерация только через UI-эффект.
+- Imagen-семейство (`imagen-3.0-*`) использует `:predict` с `instances[]` — **не реализовано**, на текущей фазе только `:generateContent` / `gemini-*-image-preview`.
+- Локальной модерации контента нет — отдано на откуп провайдеру.
+- Нет повторных попыток / экспоненциального backoff: при HTTP ≥ 400 задача завершается с `failed`, спиннер уходит, GM получает ошибку в WS-событии.
+
+**Файлы:** `backend/paths.py`, `backend/models.py`, `backend/services/image_utils.py`, `backend/services/ai_composer.py`, `backend/routers/actors.py`, `backend/routers/assets.py`, `backend/routers/ai.py`, `backend/routers/ws.py`, `src/types.ts`, `src/hooks/useAiImageModels.ts`, `src/hooks/useCombatState.ts`, `src/components/InitiativeTracker/ActorRow.tsx`, `src/components/Modals/LibraryModal.tsx`, `src/components/Modals/ConfigTabs/AITab.tsx`, `data/locales/{en,ru,ger,je}/core.json`.
+
+---
+
 ## ✅ Фаза 14 — Компендиум (Rostrum & Bestiary) — Data-Driven UI для актёров (04.05.2026)
 
 Создана модульная система поиска, фильтрации и добавления НПС/монстров в трекер инициативы через компонент **Compendium** с полностью data-driven фильтрацией и сортировкой.
@@ -563,8 +699,8 @@ UX-ревизия `ConfigModal`: горизонтальные табы плох�
 - [x] Полная миграция UI-строк на i18n для зоны настроек и таблицы (основная часть); точечный хвост хардкода / `defaultValue` в других модалках — по мере обнаружения.
 
 ### ✨ Новые фичи
-- [ ] **Hotbar**: UI для `HotbarAction` (быстрые атаки, заклинания)
-- [ ] **Reactions**: UI для `active_reaction_actor_id` (отслеживание реакций)
+- [x] **Hotbar**: UI для `HotbarAction` (быстрые атаки, заклинания). Закрыто в рамках создания действий.
+- [x] **Reactions**: UI для `active_reaction_actor_id` (отслеживание реакций). Закрыто созданием элемента (группы чекбоксов)
 - [ ] **GM Console (расширение):** отдельная страница `/gm-console` или pop-out для второго монитора (полноэкранная ширма). *Встроенная нижняя консоль с терминалом бросков, режимами Note/Roll/AI и Smart Notes — см. раздел «GM Console — терминал, броски и Smart Notes» выше.*
 - [x] **Sticky Columns:** фиксация первой/последней колонки при горизонтальной прокрутке широкой таблицы — см. Фаза 12.
 - [x] **Улучшенный UI Раундов:** крупная плашка раунда в **AppHeader** (стиль Shield Maiden); опционально позже — анимации через **`motion`** и дублирование в тулбаре.
@@ -575,5 +711,5 @@ UX-ревизия `ConfigModal`: горизонтальные табы плох�
 - [x] LED: `LayoutProfile` + `led_profiles.json` + легенда + `led_interceptor` + стек приоритетов (`resolve_led_payload`, триггеры `time`/`turn`).
 - [x] Proactive render / hardware push: UI broadcast не ждёт ESP/рендер; PNG пишется атомарно; ESP `/update` — **best-effort** с timeout **20 s** на клиенте бэкенда — см. Фаза 13.5 и ADR-21.
 - [x] Линия инициативы для Omnimini: привязка к позиции очереди, переход экрана из **`initiative_shift`** (`led_triggers.json`), кастомный LED-профиль слота — см. Фаза 13.6 и **Фаза 10.8**.
-- [ ] Расширенная синхронизация LED (`sync_led_to_ui`): помимо пуша при рендере — например, обновление LED при смене хода/HP без перерисовки экрана (отдельные вызовы `send_update` по правилам UI).
+- [x] Расширенная синхронизация LED (`sync_led_to_ui`): помимо пуша при рендере — например, обновление LED при смене хода/HP без перерисовки экрана (отдельные вызовы `send_update` по правилам UI). Сделано в рамках Led trigers
 

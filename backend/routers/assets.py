@@ -330,6 +330,61 @@ async def get_default_ui_logo():
     raise HTTPException(status_code=404, detail="Logo not found")
 
 
+# ---------------------------------------------------------------------------
+# AI Composer (Phase 3) — async library generation
+# ---------------------------------------------------------------------------
+
+
+class _AIGenerateRequest(BaseModel):
+    prompt: str
+
+
+@router.post("/generate")
+async def post_assets_generate(payload: _AIGenerateRequest) -> dict:
+    """Kick off an AI portrait generation for the asset library.
+
+    Returns ``{job_id, status}`` immediately — the actual provider call (10-30s
+    for DALL-E 3) runs in a background task. Completion is broadcast over WS as
+    ``{type: "ai_image_ready", job_id, ok, path?, error?}``; clients can also
+    poll ``GET /api/assets/generate/{job_id}`` if WS isn't available.
+    """
+    import asyncio as _asyncio
+    from backend.services.ai_composer import (
+        process_library_portrait_task,
+        submit_library_job,
+    )
+
+    prompt = (payload.prompt or "").strip()
+    if not prompt:
+        raise HTTPException(status_code=400, detail="prompt is required")
+    if len(prompt) > 2000:
+        raise HTTPException(status_code=400, detail="prompt is too long (max 2000 chars)")
+
+    job = await submit_library_job(prompt)
+    # Fire-and-forget. The task itself flips the job's status and broadcasts
+    # the WS event when done; we don't await it from the request handler.
+    _asyncio.create_task(process_library_portrait_task(job.job_id, prompt))
+    return {"job_id": job.job_id, "status": job.status}
+
+
+@router.get("/generate/{job_id}")
+async def get_assets_generate_status(job_id: str) -> dict:
+    """Poll a generation job. Use the WS ``ai_image_ready`` event for push updates."""
+    from backend.services.ai_composer import get_job
+
+    job = get_job(job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail="job not found")
+    return {
+        "job_id": job.job_id,
+        "status": job.status,
+        "path": job.path,
+        "error": job.error,
+        "created_at": job.created_at,
+        "finished_at": job.finished_at,
+    }
+
+
 @router.get("/{category}")
 async def list_assets(category: str, system: str = None):
     if category not in ["portraits", "frames", "effects", "fonts", "bars"]:
@@ -357,6 +412,14 @@ async def list_assets(category: str, system: str = None):
 
 @router.post("/{category}")
 async def upload_asset(category: str, system: str = None, overwrite: bool = False, file: UploadFile = File(...)):
+    # Subpaths that have their own dedicated POST handlers above. If we see
+    # them here it means route ordering broke or the dedicated handler raised
+    # before registration — give a clearer error than Pydantic's "file required".
+    if category in ("generate", "notes", "bars"):
+        raise HTTPException(
+            status_code=400,
+            detail=f"/api/assets/{category} does not accept multipart upload",
+        )
     if category not in ["portraits", "frames", "effects", "fonts", "bars"]:
         raise HTTPException(status_code=400, detail="Invalid category")
 

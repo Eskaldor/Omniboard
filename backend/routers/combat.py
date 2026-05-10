@@ -30,6 +30,7 @@ from backend.paths import LOGS_DIR
 from backend.routers.hardware import get_esp_manager
 from backend.routers.ws import broadcast_roll_event, broadcast_state
 from backend.routers.ws import broadcast_roll_request_status_to_player, broadcast_roll_request_to_gm
+from backend.services.ai_chat_history import clear_history as clear_ai_chat_history
 from backend.services.out_of_turn_roll_policy import player_may_roll_now
 from backend.services import led_interceptor
 from backend.services.dice import DiceManager, RollResult
@@ -714,6 +715,10 @@ async def clear_combat(body: ClearCombatRequest = Body(default_factory=ClearComb
 
     (LOGS_DIR / "latest_combat.json").write_text("[]", encoding="utf-8")
     (LOGS_DIR / "latest_combat.md").write_text("", encoding="utf-8")
+
+    # Chat lives "in scope of combat" but on its own file (state_ai_chat.json) —
+    # clear it together so a fresh combat starts with a clean conversation.
+    clear_ai_chat_history()
 
     await save_snapshot()
     await broadcast_state()

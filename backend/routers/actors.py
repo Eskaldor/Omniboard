@@ -300,6 +300,11 @@ async def update_actor(actor_id: str, updates: dict, background_tasks: Backgroun
 
             old_keys = {_effect_key(e) for e in old_actor.effects}
             new_keys = {_effect_key(e) for e in new_actor.effects}
+            # Phase-3: AI portrait regen on effect add (e.g. "Zombie" with ai_prompt).
+            # Pick the first newly-added effect that carries an ai_prompt — multiple
+            # simultaneous regenerations on one actor would just race for the same
+            # actor.portrait field, so the first wins per PATCH.
+            ai_regen_prompt: str | None = None
             for e in new_actor.effects:
                 if _effect_key(e) not in old_keys:
                     add_log(
@@ -308,6 +313,10 @@ async def update_actor(actor_id: str, updates: dict, background_tasks: Backgroun
                         actor_name=new_actor.name,
                         details={"effect_name": e.name},
                     )
+                    if ai_regen_prompt is None:
+                        prompt_val = (getattr(e, "ai_prompt", None) or "").strip()
+                        if prompt_val:
+                            ai_regen_prompt = prompt_val
             for e in old_actor.effects:
                 if _effect_key(e) not in new_keys:
                     add_log(
@@ -316,6 +325,15 @@ async def update_actor(actor_id: str, updates: dict, background_tasks: Backgroun
                         actor_name=new_actor.name,
                         details={"effect_name": e.name},
                     )
+
+            # Mark the actor as regenerating BEFORE we drop it into state — that way
+            # the broadcast at the bottom of this handler carries
+            # ``is_generating_portrait=true`` and the UI flips to the spinner the
+            # same tick the effect appears.
+            base_image_path: str | None = None
+            if ai_regen_prompt:
+                base_image_path = (new_actor.portrait or "").strip() or None
+                new_actor = new_actor.model_copy(update={"is_generating_portrait": True})
 
             app_state.state.core.actors[i] = new_actor
 
@@ -358,6 +376,21 @@ async def update_actor(actor_id: str, updates: dict, background_tasks: Backgroun
             combat_engine.reorder_turn_queue()
             await save_snapshot()
             await broadcast_state()
+
+            # Dispatch the AI portrait regeneration AFTER broadcast so the UI
+            # immediately sees ``is_generating_portrait=true``. The task runs
+            # outside the request lifecycle (BackgroundTasks) — failure inside
+            # the task resets the flag itself, see ai_composer.process_actor_portrait_task.
+            if ai_regen_prompt:
+                from backend.services.ai_composer import process_actor_portrait_task
+
+                background_tasks.add_task(
+                    process_actor_portrait_task,
+                    actor_id,
+                    ai_regen_prompt,
+                    base_image_path,
+                )
+
             return app_state.state.core.actors[i]
     return {"error": "not found"}
 

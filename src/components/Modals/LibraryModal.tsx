@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { X, Upload, Trash2, Lock } from 'lucide-react';
+import { Loader2, Lock, Sparkles, Trash2, Upload, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Effect } from '../../types';
 import { ImageCropperModal, type CropCompletePayload } from './ImageCropperModal';
@@ -45,6 +45,17 @@ export function LibraryModal({
   const [overwrittenUrlCacheBust, setOverwrittenUrlCacheBust] = useState<{ url: string; t: number } | null>(null);
   const [deleteConfirmUrl, setDeleteConfirmUrl] = useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Phase-3 AI Composer: prompt modal + active job tracking.
+  const [aiModalOpen, setAiModalOpen] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [aiJobId, setAiJobId] = useState<string | null>(null);
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const aiJobIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    aiJobIdRef.current = aiJobId;
+  }, [aiJobId]);
 
   const OPTIMAL_EFFECT_SIZE = { width: 172, height: 320 };
 
@@ -148,6 +159,74 @@ export function LibraryModal({
       );
     });
   }, [assets, searchQuery, getDisplayLabel]);
+
+  const handleStartAiGenerate = useCallback(async () => {
+    const prompt = aiPrompt.trim();
+    if (!prompt) {
+      setAiError(t('library.ai_prompt_required'));
+      return;
+    }
+    setAiError(null);
+    setAiGenerating(true);
+    try {
+      const res = await fetch('/api/assets/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      });
+      const text = await res.text();
+      if (!res.ok) {
+        let detail = `HTTP ${res.status}`;
+        try {
+          const j = JSON.parse(text) as { detail?: string };
+          if (typeof j.detail === 'string' && j.detail.trim()) detail = j.detail;
+        } catch {
+          /* ignore */
+        }
+        setAiError(detail);
+        setAiGenerating(false);
+        return;
+      }
+      try {
+        const j = JSON.parse(text) as { job_id?: string };
+        if (typeof j.job_id === 'string' && j.job_id) {
+          setAiJobId(j.job_id);
+        }
+      } catch {
+        /* ignore */
+      }
+    } catch (e) {
+      setAiError(e instanceof Error ? e.message : String(e));
+      setAiGenerating(false);
+    }
+  }, [aiPrompt, t]);
+
+  // WS bridge: pick up ai_image_ready dispatched by useCombatState.
+  useEffect(() => {
+    if (!aiJobId) return undefined;
+    const handler = (ev: Event) => {
+      const detail = (ev as CustomEvent).detail as
+        | { job_id?: string; ok?: boolean; path?: string; error?: string }
+        | undefined;
+      if (!detail || detail.job_id !== aiJobIdRef.current) return;
+      if (detail.ok && typeof detail.path === 'string') {
+        // Refresh thumbnails — the new PNG is on disk.
+        fetchAssets();
+        setAiModalOpen(false);
+        setAiPrompt('');
+        setAiError(null);
+      } else {
+        setAiError(detail.error || t('library.ai_generation_failed'));
+      }
+      setAiGenerating(false);
+      setAiJobId(null);
+    };
+    window.addEventListener('omniboard:ai-image-ready', handler);
+    return () => window.removeEventListener('omniboard:ai-image-ready', handler);
+    // ``fetchAssets`` is rebuilt every render and reads the latest activeTab
+    // / systemName via closure; depending on those keeps the handler fresh.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aiJobId, activeTab, systemName, t]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -384,7 +463,7 @@ export function LibraryModal({
               className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500"
             />
           </div>
-          <div className="pb-0.5">
+          <div className="pb-0.5 flex gap-2">
             <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*" />
             <button
               onClick={() => fileInputRef.current?.click()}
@@ -393,6 +472,25 @@ export function LibraryModal({
             >
               <Upload size={16} /> {isUploading ? t('library.uploading') : t('library.upload')}
             </button>
+            {activeTab === 'portraits' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setAiError(null);
+                  setAiModalOpen(true);
+                }}
+                disabled={aiGenerating}
+                className="flex items-center gap-2 px-4 py-2 bg-violet-600/80 hover:bg-violet-500 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                title={t('library.ai_generate_tooltip')}
+              >
+                {aiGenerating ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <Sparkles size={16} />
+                )}
+                {aiGenerating ? t('library.ai_generating') : t('library.ai_generate')}
+              </button>
+            )}
           </div>
           </div>
         </div>
@@ -491,6 +589,56 @@ export function LibraryModal({
           </div>
         </div>
       </div>
+
+      {aiModalOpen && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-10 rounded-2xl">
+          <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-4 w-full max-w-md shadow-xl">
+            <h4 className="text-sm font-semibold text-zinc-100 mb-1 flex items-center gap-2">
+              <Sparkles size={16} className="text-violet-300" />
+              {t('library.ai_modal_title')}
+            </h4>
+            <p className="text-xs text-zinc-400 mb-3">{t('library.ai_modal_hint')}</p>
+            <textarea
+              value={aiPrompt}
+              onChange={(e) => setAiPrompt(e.target.value)}
+              placeholder={t('library.ai_prompt_placeholder')}
+              className="w-full min-h-[6rem] bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-violet-500 resize-y"
+              disabled={aiGenerating}
+              spellCheck={false}
+              maxLength={2000}
+            />
+            {aiError && (
+              <div className="mt-2 rounded border border-red-700/50 bg-red-950/40 px-2 py-1 text-xs text-red-200">
+                {aiError}
+              </div>
+            )}
+            <div className="mt-3 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (aiGenerating) return;
+                  setAiModalOpen(false);
+                  setAiPrompt('');
+                  setAiError(null);
+                }}
+                disabled={aiGenerating}
+                className="px-3 py-1.5 text-sm font-medium text-zinc-300 hover:text-zinc-100 rounded-lg border border-zinc-600 hover:bg-zinc-700 transition-colors disabled:opacity-50"
+              >
+                {t('library.confirm_delete_cancel')}
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleStartAiGenerate()}
+                disabled={aiGenerating || !aiPrompt.trim()}
+                className="px-3 py-1.5 text-sm font-medium text-white bg-violet-600 hover:bg-violet-500 rounded-lg transition-colors disabled:opacity-50 inline-flex items-center gap-2"
+              >
+                {aiGenerating && <Loader2 size={14} className="animate-spin" />}
+                {aiGenerating ? t('library.ai_generating') : t('library.ai_modal_submit')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {deleteConfirmUrl && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-10 rounded-2xl">

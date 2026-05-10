@@ -42,6 +42,9 @@ def get_system_columns_path(system_name: str) -> Path | None:
 ASSETS_DIR = BASE_DIR / "data" / "assets"
 DEFAULT_ASSETS_DIR = ASSETS_DIR / "default"
 SYSTEMS_ASSETS_DIR = ASSETS_DIR / "systems"
+# AI-generated portraits / library assets — flat, cross-system folder.
+# Served via the existing ``/assets`` static mount as ``/assets/generated/*``.
+GENERATED_ASSETS_DIR = ASSETS_DIR / "generated"
 
 ACTORS_DIR = BASE_DIR / "data" / "actors"
 
@@ -112,6 +115,7 @@ def ensure_dirs() -> None:
     (DEFAULT_ASSETS_DIR / "config").mkdir(parents=True, exist_ok=True)
     (ASSETS_DIR / "effects").mkdir(exist_ok=True)
     SYSTEMS_ASSETS_DIR.mkdir(exist_ok=True)
+    GENERATED_ASSETS_DIR.mkdir(exist_ok=True)
 
     ACTORS_DIR.mkdir(parents=True, exist_ok=True)
     ENCOUNTERS_DIR.mkdir(parents=True, exist_ok=True)

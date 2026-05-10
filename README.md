@@ -25,7 +25,13 @@ Omniboard — это не VTT (Virtual Tabletop). Это физический п
 - **Undo/Redo** для отмены ошибок
 - **Журнал боя** (опционально) — текстовые логи событий с экспортом
 - **Броски вне хода**: политика «без запросов» (глобальный тумблер) или очередь запросов с решениями **Ок / Нет / На раунд** (пас актёру до конца текущего раунда)
-- **Текстовый чат ИИ (фаза 1)** в **GM Console**: запросы через бэкенд **`/api/ai/chat`**, ключ и модель — в **`data/config/ai_settings.json`** (см. **`Progress_and_Backlog.md`**, **ADR-29**, ТЗ §4)
+- **ИИ Co-GM (фазы AI.1 → AI.3)** в **GM Console**:
+  - текстовый чат через бэкенд **`/api/ai/chat`**, ключ и модель — в **`data/config/ai_settings.json`** (**ADR-29**, ТЗ §4);
+  - **Co-GM режим** (`ai_mode = standard`): системный контракт `data/{assets/default,systems/<sys>}/config/ai_system_prompt.md` + сжатый снимок боя + LLM-инструмент **`apply_combat_mutations`** (damage/heal/set по живым акторам с клампом по `max_<stat>`); действия откатываются Undo и пишутся в журнал боя как ручные правки (**ADR-30 / ADR-31**);
+  - персистенция чата в `data/state_ai_chat.json` (переживает F5, чистится вместе с `POST /api/combat/clear`);
+  - телеметрия токенов: JSONL-логи `data/logs/ai/YYYY-MM-DD.jsonl` + **`GET /api/ai/usage/summary`** + плашка `[Tokens: P + C = T]` на каждом ответе;
+  - **AI Composer** (**ADR-32**): авто-генерация портрета актёра по эффекту с `Effect.ai_prompt` + ручная генерация в библиотеке (`POST /api/assets/generate` async-job + WS `ai_image_ready`); итог всегда **172×320** под Omnimini, прозрачность сохраняется. Поддерживаются OpenAI / DALL-E / OpenRouter и **native Gemini** (`generativelanguage.googleapis.com`, авто-детектор);
+  - режим `red_knight` — заглушка под будущий самостоятельный агент (RAG / векторная БД / Home Assistant), пока работает как passthrough.
 
 ### Гибкая система
 - **Мультисистемность**: настраиваемые колонки статов под любую НРИ

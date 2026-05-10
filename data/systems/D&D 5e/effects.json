@@ -60,5 +60,17 @@
     "experimental_ai": false,
     "ai_prompt": "",
     "ai_variations": {}
+  },
+  {
+    "id": "effect_okameneni",
+    "name": "Окаменени",
+    "description": "Цель превращается  камень",
+    "duration": null,
+    "icon": "pozhar.png",
+    "render_on_mini": true,
+    "render_on_panel": true,
+    "experimental_ai": true,
+    "ai_prompt": "Пусть персонаж на портрете, будет каменной статуей. ",
+    "ai_variations": {}
   }
 ]
