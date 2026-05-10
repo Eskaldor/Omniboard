@@ -296,6 +296,8 @@ export interface MatrixPrerollSlot {
   index: number;
   used: boolean;
   results: MatrixRollResult[];
+  /** Parallel labels from composite ``part_label`` (same length as ``results`` when set). */
+  part_labels?: string[];
 }
 
 /** Одно правило из matrix.json со сгенерированными слотами для актора (legacy плоский вид). */

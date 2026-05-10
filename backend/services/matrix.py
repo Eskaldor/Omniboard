@@ -97,18 +97,21 @@ def _actor_passes_filter(actor: Actor, filt: dict[str, Any]) -> bool:
 
 def _roll_parts_for_cell(
     *,
-    parts: list[dict[str, Any]],
+    parts: list[Any],
     dice: DiceManager,
     system: str,
     actor: Actor,
     merged_macros: dict[str, dict[str, str]],
-) -> list[dict[str, Any]]:
+) -> tuple[list[dict[str, Any]], list[str]]:
+    """Returns rolled results and parallel ``part_label`` strings (possibly empty)."""
     results: list[dict[str, Any]] = []
+    labels: list[str] = []
     for part in parts:
         if not isinstance(part, dict):
             continue
         kind = str(part.get("kind") or "").strip().lower()
         expr = ""
+        label = str(part.get("part_label") or "").strip()
         if kind == "expression":
             expr = str(part.get("expression") or "").strip()
         elif kind == "macro":
@@ -123,7 +126,8 @@ def _roll_parts_for_cell(
             expr = f"({expr})" if expr else expr
         r = dice.execute_roll(expr, system, actor)
         results.append(r.model_dump())
-    return results
+        labels.append(label)
+    return results, labels
 
 
 def _build_legacy_prerolls(session: CombatSession, dice: DiceManager) -> dict[str, list[Any]]:
@@ -276,7 +280,7 @@ class MatrixManager:
                     if kind == "composite":
                         parts_raw = col.get("parts")
                         parts = parts_raw if isinstance(parts_raw, list) else []
-                        results = _roll_parts_for_cell(
+                        results, part_labels = _roll_parts_for_cell(
                             parts=parts,
                             dice=dice,
                             system=system_name,
@@ -288,6 +292,7 @@ class MatrixManager:
                                 "index": 0,
                                 "used": False,
                                 "results": results,
+                                "part_labels": part_labels,
                             }
                         ]
                         columns_out.append(
