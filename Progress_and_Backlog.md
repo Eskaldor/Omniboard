@@ -1,6 +1,6 @@
 # Omniboard — Progress & Backlog
 
-> Обновлено: 09.05.2026 (**Фаза AI.1** — базовый текстовый чат в GM Console, `/api/ai/*`, конфиг провайдера); ранее: 06.05.2026 (**Фаза 15.2** — Mobile UX (haptics), Player Dice tab, secret rolls + whisper to GM, политика бросков вне хода (очередь запросов + «пас на раунд» + глобальный тумблер), PWA-скелет); 05.05.2026 (**Фаза 15.1** — персонализированный `/ws/player`, отчёт о бое + синхронизация кампании, хук `usePlayerActor`, универсальный лист `DefaultSystemSheet variant="player"`, Foundry-style реестр кастомных листов)
+> Обновлено: 10.05.2026 (**Фаза 16 — Roll Matrix UI v2**: переработка конфигуратора и панели GM, см. ADR-33); ранее: 09.05.2026 (**Фаза AI.1** — базовый текстовый чат в GM Console, `/api/ai/*`, конфиг провайдера); 06.05.2026 (**Фаза 15.2** — Mobile UX (haptics), Player Dice tab, secret rolls + whisper to GM, политика бросков вне хода (очередь запросов + «пас на раунд» + глобальный тумблер), PWA-скелет); 05.05.2026 (**Фаза 15.1** — персонализированный `/ws/player`, отчёт о бое + синхронизация кампании, хук `usePlayerActor`, универсальный лист `DefaultSystemSheet variant="player"`, Foundry-style реестр кастомных листов)
 
 ---
 
@@ -667,6 +667,40 @@ UI: радиогруппа во вкладке AI с amber-плашкой «Ин
 - [x] **Единая модель `sheet_profiles`:** группировка характеристик и действий живёт в `profile.stats.accordions` и `profile.actions.accordions` (без раздельных профилей/табов); `actions_panel_override` у актора полностью заменяет секции действий.
 - [x] **Foundry-style SheetRegistry:** `SystemSheetProfile.custom_component_id` позволяет назначить профилю кастомный React-компонент из реестра (`src/components/Sheets/SheetRegistry.tsx`).
 - [x] **Единая точка рендера:** `src/components/Sheets/ActorFullSheet.tsx` выбирает кастомный лист (если зарегистрирован) или универсальный `DefaultSystemSheet variant="player"`. Используется и для GM-модалки, и для Player View.
+
+---
+
+## ✅ Фаза 16 — Roll Matrix UI v2 (10.05.2026)
+
+См. **ADR-33** в `Architecture_Decisions_and_Icebox.md` — полный контракт.
+
+### Конфигуратор (`MatrixTab.tsx`)
+- [x] **Колонка как контейнер подбросков.** `kind` (expression / macro / composite) убран с уровня UI колонки; драфт колонки теперь `{ id, label, parts: PartDraft[] }`. Часть имеет dropdown типа: **Своя формула** / **Действие** / **Характеристика**.
+- [x] **Подгрузка источников из системы.** «Действие» — dropdown из `useSystemActions(systemName)` (`/api/systems/<name>/actions`). «Характеристика» — dropdown из `useSystemColumns(systemName)` с фильтром `is_rollable === true`.
+- [x] **Автоматическая сборка stat → expression на сериализации.** Если выбран stat, подставляется `column.roll_formula` с заменой `[value]` на `[<stat_key>]`; если roll_formula пуста — просто `[<stat_key>]`. Бэкендный `BaseDiceEngine.interpolate_stats` подставит конкретное значение.
+- [x] **«Повтор» (count) на уровне части.** Активен только для single-part колонок (бэкендный composite не поддерживает per-part count). Для multi-part колонок поле disabled с tooltip-объяснением.
+- [x] **Лимит 4 части на колонку.** `MAX_PARTS_PER_COLUMN`; кнопка «Добавить подбросок» disable-ится при достижении.
+- [x] **Auto-slug для group_id / column_id.** Если оставить пусто — slug генерируется из `label` через `transliteration.slugify` + нормализация в `[a-z0-9_]`. Уникальность slug-ов в пределах siblings обеспечивает `uniqueSlug()`.
+- [x] **Стиль ColumnsTab для карточек.** Шапка группы / колонки сжата: chevron expand, inline label-input, ↑↓✕ контролы. Сортировка групп / колонок / частей через стрелки (без DnD-библиотек).
+- [x] **Аккордеон групп.** Свёрнутая группа показывает только заголовок и контролы.
+- [x] **Поле `display` (single/pair) удалено.** Дефолтно сериализуется как `'single'`.
+- [x] **Парсинг старых конфигов.** `kind: 'macro'` / `'expression'` → 1 часть, `column.count` копируется в `parts[0].count`. `kind: 'composite'` → массив частей; stat не угадывается, остаётся expression.
+
+### GM-панель (`RollMatrixDrawer.tsx`)
+- [x] **Шапка таблицы = группы.** Один `<th>` на `group.label`. В legacy-режиме — fallback на плоский список правил.
+- [x] **Ячейка группы — горизонтальный flex колонок.** Внутри каждой колонки лейбл сверху (если в группе >1 колонок) и pill-кнопки вертикальным стеком.
+- [x] **Sticky-колонка имени по контенту.** `w-auto` на таблице, `w-px max-w-[14rem]` на name-cell — таблица не растягивается на ширину контейнера.
+- [x] **Имя актёра — toggle для row_ghost.** Отдельный чекбокс «строка призрак» удалён. Ghosted имя dim+italic+line-through.
+- [x] **Pill = клик-popover.** Native `title` заменён абсолютным popover-ом: формула, выпавшие кубы (`details`), total. Кнопка «В очередь» / «Убрать» — единственный способ менять `matrix_cell_queue`. Закрытие — повторный клик / клик вне / Esc.
+- [x] **Glitch / crit-glitch индикаторы на pill** (`!` / `!!`, янтарь / роза). Поддержка `ShadowrunEngine` без хардкода правил.
+
+### Локали
+- [x] Новые ключи в `data/locales/{en,ru,ger,je}/core.json`: `matrix_part_kind_expression/action/stat`, `matrix_part_action_select`, `matrix_part_stat_select`, `matrix_part_no_actions`, `matrix_part_no_rollable_stats`, `matrix_field_repeat`, `matrix_field_repeat_hint`, `matrix_field_repeat_disabled`, `matrix_max_parts_reached`, `matrix_queue_add`, `matrix_queue_remove`, `matrix_glitch`, `matrix_crit_glitch`, `matrix_default_part_label`, `matrix_move_up/down`, `matrix_collapse_group/expand_group`, `matrix_part_label_placeholder`, `matrix_column_intro`.
+
+### Что в icebox
+- «Повтор» для multi-part колонок (composite × N) — требует расширения `MatrixManager.build_prerolls` поддержкой `count` для `kind: composite`.
+- SVG-иконки в `part_label` — пока ограничились emoji / текстом.
+- Auto-rerun матрицы после `POST /api/systems/<name>/matrix` — не делается; GM по-прежнему вручную жмёт «Перегенерировать матрицу» в drawer-е.
 
 ---
 

@@ -147,7 +147,7 @@
 **Решение:** Механика игровых систем выносится из TS/Python в JSON-конфиги с Asset Override:
 
 - `data/assets/default/config/mechanics.json` + `data/systems/<system>/mechanics.json` — `system_dice`, `formulas`;
-- `data/assets/default/config/matrix.json` + `data/systems/<system>/matrix.json` — `generation_rules` для пред-бросков;
+- `data/assets/default/config/matrix.json` + `data/systems/<system>/matrix.json` — `groups → columns → kind (expression | macro | composite)` для пред-бросков (schema v2; см. ADR-28). Legacy `generation_rules` всё ещё парсится при загрузке;
 - `data/systems/<system>/columns.json` — UI/механические флаги колонок (`is_readonly`, `is_rollable`, `roll_formula`, `computed_formula_id`).
 
 **Правило:** никакого хардкода игровых кубов (`1d20`) и системных формул в TS/Python. Код предоставляет движки и безопасное исполнение (`MechanicsManager`, `DiceManager`, `MatrixManager`), а различия D&D / Shadowrun / кастомных систем задаются данными.
@@ -422,6 +422,46 @@ actor_id = turn_queue[target_index]
 - Imagen-семейство (`imagen-3.0-*`) использует `:predict` endpoint с `instances[]` — **не реализовано**, на текущей фазе только `:generateContent` / `gemini-*-image-preview`. Если понадобится — добавим Imagen-ветку, она уже частично развёрнута через тот же детектор.
 - Модерация контента отдана на откуп провайдеру (Gemini шлёт `promptFeedback.blockReason`, парсер их понимает; OpenAI шлёт 400 с текстом — пробрасывается в `system_report`). Локальной модерации нет.
 - Нет повторных попыток / экспоненциального backoff: при HTTP ≥ 400 от провайдера задача завершается с `failed`, флаг `is_generating_portrait` сбрасывается, спиннер уходит, но GM получает ошибку в WS-событии.
+
+### ADR-33: Roll Matrix UI v2 — конфигуратор и панель GM
+
+**Статус:** Реализовано (10.05.2026).
+
+**Контекст:** `matrix.json` со `schema_version: 2` (`groups → columns → kind`) на бэкенде существует с фазы 9, но конфигуратор в **`MatrixTab.tsx`** оставался JSON-редактором: выставлял пользователю термины `macro` / `composite` / `expression`, требовал ручного ввода `macro_key` и `id`-slug-ов, а **`RollMatrixDrawer.tsx`** рендерил каждую `column` отдельной колонкой таблицы — и `<th>`, и pill-ячейки сваливались в шумный «массив цифр». Цель фичи (см. CLAUDE.md): мастер видит компактную сводку **по группам**, кликом ставит pill в очередь, ничего не редактирует руками.
+
+**Решения:**
+
+1. **Колонка ≡ контейнер подбросков.** `kind` ушёл с уровня UI-колонки на уровень части. Драфт хранит `ColumnDraft = { id, label, parts: PartDraft[] }`; `PartDraft.kind ∈ 'expression' | 'action' | 'stat'`. Подгрузка источников — из системы:
+   - **action** — `useSystemActions(systemName)` (`/api/systems/<name>/actions`).
+   - **stat** — `useSystemColumns(systemName)` фильтр по `is_rollable === true` (`/api/systems/<name>/columns`).
+   - **expression** — свободная формула.
+2. **Маппинг на бэкенд.** Бэкендный matrix-engine не знает про `stat`. На сериализации:
+   - `parts.length === 1` + `expression`/`action` → колонка `{kind: 'expression'|'macro', count, ...}`.
+   - `parts.length === 1` + `stat` → колонка `{kind: 'expression', expression: <derived>}` где `<derived>` берёт `column.roll_formula` колонки и заменяет `[value]` на `[<stat_key>]`; если formula пуста — просто `[<stat_key>]`. Реальная подстановка значения происходит в `BaseDiceEngine.interpolate_stats`.
+   - `parts.length ≥ 2` → колонка `{kind: 'composite', parts: [...]}` без `count` / `display`. Бэкендный composite даёт **один слот** с одним результатом на каждую часть; `display` всегда `'single'`.
+3. **«Повтор» (count) на уровне части.** Поле `count` живёт в `PartDraft` и работает только для **single-part** колонок (так бэкенд `kind: macro/expression` создаёт N независимых слотов = N pill-кнопок в таблице). Для multi-part колонок поле disabled с tooltip-объяснением. Расширение «повтор для composite» отдано в icebox — требует поддержки `count` на уровне `kind: composite` в `MatrixManager`.
+4. **Лимит частей.** Жёстко 4 части на колонку (`MAX_PARTS_PER_COLUMN`). Кнопка «Добавить подбросок» disable-ится при достижении лимита; tooltip-объяснение через i18n. Это сознательный UX-предел, чтобы matrix-таблица не разрастаясь pill-ами в одной ячейке.
+5. **Auto-slug.** `group_id` и `column_id` больше не обязательны для GM. Если пусто — `serializeGroup` / `serializeColumn` генерируют slug из `label` через `transliteration.slugify` + нормализация в `[a-z0-9_]`, c гарантией уникальности в пределах siblings (`uniqueSlug`). Мастер видит slug в раскрытой части, может перезаписать, но не обязан.
+6. **Backwards-compat.** Парсинг исходного `matrix.json` любой формы:
+   - `kind: 'macro'` / `'expression'` → 1 часть нужного типа, `column.count` копируется в `parts[0].count`.
+   - `kind: 'composite'` → массив частей (`macro` → `action`, `expression` → `expression`).
+   - Stat-ы при загрузке не угадываются — пользователь сам выбирает «Характеристика» в dropdown, если хочет.
+   - Legacy `generation_rules` (schema v1) показывает баннер «загружено старое правило, добавьте группы и пересохраните».
+7. **GM Drawer.** Шапка таблицы — одно `<th>` на группу (`group.label`). В `<td>` группы — горизонтальный `flex` колонок (`overflow-x` уже есть на родителе), внутри каждой колонки лейбл сверху (если в группе >1 колонок) и pill-ы вертикальным стеком. Sticky-колонка имени по контенту (`w-auto`), не растягивает таблицу на ширину контейнера. Имя актёра — `<button>` toggle для `row_ghost`; ghosted имя dim+italic+line-through. Отдельный чекбокс «строка-призрак» удалён.
+8. **Pill = клик-popover.** Native `title` заменён абсолютным popover-ом. В нём — построчно по `MatrixRollResult`: `[part_label]: <formula> → <total>` + `details` моноширинно (что выпало). `is_glitch` / `is_crit_glitch` дают цветной индикатор `!` / `!!` на pill и подпись в popover (поддержка ShadowrunEngine, без хардкода правил). Кнопка «В очередь» / «Убрать из очереди» — единственный способ менять `matrix_cell_queue`; pill-клик больше не toggle-queue. Закрытие popover-а — повторный клик / клик вне / Esc.
+9. **`part_label` как универсальный маркер.** Подпись части в pill — свободный текст: «Атака», эмодзи `⚔️`, что угодно. SVG-иконки явно отвергнуты на этой итерации (см. icebox).
+
+**Файлы:**
+- `src/components/Modals/ConfigTabs/MatrixTab.tsx`
+- `src/components/GMConsole/RollMatrixDrawer.tsx`
+- `data/locales/{en,ru,ger,je}/core.json`
+- (без изменений, но участвуют в контракте) `backend/services/matrix.py`, `backend/services/dice.py`, `backend/routers/systems.py`, `backend/routers/combat.py`, `src/types.ts`, `src/hooks/useSystemActions.ts`, `src/hooks/useSystemColumns.ts`.
+
+**Границы:**
+- Бэкенд не трогали — всё реализовано через существующий `schema_version: 2` контракт.
+- «Повтор» для multi-part колонок (composite × N) — icebox, требует расширения `MatrixManager.build_prerolls`.
+- SVG-иконки в `part_label` — icebox.
+- Auto-rerun матрицы после сохранения конфига — не делается; GM по-прежнему сам жмёт «Перегенерировать матрицу» в drawer-е.
 
 ---
 

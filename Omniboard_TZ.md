@@ -108,7 +108,12 @@ data/
 ### 2.1.2. `mechanics.json` и `matrix.json`
 
 - `**mechanics.json**` загружается через `load_config_with_override(system, "mechanics.json")`; дефолт лежит в `data/assets/default/config/mechanics.json` и содержит `system_dice` + `formulas` + опционально **`initiative_roll`** (см. **§2.1.5**).
-- `**matrix.json**` загружается тем же Asset Override-путём; `generation_rules[]` задаёт выражение, количество слотов и режим отображения (`single` / `pair`) для пред-бросков.
+- `**matrix.json**` загружается тем же Asset Override-путём. Текущий контракт — **`schema_version: 2`** (`groups → columns → kind`):
+  - **`groups[]`** — секции в шапке таблицы Roll Matrix; у каждой `id`, `label`, `columns[]`.
+  - **`columns[]`** — конкретный бросок внутри группы; `id`, `label`, `kind` ∈ `expression | macro | composite`. Для `expression` хранятся `expression`, `count` (число слотов в раунде) и `display` ∈ `single | pair`; для `macro` — `macro_key` (ссылка на действие из `actions.json`) + `count`/`display`; для `composite` — массив **`parts[]`** (без `count`/`display`, всегда один слот, в нём по результату на каждую часть).
+  - **`parts[]`** — каждая часть имеет свой `kind` (`macro` или `expression`), необязательный `part_label` и нужные поля под `kind`. В одном слоте бросаются все части подряд.
+  - Опциональный **`actor_filter`** (`include_roles` / `exclude_roles`) ограничивает, у каких актёров бэкенд считает пред-броски.
+  - Legacy-поле **`generation_rules[]`** (`schema_version: 1`) сохраняется для совместимости со старыми конфигами; `MatrixManager` парсит оба формата, новые сохранения всегда пишут v2.
 - Правило проекта: игровой куб, формулы и матрицы не хардкодятся в TS/Python; системные отличия живут в JSON-конфигах.
 
 **Ключ `initiative_roll` (кратко, полное описание — §2.1.5):** отсутствие ключа или пустая строка → эффективный шаблон **`1d20`**; строка **`none`** (без учёта регистра) → броска нет: в публичном стейте **`initiative_roll_available: false`**, числовая колонка Init в трекере скрыта (у **popcorn** эта колонка всегда скрыта отдельно от ключа); иначе — выражение с подстановкой **`[stat_key]`** как у `BaseDiceEngine.interpolate_stats` в `dice.py`.
