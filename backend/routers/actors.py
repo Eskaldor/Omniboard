@@ -285,7 +285,7 @@ async def update_actor(actor_id: str, updates: dict, background_tasks: Backgroun
             new_stats = dict(new_actor.model_dump().get("stats") or {})
 
             # Dynamic stat change logging from column config (numbers + checkbox_group nests)
-            columns = _load_system_columns(getattr(app_state.state.core, "system", "") or "D&D 5e")
+            columns = _load_system_columns(getattr(app_state.state.core, "system", "") or "DND5e")
             _log_stat_changes_for_actor(
                 old_stats=old_stats,
                 new_stats=new_stats,
@@ -347,7 +347,7 @@ async def update_actor(actor_id: str, updates: dict, background_tasks: Backgroun
 
             # Proactively (re)render miniature PNG and push update to ESP (non-blocking for HTTP response).
             bind_rule = (
-                find_hardware_trigger(system_name or "D&D 5e", "miniature_bind")
+                find_hardware_trigger(system_name or "DND5e", "miniature_bind")
                 if new_miniature_id and new_miniature_id != old_miniature_id
                 else None
             )

@@ -5,7 +5,7 @@ import { useCombatState } from './CombatStateContext';
 const columnsCache: Record<string, ColumnConfig[]> = {};
 
 function normalizeSystemKey(system: string): string {
-  return system.replace(/\s+/g, '').trim() || 'D&D5e';
+  return system.replace(/\s+/g, '').trim() || 'DND5e';
 }
 
 type ColumnsContextValue = {
@@ -25,7 +25,7 @@ export function useColumns(): ColumnsContextValue {
 
 export function ColumnsProvider({ children }: { children: React.ReactNode }) {
   const { state } = useCombatState();
-  const systemName = state?.core.system || 'D&D 5e';
+  const systemName = state?.core.system || 'DND5e';
   const cacheKey = normalizeSystemKey(systemName);
   const [columns, setColumnsState] = useState<ColumnConfig[]>(() => columnsCache[cacheKey] ?? []);
   const prevKeyRef = useRef<string | null>(null);

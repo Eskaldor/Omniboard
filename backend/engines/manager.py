@@ -26,7 +26,7 @@ def _logic_path(system_name: str) -> Path:
 
 def system_has_custom_logic_file(system_name: str) -> bool:
     """True when ``data/systems/<system>/logic.py`` exists (system-defined initiative)."""
-    return _logic_path((system_name or "").strip() or "D&D 5e").is_file()
+    return _logic_path((system_name or "").strip() or "DND5e").is_file()
 
 
 def _try_load_custom_engine(system_name: str) -> BaseInitiativeEngine | None:
@@ -46,7 +46,7 @@ def get_engine_for_state(state: CombatState) -> BaseInitiativeEngine:
     """
     Resolve initiative engine: custom ``logic.py`` wins; otherwise map ``engine_type``.
     """
-    sys_name = (state.system or "").strip() or "D&D 5e"
+    sys_name = (state.system or "").strip() or "DND5e"
     custom = _try_load_custom_engine(sys_name)
     if custom is not None:
         return custom

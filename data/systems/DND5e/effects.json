@@ -1,0 +1,137 @@
+[
+  {
+    "id": "blinded",
+    "name": "Ослеплён",
+    "description": "Автоматически проваливает проверки, требующие зрения. Броски атаки по нему — с преимуществом, его атаки — с помехой.",
+    "duration": null,
+    "icon": "",
+    "render_on_mini": true,
+    "render_on_panel": true
+  },
+  {
+    "id": "charmed",
+    "name": "Очарован",
+    "description": "Не может атаковать очарователя или делать его целью вредных эффектов. Очарователь совершает проверки общения с ним с преимуществом.",
+    "duration": null,
+    "icon": "",
+    "render_on_mini": true,
+    "render_on_panel": true
+  },
+  {
+    "id": "deafened",
+    "name": "Оглох",
+    "description": "Автоматически проваливает проверки, требующие слуха.",
+    "duration": null,
+    "icon": "",
+    "render_on_mini": true,
+    "render_on_panel": true
+  },
+  {
+    "id": "frightened",
+    "name": "Испуган",
+    "description": "Помеха на проверки и атаки, пока источник страха в поле зрения. Не может добровольно приблизиться к источнику.",
+    "duration": null,
+    "icon": "",
+    "render_on_mini": true,
+    "render_on_panel": true
+  },
+  {
+    "id": "grappled",
+    "name": "Схвачен",
+    "description": "Скорость 0. Состояние заканчивается, если схвативший недееспособен или цель вынесена из его досягаемости.",
+    "duration": null,
+    "icon": "",
+    "render_on_mini": true,
+    "render_on_panel": true
+  },
+  {
+    "id": "incapacitated",
+    "name": "Недееспособен",
+    "description": "Не может совершать действия и реакции.",
+    "duration": null,
+    "icon": "",
+    "render_on_mini": true,
+    "render_on_panel": true
+  },
+  {
+    "id": "invisible",
+    "name": "Невидим",
+    "description": "Невозможно увидеть без магии или особого чувства. Атаки по нему — с помехой, его атаки — с преимуществом.",
+    "duration": null,
+    "icon": "",
+    "render_on_mini": true,
+    "render_on_panel": true
+  },
+  {
+    "id": "paralyzed",
+    "name": "Парализован",
+    "description": "Недееспособен, не двигается и не говорит. Провал спасбросков СИЛ и ЛОВ. Атаки с преимуществом; попадание в пределах 5 фт — критическое.",
+    "duration": null,
+    "icon": "",
+    "render_on_mini": true,
+    "render_on_panel": true
+  },
+  {
+    "id": "petrified",
+    "name": "Окаменел",
+    "description": "Недееспособен, вес ×10, сопротивление всем видам урона, иммунитет к ядам и болезням. Провал спасбросков СИЛ и ЛОВ.",
+    "duration": null,
+    "icon": "",
+    "render_on_mini": true,
+    "render_on_panel": true
+  },
+  {
+    "id": "poisoned",
+    "name": "Отравлен",
+    "description": "Помеха на броски атаки и проверки характеристик.",
+    "duration": null,
+    "icon": "",
+    "render_on_mini": true,
+    "render_on_panel": true
+  },
+  {
+    "id": "prone",
+    "name": "Сбит с ног",
+    "description": "Перемещается только ползком. Помеха на атаки. Атаки по нему в пределах 5 фт — с преимуществом, дальше — с помехой.",
+    "duration": null,
+    "icon": "",
+    "render_on_mini": true,
+    "render_on_panel": true
+  },
+  {
+    "id": "restrained",
+    "name": "Опутан",
+    "description": "Скорость 0. Атаки по нему с преимуществом, его атаки с помехой. Помеха на спасброски ЛОВ.",
+    "duration": null,
+    "icon": "",
+    "render_on_mini": true,
+    "render_on_panel": true
+  },
+  {
+    "id": "stunned",
+    "name": "Ошеломлён",
+    "description": "Недееспособен, не двигается, говорит запинаясь. Провал спасбросков СИЛ и ЛОВ. Атаки по нему с преимуществом.",
+    "duration": null,
+    "icon": "",
+    "render_on_mini": true,
+    "render_on_panel": true
+  },
+  {
+    "id": "unconscious",
+    "name": "Без сознания",
+    "description": "Недееспособен, роняет всё и падает ничком. Провал спасбросков СИЛ и ЛОВ. Атаки с преимуществом; попадание в пределах 5 фт — критическое.",
+    "duration": null,
+    "icon": "",
+    "render_on_mini": true,
+    "render_on_panel": true
+  },
+  {
+    "id": "concentration",
+    "name": "Концентрация",
+    "description": "Поддерживает заклинание. При получении урона — спасбросок ТЕЛ (Сл 10 или половина урона, что больше).",
+    "duration": null,
+    "icon": "",
+    "render_on_mini": true,
+    "render_on_panel": true
+  }
+]

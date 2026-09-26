@@ -370,7 +370,7 @@ class MiniatureEntry(BaseModel):
         return data
 
     @model_validator(mode="after")
-    def fill_mac_from_id(self) -> MiniatureEntry:
+    def fill_mac_from_id(self) -> "MiniatureEntry":
         if not (self.mac or "").strip():
             self.mac = self.id
         return self
@@ -416,7 +416,7 @@ class CombatCore(BaseModel):
     round: int = 1
     engine_type: str = "standard"
     is_manual_mode: bool = False
-    system: str = "D&D 5e"
+    system: str = "DND5e"
     is_active: bool = False
     active_reaction_actor_id: Optional[str] = None
 
@@ -742,7 +742,7 @@ class CombatState(BaseModel):
     round: int = 1
     is_manual_mode: bool = False
     engine_type: str = "standard"
-    system: str = "D&D 5e"
+    system: str = "DND5e"
     layout_profiles: List[LayoutProfile] = Field(default_factory=list)
     legend: LegendConfig = Field(default_factory=LegendConfig)
     show_group_colors: bool = True

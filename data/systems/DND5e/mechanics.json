@@ -1,0 +1,15 @@
+{
+  "system_dice": "1d20",
+  "initiative_roll": "1d20 + [init_bonus]",
+  "formulas": {
+    "str_mod": "(strength - 10) // 2",
+    "dex_mod": "(dexterity - 10) // 2",
+    "con_mod": "(constitution - 10) // 2",
+    "int_mod": "(intelligence - 10) // 2",
+    "wis_mod": "(wisdom - 10) // 2",
+    "cha_mod": "(charisma - 10) // 2",
+    "init_bonus": "(dexterity - 10) // 2",
+    "prof_bonus": "(level - 1) // 4 + 2 if level > 0 else 2",
+    "passive_perception": "10 + perception"
+  }
+}
