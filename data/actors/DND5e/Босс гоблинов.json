@@ -1,0 +1,190 @@
+{
+  "id": "2ec1c60a-b46c-46f7-9d37-a21ad0670dc6",
+  "name": "Босс гоблинов",
+  "role": "enemy",
+  "is_revealed": true,
+  "is_pinned": false,
+  "group_id": null,
+  "group_name": null,
+  "group_mode": null,
+  "group_color": null,
+  "initiative": 0,
+  "has_acted": false,
+  "portrait": "",
+  "show_portrait": false,
+  "miniature_id": null,
+  "layout_profile_id": null,
+  "sheet_profile_id": "default",
+  "stats": {
+    "strength": 10,
+    "dexterity": 14,
+    "constitution": 10,
+    "intelligence": 10,
+    "wisdom": 8,
+    "charisma": 10,
+    "level": 1,
+    "hp": 21,
+    "max_hp": 21,
+    "temp_hp": 0,
+    "ac": 17,
+    "speed": 30,
+    "hit_dice": 6,
+    "hit_dice_max": 6,
+    "hit_die": "d6",
+    "exhaustion": 0,
+    "inspiration": 0,
+    "spell_save_dc": 0,
+    "spell_attack": 0,
+    "notes": "Маленький гуманоид (гоблиноид), нейтрально-злой. КД 17 (кольчужная рубаха, щит), хиты 21 (6d6). Опасность 1 (200 опыта).\nТёмное зрение 60 фт, пассивная Внимательность 9. Языки: Гоблинский, Общий.\nПроворный побег: Отход или Засада бонусным действием.\nМультиатака: две атаки скимитаром, вторая с помехой.\nСкимитар: +4, 5 фт, 1d6+2 рубящего. Метательное копьё: +2, 5 фт или 30/120 фт, 1d6 колющего.\nРеакция — Перенаправление атаки: при атаке по боссу меняется местами с гоблином в 5 фт, цель атаки — гоблин.",
+    "save_str": 0,
+    "save_dex": 2,
+    "save_con": 0,
+    "save_int": 0,
+    "save_wis": -1,
+    "save_cha": 0,
+    "athletics": 0,
+    "acrobatics": 2,
+    "sleight_of_hand": 2,
+    "stealth": 6,
+    "arcana": 0,
+    "history": 0,
+    "investigation": 0,
+    "nature": 0,
+    "religion": 0,
+    "animal_handling": -1,
+    "insight": -1,
+    "medicine": -1,
+    "perception": -1,
+    "survival": -1,
+    "deception": 0,
+    "intimidation": 0,
+    "performance": 0,
+    "persuasion": 0,
+    "death_saves_success": {
+      "s1": false,
+      "s2": false,
+      "s3": false
+    },
+    "death_saves_fail": {
+      "f1": false,
+      "f2": false,
+      "f3": false
+    },
+    "legendary_actions": {
+      "la1": false,
+      "la2": false,
+      "la3": false
+    },
+    "legendary_resistance": {
+      "lr1": false,
+      "lr2": false,
+      "lr3": false
+    },
+    "spell_slots_1": {
+      "l1_1": false,
+      "l1_2": false,
+      "l1_3": false,
+      "l1_4": false
+    },
+    "spell_slots_2": {
+      "l2_1": false,
+      "l2_2": false,
+      "l2_3": false
+    },
+    "spell_slots_3": {
+      "l3_1": false,
+      "l3_2": false,
+      "l3_3": false
+    },
+    "spell_slots_4": {
+      "l4_1": false,
+      "l4_2": false,
+      "l4_3": false
+    },
+    "spell_slots_5": {
+      "l5_1": false,
+      "l5_2": false,
+      "l5_3": false
+    },
+    "spell_slots_6": {
+      "l6_1": false,
+      "l6_2": false
+    },
+    "spell_slots_7": {
+      "l7_1": false,
+      "l7_2": false
+    },
+    "spell_slots_8": {
+      "l8_1": false
+    },
+    "spell_slots_9": {
+      "l9_1": false
+    }
+  },
+  "effects": [],
+  "visibility": {
+    "hp": false,
+    "stats": false,
+    "effects": true,
+    "name": true
+  },
+  "hotbar": [],
+  "actions": {
+    "gb_scimitar": {
+      "show_on_panel": true,
+      "show_in_tracker": true,
+      "custom_name": "Скимитар (атака)",
+      "custom_formula": "1d20 + 4"
+    },
+    "gb_scimitar_dis": {
+      "show_on_panel": true,
+      "show_in_tracker": false,
+      "custom_name": "Скимитар, 2-я атака (с помехой)",
+      "custom_formula": "2d20kl1 + 4"
+    },
+    "gb_scimitar_dmg": {
+      "show_on_panel": true,
+      "show_in_tracker": true,
+      "custom_name": "Скимитар (урон)",
+      "custom_formula": "1d6 + 2"
+    },
+    "gb_javelin": {
+      "show_on_panel": true,
+      "show_in_tracker": false,
+      "custom_name": "Метательное копьё (атака)",
+      "custom_formula": "1d20 + 2"
+    },
+    "gb_javelin_dmg": {
+      "show_on_panel": true,
+      "show_in_tracker": false,
+      "custom_name": "Метательное копьё (урон)",
+      "custom_formula": "1d6"
+    }
+  },
+  "actions_panel_override": {
+    "accordions": [
+      {
+        "name": "Атаки и заклинания",
+        "columns": [
+          "gb_scimitar",
+          "gb_scimitar_dis",
+          "gb_scimitar_dmg",
+          "gb_javelin",
+          "gb_javelin_dmg"
+        ],
+        "display": "open"
+      },
+      {
+        "name": "Прочее",
+        "columns": [
+          "initiative",
+          "check_advantage",
+          "check_disadvantage",
+          "death_save",
+          "hit_die_roll"
+        ],
+        "display": "accordion"
+      }
+    ]
+  }
+}

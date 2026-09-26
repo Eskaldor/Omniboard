@@ -1,0 +1,197 @@
+{
+  "id": "036e19ef-d2ed-4b8d-a301-a9cce1c338b6",
+  "name": "Аиша",
+  "role": "character",
+  "is_revealed": true,
+  "is_pinned": false,
+  "group_id": null,
+  "group_name": null,
+  "group_mode": null,
+  "group_color": null,
+  "initiative": 0,
+  "has_acted": false,
+  "portrait": "",
+  "show_portrait": false,
+  "miniature_id": null,
+  "layout_profile_id": null,
+  "sheet_profile_id": "default",
+  "stats": {
+    "strength": 8,
+    "dexterity": 13,
+    "constitution": 16,
+    "intelligence": 10,
+    "wisdom": 12,
+    "charisma": 18,
+    "level": 5,
+    "hp": 43,
+    "max_hp": 43,
+    "temp_hp": 0,
+    "ac": 17,
+    "speed": 30,
+    "hit_dice": 5,
+    "hit_dice_max": 5,
+    "hit_die": "d8",
+    "exhaustion": 0,
+    "inspiration": 0,
+    "spell_save_dc": 15,
+    "spell_attack": 7,
+    "notes": "Тифлинг (инфернальное наследие), колдун 5 (Ведьмовской клинок, XGtE — легаси-подкласс поверх PHB 2024). Предыстория: Шарлатан.\nЧерты: Одарённый (Убеждение, Проницательность, Внимательность), Увеличение характеристик (4 ур.).\nТифлинг: тёмное зрение 60 фт, сопротивление огню, Огненный снаряд, Адское возмездие (3 ур.), Тьма (5 ур.).\nМагия договора: 2 ячейки 3 уровня (третья точка в «Ячейки 3» не используется), восстанавливаются на коротком отдыхе.\nВоззвания: Договор клинка, Жаждущий клинок (Дополнительная атака), Мучительный взрыв, Отталкивающий взрыв, Дьявольское зрение. Магическая хитрость.\nВедьмовской клинок: Проклятие ведьмовского клинка (+3 к урону, крит 19–20, лечение 5+ХАР при смерти цели), Воин порчи (атаки ХАР, средние доспехи, щиты, воинское оружие).\nЗаговоры: Мистический заряд, Огненный снаряд, Малая иллюзия. Заклинания: Сглаз, Щит, Доспех Агатиса, Туманный шаг, Удержание личности, Контрзаклинание, Голод Хадара.\nСнаряжение: кираса, щит, длинный меч (оружие договора).",
+    "save_str": -1,
+    "save_dex": 1,
+    "save_con": 3,
+    "save_int": 0,
+    "save_wis": 4,
+    "save_cha": 7,
+    "athletics": -1,
+    "acrobatics": 1,
+    "sleight_of_hand": 4,
+    "stealth": 1,
+    "arcana": 3,
+    "history": 0,
+    "investigation": 0,
+    "nature": 0,
+    "religion": 0,
+    "animal_handling": 1,
+    "insight": 4,
+    "medicine": 1,
+    "perception": 4,
+    "survival": 1,
+    "deception": 7,
+    "intimidation": 7,
+    "performance": 4,
+    "persuasion": 7,
+    "death_saves_success": {
+      "s1": false,
+      "s2": false,
+      "s3": false
+    },
+    "death_saves_fail": {
+      "f1": false,
+      "f2": false,
+      "f3": false
+    },
+    "legendary_actions": {
+      "la1": false,
+      "la2": false,
+      "la3": false
+    },
+    "legendary_resistance": {
+      "lr1": false,
+      "lr2": false,
+      "lr3": false
+    },
+    "spell_slots_1": {
+      "l1_1": false,
+      "l1_2": false,
+      "l1_3": false,
+      "l1_4": false
+    },
+    "spell_slots_2": {
+      "l2_1": false,
+      "l2_2": false,
+      "l2_3": false
+    },
+    "spell_slots_3": {
+      "l3_1": true,
+      "l3_2": true,
+      "l3_3": false
+    },
+    "spell_slots_4": {
+      "l4_1": false,
+      "l4_2": false,
+      "l4_3": false
+    },
+    "spell_slots_5": {
+      "l5_1": false,
+      "l5_2": false,
+      "l5_3": false
+    },
+    "spell_slots_6": {
+      "l6_1": false,
+      "l6_2": false
+    },
+    "spell_slots_7": {
+      "l7_1": false,
+      "l7_2": false
+    },
+    "spell_slots_8": {
+      "l8_1": false
+    },
+    "spell_slots_9": {
+      "l9_1": false
+    }
+  },
+  "effects": [],
+  "visibility": {
+    "hp": true,
+    "stats": true,
+    "effects": true,
+    "name": true
+  },
+  "hotbar": [],
+  "actions": {
+    "aisha_pact_blade": {
+      "show_on_panel": true,
+      "show_in_tracker": true,
+      "custom_name": "Клинок договора (атака)",
+      "custom_formula": "1d20 + [cha_mod] + [prof_bonus]"
+    },
+    "aisha_pact_blade_dmg": {
+      "show_on_panel": true,
+      "show_in_tracker": false,
+      "custom_name": "Клинок договора (урон)",
+      "custom_formula": "1d8 + [cha_mod]"
+    },
+    "aisha_hexblade_curse": {
+      "show_on_panel": true,
+      "show_in_tracker": false,
+      "custom_name": "Проклятие клинка (доп. урон)",
+      "custom_formula": "[prof_bonus]"
+    },
+    "aisha_eldritch_blast": {
+      "show_on_panel": true,
+      "show_in_tracker": true,
+      "custom_name": "Мистический заряд (атака, ×2)",
+      "custom_formula": "1d20 + [cha_mod] + [prof_bonus]"
+    },
+    "aisha_eldritch_blast_dmg": {
+      "show_on_panel": true,
+      "show_in_tracker": false,
+      "custom_name": "Мистический заряд (урон луча)",
+      "custom_formula": "1d10 + [cha_mod]"
+    },
+    "aisha_hex": {
+      "show_on_panel": true,
+      "show_in_tracker": false,
+      "custom_name": "Сглаз (урон)",
+      "custom_formula": "1d6"
+    }
+  },
+  "actions_panel_override": {
+    "accordions": [
+      {
+        "name": "Атаки и заклинания",
+        "columns": [
+          "aisha_pact_blade",
+          "aisha_pact_blade_dmg",
+          "aisha_hexblade_curse",
+          "aisha_eldritch_blast",
+          "aisha_eldritch_blast_dmg",
+          "aisha_hex"
+        ],
+        "display": "open"
+      },
+      {
+        "name": "Прочее",
+        "columns": [
+          "initiative",
+          "check_advantage",
+          "check_disadvantage",
+          "death_save",
+          "hit_die_roll"
+        ],
+        "display": "accordion"
+      }
+    ]
+  }
+}

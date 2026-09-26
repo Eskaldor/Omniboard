@@ -1,0 +1,204 @@
+{
+  "id": "6ebe31e2-0214-4877-8326-b582754b527f",
+  "name": "Килдрак",
+  "role": "character",
+  "is_revealed": true,
+  "is_pinned": false,
+  "group_id": null,
+  "group_name": null,
+  "group_mode": null,
+  "group_color": null,
+  "initiative": 0,
+  "has_acted": false,
+  "portrait": "",
+  "show_portrait": false,
+  "miniature_id": null,
+  "layout_profile_id": null,
+  "sheet_profile_id": "default",
+  "stats": {
+    "strength": 13,
+    "dexterity": 10,
+    "constitution": 15,
+    "intelligence": 8,
+    "wisdom": 18,
+    "charisma": 13,
+    "level": 5,
+    "hp": 43,
+    "max_hp": 43,
+    "temp_hp": 0,
+    "ac": 19,
+    "speed": 30,
+    "hit_dice": 5,
+    "hit_dice_max": 5,
+    "hit_die": "d8",
+    "exhaustion": 0,
+    "inspiration": 0,
+    "spell_save_dc": 15,
+    "spell_attack": 7,
+    "notes": "Дварф, жрец 5 (Домен кузни, XGtE — легаси-подкласс поверх PHB 2024). Предыстория: Прислужник.\nЧерты: Посвящённый в магию (жрец), Увеличение характеристик (4 ур.).\nДварф: тёмное зрение 120 фт, Дварфская стойкость (сопр. яду), Дварфская выносливость (+1 хит/ур.), Чувство камня.\nБожественный порядок: Защитник (тяжёлые доспехи, воинское оружие). Божественная искра, Божественный канал 2/отдых, Испепеление нежити (5 ур.).\nКузня: Благословение кузни (+1 к КД доспеха — учтено), Благословение ремесленника.\nЗаклинания домена: Опознание, Палящая кара, Раскалённый металл, Магическое оружие, Стихийное оружие, Защита от энергии.\nЗаговоры: Священное пламя, Указание, Чудотворство, Починка. Подготовлены: Лечение ран, Благословение, Щит веры, Духовное оружие, Малое восстановление, Духовные стражи, Возрождение.\nСнаряжение: кольчуга (+1), щит, боевой молот, святой символ.",
+    "save_str": 1,
+    "save_dex": 0,
+    "save_con": 2,
+    "save_int": -1,
+    "save_wis": 7,
+    "save_cha": 4,
+    "athletics": 1,
+    "acrobatics": 0,
+    "sleight_of_hand": 0,
+    "stealth": 0,
+    "arcana": -1,
+    "history": 2,
+    "investigation": -1,
+    "nature": -1,
+    "religion": 2,
+    "animal_handling": 4,
+    "insight": 7,
+    "medicine": 7,
+    "perception": 4,
+    "survival": 4,
+    "deception": 1,
+    "intimidation": 1,
+    "performance": 1,
+    "persuasion": 1,
+    "death_saves_success": {
+      "s1": false,
+      "s2": false,
+      "s3": false
+    },
+    "death_saves_fail": {
+      "f1": false,
+      "f2": false,
+      "f3": false
+    },
+    "legendary_actions": {
+      "la1": false,
+      "la2": false,
+      "la3": false
+    },
+    "legendary_resistance": {
+      "lr1": false,
+      "lr2": false,
+      "lr3": false
+    },
+    "spell_slots_1": {
+      "l1_1": true,
+      "l1_2": true,
+      "l1_3": true,
+      "l1_4": true
+    },
+    "spell_slots_2": {
+      "l2_1": true,
+      "l2_2": true,
+      "l2_3": true
+    },
+    "spell_slots_3": {
+      "l3_1": true,
+      "l3_2": true,
+      "l3_3": false
+    },
+    "spell_slots_4": {
+      "l4_1": false,
+      "l4_2": false,
+      "l4_3": false
+    },
+    "spell_slots_5": {
+      "l5_1": false,
+      "l5_2": false,
+      "l5_3": false
+    },
+    "spell_slots_6": {
+      "l6_1": false,
+      "l6_2": false
+    },
+    "spell_slots_7": {
+      "l7_1": false,
+      "l7_2": false
+    },
+    "spell_slots_8": {
+      "l8_1": false
+    },
+    "spell_slots_9": {
+      "l9_1": false
+    }
+  },
+  "effects": [],
+  "visibility": {
+    "hp": true,
+    "stats": true,
+    "effects": true,
+    "name": true
+  },
+  "hotbar": [],
+  "actions": {
+    "kildrak_warhammer": {
+      "show_on_panel": true,
+      "show_in_tracker": true,
+      "custom_name": "Боевой молот (атака)",
+      "custom_formula": "1d20 + [str_mod] + [prof_bonus]"
+    },
+    "kildrak_warhammer_dmg": {
+      "show_on_panel": true,
+      "show_in_tracker": false,
+      "custom_name": "Боевой молот (урон)",
+      "custom_formula": "1d8 + [str_mod]"
+    },
+    "kildrak_sacred_flame": {
+      "show_on_panel": true,
+      "show_in_tracker": true,
+      "custom_name": "Священное пламя (урон, Сл ЛОВ)",
+      "custom_formula": "2d8"
+    },
+    "kildrak_spiritual_weapon": {
+      "show_on_panel": true,
+      "show_in_tracker": false,
+      "custom_name": "Духовное оружие (атака)",
+      "custom_formula": "1d20 + [wis_mod] + [prof_bonus]"
+    },
+    "kildrak_spiritual_weapon_dmg": {
+      "show_on_panel": true,
+      "show_in_tracker": false,
+      "custom_name": "Духовное оружие (урон)",
+      "custom_formula": "1d8 + [wis_mod]"
+    },
+    "kildrak_spirit_guardians": {
+      "show_on_panel": true,
+      "show_in_tracker": false,
+      "custom_name": "Духовные стражи (урон)",
+      "custom_formula": "3d8"
+    },
+    "kildrak_cure": {
+      "show_on_panel": true,
+      "show_in_tracker": false,
+      "custom_name": "Лечение ран",
+      "custom_formula": "2d8 + [wis_mod]"
+    }
+  },
+  "actions_panel_override": {
+    "accordions": [
+      {
+        "name": "Атаки и заклинания",
+        "columns": [
+          "kildrak_warhammer",
+          "kildrak_warhammer_dmg",
+          "kildrak_sacred_flame",
+          "kildrak_spiritual_weapon",
+          "kildrak_spiritual_weapon_dmg",
+          "kildrak_spirit_guardians",
+          "kildrak_cure"
+        ],
+        "display": "open"
+      },
+      {
+        "name": "Прочее",
+        "columns": [
+          "initiative",
+          "check_advantage",
+          "check_disadvantage",
+          "death_save",
+          "hit_die_roll"
+        ],
+        "display": "accordion"
+      }
+    ]
+  }
+}
