@@ -1,0 +1,204 @@
+{
+  "id": "9ebe1581-34ef-42ac-b516-008b7adb83ae",
+  "name": "Эстель",
+  "role": "character",
+  "is_revealed": true,
+  "is_pinned": false,
+  "group_id": null,
+  "group_name": null,
+  "group_mode": null,
+  "group_color": null,
+  "initiative": 0,
+  "has_acted": false,
+  "portrait": "",
+  "show_portrait": false,
+  "miniature_id": null,
+  "layout_profile_id": null,
+  "sheet_profile_id": "default",
+  "stats": {
+    "strength": 10,
+    "dexterity": 18,
+    "constitution": 13,
+    "intelligence": 12,
+    "wisdom": 16,
+    "charisma": 8,
+    "level": 5,
+    "hp": 39,
+    "max_hp": 39,
+    "temp_hp": 0,
+    "ac": 16,
+    "speed": 35,
+    "hit_dice": 5,
+    "hit_dice_max": 5,
+    "hit_die": "d10",
+    "exhaustion": 0,
+    "inspiration": 0,
+    "spell_save_dc": 14,
+    "spell_attack": 6,
+    "notes": "Лесной эльф, следопыт 5 (Охотник). Предыстория: Проводник. PHB 2024.\nЧерты: Посвящённый в магию (друид) — Указание, Терновый кнут, Лечащее слово (1/долгий отдых); Увеличение характеристик (4 ур.).\nЭльф: тёмное зрение 60 фт, Транс, Обострённые чувства, Наследие фей; Лесной: скорость 35 фт, Искусность друидов, Скороход (3 ур.), Бесследное передвижение (5 ур.).\nБоевой стиль: Стрельба (+2 к дальнобойным атакам). Мастерство оружия: длинный лук (Замедление), короткий меч (Досаждение). Дополнительная атака.\nИзбранный враг: Метка охотника без ячейки 3/долгий отдых. Умелый исследователь: компетентность в Выживании.\nОхотник: Добыча охотника — Убийца колоссов (+1d8 раз в ход по раненой цели); Знания охотника.\nЗаклинания: Метка охотника (всегда подготовлена), Лечение ран, Туманное облако, Опутывающий удар, Чудесные ягоды; 2 ур.: Шипастая поросль, Малое восстановление.\nСнаряжение: проклёпанная кожа, длинный лук, 2 коротких меча.",
+    "save_str": 3,
+    "save_dex": 7,
+    "save_con": 1,
+    "save_int": 1,
+    "save_wis": 3,
+    "save_cha": -1,
+    "athletics": 3,
+    "acrobatics": 4,
+    "sleight_of_hand": 4,
+    "stealth": 7,
+    "arcana": 1,
+    "history": 1,
+    "investigation": 1,
+    "nature": 4,
+    "religion": 1,
+    "animal_handling": 3,
+    "insight": 6,
+    "medicine": 3,
+    "perception": 6,
+    "survival": 9,
+    "deception": -1,
+    "intimidation": -1,
+    "performance": -1,
+    "persuasion": -1,
+    "death_saves_success": {
+      "s1": false,
+      "s2": false,
+      "s3": false
+    },
+    "death_saves_fail": {
+      "f1": false,
+      "f2": false,
+      "f3": false
+    },
+    "legendary_actions": {
+      "la1": false,
+      "la2": false,
+      "la3": false
+    },
+    "legendary_resistance": {
+      "lr1": false,
+      "lr2": false,
+      "lr3": false
+    },
+    "spell_slots_1": {
+      "l1_1": true,
+      "l1_2": true,
+      "l1_3": true,
+      "l1_4": true
+    },
+    "spell_slots_2": {
+      "l2_1": true,
+      "l2_2": true,
+      "l2_3": false
+    },
+    "spell_slots_3": {
+      "l3_1": false,
+      "l3_2": false,
+      "l3_3": false
+    },
+    "spell_slots_4": {
+      "l4_1": false,
+      "l4_2": false,
+      "l4_3": false
+    },
+    "spell_slots_5": {
+      "l5_1": false,
+      "l5_2": false,
+      "l5_3": false
+    },
+    "spell_slots_6": {
+      "l6_1": false,
+      "l6_2": false
+    },
+    "spell_slots_7": {
+      "l7_1": false,
+      "l7_2": false
+    },
+    "spell_slots_8": {
+      "l8_1": false
+    },
+    "spell_slots_9": {
+      "l9_1": false
+    }
+  },
+  "effects": [],
+  "visibility": {
+    "hp": true,
+    "stats": true,
+    "effects": true,
+    "name": true
+  },
+  "hotbar": [],
+  "actions": {
+    "estel_longbow": {
+      "show_on_panel": true,
+      "show_in_tracker": true,
+      "custom_name": "Длинный лук (атака)",
+      "custom_formula": "1d20 + [dex_mod] + [prof_bonus] + 2"
+    },
+    "estel_longbow_dmg": {
+      "show_on_panel": true,
+      "show_in_tracker": true,
+      "custom_name": "Длинный лук (урон)",
+      "custom_formula": "1d8 + [dex_mod]"
+    },
+    "estel_shortsword": {
+      "show_on_panel": true,
+      "show_in_tracker": false,
+      "custom_name": "Короткий меч (атака)",
+      "custom_formula": "1d20 + [dex_mod] + [prof_bonus]"
+    },
+    "estel_shortsword_dmg": {
+      "show_on_panel": true,
+      "show_in_tracker": false,
+      "custom_name": "Короткий меч (урон)",
+      "custom_formula": "1d6 + [dex_mod]"
+    },
+    "estel_hunters_mark": {
+      "show_on_panel": true,
+      "show_in_tracker": false,
+      "custom_name": "Метка охотника (урон)",
+      "custom_formula": "1d6"
+    },
+    "estel_colossus": {
+      "show_on_panel": true,
+      "show_in_tracker": false,
+      "custom_name": "Убийца колоссов",
+      "custom_formula": "1d8"
+    },
+    "estel_cure": {
+      "show_on_panel": true,
+      "show_in_tracker": false,
+      "custom_name": "Лечение ран",
+      "custom_formula": "2d8 + [wis_mod]"
+    }
+  },
+  "actions_panel_override": {
+    "accordions": [
+      {
+        "name": "Атаки и заклинания",
+        "columns": [
+          "estel_longbow",
+          "estel_longbow_dmg",
+          "estel_shortsword",
+          "estel_shortsword_dmg",
+          "estel_hunters_mark",
+          "estel_colossus",
+          "estel_cure"
+        ],
+        "display": "open"
+      },
+      {
+        "name": "Прочее",
+        "columns": [
+          "initiative",
+          "check_advantage",
+          "check_disadvantage",
+          "death_save",
+          "hit_die_roll"
+        ],
+        "display": "accordion"
+      }
+    ]
+  }
+}

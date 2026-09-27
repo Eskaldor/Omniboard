@@ -1,0 +1,204 @@
+{
+  "id": "066fb2c8-a88d-4fe5-b5db-6bf0144b6429",
+  "name": "Шаман гоблинов",
+  "role": "enemy",
+  "is_revealed": true,
+  "is_pinned": false,
+  "group_id": null,
+  "group_name": null,
+  "group_mode": null,
+  "group_color": null,
+  "initiative": 0,
+  "has_acted": false,
+  "portrait": "",
+  "show_portrait": false,
+  "miniature_id": null,
+  "layout_profile_id": null,
+  "sheet_profile_id": "default",
+  "stats": {
+    "strength": 15,
+    "dexterity": 10,
+    "constitution": 13,
+    "intelligence": 10,
+    "wisdom": 15,
+    "charisma": 8,
+    "level": 2,
+    "hp": 27,
+    "max_hp": 27,
+    "temp_hp": 0,
+    "ac": 13,
+    "speed": 30,
+    "hit_dice": 5,
+    "hit_dice_max": 5,
+    "hit_die": "d8",
+    "exhaustion": 0,
+    "inspiration": 0,
+    "spell_save_dc": 12,
+    "spell_attack": 4,
+    "notes": "Статблок шамана людоящеров (VGtM). КД 13 (природный доспех), хиты 27 (5d8+5), скорость 30 фт, плавание 30 фт. Опасность 2 (450 опыта). Пассивная Внимательность 14.\nЗадержка дыхания: 15 минут.\nКолдовство (только в обычном облике): заклинатель 5 ур., МДР, Сл 12, +4 к попаданию.\nЗаговоры: Искусность друидов, Сотворение пламени, Терновый кнут. 1 ур. (4): Опутывание, Туманное облако. 2 ур. (3): Раскалённый металл, Шипастая поросль. 3 ур. (2): Призыв животных (только рептилии), Рост растений.\nМультиатака (только в обычном облике): укус и когти.\nУкус: +4, 5 фт, 1d4+2 колющего (1d6+2 в облике крокодила). Когти: +4, 5 фт, 1d4+2 рубящего.\nСмена формы (перезарядка после отдыха): превращается в крокодила.",
+    "save_str": 2,
+    "save_dex": 0,
+    "save_con": 1,
+    "save_int": 0,
+    "save_wis": 2,
+    "save_cha": -1,
+    "athletics": 2,
+    "acrobatics": 0,
+    "sleight_of_hand": 0,
+    "stealth": 4,
+    "arcana": 0,
+    "history": 0,
+    "investigation": 0,
+    "nature": 0,
+    "religion": 0,
+    "animal_handling": 2,
+    "insight": 2,
+    "medicine": 2,
+    "perception": 4,
+    "survival": 6,
+    "deception": -1,
+    "intimidation": -1,
+    "performance": -1,
+    "persuasion": -1,
+    "death_saves_success": {
+      "s1": false,
+      "s2": false,
+      "s3": false
+    },
+    "death_saves_fail": {
+      "f1": false,
+      "f2": false,
+      "f3": false
+    },
+    "legendary_actions": {
+      "la1": false,
+      "la2": false,
+      "la3": false
+    },
+    "legendary_resistance": {
+      "lr1": false,
+      "lr2": false,
+      "lr3": false
+    },
+    "spell_slots_1": {
+      "l1_1": true,
+      "l1_2": true,
+      "l1_3": true,
+      "l1_4": true
+    },
+    "spell_slots_2": {
+      "l2_1": true,
+      "l2_2": true,
+      "l2_3": true
+    },
+    "spell_slots_3": {
+      "l3_1": true,
+      "l3_2": true,
+      "l3_3": false
+    },
+    "spell_slots_4": {
+      "l4_1": false,
+      "l4_2": false,
+      "l4_3": false
+    },
+    "spell_slots_5": {
+      "l5_1": false,
+      "l5_2": false,
+      "l5_3": false
+    },
+    "spell_slots_6": {
+      "l6_1": false,
+      "l6_2": false
+    },
+    "spell_slots_7": {
+      "l7_1": false,
+      "l7_2": false
+    },
+    "spell_slots_8": {
+      "l8_1": false
+    },
+    "spell_slots_9": {
+      "l9_1": false
+    }
+  },
+  "effects": [],
+  "visibility": {
+    "hp": false,
+    "stats": false,
+    "effects": true,
+    "name": true
+  },
+  "hotbar": [],
+  "actions": {
+    "gs_bite": {
+      "show_on_panel": true,
+      "show_in_tracker": false,
+      "custom_name": "Укус (атака)",
+      "custom_formula": "1d20 + 4"
+    },
+    "gs_bite_dmg": {
+      "show_on_panel": true,
+      "show_in_tracker": false,
+      "custom_name": "Укус (урон)",
+      "custom_formula": "1d4 + 2"
+    },
+    "gs_claws": {
+      "show_on_panel": true,
+      "show_in_tracker": false,
+      "custom_name": "Когти (атака)",
+      "custom_formula": "1d20 + 4"
+    },
+    "gs_claws_dmg": {
+      "show_on_panel": true,
+      "show_in_tracker": false,
+      "custom_name": "Когти (урон)",
+      "custom_formula": "1d4 + 2"
+    },
+    "gs_produce_flame": {
+      "show_on_panel": true,
+      "show_in_tracker": true,
+      "custom_name": "Сотворение пламени (атака)",
+      "custom_formula": "1d20 + 4"
+    },
+    "gs_produce_flame_dmg": {
+      "show_on_panel": true,
+      "show_in_tracker": true,
+      "custom_name": "Сотворение пламени (урон)",
+      "custom_formula": "2d8"
+    },
+    "gs_thorn_whip_dmg": {
+      "show_on_panel": true,
+      "show_in_tracker": false,
+      "custom_name": "Терновый кнут (урон)",
+      "custom_formula": "2d6"
+    }
+  },
+  "actions_panel_override": {
+    "accordions": [
+      {
+        "name": "Атаки и заклинания",
+        "columns": [
+          "gs_bite",
+          "gs_bite_dmg",
+          "gs_claws",
+          "gs_claws_dmg",
+          "gs_produce_flame",
+          "gs_produce_flame_dmg",
+          "gs_thorn_whip_dmg"
+        ],
+        "display": "open"
+      },
+      {
+        "name": "Прочее",
+        "columns": [
+          "initiative",
+          "check_advantage",
+          "check_disadvantage",
+          "death_save",
+          "hit_die_roll"
+        ],
+        "display": "accordion"
+      }
+    ]
+  }
+}

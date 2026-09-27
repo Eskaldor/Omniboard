@@ -212,7 +212,7 @@ class ESPManager:
             )
             if actor is None:
                 return
-            system = (getattr(app_state.state.core, "system", "") or "").strip() or "D&D 5e"
+            system = (getattr(app_state.state.core, "system", "") or "").strip() or "DND5e"
             rule = find_hardware_trigger(system, "miniature_bind")
             await proactive_render_and_push(
                 actor.id,
@@ -245,7 +245,7 @@ class ESPManager:
         if not slot_minis:
             return
 
-        system = (getattr(combat_session.core, "system", "") or "").strip() or "D&D 5e"
+        system = (getattr(combat_session.core, "system", "") or "").strip() or "DND5e"
         from backend.services.hardware_triggers import find_hardware_trigger
 
         shift_rule = find_hardware_trigger(system, "initiative_shift")

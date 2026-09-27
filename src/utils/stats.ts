@@ -72,7 +72,7 @@ type MechanicsConfig = {
 const mechanicsCache = new Map<string, Promise<MechanicsConfig>>();
 
 async function loadMechanics(systemName: string): Promise<MechanicsConfig> {
-  const key = (systemName || '').trim() || 'D&D 5e';
+  const key = (systemName || '').trim() || 'DND5e';
   const cached = mechanicsCache.get(key);
   if (cached) return cached;
   const p = fetch(`/api/systems/${encodeURIComponent(key)}/mechanics`)

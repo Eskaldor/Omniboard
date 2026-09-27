@@ -1,0 +1,183 @@
+{
+  "id": "6027b4a1-6e45-4202-9520-f4a6a3d18cc8",
+  "name": "Гоблин",
+  "role": "enemy",
+  "is_revealed": true,
+  "is_pinned": false,
+  "group_id": null,
+  "group_name": null,
+  "group_mode": null,
+  "group_color": null,
+  "initiative": 0,
+  "has_acted": false,
+  "portrait": "",
+  "show_portrait": false,
+  "miniature_id": null,
+  "layout_profile_id": null,
+  "sheet_profile_id": "default",
+  "stats": {
+    "strength": 8,
+    "dexterity": 14,
+    "constitution": 10,
+    "intelligence": 10,
+    "wisdom": 8,
+    "charisma": 8,
+    "level": 0,
+    "hp": 7,
+    "max_hp": 7,
+    "temp_hp": 0,
+    "ac": 15,
+    "speed": 30,
+    "hit_dice": 2,
+    "hit_dice_max": 2,
+    "hit_die": "d6",
+    "exhaustion": 0,
+    "inspiration": 0,
+    "spell_save_dc": 0,
+    "spell_attack": 0,
+    "notes": "Маленький гуманоид (гоблиноид), нейтрально-злой. КД 15 (кожаный доспех, щит), хиты 7 (2d6). Опасность 1/4 (50 опыта).\nТёмное зрение 60 фт, пассивная Внимательность 9. Языки: Гоблинский, Общий.\nПроворный побег: Отход или Засада бонусным действием.\nСкимитар: +4, 5 фт, 1d6+2 рубящего. Короткий лук: +4, 80/320 фт, 1d6+2 колющего.",
+    "save_str": -1,
+    "save_dex": 2,
+    "save_con": 0,
+    "save_int": 0,
+    "save_wis": -1,
+    "save_cha": -1,
+    "athletics": -1,
+    "acrobatics": 2,
+    "sleight_of_hand": 2,
+    "stealth": 6,
+    "arcana": 0,
+    "history": 0,
+    "investigation": 0,
+    "nature": 0,
+    "religion": 0,
+    "animal_handling": -1,
+    "insight": -1,
+    "medicine": -1,
+    "perception": -1,
+    "survival": -1,
+    "deception": -1,
+    "intimidation": -1,
+    "performance": -1,
+    "persuasion": -1,
+    "death_saves_success": {
+      "s1": false,
+      "s2": false,
+      "s3": false
+    },
+    "death_saves_fail": {
+      "f1": false,
+      "f2": false,
+      "f3": false
+    },
+    "legendary_actions": {
+      "la1": false,
+      "la2": false,
+      "la3": false
+    },
+    "legendary_resistance": {
+      "lr1": false,
+      "lr2": false,
+      "lr3": false
+    },
+    "spell_slots_1": {
+      "l1_1": false,
+      "l1_2": false,
+      "l1_3": false,
+      "l1_4": false
+    },
+    "spell_slots_2": {
+      "l2_1": false,
+      "l2_2": false,
+      "l2_3": false
+    },
+    "spell_slots_3": {
+      "l3_1": false,
+      "l3_2": false,
+      "l3_3": false
+    },
+    "spell_slots_4": {
+      "l4_1": false,
+      "l4_2": false,
+      "l4_3": false
+    },
+    "spell_slots_5": {
+      "l5_1": false,
+      "l5_2": false,
+      "l5_3": false
+    },
+    "spell_slots_6": {
+      "l6_1": false,
+      "l6_2": false
+    },
+    "spell_slots_7": {
+      "l7_1": false,
+      "l7_2": false
+    },
+    "spell_slots_8": {
+      "l8_1": false
+    },
+    "spell_slots_9": {
+      "l9_1": false
+    }
+  },
+  "effects": [],
+  "visibility": {
+    "hp": false,
+    "stats": false,
+    "effects": true,
+    "name": true
+  },
+  "hotbar": [],
+  "actions": {
+    "gob_scimitar": {
+      "show_on_panel": true,
+      "show_in_tracker": true,
+      "custom_name": "Скимитар (атака)",
+      "custom_formula": "1d20 + 4"
+    },
+    "gob_scimitar_dmg": {
+      "show_on_panel": true,
+      "show_in_tracker": true,
+      "custom_name": "Скимитар (урон)",
+      "custom_formula": "1d6 + 2"
+    },
+    "gob_shortbow": {
+      "show_on_panel": true,
+      "show_in_tracker": false,
+      "custom_name": "Короткий лук (атака)",
+      "custom_formula": "1d20 + 4"
+    },
+    "gob_shortbow_dmg": {
+      "show_on_panel": true,
+      "show_in_tracker": false,
+      "custom_name": "Короткий лук (урон)",
+      "custom_formula": "1d6 + 2"
+    }
+  },
+  "actions_panel_override": {
+    "accordions": [
+      {
+        "name": "Атаки и заклинания",
+        "columns": [
+          "gob_scimitar",
+          "gob_scimitar_dmg",
+          "gob_shortbow",
+          "gob_shortbow_dmg"
+        ],
+        "display": "open"
+      },
+      {
+        "name": "Прочее",
+        "columns": [
+          "initiative",
+          "check_advantage",
+          "check_disadvantage",
+          "death_save",
+          "hit_die_roll"
+        ],
+        "display": "accordion"
+      }
+    ]
+  }
+}

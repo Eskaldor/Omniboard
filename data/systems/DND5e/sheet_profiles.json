@@ -1,0 +1,169 @@
+[
+  {
+    "id": "default",
+    "name": "D&D 5e — стандартный лист",
+    "is_default": true,
+    "hero_columns": [
+      "ac",
+      "speed",
+      "init_bonus",
+      "prof_bonus"
+    ],
+    "stats": {
+      "accordions": [
+        {
+          "name": "Здоровье и защита",
+          "columns": [
+            "hp",
+            "max_hp",
+            "temp_hp",
+            "ac",
+            "speed",
+            "init_bonus"
+          ],
+          "display": "open"
+        },
+        {
+          "name": "Характеристики",
+          "columns": [
+            "strength",
+            "dexterity",
+            "constitution",
+            "intelligence",
+            "wisdom",
+            "charisma"
+          ],
+          "display": "open"
+        },
+        {
+          "name": "Модификаторы",
+          "columns": [
+            "str_mod",
+            "dex_mod",
+            "con_mod",
+            "int_mod",
+            "wis_mod",
+            "cha_mod",
+            "level",
+            "prof_bonus"
+          ],
+          "display": "open"
+        },
+        {
+          "name": "Спасброски",
+          "columns": [
+            "save_str",
+            "save_dex",
+            "save_con",
+            "save_int",
+            "save_wis",
+            "save_cha"
+          ],
+          "display": "accordion"
+        },
+        {
+          "name": "Навыки",
+          "columns": [
+            "athletics",
+            "acrobatics",
+            "sleight_of_hand",
+            "stealth",
+            "arcana",
+            "history",
+            "investigation",
+            "nature",
+            "religion",
+            "animal_handling",
+            "insight",
+            "medicine",
+            "perception",
+            "survival",
+            "deception",
+            "intimidation",
+            "performance",
+            "persuasion",
+            "passive_perception"
+          ],
+          "display": "accordion"
+        },
+        {
+          "name": "Выживание",
+          "columns": [
+            "hit_dice",
+            "hit_dice_max",
+            "hit_die",
+            "death_saves_success",
+            "death_saves_fail",
+            "exhaustion",
+            "inspiration"
+          ],
+          "display": "accordion"
+        },
+        {
+          "name": "Действия в бою",
+          "columns": [
+            "action_economy",
+            "legendary_actions",
+            "legendary_resistance"
+          ],
+          "display": "accordion"
+        },
+        {
+          "name": "Заклинания",
+          "columns": [
+            "spell_save_dc",
+            "spell_attack",
+            "spell_slots_1",
+            "spell_slots_2",
+            "spell_slots_3",
+            "spell_slots_4",
+            "spell_slots_5",
+            "spell_slots_6",
+            "spell_slots_7",
+            "spell_slots_8",
+            "spell_slots_9"
+          ],
+          "display": "accordion"
+        },
+        {
+          "name": "Заметки",
+          "columns": [
+            "notes"
+          ],
+          "display": "accordion"
+        }
+      ]
+    },
+    "actions": {
+      "accordions": [
+        {
+          "name": "Бой",
+          "columns": [
+            "initiative",
+            "unarmed_attack",
+            "unarmed_damage"
+          ],
+          "display": "open"
+        },
+        {
+          "name": "Проверки",
+          "columns": [
+            "check_advantage",
+            "check_disadvantage"
+          ],
+          "display": "accordion"
+        },
+        {
+          "name": "Выживание",
+          "columns": [
+            "death_save",
+            "hit_die_roll",
+            "potion_healing",
+            "potion_healing_greater"
+          ],
+          "display": "accordion"
+        }
+      ]
+    }
+  }
+]

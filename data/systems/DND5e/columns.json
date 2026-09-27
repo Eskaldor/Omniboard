@@ -1,0 +1,1172 @@
+{
+  "displayName": "DND5e",
+  "columns": [
+    {
+      "key": "hp",
+      "label": "Хиты",
+      "showInTable": true,
+      "type": "number",
+      "width": "80px",
+      "log_changes": true,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": true,
+      "show_tooltip": false,
+      "max_key": "max_hp",
+      "min_value": 0,
+      "log_color": "#e70808"
+    },
+    {
+      "key": "max_hp",
+      "label": "Максимум хитов",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "min_value": 0
+    },
+    {
+      "key": "temp_hp",
+      "label": "Временные хиты",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": true,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "min_value": 0,
+      "log_color": "#60a5fa"
+    },
+    {
+      "key": "ac",
+      "label": "Класс доспеха",
+      "showInTable": true,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false
+    },
+    {
+      "key": "speed",
+      "label": "Скорость",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false
+    },
+    {
+      "key": "init_bonus",
+      "label": "Бонус инициативы",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "computed_formula_id": "init_bonus",
+      "is_readonly": true,
+      "is_rollable": true,
+      "roll_formula": "1d20 + [value]"
+    },
+    {
+      "key": "level",
+      "label": "Уровень (ПО)",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "min_value": 0
+    },
+    {
+      "key": "prof_bonus",
+      "label": "Бонус мастерства",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "computed_formula_id": "prof_bonus",
+      "is_readonly": true
+    },
+    {
+      "key": "strength",
+      "label": "Сила",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "min_value": 1,
+      "max_value": 30
+    },
+    {
+      "key": "dexterity",
+      "label": "Ловкость",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "min_value": 1,
+      "max_value": 30
+    },
+    {
+      "key": "constitution",
+      "label": "Телосложение",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "min_value": 1,
+      "max_value": 30
+    },
+    {
+      "key": "intelligence",
+      "label": "Интеллект",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "min_value": 1,
+      "max_value": 30
+    },
+    {
+      "key": "wisdom",
+      "label": "Мудрость",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "min_value": 1,
+      "max_value": 30
+    },
+    {
+      "key": "charisma",
+      "label": "Харизма",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "min_value": 1,
+      "max_value": 30
+    },
+    {
+      "key": "str_mod",
+      "label": "Модификатор: Сила",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "computed_formula_id": "str_mod",
+      "is_readonly": true,
+      "is_rollable": true,
+      "roll_formula": "1d20 + [value]"
+    },
+    {
+      "key": "dex_mod",
+      "label": "Модификатор: Ловкость",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "computed_formula_id": "dex_mod",
+      "is_readonly": true,
+      "is_rollable": true,
+      "roll_formula": "1d20 + [value]"
+    },
+    {
+      "key": "con_mod",
+      "label": "Модификатор: Телосложение",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "computed_formula_id": "con_mod",
+      "is_readonly": true,
+      "is_rollable": true,
+      "roll_formula": "1d20 + [value]"
+    },
+    {
+      "key": "int_mod",
+      "label": "Модификатор: Интеллект",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "computed_formula_id": "int_mod",
+      "is_readonly": true,
+      "is_rollable": true,
+      "roll_formula": "1d20 + [value]"
+    },
+    {
+      "key": "wis_mod",
+      "label": "Модификатор: Мудрость",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "computed_formula_id": "wis_mod",
+      "is_readonly": true,
+      "is_rollable": true,
+      "roll_formula": "1d20 + [value]"
+    },
+    {
+      "key": "cha_mod",
+      "label": "Модификатор: Харизма",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "computed_formula_id": "cha_mod",
+      "is_readonly": true,
+      "is_rollable": true,
+      "roll_formula": "1d20 + [value]"
+    },
+    {
+      "key": "save_str",
+      "label": "Спасбросок: Сила",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "is_rollable": true,
+      "roll_formula": "1d20 + [value]"
+    },
+    {
+      "key": "save_dex",
+      "label": "Спасбросок: Ловкость",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "is_rollable": true,
+      "roll_formula": "1d20 + [value]"
+    },
+    {
+      "key": "save_con",
+      "label": "Спасбросок: Телосложение",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "is_rollable": true,
+      "roll_formula": "1d20 + [value]"
+    },
+    {
+      "key": "save_int",
+      "label": "Спасбросок: Интеллект",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "is_rollable": true,
+      "roll_formula": "1d20 + [value]"
+    },
+    {
+      "key": "save_wis",
+      "label": "Спасбросок: Мудрость",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "is_rollable": true,
+      "roll_formula": "1d20 + [value]"
+    },
+    {
+      "key": "save_cha",
+      "label": "Спасбросок: Харизма",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "is_rollable": true,
+      "roll_formula": "1d20 + [value]"
+    },
+    {
+      "key": "athletics",
+      "label": "Атлетика",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "is_rollable": true,
+      "roll_formula": "1d20 + [value]"
+    },
+    {
+      "key": "acrobatics",
+      "label": "Акробатика",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "is_rollable": true,
+      "roll_formula": "1d20 + [value]"
+    },
+    {
+      "key": "sleight_of_hand",
+      "label": "Ловкость рук",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "is_rollable": true,
+      "roll_formula": "1d20 + [value]"
+    },
+    {
+      "key": "stealth",
+      "label": "Скрытность",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "is_rollable": true,
+      "roll_formula": "1d20 + [value]"
+    },
+    {
+      "key": "arcana",
+      "label": "Магия",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "is_rollable": true,
+      "roll_formula": "1d20 + [value]"
+    },
+    {
+      "key": "history",
+      "label": "История",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "is_rollable": true,
+      "roll_formula": "1d20 + [value]"
+    },
+    {
+      "key": "investigation",
+      "label": "Анализ",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "is_rollable": true,
+      "roll_formula": "1d20 + [value]"
+    },
+    {
+      "key": "nature",
+      "label": "Природа",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "is_rollable": true,
+      "roll_formula": "1d20 + [value]"
+    },
+    {
+      "key": "religion",
+      "label": "Религия",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "is_rollable": true,
+      "roll_formula": "1d20 + [value]"
+    },
+    {
+      "key": "animal_handling",
+      "label": "Уход за животными",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "is_rollable": true,
+      "roll_formula": "1d20 + [value]"
+    },
+    {
+      "key": "insight",
+      "label": "Проницательность",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "is_rollable": true,
+      "roll_formula": "1d20 + [value]"
+    },
+    {
+      "key": "medicine",
+      "label": "Медицина",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "is_rollable": true,
+      "roll_formula": "1d20 + [value]"
+    },
+    {
+      "key": "perception",
+      "label": "Внимательность",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "is_rollable": true,
+      "roll_formula": "1d20 + [value]"
+    },
+    {
+      "key": "survival",
+      "label": "Выживание",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "is_rollable": true,
+      "roll_formula": "1d20 + [value]"
+    },
+    {
+      "key": "deception",
+      "label": "Обман",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "is_rollable": true,
+      "roll_formula": "1d20 + [value]"
+    },
+    {
+      "key": "intimidation",
+      "label": "Запугивание",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "is_rollable": true,
+      "roll_formula": "1d20 + [value]"
+    },
+    {
+      "key": "performance",
+      "label": "Выступление",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "is_rollable": true,
+      "roll_formula": "1d20 + [value]"
+    },
+    {
+      "key": "persuasion",
+      "label": "Убеждение",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "is_rollable": true,
+      "roll_formula": "1d20 + [value]"
+    },
+    {
+      "key": "passive_perception",
+      "label": "Пассивная внимательность",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "computed_formula_id": "passive_perception",
+      "is_readonly": true
+    },
+    {
+      "key": "hit_dice",
+      "label": "Кости хитов",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": true,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": true,
+      "show_tooltip": false,
+      "max_key": "hit_dice_max",
+      "min_value": 0,
+      "log_color": "#f59e0b"
+    },
+    {
+      "key": "hit_dice_max",
+      "label": "Всего костей хитов",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "min_value": 0
+    },
+    {
+      "key": "hit_die",
+      "label": "Тип кости хитов",
+      "showInTable": false,
+      "type": "string",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false
+    },
+    {
+      "key": "death_saves_success",
+      "label": "Спасброски от смерти: успехи",
+      "showInTable": false,
+      "type": "checkbox_group",
+      "width": "80px",
+      "log_changes": true,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "display_style": "dot",
+      "reset_policy": "manual",
+      "log_color": "#22c55e",
+      "items": [
+        {
+          "id": "s1",
+          "label": "1",
+          "color": "#22c55e"
+        },
+        {
+          "id": "s2",
+          "label": "2",
+          "color": "#22c55e"
+        },
+        {
+          "id": "s3",
+          "label": "3",
+          "color": "#22c55e"
+        }
+      ]
+    },
+    {
+      "key": "death_saves_fail",
+      "label": "Спасброски от смерти: провалы",
+      "showInTable": false,
+      "type": "checkbox_group",
+      "width": "80px",
+      "log_changes": true,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "display_style": "dot",
+      "reset_policy": "manual",
+      "log_color": "#ef4444",
+      "items": [
+        {
+          "id": "f1",
+          "label": "1",
+          "color": "#ef4444"
+        },
+        {
+          "id": "f2",
+          "label": "2",
+          "color": "#ef4444"
+        },
+        {
+          "id": "f3",
+          "label": "3",
+          "color": "#ef4444"
+        }
+      ]
+    },
+    {
+      "key": "exhaustion",
+      "label": "Истощение",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": true,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "min_value": 0,
+      "max_value": 6,
+      "log_color": "#a855f7"
+    },
+    {
+      "key": "inspiration",
+      "label": "Вдохновение",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": true,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "min_value": 0,
+      "max_value": 1,
+      "log_color": "#eab308"
+    },
+    {
+      "key": "action_economy",
+      "label": "Действия",
+      "showInTable": false,
+      "type": "checkbox_group",
+      "width": "80px",
+      "log_changes": true,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "display_style": "badge",
+      "reset_policy": "turn_start",
+      "items": [
+        {
+          "id": "action",
+          "label": "Д",
+          "color": "#a3a3a3"
+        },
+        {
+          "id": "bonus",
+          "label": "Б",
+          "color": "#737373"
+        },
+        {
+          "id": "reaction",
+          "label": "Р",
+          "color": "#52525b"
+        }
+      ]
+    },
+    {
+      "key": "legendary_actions",
+      "label": "Легендарные действия",
+      "showInTable": false,
+      "type": "checkbox_group",
+      "width": "80px",
+      "log_changes": true,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "display_style": "dot",
+      "reset_policy": "turn_start",
+      "items": [
+        {
+          "id": "la1",
+          "label": "1",
+          "color": "#f97316"
+        },
+        {
+          "id": "la2",
+          "label": "2",
+          "color": "#f97316"
+        },
+        {
+          "id": "la3",
+          "label": "3",
+          "color": "#f97316"
+        }
+      ]
+    },
+    {
+      "key": "legendary_resistance",
+      "label": "Легендарное сопротивление",
+      "showInTable": false,
+      "type": "checkbox_group",
+      "width": "80px",
+      "log_changes": true,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "display_style": "dot",
+      "reset_policy": "manual",
+      "items": [
+        {
+          "id": "lr1",
+          "label": "1",
+          "color": "#f97316"
+        },
+        {
+          "id": "lr2",
+          "label": "2",
+          "color": "#f97316"
+        },
+        {
+          "id": "lr3",
+          "label": "3",
+          "color": "#f97316"
+        }
+      ]
+    },
+    {
+      "key": "spell_save_dc",
+      "label": "Сл спасброска заклинаний",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false
+    },
+    {
+      "key": "spell_attack",
+      "label": "Бонус атаки заклинанием",
+      "showInTable": false,
+      "type": "number",
+      "width": "80px",
+      "log_changes": false,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "is_rollable": true,
+      "roll_formula": "1d20 + [value]"
+    },
+    {
+      "key": "spell_slots_1",
+      "label": "Ячейки заклинаний 1 ур.",
+      "showInTable": false,
+      "type": "checkbox_group",
+      "width": "80px",
+      "log_changes": true,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "display_style": "dot",
+      "reset_policy": "manual",
+      "log_color": "#08b0e7",
+      "items": [
+        {
+          "id": "l1_1",
+          "label": "1",
+          "color": "#08b0e7"
+        },
+        {
+          "id": "l1_2",
+          "label": "2",
+          "color": "#08b0e7"
+        },
+        {
+          "id": "l1_3",
+          "label": "3",
+          "color": "#08b0e7"
+        },
+        {
+          "id": "l1_4",
+          "label": "4",
+          "color": "#08b0e7"
+        }
+      ]
+    },
+    {
+      "key": "spell_slots_2",
+      "label": "Ячейки заклинаний 2 ур.",
+      "showInTable": false,
+      "type": "checkbox_group",
+      "width": "80px",
+      "log_changes": true,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "display_style": "dot",
+      "reset_policy": "manual",
+      "log_color": "#08b0e7",
+      "items": [
+        {
+          "id": "l2_1",
+          "label": "1",
+          "color": "#08b0e7"
+        },
+        {
+          "id": "l2_2",
+          "label": "2",
+          "color": "#08b0e7"
+        },
+        {
+          "id": "l2_3",
+          "label": "3",
+          "color": "#08b0e7"
+        }
+      ]
+    },
+    {
+      "key": "spell_slots_3",
+      "label": "Ячейки заклинаний 3 ур.",
+      "showInTable": false,
+      "type": "checkbox_group",
+      "width": "80px",
+      "log_changes": true,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "display_style": "dot",
+      "reset_policy": "manual",
+      "log_color": "#08b0e7",
+      "items": [
+        {
+          "id": "l3_1",
+          "label": "1",
+          "color": "#08b0e7"
+        },
+        {
+          "id": "l3_2",
+          "label": "2",
+          "color": "#08b0e7"
+        },
+        {
+          "id": "l3_3",
+          "label": "3",
+          "color": "#08b0e7"
+        }
+      ]
+    },
+    {
+      "key": "spell_slots_4",
+      "label": "Ячейки заклинаний 4 ур.",
+      "showInTable": false,
+      "type": "checkbox_group",
+      "width": "80px",
+      "log_changes": true,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "display_style": "dot",
+      "reset_policy": "manual",
+      "log_color": "#08b0e7",
+      "items": [
+        {
+          "id": "l4_1",
+          "label": "1",
+          "color": "#08b0e7"
+        },
+        {
+          "id": "l4_2",
+          "label": "2",
+          "color": "#08b0e7"
+        },
+        {
+          "id": "l4_3",
+          "label": "3",
+          "color": "#08b0e7"
+        }
+      ]
+    },
+    {
+      "key": "spell_slots_5",
+      "label": "Ячейки заклинаний 5 ур.",
+      "showInTable": false,
+      "type": "checkbox_group",
+      "width": "80px",
+      "log_changes": true,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "display_style": "dot",
+      "reset_policy": "manual",
+      "log_color": "#08b0e7",
+      "items": [
+        {
+          "id": "l5_1",
+          "label": "1",
+          "color": "#08b0e7"
+        },
+        {
+          "id": "l5_2",
+          "label": "2",
+          "color": "#08b0e7"
+        },
+        {
+          "id": "l5_3",
+          "label": "3",
+          "color": "#08b0e7"
+        }
+      ]
+    },
+    {
+      "key": "spell_slots_6",
+      "label": "Ячейки заклинаний 6 ур.",
+      "showInTable": false,
+      "type": "checkbox_group",
+      "width": "80px",
+      "log_changes": true,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "display_style": "dot",
+      "reset_policy": "manual",
+      "log_color": "#08b0e7",
+      "items": [
+        {
+          "id": "l6_1",
+          "label": "1",
+          "color": "#08b0e7"
+        },
+        {
+          "id": "l6_2",
+          "label": "2",
+          "color": "#08b0e7"
+        }
+      ]
+    },
+    {
+      "key": "spell_slots_7",
+      "label": "Ячейки заклинаний 7 ур.",
+      "showInTable": false,
+      "type": "checkbox_group",
+      "width": "80px",
+      "log_changes": true,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "display_style": "dot",
+      "reset_policy": "manual",
+      "log_color": "#08b0e7",
+      "items": [
+        {
+          "id": "l7_1",
+          "label": "1",
+          "color": "#08b0e7"
+        },
+        {
+          "id": "l7_2",
+          "label": "2",
+          "color": "#08b0e7"
+        }
+      ]
+    },
+    {
+      "key": "spell_slots_8",
+      "label": "Ячейки заклинаний 8 ур.",
+      "showInTable": false,
+      "type": "checkbox_group",
+      "width": "80px",
+      "log_changes": true,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "display_style": "dot",
+      "reset_policy": "manual",
+      "log_color": "#08b0e7",
+      "items": [
+        {
+          "id": "l8_1",
+          "label": "1",
+          "color": "#08b0e7"
+        }
+      ]
+    },
+    {
+      "key": "spell_slots_9",
+      "label": "Ячейки заклинаний 9 ур.",
+      "showInTable": false,
+      "type": "checkbox_group",
+      "width": "80px",
+      "log_changes": true,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": false,
+      "display_style": "dot",
+      "reset_policy": "manual",
+      "log_color": "#08b0e7",
+      "items": [
+        {
+          "id": "l9_1",
+          "label": "1",
+          "color": "#08b0e7"
+        }
+      ]
+    },
+    {
+      "key": "notes",
+      "label": "Заметки",
+      "showInTable": false,
+      "type": "text",
+      "width": "120px",
+      "log_changes": true,
+      "show_in_mini_sheet": true,
+      "is_advanced": false,
+      "display_as_fraction": false,
+      "show_tooltip": true
+    }
+  ]
+}

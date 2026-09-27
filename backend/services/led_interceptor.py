@@ -67,7 +67,7 @@ async def process_led_trigger(actor_id: str, event_type: str, target_stat: str |
     if not mid or mid not in _esp.get_active_minis():
         return
 
-    system = (getattr(app_state.state.core, "system", None) or "").strip() or "D&D 5e"
+    system = (getattr(app_state.state.core, "system", None) or "").strip() or "DND5e"
     rule = find_hardware_trigger(system, event_type, target_stat)
     if rule is None:
         return

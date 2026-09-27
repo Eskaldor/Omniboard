@@ -1,0 +1,38 @@
+{
+  "initiative": {
+    "name": "Инициатива",
+    "formula": "1d20 + [init_bonus]"
+  },
+  "unarmed_attack": {
+    "name": "Безоружный удар (атака)",
+    "formula": "1d20 + [str_mod] + [prof_bonus]"
+  },
+  "unarmed_damage": {
+    "name": "Безоружный удар (урон)",
+    "formula": "1 + [str_mod]"
+  },
+  "check_advantage": {
+    "name": "Бросок с преимуществом",
+    "formula": "2d20kh1"
+  },
+  "check_disadvantage": {
+    "name": "Бросок с помехой",
+    "formula": "2d20kl1"
+  },
+  "death_save": {
+    "name": "Спасбросок от смерти",
+    "formula": "1d20"
+  },
+  "hit_die_roll": {
+    "name": "Кость хитов (d8 + ТЕЛ)",
+    "formula": "1d8 + [con_mod]"
+  },
+  "potion_healing": {
+    "name": "Зелье лечения",
+    "formula": "2d4 + 2"
+  },
+  "potion_healing_greater": {
+    "name": "Зелье большого лечения",
+    "formula": "4d4 + 4"
+  }
+}

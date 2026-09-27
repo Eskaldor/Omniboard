@@ -97,7 +97,7 @@ export function HardwareTriggersModal({ isOpen, onClose }: { isOpen: boolean; on
   const { state } = useCombatState();
   const columns = columnsCtx?.columns ?? [];
   const system = (state?.core.system ?? '').trim();
-  const systemNameForI18n = system || 'D&D 5e';
+  const systemNameForI18n = system || 'DND5e';
 
   const [profiles, setProfiles] = useState<LedProfile[]>([]);
   const [rules, setRules] = useState<HardwareTrigger[]>([]);

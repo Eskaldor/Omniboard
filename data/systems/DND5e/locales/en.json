@@ -1,0 +1,270 @@
+{
+  "hp": {
+    "name": "Hit Points",
+    "short": "HP"
+  },
+  "max_hp": {
+    "name": "Max Hit Points",
+    "short": "Max HP"
+  },
+  "temp_hp": {
+    "name": "Temporary Hit Points",
+    "short": "Temp HP"
+  },
+  "ac": {
+    "name": "Armor Class",
+    "short": "AC"
+  },
+  "speed": {
+    "name": "Speed",
+    "short": "Spd"
+  },
+  "init_bonus": {
+    "name": "Initiative Bonus",
+    "short": "Init"
+  },
+  "level": {
+    "name": "Level (CR)",
+    "short": "Lvl"
+  },
+  "prof_bonus": {
+    "name": "Proficiency Bonus",
+    "short": "Prof"
+  },
+  "strength": {
+    "name": "Strength",
+    "short": "STR"
+  },
+  "dexterity": {
+    "name": "Dexterity",
+    "short": "DEX"
+  },
+  "constitution": {
+    "name": "Constitution",
+    "short": "CON"
+  },
+  "intelligence": {
+    "name": "Intelligence",
+    "short": "INT"
+  },
+  "wisdom": {
+    "name": "Wisdom",
+    "short": "WIS"
+  },
+  "charisma": {
+    "name": "Charisma",
+    "short": "CHA"
+  },
+  "str_mod": {
+    "name": "Strength Modifier",
+    "short": "STR mod"
+  },
+  "dex_mod": {
+    "name": "Dexterity Modifier",
+    "short": "DEX mod"
+  },
+  "con_mod": {
+    "name": "Constitution Modifier",
+    "short": "CON mod"
+  },
+  "int_mod": {
+    "name": "Intelligence Modifier",
+    "short": "INT mod"
+  },
+  "wis_mod": {
+    "name": "Wisdom Modifier",
+    "short": "WIS mod"
+  },
+  "cha_mod": {
+    "name": "Charisma Modifier",
+    "short": "CHA mod"
+  },
+  "save_str": {
+    "name": "Strength Saving Throw",
+    "short": "STR save"
+  },
+  "save_dex": {
+    "name": "Dexterity Saving Throw",
+    "short": "DEX save"
+  },
+  "save_con": {
+    "name": "Constitution Saving Throw",
+    "short": "CON save"
+  },
+  "save_int": {
+    "name": "Intelligence Saving Throw",
+    "short": "INT save"
+  },
+  "save_wis": {
+    "name": "Wisdom Saving Throw",
+    "short": "WIS save"
+  },
+  "save_cha": {
+    "name": "Charisma Saving Throw",
+    "short": "CHA save"
+  },
+  "athletics": {
+    "name": "Athletics",
+    "short": "Athletics"
+  },
+  "acrobatics": {
+    "name": "Acrobatics",
+    "short": "Acrobatics"
+  },
+  "sleight_of_hand": {
+    "name": "Sleight of Hand",
+    "short": "Sleight of Hand"
+  },
+  "stealth": {
+    "name": "Stealth",
+    "short": "Stealth"
+  },
+  "arcana": {
+    "name": "Arcana",
+    "short": "Arcana"
+  },
+  "history": {
+    "name": "History",
+    "short": "History"
+  },
+  "investigation": {
+    "name": "Investigation",
+    "short": "Investigation"
+  },
+  "nature": {
+    "name": "Nature",
+    "short": "Nature"
+  },
+  "religion": {
+    "name": "Religion",
+    "short": "Religion"
+  },
+  "animal_handling": {
+    "name": "Animal Handling",
+    "short": "Animal Handling"
+  },
+  "insight": {
+    "name": "Insight",
+    "short": "Insight"
+  },
+  "medicine": {
+    "name": "Medicine",
+    "short": "Medicine"
+  },
+  "perception": {
+    "name": "Perception",
+    "short": "Perception"
+  },
+  "survival": {
+    "name": "Survival",
+    "short": "Survival"
+  },
+  "deception": {
+    "name": "Deception",
+    "short": "Deception"
+  },
+  "intimidation": {
+    "name": "Intimidation",
+    "short": "Intimidation"
+  },
+  "performance": {
+    "name": "Performance",
+    "short": "Performance"
+  },
+  "persuasion": {
+    "name": "Persuasion",
+    "short": "Persuasion"
+  },
+  "passive_perception": {
+    "name": "Passive Perception",
+    "short": "Passive Perc."
+  },
+  "hit_dice": {
+    "name": "Hit Dice",
+    "short": "HD"
+  },
+  "hit_dice_max": {
+    "name": "Hit Dice Total",
+    "short": "HD max"
+  },
+  "hit_die": {
+    "name": "Hit Die",
+    "short": "Die"
+  },
+  "death_saves_success": {
+    "name": "Death Saves: Successes",
+    "short": "Death ✓"
+  },
+  "death_saves_fail": {
+    "name": "Death Saves: Failures",
+    "short": "Death ✗"
+  },
+  "exhaustion": {
+    "name": "Exhaustion",
+    "short": "Exh."
+  },
+  "inspiration": {
+    "name": "Inspiration",
+    "short": "Insp."
+  },
+  "action_economy": {
+    "name": "Actions",
+    "short": "Actions"
+  },
+  "legendary_actions": {
+    "name": "Legendary Actions",
+    "short": "Leg. act."
+  },
+  "legendary_resistance": {
+    "name": "Legendary Resistance",
+    "short": "Leg. res."
+  },
+  "spell_save_dc": {
+    "name": "Spell Save DC",
+    "short": "Spell DC"
+  },
+  "spell_attack": {
+    "name": "Spell Attack Bonus",
+    "short": "Spell atk"
+  },
+  "spell_slots_1": {
+    "name": "Spell Slots Lvl 1",
+    "short": "Slots 1"
+  },
+  "spell_slots_2": {
+    "name": "Spell Slots Lvl 2",
+    "short": "Slots 2"
+  },
+  "spell_slots_3": {
+    "name": "Spell Slots Lvl 3",
+    "short": "Slots 3"
+  },
+  "spell_slots_4": {
+    "name": "Spell Slots Lvl 4",
+    "short": "Slots 4"
+  },
+  "spell_slots_5": {
+    "name": "Spell Slots Lvl 5",
+    "short": "Slots 5"
+  },
+  "spell_slots_6": {
+    "name": "Spell Slots Lvl 6",
+    "short": "Slots 6"
+  },
+  "spell_slots_7": {
+    "name": "Spell Slots Lvl 7",
+    "short": "Slots 7"
+  },
+  "spell_slots_8": {
+    "name": "Spell Slots Lvl 8",
+    "short": "Slots 8"
+  },
+  "spell_slots_9": {
+    "name": "Spell Slots Lvl 9",
+    "short": "Slots 9"
+  },
+  "notes": {
+    "name": "Notes",
+    "short": "Notes"
+  }
+}
